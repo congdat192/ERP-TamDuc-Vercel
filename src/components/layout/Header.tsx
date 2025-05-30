@@ -12,13 +12,17 @@ interface HeaderProps {
 }
 
 const pageLabels = {
-  'dashboard': 'Dashboard',
-  'issue-voucher': 'Issue Voucher',
-  'voucher-list': 'Voucher List',
-  'analytics': 'Analytics',
-  'leaderboard': 'Leaderboard',
-  'customer-list': 'Customer List',
-  'settings': 'Settings',
+  'dashboard': 'Bảng Điều Khiển',
+  'issue-voucher': 'Phát Hành Voucher',
+  'voucher-list': 'Danh Sách Voucher',
+  'analytics': 'Báo Cáo Phân Tích',
+  'leaderboard': 'Bảng Xếp Hạng',
+  'customer-list': 'Danh Sách Khách Hàng',
+  'settings': 'Cài Đặt',
+  'user-management': 'Quản Lý Người Dùng',
+  'system-settings': 'Cài Đặt Hệ Thống',
+  'audit-log': 'Nhật Ký Hoạt Động',
+  'role-permissions': 'Phân Quyền',
 };
 
 export function Header({ onSidebarToggle, currentPage, onPageChange }: HeaderProps) {
@@ -40,7 +44,7 @@ export function Header({ onSidebarToggle, currentPage, onPageChange }: HeaderPro
               {pageLabels[currentPage]}
             </h2>
             {currentPage === 'dashboard' && (
-              <Badge variant="secondary" className="ml-2">Live</Badge>
+              <Badge variant="secondary" className="ml-2">Trực Tuyến</Badge>
             )}
           </div>
         </div>
@@ -52,14 +56,14 @@ export function Header({ onSidebarToggle, currentPage, onPageChange }: HeaderPro
             onClick={() => onPageChange('issue-voucher')}
           >
             <Receipt className="w-4 h-4 mr-2" />
-            <span className="hidden sm:inline">Quick Issue</span>
+            <span className="hidden sm:inline">Phát Hành Nhanh</span>
           </Button>
 
           {/* Search */}
           <div className="relative hidden md:block">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
-              placeholder="Search vouchers, customers..."
+              placeholder="Tìm kiếm voucher, khách hàng..."
               className="pl-10 w-64"
             />
           </div>

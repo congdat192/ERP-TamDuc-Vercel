@@ -9,12 +9,19 @@ import { Analytics } from '@/components/pages/Analytics';
 import { Leaderboard } from '@/components/pages/Leaderboard';
 import { CustomerList } from '@/components/pages/CustomerList';
 import { Settings } from '@/components/pages/Settings';
+import { UserManagement } from '@/components/pages/admin/UserManagement';
+import { SystemSettings } from '@/components/pages/admin/SystemSettings';
+import { AuditLog } from '@/components/pages/admin/AuditLog';
+import { RolePermissions } from '@/components/pages/admin/RolePermissions';
 
-export type PageType = 'dashboard' | 'issue-voucher' | 'voucher-list' | 'analytics' | 'leaderboard' | 'customer-list' | 'settings';
+export type PageType = 'dashboard' | 'issue-voucher' | 'voucher-list' | 'analytics' | 'leaderboard' | 'customer-list' | 'settings' | 'user-management' | 'system-settings' | 'audit-log' | 'role-permissions';
 
 const Index = () => {
   const [currentPage, setCurrentPage] = useState<PageType>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  
+  // Mock user role - in real app this would come from auth context
+  const userRole = 'admin'; // or 'telesales'
 
   const renderPage = () => {
     switch (currentPage) {
@@ -32,6 +39,14 @@ const Index = () => {
         return <CustomerList />;
       case 'settings':
         return <Settings />;
+      case 'user-management':
+        return <UserManagement />;
+      case 'system-settings':
+        return <SystemSettings />;
+      case 'audit-log':
+        return <AuditLog />;
+      case 'role-permissions':
+        return <RolePermissions />;
       default:
         return <Dashboard />;
     }
@@ -44,6 +59,7 @@ const Index = () => {
         onPageChange={setCurrentPage}
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen(!sidebarOpen)}
+        userRole={userRole}
       />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
