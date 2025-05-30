@@ -65,7 +65,7 @@ const Index = () => {
       case 'issue-voucher':
         return <IssueVoucher />;
       case 'voucher-list':
-        return <VoucherList />;
+        return <VoucherList currentUser={currentUser} />;
       case 'analytics':
         return <Analytics />;
       case 'leaderboard':
