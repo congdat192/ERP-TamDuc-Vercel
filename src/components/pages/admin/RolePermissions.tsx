@@ -19,7 +19,31 @@ import {
   XCircle
 } from 'lucide-react';
 
-const roleData = [
+interface Permission {
+  read: boolean;
+  write: boolean;
+  delete: boolean;
+}
+
+interface Role {
+  id: number;
+  name: string;
+  description: string;
+  userCount: number;
+  permissions: {
+    voucher: Permission;
+    customer: Permission;
+    analytics: Permission;
+    leaderboard: Permission;
+    userManagement: Permission;
+    systemSettings: Permission;
+    auditLog: Permission;
+    rolePermissions: Permission;
+  };
+  isSystem: boolean;
+}
+
+const roleData: Role[] = [
   {
     id: 1,
     name: 'Quản Trị Viên',
@@ -73,7 +97,7 @@ const roleData = [
   }
 ];
 
-const permissionLabels = {
+const permissionLabels: Record<keyof Role['permissions'], string> = {
   voucher: 'Quản Lý Voucher',
   customer: 'Quản Lý Khách Hàng',
   analytics: 'Báo Cáo Phân Tích',
@@ -85,11 +109,11 @@ const permissionLabels = {
 };
 
 export function RolePermissions() {
-  const [selectedRole, setSelectedRole] = useState<any>(null);
+  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
-  const handleEditRole = (role: any) => {
+  const handleEditRole = (role: Role) => {
     setSelectedRole(role);
     setShowEditDialog(true);
   };
