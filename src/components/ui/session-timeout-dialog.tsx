@@ -44,7 +44,7 @@ export const SessionTimeoutDialog = ({
   if (sessionState.isExpired) {
     return (
       <Dialog open={true}>
-        <DialogContent className="sm:max-w-md" hideCloseButton>
+        <DialogContent className="sm:max-w-md [&>button]:hidden">
           <DialogHeader className="text-center">
             <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
               <LogOut className="w-8 h-8 text-red-600" />
@@ -70,7 +70,7 @@ export const SessionTimeoutDialog = ({
 
   return (
     <Dialog open={sessionState.isWarning}>
-      <DialogContent className="sm:max-w-md" hideCloseButton>
+      <DialogContent className="sm:max-w-md [&>button]:hidden">
         <DialogHeader className="text-center">
           <div className="mx-auto w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4">
             <AlertTriangle className="w-8 h-8 text-orange-600" />
