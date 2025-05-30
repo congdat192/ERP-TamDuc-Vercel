@@ -1,3 +1,4 @@
+
 export type SettingsCategory = 
   | 'general-info'
   | 'email'
@@ -56,6 +57,21 @@ export interface SecuritySettings {
   sessionTimeout: number;
   maxLoginAttempts: number;
   autoLogout: boolean;
+}
+
+export interface ThirdPartyIntegration {
+  id: string;
+  name: string;
+  description: string;
+  category: 'pos' | 'ecommerce' | 'communication' | 'accounting' | 'payment';
+  status: 'connected' | 'disconnected' | 'error' | 'coming-soon';
+  logo?: string;
+  color: string;
+  lastSync?: string;
+  features: string[];
+  setupInstructions?: string;
+  apiKey?: string;
+  isSupported: boolean;
 }
 
 export interface ApiIntegration {

@@ -9,6 +9,7 @@ import { GeneralInfo } from './GeneralInfo';
 import { EmailSettings } from './EmailSettings';
 import { SecuritySettings } from './SecuritySettings';
 import { ApiIntegration } from './ApiIntegration';
+import { ThirdPartyIntegrations } from './ThirdPartyIntegrations';
 import { BackupRestore } from './BackupRestore';
 import { FeaturesPlans } from './FeaturesPlans';
 
@@ -38,8 +39,7 @@ const settingsMenuStructure = [
     icon: 'Link',
     type: 'expandable' as const,
     subItems: [
-      { id: 'api-keys', label: 'API Keys' },
-      { id: 'webhooks', label: 'Webhooks' },
+      { id: 'api-keys', label: 'API Keys & Webhooks' },
       { id: 'third-party', label: 'Tích Hợp Bên Thứ 3' }
     ]
   },
@@ -60,7 +60,9 @@ const settingsMenuStructure = [
 export function SettingsLayout() {
   const [currentCategory, setCurrentCategory] = useState<SettingsCategory>('general-info');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    'api-integration': true // Default expand API section
+  });
 
   const toggleSection = (sectionId: string) => {
     setExpandedSections(prev => ({
@@ -72,6 +74,14 @@ export function SettingsLayout() {
   const handleMenuItemClick = (categoryId: SettingsCategory) => {
     setCurrentCategory(categoryId);
     setSidebarOpen(false);
+    
+    // Auto-expand parent section if clicking on a submenu item
+    if (categoryId === 'api-keys' || categoryId === 'third-party') {
+      setExpandedSections(prev => ({
+        ...prev,
+        'api-integration': true
+      }));
+    }
   };
 
   const renderSettingsPage = () => {
@@ -83,7 +93,10 @@ export function SettingsLayout() {
       case 'security':
         return <SecuritySettings />;
       case 'api-integration':
+      case 'api-keys':
         return <ApiIntegration />;
+      case 'third-party':
+        return <ThirdPartyIntegrations />;
       case 'backup-restore':
         return <BackupRestore />;
       case 'features-plans':
@@ -164,6 +177,9 @@ export function SettingsLayout() {
                 }
 
                 // Expandable section with sub-items
+                const isParentActive = currentCategory === item.id || 
+                  (item.subItems?.some(sub => sub.id === currentCategory));
+
                 return (
                   <Collapsible
                     key={item.id}
@@ -172,10 +188,10 @@ export function SettingsLayout() {
                   >
                     <CollapsibleTrigger asChild>
                       <Button
-                        variant={currentCategory === item.id ? "secondary" : "ghost"}
+                        variant={isParentActive ? "secondary" : "ghost"}
                         className={cn(
                           "w-full justify-between text-left h-11",
-                          currentCategory === item.id 
+                          isParentActive 
                             ? "bg-blue-50 text-blue-700" 
                             : "text-gray-700 hover:bg-gray-50"
                         )}
@@ -202,7 +218,7 @@ export function SettingsLayout() {
                           className={cn(
                             "w-full justify-start text-left h-10 pl-8",
                             currentCategory === subItem.id 
-                              ? "bg-blue-50 text-blue-700 border-r-2 border-blue-600" 
+                              ? "bg-blue-100 text-blue-800 border-r-2 border-blue-600" 
                               : "text-gray-600 hover:bg-gray-50"
                           )}
                           onClick={() => handleMenuItemClick(subItem.id as SettingsCategory)}

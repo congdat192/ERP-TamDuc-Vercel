@@ -12,6 +12,7 @@ export { GeneralInfo } from './pages/settings/GeneralInfo';
 export { EmailSettings } from './pages/settings/EmailSettings';
 export { SecuritySettings } from './pages/settings/SecuritySettings';
 export { ApiIntegration } from './pages/settings/ApiIntegration';
+export { ThirdPartyIntegrations } from './pages/settings/ThirdPartyIntegrations';
 export { BackupRestore } from './pages/settings/BackupRestore';
 export { FeaturesPlans } from './pages/settings/FeaturesPlans';
 
