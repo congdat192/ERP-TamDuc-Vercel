@@ -1,14 +1,28 @@
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Bell, Search, Menu, Receipt } from 'lucide-react';
+import { Bell, Search, Menu, Receipt, LogOut, User } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { PageType } from '@/pages/Index';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface HeaderProps {
   onSidebarToggle: () => void;
   currentPage: PageType;
   onPageChange: (page: PageType) => void;
+  onLogout: () => void;
+  currentUser: {
+    username: string;
+    role: 'admin' | 'telesales';
+    fullName: string;
+  };
 }
 
 const pageLabels = {
@@ -25,7 +39,7 @@ const pageLabels = {
   'role-permissions': 'Phân Quyền',
 };
 
-export function Header({ onSidebarToggle, currentPage, onPageChange }: HeaderProps) {
+export function Header({ onSidebarToggle, currentPage, onPageChange, onLogout, currentUser }: HeaderProps) {
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
@@ -78,6 +92,40 @@ export function Header({ onSidebarToggle, currentPage, onPageChange }: HeaderPro
               3
             </Badge>
           </Button>
+
+          {/* User Menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src="/placeholder.svg" />
+                  <AvatarFallback className="bg-blue-100 text-blue-600">
+                    {currentUser.role === 'admin' ? 'QT' : 'NV'}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+              <div className="flex items-center justify-start gap-2 p-2">
+                <div className="flex flex-col space-y-1 leading-none">
+                  <p className="font-medium">{currentUser.fullName}</p>
+                  <p className="w-[200px] truncate text-sm text-muted-foreground">
+                    {currentUser.role === 'admin' ? 'Quản Trị Viên' : 'Nhân Viên Telesales'}
+                  </p>
+                </div>
+              </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => onPageChange('settings')}>
+                <User className="mr-2 h-4 w-4" />
+                <span>Cài Đặt Cá Nhân</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={onLogout} className="text-red-600">
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Đăng Xuất</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>

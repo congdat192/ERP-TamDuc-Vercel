@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,7 +17,8 @@ import {
   Upload,
   Database,
   Mail,
-  Palette
+  Palette,
+  Percent
 } from 'lucide-react';
 
 const mockCustomerSources = [
@@ -41,10 +41,35 @@ const mockVoucherValues = [
   { id: 4, value: 500000, description: 'Voucher 500K', active: false },
 ];
 
+const mockCommissionRules = [
+  { 
+    id: 1, 
+    name: 'Hoa hồng khách hàng mới', 
+    condition: 'Khách hàng mới + Voucher ≥ 100K', 
+    percentage: 5, 
+    active: true 
+  },
+  { 
+    id: 2, 
+    name: 'Hoa hồng khách VIP', 
+    condition: 'Khách hàng VIP + Tất cả voucher', 
+    percentage: 8, 
+    active: true 
+  },
+  { 
+    id: 3, 
+    name: 'Hoa hồng nguồn Facebook', 
+    condition: 'Nguồn Facebook + Voucher ≥ 200K', 
+    percentage: 6, 
+    active: false 
+  },
+];
+
 export function SystemSettings() {
   const [isSourceDialogOpen, setIsSourceDialogOpen] = useState(false);
   const [isTypeDialogOpen, setIsTypeDialogOpen] = useState(false);
   const [isValueDialogOpen, setIsValueDialogOpen] = useState(false);
+  const [isCommissionDialogOpen, setIsCommissionDialogOpen] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -62,8 +87,9 @@ export function SystemSettings() {
       </div>
 
       <Tabs defaultValue="voucher-config" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="voucher-config">Cấu Hình Voucher</TabsTrigger>
+          <TabsTrigger value="commission-settings">Thiết Lập Hoa Hồng</TabsTrigger>
           <TabsTrigger value="system-settings">Cài Đặt Chung</TabsTrigger>
           <TabsTrigger value="email-templates">Mẫu Email</TabsTrigger>
           <TabsTrigger value="ui-settings">Giao Diện</TabsTrigger>
@@ -279,6 +305,191 @@ export function SystemSettings() {
                   ))}
                 </TableBody>
               </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="commission-settings" className="space-y-6">
+          {/* Commission Rules Management */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center space-x-2">
+                <Percent className="w-5 h-5" />
+                <span>Quy Tắc Hoa Hồng Telesales</span>
+              </CardTitle>
+              <Dialog open={isCommissionDialogOpen} onOpenChange={setIsCommissionDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Thêm Quy Tắc
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Thêm Quy Tắc Hoa Hồng</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <Label>Tên quy tắc</Label>
+                      <Input placeholder="VD: Hoa hồng khách hàng doanh nghiệp" />
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <h4 className="font-medium">Điều Kiện Áp Dụng</h4>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Loại khách hàng</Label>
+                          <Select>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Chọn loại khách hàng" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Tất cả</SelectItem>
+                              <SelectItem value="new">Khách hàng mới</SelectItem>
+                              <SelectItem value="returning">Khách hàng thân thiết</SelectItem>
+                              <SelectItem value="vip">Khách hàng VIP</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label>Nguồn khách hàng</Label>
+                          <Select>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Chọn nguồn" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Tất cả</SelectItem>
+                              <SelectItem value="website">Website</SelectItem>
+                              <SelectItem value="facebook">Facebook</SelectItem>
+                              <SelectItem value="referral">Giới thiệu</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Giá trị voucher tối thiểu (VNĐ)</Label>
+                          <Input type="number" placeholder="0" />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label>Tỷ lệ hoa hồng (%)</Label>
+                          <Input type="number" placeholder="5" min="0" max="100" step="0.1" />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label>Mô tả chi tiết</Label>
+                      <textarea 
+                        className="w-full h-20 p-3 border border-gray-300 rounded-md"
+                        placeholder="Mô tả điều kiện và cách tính hoa hồng..."
+                      />
+                    </div>
+                    
+                    <div className="flex space-x-2 pt-4">
+                      <Button className="flex-1">Thêm Quy Tắc</Button>
+                      <Button variant="outline" onClick={() => setIsCommissionDialogOpen(false)}>
+                        Hủy
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Tên Quy Tắc</TableHead>
+                    <TableHead>Điều Kiện</TableHead>
+                    <TableHead>Tỷ Lệ (%)</TableHead>
+                    <TableHead>Trạng Thái</TableHead>
+                    <TableHead className="text-right">Thao Tác</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {mockCommissionRules.map((rule) => (
+                    <TableRow key={rule.id}>
+                      <TableCell className="font-medium">{rule.name}</TableCell>
+                      <TableCell>{rule.condition}</TableCell>
+                      <TableCell className="font-semibold text-green-600">
+                        {rule.percentage}%
+                      </TableCell>
+                      <TableCell>
+                        <Switch checked={rule.active} />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end space-x-1">
+                          <Button variant="ghost" size="sm">
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="text-red-600">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          {/* Commission Settings Summary */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Cài Đặt Chung Hoa Hồng</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label>Tỷ lệ hoa hồng mặc định (%)</Label>
+                  <Input type="number" defaultValue="3" min="0" max="100" step="0.1" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Thời gian thanh toán hoa hồng</Label>
+                  <Select defaultValue="monthly">
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="weekly">Hàng tuần</SelectItem>
+                      <SelectItem value="monthly">Hàng tháng</SelectItem>
+                      <SelectItem value="quarterly">Hàng quý</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Chỉ tính hoa hồng cho voucher đã sử dụng</h4>
+                    <p className="text-sm text-gray-600">Hoa hồng chỉ được tính khi khách hàng sử dụng voucher</p>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Hoa hồng tích lũy theo tháng</h4>
+                    <p className="text-sm text-gray-600">Tăng tỷ lệ hoa hồng theo số lượng voucher phát hành</p>
+                  </div>
+                  <Switch />
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Thông báo hoa hồng qua email</h4>
+                    <p className="text-sm text-gray-600">Gửi báo cáo hoa hồng định kỳ cho telesales</p>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

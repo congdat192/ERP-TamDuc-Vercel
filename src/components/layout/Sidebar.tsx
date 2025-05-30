@@ -25,6 +25,11 @@ interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
   userRole: 'admin' | 'telesales';
+  currentUser: {
+    username: string;
+    role: 'admin' | 'telesales';
+    fullName: string;
+  };
 }
 
 const telesalesItems = [
@@ -54,7 +59,7 @@ const adminOnlyItems = [
   { id: 'settings' as PageType, label: 'Cài Đặt', icon: Settings },
 ];
 
-export function Sidebar({ currentPage, onPageChange, isOpen, onToggle, userRole }: SidebarProps) {
+export function Sidebar({ currentPage, onPageChange, isOpen, onToggle, userRole, currentUser }: SidebarProps) {
   const menuItems = userRole === 'admin' ? adminItems : telesalesItems;
 
   return (
@@ -102,7 +107,7 @@ export function Sidebar({ currentPage, onPageChange, isOpen, onToggle, userRole 
               </Avatar>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">
-                  {userRole === 'admin' ? 'Nguyễn Văn Quản' : 'Trần Thị Nhân'}
+                  {currentUser.fullName}
                 </p>
                 <p className="text-xs text-gray-500 truncate">
                   {userRole === 'admin' ? 'Quản Trị Viên' : 'Nhân Viên Telesales'}
