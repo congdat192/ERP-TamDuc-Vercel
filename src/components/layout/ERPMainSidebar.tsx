@@ -2,10 +2,10 @@
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
 import { X, Building2 } from 'lucide-react';
-import { ERPModule, User } from '@/types/erp';
-import { modulePermissions, getIconComponent } from '@/data/erpConfig';
+import { ERPModule, User } from '@/types/auth';
+import { MODULE_PERMISSIONS } from '@/constants/permissions';
+import { getIconComponent } from '@/lib/icons';
 
 interface ERPMainSidebarProps {
   currentModule: ERPModule;
@@ -22,7 +22,7 @@ export function ERPMainSidebar({
   onToggle, 
   currentUser 
 }: ERPMainSidebarProps) {
-  const allowedModules = modulePermissions.filter(module => 
+  const allowedModules = MODULE_PERMISSIONS.filter(module => 
     currentUser.permissions.modules.includes(module.module)
   );
 

@@ -1,26 +1,59 @@
 import { useState } from 'react';
-import { ERPMainSidebar } from '@/components/layout/ERPMainSidebar';
-import { VoucherModuleSidebar } from '@/components/layout/VoucherModuleSidebar';
-import { Header } from '@/components/layout/Header';
-import { ERPDashboard } from '@/components/pages/ERPDashboard';
-import { ModuleEmptyState } from '@/components/pages/ModuleEmptyState';
-import { Dashboard } from '@/components/pages/Dashboard';
-import { IssueVoucher } from '@/components/pages/IssueVoucher';
-import { VoucherList } from '@/components/pages/VoucherList';
-import { Analytics } from '@/components/pages/Analytics';
-import { Leaderboard } from '@/components/pages/Leaderboard';
-import { CustomerList } from '@/components/pages/CustomerList';
-import { Settings } from '@/components/pages/Settings';
+import { ERPLayout } from '@/components/layout/ERPLayout';
 import { LoginPage } from '@/components/pages/LoginPage';
-import { ERPModule, VoucherSubPage, User } from '@/types/erp';
-import { mockUsers } from '@/data/erpConfig';
+import { ERPHome } from './ERPHome';
+import { ModuleEmptyState } from '@/components/pages/ModuleEmptyState';
 
-export type PageType = 'dashboard' | 'issue-voucher' | 'voucher-list' | 'analytics' | 'leaderboard' | 'customer-list' | 'settings' | 'user-management' | 'system-settings' | 'audit-log' | 'role-permissions';
+// Voucher module pages
+import { VoucherDashboard } from '@/modules/voucher/pages/VoucherDashboard';
+import { VoucherIssue } from '@/modules/voucher/pages/VoucherIssue';
+import { VoucherList } from '@/modules/voucher/pages/VoucherList';
+import { VoucherAnalytics } from '@/modules/voucher/pages/VoucherAnalytics';
+import { VoucherLeaderboard } from '@/modules/voucher/pages/VoucherLeaderboard';
+import { VoucherSettings } from '@/modules/voucher/pages/VoucherSettings';
+
+import { ERPModule, VoucherFeature, User } from '@/types/auth';
+import { DEFAULT_PERMISSIONS } from '@/constants/permissions';
+
+// Mock users for demo
+const mockUsers: User[] = [
+  {
+    id: '1',
+    username: 'admin',
+    fullName: 'Quản Trị Viên',
+    role: 'erp-admin',
+    email: 'admin@company.com',
+    permissions: DEFAULT_PERMISSIONS['erp-admin']
+  },
+  {
+    id: '2',
+    username: 'voucher_admin',
+    fullName: 'Quản Lý Voucher',
+    role: 'voucher-admin',
+    email: 'voucher.admin@company.com',
+    permissions: DEFAULT_PERMISSIONS['voucher-admin']
+  },
+  {
+    id: '3',
+    username: 'telesales',
+    fullName: 'Nhân Viên Telesales',
+    role: 'telesales',
+    email: 'telesales@company.com',
+    permissions: DEFAULT_PERMISSIONS['telesales']
+  },
+  {
+    id: '4',
+    username: 'custom',
+    fullName: 'Người Dùng Tùy Chỉnh',
+    role: 'custom',
+    email: 'custom@company.com',
+    permissions: DEFAULT_PERMISSIONS['custom']
+  }
+];
 
 const Index = () => {
   const [currentModule, setCurrentModule] = useState<ERPModule>('dashboard');
-  const [currentVoucherPage, setCurrentVoucherPage] = useState<VoucherSubPage>('voucher-dashboard');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [currentVoucherPage, setCurrentVoucherPage] = useState<VoucherFeature>('voucher-dashboard');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
@@ -48,30 +81,30 @@ const Index = () => {
   };
 
   if (!isLoggedIn || !currentUser) {
-    return <LoginPage onLogin={handleLogin} />;
+    return <LoginPage onLogin={handleLogin} mockUsers={mockUsers} />;
   }
 
   const renderMainContent = () => {
     if (currentModule === 'dashboard') {
-      return <ERPDashboard currentUser={currentUser} onModuleChange={handleModuleChange} />;
+      return <ERPHome currentUser={currentUser} onModuleChange={handleModuleChange} />;
     }
 
     if (currentModule === 'voucher') {
       switch (currentVoucherPage) {
         case 'voucher-dashboard':
-          return <Dashboard />;
+          return <VoucherDashboard />;
         case 'issue-voucher':
-          return <IssueVoucher />;
+          return <VoucherIssue />;
         case 'voucher-list':
           return <VoucherList currentUser={currentUser} />;
         case 'voucher-analytics':
-          return <Analytics />;
+          return <VoucherAnalytics />;
         case 'voucher-leaderboard':
-          return <Leaderboard />;
+          return <VoucherLeaderboard />;
         case 'voucher-settings':
-          return <Settings />;
+          return <VoucherSettings />;
         default:
-          return <Dashboard />;
+          return <VoucherDashboard />;
       }
     }
 
@@ -79,69 +112,17 @@ const Index = () => {
     return <ModuleEmptyState module={currentModule} onBackToDashboard={() => setCurrentModule('dashboard')} />;
   };
 
-  const getPageTitle = () => {
-    if (currentModule === 'dashboard') {
-      return 'Tổng Quan ERP';
-    }
-    
-    if (currentModule === 'voucher') {
-      const pageTitles = {
-        'voucher-dashboard': 'Tổng Quan Voucher',
-        'issue-voucher': 'Phát Hành Voucher',
-        'voucher-list': 'Danh Sách Voucher',
-        'voucher-analytics': 'Báo Cáo Voucher',
-        'voucher-leaderboard': 'Bảng Xếp Hạng',
-        'voucher-settings': 'Cài Đặt Voucher'
-      };
-      return pageTitles[currentVoucherPage] || 'Module Voucher';
-    }
-
-    const moduleTitles = {
-      customers: 'Khách Hàng',
-      sales: 'Bán Hàng',
-      inventory: 'Kho Hàng',
-      accounting: 'Kế Toán',
-      hr: 'Nhân Sự',
-      'system-settings': 'Cài Đặt Hệ Thống',
-      'user-management': 'Quản Lý Người Dùng'
-    };
-    
-    return moduleTitles[currentModule as keyof typeof moduleTitles] || 'ERP System';
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 flex w-full">
-      <ERPMainSidebar 
-        currentModule={currentModule}
-        onModuleChange={handleModuleChange}
-        isOpen={sidebarOpen}
-        onToggle={() => setSidebarOpen(!sidebarOpen)}
-        currentUser={currentUser}
-      />
-      
-      {/* Voucher Module Secondary Sidebar */}
-      {currentModule === 'voucher' && (
-        <VoucherModuleSidebar
-          currentPage={currentVoucherPage}
-          onPageChange={setCurrentVoucherPage}
-          currentUser={currentUser}
-          onBackToModules={() => setCurrentModule('dashboard')}
-        />
-      )}
-      
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header 
-          onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
-          currentPage={getPageTitle()}
-          onPageChange={() => {}} // Not used in ERP mode
-          onLogout={handleLogout}
-          currentUser={currentUser}
-        />
-        <main className="flex-1 overflow-auto p-6">
-          {renderMainContent()}
-        </main>
-      </div>
-    </div>
+    <ERPLayout
+      currentUser={currentUser}
+      currentModule={currentModule}
+      currentVoucherPage={currentModule === 'voucher' ? currentVoucherPage : undefined}
+      onModuleChange={handleModuleChange}
+      onVoucherPageChange={currentModule === 'voucher' ? setCurrentVoucherPage : undefined}
+      onLogout={handleLogout}
+    >
+      {renderMainContent()}
+    </ERPLayout>
   );
 };
 

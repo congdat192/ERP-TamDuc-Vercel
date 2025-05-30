@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User as UserType } from '@/types/erp';
+import { User as UserType } from '@/types/auth';
 
 interface HeaderProps {
   onSidebarToggle: () => void;

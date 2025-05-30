@@ -1,7 +1,6 @@
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { 
   LayoutDashboard, 
   Ticket, 
@@ -11,22 +10,22 @@ import {
   Settings,
   ChevronLeft
 } from 'lucide-react';
-import { VoucherSubPage, User } from '@/types/erp';
+import { VoucherFeature, User } from '@/types/auth';
 
 interface VoucherModuleSidebarProps {
-  currentPage: VoucherSubPage;
-  onPageChange: (page: VoucherSubPage) => void;
+  currentPage: VoucherFeature;
+  onPageChange: (page: VoucherFeature) => void;
   currentUser: User;
   onBackToModules: () => void;
 }
 
 const voucherPages = [
-  { id: 'voucher-dashboard' as VoucherSubPage, label: 'Tổng Quan', icon: LayoutDashboard },
-  { id: 'issue-voucher' as VoucherSubPage, label: 'Phát Hành Voucher', icon: Ticket },
-  { id: 'voucher-list' as VoucherSubPage, label: 'Danh Sách Voucher', icon: FileText },
-  { id: 'voucher-analytics' as VoucherSubPage, label: 'Báo Cáo Phân Tích', icon: BarChart3 },
-  { id: 'voucher-leaderboard' as VoucherSubPage, label: 'Bảng Xếp Hạng', icon: Trophy },
-  { id: 'voucher-settings' as VoucherSubPage, label: 'Cài Đặt', icon: Settings },
+  { id: 'voucher-dashboard' as VoucherFeature, label: 'Tổng Quan', icon: LayoutDashboard },
+  { id: 'issue-voucher' as VoucherFeature, label: 'Phát Hành Voucher', icon: Ticket },
+  { id: 'voucher-list' as VoucherFeature, label: 'Danh Sách Voucher', icon: FileText },
+  { id: 'voucher-analytics' as VoucherFeature, label: 'Báo Cáo Phân Tích', icon: BarChart3 },
+  { id: 'voucher-leaderboard' as VoucherFeature, label: 'Bảng Xếp Hạng', icon: Trophy },
+  { id: 'voucher-settings' as VoucherFeature, label: 'Cài Đặt', icon: Settings },
 ];
 
 export function VoucherModuleSidebar({ 

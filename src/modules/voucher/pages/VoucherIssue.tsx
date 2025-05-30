@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,7 +21,7 @@ import {
   Gift
 } from 'lucide-react';
 
-export function IssueVoucher() {
+export function VoucherIssue() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [customerFound, setCustomerFound] = useState<any>(null);
   const [existingVoucher, setExistingVoucher] = useState<any>(null);

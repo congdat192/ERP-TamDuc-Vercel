@@ -11,14 +11,14 @@ import {
   Ticket, 
   AlertCircle 
 } from 'lucide-react';
-import { User, ERPModule } from '@/types/erp';
+import { User, ERPModule } from '@/types/auth';
 
-interface ERPDashboardProps {
+interface ERPHomeProps {
   currentUser: User;
   onModuleChange: (module: ERPModule) => void;
 }
 
-export function ERPDashboard({ currentUser, onModuleChange }: ERPDashboardProps) {
+export function ERPHome({ currentUser, onModuleChange }: ERPHomeProps) {
   const quickActions = [
     {
       title: 'Phát Hành Voucher',

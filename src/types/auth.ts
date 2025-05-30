@@ -1,4 +1,10 @@
 
+export type UserRole = 
+  | 'erp-admin' 
+  | 'voucher-admin' 
+  | 'telesales' 
+  | 'custom';
+
 export type ERPModule = 
   | 'dashboard' 
   | 'customers' 
@@ -10,19 +16,13 @@ export type ERPModule =
   | 'system-settings' 
   | 'user-management';
 
-export type VoucherSubPage = 
+export type VoucherFeature = 
   | 'voucher-dashboard' 
   | 'issue-voucher' 
   | 'voucher-list' 
   | 'voucher-analytics' 
   | 'voucher-leaderboard' 
   | 'voucher-settings';
-
-export type UserRole = 
-  | 'erp-admin' 
-  | 'voucher-admin' 
-  | 'telesales' 
-  | 'custom';
 
 export interface User {
   id: string;
@@ -32,7 +32,7 @@ export interface User {
   email: string;
   permissions: {
     modules: ERPModule[];
-    voucherFeatures?: VoucherSubPage[];
+    voucherFeatures?: VoucherFeature[];
     canManageUsers?: boolean;
     canViewAllVouchers?: boolean;
   };
