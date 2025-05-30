@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Receipt, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Building2, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { mockUsers } from '@/data/erpConfig';
 
 interface LoginPageProps {
   onLogin: (username: string, password: string) => void;
@@ -31,9 +32,8 @@ export function LoginPage({ onLogin }: LoginPageProps) {
     
     // Simulate API call
     setTimeout(() => {
-      if (username === 'admin' && password === 'admin123') {
-        onLogin(username, password);
-      } else if (username === 'telesales' && password === 'sales123') {
+      const user = mockUsers.find(u => u.username === username);
+      if (user && password === 'demo123') {
         onLogin(username, password);
       } else {
         setError('Tài khoản hoặc mật khẩu không chính xác');
@@ -42,16 +42,22 @@ export function LoginPage({ onLogin }: LoginPageProps) {
     }, 1000);
   };
 
+  const handleQuickLogin = (userType: string) => {
+    setUsername(userType);
+    setPassword('demo123');
+    setError('');
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Company Logo and Title */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-full mb-4">
-            <Receipt className="w-8 h-8 text-white" />
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-900 rounded-full mb-4">
+            <Building2 className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">VoucherCRM</h1>
-          <p className="text-gray-600">Hệ Thống Quản Lý Voucher Telesales</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">ERP System</h1>
+          <p className="text-gray-600">Hệ Thống Quản Lý Tổng Hợp Doanh Nghiệp</p>
         </div>
 
         {/* Login Form */}
@@ -61,7 +67,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
               Đăng Nhập Hệ Thống
             </CardTitle>
             <p className="text-sm text-gray-600 text-center">
-              Nhập thông tin tài khoản để truy cập
+              Chọn loại tài khoản để kiểm tra giao diện và phân quyền
             </p>
           </CardHeader>
           <CardContent>
@@ -123,27 +129,50 @@ export function LoginPage({ onLogin }: LoginPageProps) {
 
               <Button 
                 type="submit" 
-                className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium"
+                className="w-full h-11 bg-slate-900 hover:bg-slate-800 text-white font-medium"
                 disabled={isLoading}
               >
                 {isLoading ? 'Đang Đăng Nhập...' : 'Đăng Nhập'}
               </Button>
             </form>
 
-            {/* Demo Accounts */}
+            {/* Quick Login Options */}
             <div className="mt-6 pt-6 border-t border-gray-200">
-              <p className="text-xs text-gray-500 text-center mb-3">
-                Tài khoản demo:
+              <p className="text-sm text-gray-600 text-center mb-4">
+                Tài khoản demo cho kiểm tra UI và phân quyền:
               </p>
-              <div className="space-y-2 text-xs text-gray-600">
-                <div className="flex justify-between">
-                  <span>Quản trị viên:</span>
-                  <span>admin / admin123</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Nhân viên:</span>
-                  <span>telesales / sales123</span>
-                </div>
+              
+              <div className="space-y-2">
+                {mockUsers.map((user) => (
+                  <Button
+                    key={user.id}
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-between text-xs h-auto py-2"
+                    onClick={() => handleQuickLogin(user.username)}
+                    disabled={isLoading}
+                  >
+                    <div className="text-left">
+                      <div className="font-medium">{user.fullName}</div>
+                      <div className="text-gray-500">{user.username}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-gray-600">
+                        {user.role === 'erp-admin' ? 'Quản Trị ERP' :
+                         user.role === 'voucher-admin' ? 'Quản Lý Voucher' :
+                         user.role === 'telesales' ? 'Nhân Viên' : 'Tùy Chỉnh'}
+                      </div>
+                      <div className="text-gray-500">demo123</div>
+                    </div>
+                  </Button>
+                ))}
+              </div>
+              
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                <p className="text-xs text-blue-700">
+                  <strong>Lưu ý:</strong> Tất cả tài khoản demo sử dụng mật khẩu "demo123". 
+                  Mỗi loại tài khoản có quyền truy cập module khác nhau để kiểm tra phân quyền.
+                </p>
               </div>
             </div>
           </CardContent>
@@ -152,7 +181,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-xs text-gray-500">
-            © 2024 VoucherCRM. Phiên bản 2.1.0
+            © 2024 ERP System. Demo UI v1.0.0
           </p>
         </div>
       </div>
