@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +15,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { NotificationCenter } from '@/components/ui/notification-center';
@@ -33,6 +33,8 @@ export function Header({ onSidebarToggle, currentPage, onPageChange, onLogout, c
   const [searchQuery, setSearchQuery] = useState('');
   const [showQuickVoucher, setShowQuickVoucher] = useState(false);
   const [showUserSettings, setShowUserSettings] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const getRoleDisplayName = (role: string) => {
     switch (role) {
@@ -58,6 +60,15 @@ export function Header({ onSidebarToggle, currentPage, onPageChange, onLogout, c
 
   const handleUserSettings = () => {
     setShowUserSettings(true);
+  };
+
+  const handleLogout = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
+    setShowLogoutConfirm(false);
+    onLogout();
   };
 
   return (
@@ -95,15 +106,27 @@ export function Header({ onSidebarToggle, currentPage, onPageChange, onLogout, c
             )}
 
             {/* Search */}
-            <form onSubmit={handleSearch} className="relative hidden md:block">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <Input
-                placeholder="Tìm kiếm trong hệ thống..."
-                className="pl-10 w-64"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </form>
+            <div className="hidden md:block">
+              <form onSubmit={handleSearch} className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Tìm kiếm trong hệ thống..."
+                  className="pl-10 w-64"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </form>
+            </div>
+
+            {/* Mobile Search Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowSearch(true)}
+              className="md:hidden"
+            >
+              <Search className="w-5 h-5" />
+            </Button>
 
             {/* Notifications */}
             <NotificationCenter />
@@ -138,7 +161,7 @@ export function Header({ onSidebarToggle, currentPage, onPageChange, onLogout, c
                   <span>Cài Đặt Cá Nhân</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={onLogout} className="text-red-600">
+                <DropdownMenuItem onClick={handleLogout} className="text-red-600">
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Đăng Xuất</span>
                 </DropdownMenuItem>
@@ -147,6 +170,58 @@ export function Header({ onSidebarToggle, currentPage, onPageChange, onLogout, c
           </div>
         </div>
       </header>
+
+      {/* Mobile Search Dialog */}
+      <Dialog open={showSearch} onOpenChange={setShowSearch}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Tìm Kiếm</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <form onSubmit={(e) => { e.preventDefault(); handleSearch(e); setShowSearch(false); }}>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Tìm kiếm trong hệ thống..."
+                  className="pl-10"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              <Button type="submit" className="w-full mt-4">
+                Tìm Kiếm
+              </Button>
+            </form>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Logout Confirmation Dialog */}
+      <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Xác Nhận Đăng Xuất</DialogTitle>
+            <DialogDescription>
+              Bạn có chắc chắn muốn đăng xuất khỏi hệ thống không?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex space-x-2 justify-end">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowLogoutConfirm(false)}
+            >
+              Hủy
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={confirmLogout}
+            >
+              Đăng Xuất
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Quick Voucher Dialog */}
       <Dialog open={showQuickVoucher} onOpenChange={setShowQuickVoucher}>

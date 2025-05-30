@@ -120,7 +120,30 @@ const Index = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [loginAttempts, setLoginAttempts] = useState(0);
   const { toast } = useToast();
+
+  // Check for remembered login on component mount
+  useEffect(() => {
+    const rememberedUser = localStorage.getItem('rememberedUser');
+    if (rememberedUser) {
+      try {
+        const userData = JSON.parse(rememberedUser);
+        const user = mockUsers.find(u => u.username === userData.username);
+        if (user) {
+          setCurrentUser(user);
+          setIsLoggedIn(true);
+          setCurrentModule('dashboard');
+          toast({
+            title: "Đăng nhập tự động",
+            description: `Chào mừng bạn trở lại, ${user.fullName}!`,
+          });
+        }
+      } catch (error) {
+        localStorage.removeItem('rememberedUser');
+      }
+    }
+  }, []);
 
   // Keyboard shortcuts
   useKeyboardShortcuts({
@@ -176,7 +199,7 @@ const Index = () => {
     }
   });
 
-  const handleLogin = async (username: string, password: string) => {
+  const handleLogin = async (username: string, password: string, rememberMe?: boolean) => {
     setIsLoading(true);
     
     // Simulate loading
@@ -185,25 +208,57 @@ const Index = () => {
     // Find user by username for demo purposes
     const user = mockUsers.find(u => u.username === username);
     if (user) {
+      // Reset login attempts on successful login
+      setLoginAttempts(0);
       setCurrentUser(user);
       setIsLoggedIn(true);
       setCurrentModule('dashboard');
+      
+      // Handle remember me
+      if (rememberMe) {
+        localStorage.setItem('rememberedUser', JSON.stringify({ username: user.username }));
+      }
+      
       toast({
         title: "Đăng nhập thành công",
         description: `Chào mừng bạn trở lại, ${user.fullName}!`,
       });
+    } else {
+      // Increment login attempts
+      const newAttempts = loginAttempts + 1;
+      setLoginAttempts(newAttempts);
+      
+      if (newAttempts >= 3) {
+        toast({
+          title: "Tài khoản bị khóa",
+          description: "Quá nhiều lần đăng nhập thất bại. Tài khoản đã bị khóa tạm thời.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Đăng nhập thất bại",
+          description: `Tên đăng nhập hoặc mật khẩu không đúng. Còn lại ${3 - newAttempts} lần thử.`,
+          variant: "destructive",
+        });
+      }
     }
     
     setIsLoading(false);
   };
 
   const handleLogout = () => {
+    // Clear remembered login
+    localStorage.removeItem('rememberedUser');
+    
     setIsLoggedIn(false);
     setCurrentUser(null);
     setCurrentModule('dashboard');
+    setLoginAttempts(0); // Reset login attempts on logout
+    
     toast({
       title: "Đăng xuất thành công",
-      description: "Hẹn gặp lại bạn!",
+      description: "Bạn đã đăng xuất khỏi hệ thống. Hẹn gặp lại!",
+      duration: 3000,
     });
   };
 
@@ -224,7 +279,11 @@ const Index = () => {
   if (!isLoggedIn || !currentUser) {
     return (
       <PageTransition isLoading={isLoading}>
-        <LoginPage onLogin={handleLogin} mockUsers={mockUsers} />
+        <LoginPage 
+          onLogin={handleLogin} 
+          mockUsers={mockUsers}
+          loginAttempts={loginAttempts}
+        />
       </PageTransition>
     );
   }
