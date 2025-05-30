@@ -148,7 +148,7 @@ export function UserEditModal({ isOpen, onClose, user, onUserUpdated }: UserEdit
   );
 
   const availableVoucherFeatures = VOUCHER_FEATURES.filter(feature => 
-    feature.allowedRoles.includes(formData.role)
+    (feature.allowedRoles as readonly UserRole[]).includes(formData.role)
   );
 
   // Check if user can have special permissions
