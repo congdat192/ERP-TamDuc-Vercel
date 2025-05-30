@@ -1,3 +1,4 @@
+
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -47,18 +48,6 @@ const moduleInfo = {
     description: 'Quản lý nhân viên, chấm công, lương và phúc lợi',
     icon: UserCheck,
     color: 'text-pink-600'
-  },
-  'system-settings': {
-    title: 'Cài Đặt Hệ Thống',
-    description: 'Cấu hình hệ thống, tham số và thiết lập toàn cục',
-    icon: Settings,
-    color: 'text-gray-600'
-  },
-  'user-management': {
-    title: 'Quản Lý Người Dùng',
-    description: 'Quản lý tài khoản người dùng, phân quyền và bảo mật',
-    icon: Shield,
-    color: 'text-red-600'
   }
 };
 

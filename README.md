@@ -1,54 +1,90 @@
+# ERP System - Modular Architecture
 
-# ERP System - Modular Enterprise Solution
+A comprehensive Enterprise Resource Planning (ERP) system built with React, TypeScript, and Tailwind CSS, featuring a modular architecture for scalability and maintainability.
 
-A modern, modular ERP system built with React, TypeScript, and Tailwind CSS. This system provides a scalable foundation for enterprise resource planning with role-based access control and modular architecture.
+## 📁 Project Structure
 
-## 🏗️ Project Structure
-
-### Modular Architecture
+The project follows a modular enterprise-ready structure that separates business logic into dedicated modules while maintaining shared components and utilities.
 
 ```
 src/
-├── modules/                    # Business modules
-│   └── voucher/               # Voucher management module
-│       ├── components/        # Module-specific components
-│       ├── hooks/            # Module-specific React hooks
-│       ├── pages/            # Module pages/screens
-│       ├── services/         # API services for the module
-│       └── types/            # TypeScript types for the module
+├── modules/                    # Business modules (self-contained)
+│   ├── voucher/               # Voucher management module
+│   │   ├── pages/             # All voucher-related pages
+│   │   │   ├── VoucherDashboard.tsx
+│   │   │   ├── VoucherIssue.tsx
+│   │   │   ├── VoucherList.tsx
+│   │   │   ├── VoucherAnalytics.tsx
+│   │   │   ├── VoucherLeaderboard.tsx
+│   │   │   └── VoucherSettings.tsx
+│   │   ├── components/        # Voucher-specific components
+│   │   │   └── VoucherCard.tsx
+│   │   ├── hooks/            # Voucher-specific hooks
+│   │   │   └── useVoucher.ts
+│   │   └── types/            # Voucher-specific types
+│   │       └── index.ts
+│   ├── admin/                # Administration module
+│   │   └── pages/            # Admin-related pages
+│   │       ├── AuditLog.tsx
+│   │       ├── RolePermissions.tsx
+│   │       ├── SystemSettings.tsx
+│   │       └── UserManagement.tsx
+│   └── [future-modules]/     # Sales, HR, Inventory, etc.
 │
-├── components/                # Shared components
-│   ├── ui/                   # Reusable UI components (shadcn/ui)
-│   └── layout/               # Layout components (sidebar, header, etc.)
+├── components/               # Global/shared components
+│   ├── ui/                  # Reusable UI components (shadcn/ui)
+│   ├── layout/              # Application layout components
+│   │   ├── ERPLayout.tsx
+│   │   ├── ERPMainSidebar.tsx
+│   │   ├── VoucherModuleSidebar.tsx
+│   │   └── Header.tsx
+│   └── pages/               # Shared page components
+│       ├── LoginPage.tsx
+│       └── ModuleEmptyState.tsx
 │
-├── pages/                    # Top-level application pages
-├── types/                    # Global TypeScript types
-├── constants/                # Application constants and configs
-├── routes/                   # Route definitions
-├── hooks/                    # Global React hooks
-├── lib/                      # Utility functions and libraries
-└── data/                     # Static data and configurations
+├── pages/                   # Top-level entry point pages
+│   ├── Index.tsx           # Main application entry
+│   ├── ERPHome.tsx         # ERP dashboard/home
+│   └── NotFound.tsx        # 404 page
+│
+├── types/                   # Global TypeScript types
+│   └── auth.ts             # Authentication & permission types
+│
+├── constants/               # Application-wide constants
+│   └── permissions.ts      # Role and permission definitions
+│
+├── hooks/                   # Global/shared hooks
+├── lib/                     # Utility functions and libraries
+├── routes/                  # Route configurations
+└── ...                     # Other global files (main.tsx, etc.)
 ```
 
-### Module Organization
+## 🏗️ Architecture Principles
 
-Each business module follows this structure:
+### 1. Modular Design
+- Each business domain (voucher, admin, sales, etc.) is a separate module
+- Modules are self-contained with their own pages, components, hooks, and types
+- Easy to add new modules without affecting existing code
 
-- **pages/**: All page-level components for the module
-- **components/**: Reusable components specific to the module
-- **hooks/**: React hooks specific to the module's functionality
-- **services/**: API calls and business logic services
-- **types/**: TypeScript interfaces and types for the module
+### 2. Separation of Concerns
+- **Business Logic**: Lives in respective modules (`src/modules/`)
+- **Shared UI**: Common components in `src/components/ui/`
+- **Layout**: Application layout in `src/components/layout/`
+- **Global Types**: Shared types in `src/types/`
+- **Constants**: Application constants in `src/constants/`
+
+### 3. Role-Based Access Control (RBAC)
+- Comprehensive permission system with module and feature-level access
+- Supports multiple user roles: ERP Admin, Voucher Admin, Telesales, Custom
+- Easy to extend with new roles and permissions
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-
 - Node.js 18+ 
-- npm or bun
+- npm or yarn or bun
 
 ### Installation
-
 ```bash
 # Clone the repository
 git clone <repository-url>
@@ -64,173 +100,137 @@ npm run dev
 bun dev
 ```
 
-## 👥 User Roles & Permissions
+### Demo Accounts
+The application includes demo accounts for testing:
 
-The system supports role-based access control with the following predefined roles:
+| Username | Role | Password | Access Level |
+|----------|------|----------|--------------|
+| `admin` | ERP Admin | any | Full system access |
+| `voucher_admin` | Voucher Admin | any | Voucher module + dashboard |
+| `telesales` | Telesales | any | Limited voucher access |
+| `custom` | Custom | any | Dashboard only |
 
-### ERP Admin
-- Full access to all modules and features
-- User management capabilities
-- System settings configuration
-- Complete voucher module access
+## 📦 Adding New Modules
 
-### Voucher Admin
-- Full access to voucher module
-- Analytics and reporting
-- Voucher settings management
-- Can view all vouchers
+To add a new business module (e.g., `sales`):
 
-### Telesales
-- Limited voucher module access
-- Can issue and manage own vouchers
-- Access to leaderboard
-- Cannot access analytics or settings
+1. **Create Module Structure**:
+```bash
+src/modules/sales/
+├── pages/
+├── components/
+├── hooks/
+├── services/     # Optional
+└── types/        # Optional
+```
 
-### Custom Role
-- Configurable permissions
-- Module access can be customized
-- Feature-level permission control
+2. **Update Types** (`src/types/auth.ts`):
+```typescript
+export type ERPModule = 
+  | 'dashboard' 
+  | 'voucher'
+  | 'sales'      // Add new module
+  | ...
+```
 
-## 🔐 Authentication & Demo
+3. **Update Permissions** (`src/constants/permissions.ts`):
+```typescript
+export const MODULE_PERMISSIONS: ModulePermission[] = [
+  // ... existing modules
+  {
+    module: 'sales',
+    label: 'Bán Hàng',
+    icon: 'TrendingUp',
+    allowedRoles: ['erp-admin', 'sales-manager']
+  }
+];
+```
 
-For demonstration purposes, the following test accounts are available:
+4. **Add Route Handling** (`src/pages/Index.tsx`):
+```typescript
+// Import module pages
+import { SalesDashboard } from '@/modules/sales/pages/SalesDashboard';
 
-- **Username:** `admin` - ERP Administrator
-- **Username:** `voucher_admin` - Voucher Module Administrator  
-- **Username:** `telesales` - Telesales User
-- **Username:** `custom` - Custom Role User
+// Add to renderMainContent()
+if (currentModule === 'sales') {
+  return <SalesDashboard />;
+}
+```
 
-All accounts use any password for demo login.
+## 🔧 Technologies Used
 
-## 📱 Modules
+- **React 18** - UI framework
+- **TypeScript** - Type safety
+- **Tailwind CSS** - Utility-first CSS
+- **shadcn/ui** - Component library
+- **Lucide React** - Icon library
+- **React Router** - Client-side routing
+- **Vite** - Build tool
 
-### Current Modules
+## 🎯 Key Features
 
-#### Voucher Management
-- **Dashboard**: Overview and statistics
-- **Issue Voucher**: Create new vouchers for customers
-- **Voucher List**: View and manage vouchers (with privacy controls)
-- **Analytics**: Reports and performance analysis
-- **Leaderboard**: Staff performance rankings
-- **Settings**: Module configuration
+- **Modular Architecture**: Easy to extend and maintain
+- **Role-Based Access Control**: Comprehensive permission system
+- **Responsive Design**: Works on all device sizes
+- **TypeScript**: Full type safety throughout the application
+- **Component Library**: Consistent UI with shadcn/ui
+- **Vietnamese Localization**: Fully localized for Vietnamese users
 
-#### Other Modules (UI Scaffolding)
-- Customer Management
-- Sales Management
-- Inventory Management
-- Accounting
-- Human Resources
-- System Settings
-- User Management
-
-## 🛠️ Adding New Modules
-
-To add a new business module:
-
-1. **Create Module Directory Structure**
-   ```bash
-   src/modules/your-module/
-   ├── components/
-   ├── hooks/
-   ├── pages/
-   ├── services/
-   └── types/
-   ```
-
-2. **Define Module Types**
-   ```typescript
-   // src/modules/your-module/types/index.ts
-   export interface YourModuleData {
-     // Define your interfaces
-   }
-   ```
-
-3. **Create Module Pages**
-   ```typescript
-   // src/modules/your-module/pages/YourModuleDashboard.tsx
-   export function YourModuleDashboard() {
-     // Your page component
-   }
-   ```
-
-4. **Update Route Configuration**
-   ```typescript
-   // src/routes/index.ts
-   export const ROUTES = {
-     // Add your module routes
-     YOUR_MODULE: '/your-module',
-   }
-   ```
-
-5. **Configure Permissions**
-   ```typescript
-   // src/constants/permissions.ts
-   // Add module to MODULE_PERMISSIONS array
-   ```
-
-6. **Register in Main Application**
-   ```typescript
-   // src/pages/Index.tsx
-   // Import and add routing logic
-   ```
-
-## 🎨 Styling & UI
-
-- **Framework**: Tailwind CSS for utility-first styling
-- **Components**: shadcn/ui for consistent, accessible components
-- **Theme**: Customizable color schemes per module
-- **Responsive**: Mobile-first responsive design
-
-## 🔧 Development Guidelines
-
-### File Naming Conventions
-- Use PascalCase for component files: `VoucherDashboard.tsx`
-- Use camelCase for utility functions: `formatCurrency.ts`
-- Use kebab-case for non-component files: `api-client.ts`
-
-### Component Structure
-- Keep components focused and single-responsibility
-- Use TypeScript interfaces for all props
-- Implement proper error boundaries
-- Follow React hooks best practices
+## 📝 Development Guidelines
 
 ### Module Development
-- Each module should be self-contained
-- Avoid cross-module dependencies (use shared utilities instead)
-- Implement proper TypeScript types
-- Include comprehensive empty states
+- Keep modules self-contained and independent
+- Use descriptive naming (e.g., `VoucherDashboard.tsx` not `Dashboard.tsx`)
+- Follow the established folder structure within modules
+- Import shared components from `@/components/ui/` and `@/components/layout/`
 
-## 📊 Features
+### Naming Conventions
+- Files: PascalCase for components (`VoucherDashboard.tsx`)
+- Folders: lowercase with hyphens (`voucher-analytics`)
+- Constants: UPPER_SNAKE_CASE
+- Functions: camelCase
 
-### Implemented Features
-- ✅ Role-based authentication
-- ✅ Modular architecture
-- ✅ Voucher management system
-- ✅ Permission-based navigation
-- ✅ Responsive design
-- ✅ Vietnamese localization
-- ✅ Empty state handling
+### Adding New Features
+1. Determine if it's module-specific or global
+2. Place in appropriate folder following the structure
+3. Update types and permissions if needed
+4. Add proper TypeScript types
+5. Test with different user roles
 
-### Planned Features
-- 🔄 API integration
-- 🔄 Real-time notifications
-- 🔄 Advanced reporting
-- 🔄 Multi-language support
-- 🔄 Audit logging
-- 🔄 Data export capabilities
+## 🔐 Permission System
 
-## 🤝 Contributing
+The application uses a hierarchical permission system:
 
-1. Follow the modular architecture patterns
-2. Maintain TypeScript strict mode compliance
-3. Add proper documentation for new modules
-4. Ensure responsive design implementation
-5. Include proper error handling and empty states
+1. **Module Level**: Controls access to entire modules
+2. **Feature Level**: Controls access to specific features within modules
+3. **Action Level**: Controls specific actions (view all, manage users, etc.)
+
+Example permission structure:
+```typescript
+{
+  modules: ['dashboard', 'voucher'],
+  voucherFeatures: ['voucher-dashboard', 'issue-voucher'],
+  canManageUsers: false,
+  canViewAllVouchers: true
+}
+```
+
+## 🚀 Deployment
+
+The application can be deployed to any static hosting service:
+
+```bash
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+```
 
 ## 📄 License
 
-This project is proprietary software. All rights reserved.
+This project is proprietary software for internal company use.
 
 ---
 
-For questions or support, please refer to the project documentation or contact the development team.
+**Note**: This is a demo implementation focusing on structure and UI patterns. Business logic and data integration would be implemented based on specific requirements.

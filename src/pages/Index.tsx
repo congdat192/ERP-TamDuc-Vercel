@@ -12,6 +12,12 @@ import { VoucherAnalytics } from '@/modules/voucher/pages/VoucherAnalytics';
 import { VoucherLeaderboard } from '@/modules/voucher/pages/VoucherLeaderboard';
 import { VoucherSettings } from '@/modules/voucher/pages/VoucherSettings';
 
+// Admin module pages
+import { AuditLog } from '@/modules/admin/pages/AuditLog';
+import { RolePermissions } from '@/modules/admin/pages/RolePermissions';
+import { SystemSettings } from '@/modules/admin/pages/SystemSettings';
+import { UserManagement } from '@/modules/admin/pages/UserManagement';
+
 import { ERPModule, VoucherFeature, User } from '@/types/auth';
 import { DEFAULT_PERMISSIONS } from '@/constants/permissions';
 
@@ -106,6 +112,14 @@ const Index = () => {
         default:
           return <VoucherDashboard />;
       }
+    }
+
+    // Admin module pages
+    if (currentModule === 'system-settings') {
+      return <SystemSettings />;
+    }
+    if (currentModule === 'user-management') {
+      return <UserManagement />;
     }
 
     // Other modules show empty state
