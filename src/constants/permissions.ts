@@ -91,5 +91,11 @@ export const DEFAULT_PERMISSIONS = {
     voucherFeatures: [] as VoucherFeature[],
     canManageUsers: false,
     canViewAllVouchers: false
+  },
+  'platform-admin': {
+    modules: ['dashboard'] as ERPModule[],
+    voucherFeatures: [] as VoucherFeature[],
+    canManageUsers: true,
+    canViewAllVouchers: true
   }
 };

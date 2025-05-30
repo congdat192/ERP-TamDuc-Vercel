@@ -111,6 +111,28 @@ const mockUsers: User[] = [
       sessionTimeoutMinutes: 120
     },
     activities: []
+  },
+  {
+    id: '5',
+    username: 'platform_admin',
+    fullName: 'Quản Trị Nền Tảng',
+    role: 'platform-admin',
+    email: 'platform.admin@company.com',
+    phone: '0901234571',
+    status: 'active',
+    notes: 'Platform Super Administrator',
+    createdAt: new Date('2024-01-01'),
+    lastLogin: new Date('2024-05-30T10:00:00'),
+    emailVerified: true,
+    permissions: DEFAULT_PERMISSIONS['platform-admin'],
+    securitySettings: {
+      twoFactorEnabled: true,
+      loginAttemptLimit: 5,
+      passwordChangeRequired: false,
+      lastPasswordChange: new Date('2024-01-01'),
+      sessionTimeoutMinutes: 480
+    },
+    activities: []
   }
 ];
 

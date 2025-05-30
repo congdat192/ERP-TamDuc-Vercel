@@ -2,7 +2,8 @@ export type UserRole =
   | 'erp-admin' 
   | 'voucher-admin' 
   | 'telesales' 
-  | 'custom';
+  | 'custom'
+  | 'platform-admin';
 
 export type ERPModule = 
   | 'dashboard' 

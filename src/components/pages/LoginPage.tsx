@@ -88,6 +88,7 @@ export function LoginPage({ onLogin, mockUsers, loginAttempts = 0 }: LoginPagePr
       case 'voucher-admin': return 'Quản Lý Voucher';
       case 'telesales': return 'Nhân Viên Telesales';
       case 'custom': return 'Vai Trò Tùy Chỉnh';
+      case 'platform-admin': return 'Quản Trị Nền Tảng';
       default: return 'Người Dùng';
     }
   };
@@ -98,6 +99,7 @@ export function LoginPage({ onLogin, mockUsers, loginAttempts = 0 }: LoginPagePr
       case 'voucher-admin': return 'bg-blue-100 text-blue-800';
       case 'telesales': return 'bg-green-100 text-green-800';
       case 'custom': return 'bg-gray-100 text-gray-800';
+      case 'platform-admin': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
