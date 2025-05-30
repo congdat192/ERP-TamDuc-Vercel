@@ -8,6 +8,7 @@ import { ErrorBoundary } from "@/components/layout/ErrorBoundary";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { ForbiddenPage, ServerErrorPage, NetworkErrorPage } from "./pages/ErrorPages";
+import { AdminRoutes } from "./routes/adminRoutes";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,6 +35,9 @@ const App = () => (
             <Route path="/403" element={<ForbiddenPage />} />
             <Route path="/500" element={<ServerErrorPage />} />
             <Route path="/network-error" element={<NetworkErrorPage />} />
+            {/* Admin Routes */}
+            <Route path="/admin/*" element={<AdminRoutes />} />
+            <Route path="/system-settings/*" element={<AdminRoutes />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
