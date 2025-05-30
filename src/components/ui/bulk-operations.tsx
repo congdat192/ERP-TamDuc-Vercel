@@ -266,7 +266,12 @@ export const BulkSelectHeader = ({
     <Checkbox
       checked={isAllSelected}
       ref={(el) => {
-        if (el) el.indeterminate = isIndeterminate;
+        if (el) {
+          const checkbox = el.querySelector('input[type="checkbox"]') as HTMLInputElement;
+          if (checkbox) {
+            checkbox.indeterminate = isIndeterminate;
+          }
+        }
       }}
       onCheckedChange={() => {
         if (isAllSelected || isIndeterminate) {

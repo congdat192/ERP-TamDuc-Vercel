@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { 
   Keyboard, 
@@ -11,8 +10,8 @@ import {
   X,
   ArrowUp,
   ArrowDown,
-  Enter,
-  Escape
+  CornerDownLeft,
+  Zap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -154,9 +153,9 @@ const KeyBadge = ({ keyName, inline = false }: KeyBadgeProps) => {
   const getKeyIcon = (key: string) => {
     switch (key.toLowerCase()) {
       case 'enter':
-        return <Enter className="w-3 h-3" />;
+        return <CornerDownLeft className="w-3 h-3" />;
       case 'escape':
-        return <Escape className="w-3 h-3" />;
+        return <Zap className="w-3 h-3" />;
       case '↑':
         return <ArrowUp className="w-3 h-3" />;
       case '↓':
