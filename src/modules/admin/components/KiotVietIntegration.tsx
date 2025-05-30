@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,7 +21,7 @@ import {
   Package,
   CreditCard
 } from 'lucide-react';
-import { KiotVietIntegration, KiotVietApiGroup, ConnectionTestResult } from '../types/settings';
+import type { KiotVietIntegration as KiotVietIntegrationType, KiotVietApiGroup, ConnectionTestResult } from '../types/settings';
 
 const availableApiGroups: KiotVietApiGroup[] = [
   {
@@ -66,8 +65,8 @@ const apiGroupIcons = {
 };
 
 interface KiotVietIntegrationProps {
-  integration?: KiotVietIntegration;
-  onSave: (config: Partial<KiotVietIntegration>) => void;
+  integration?: KiotVietIntegrationType;
+  onSave: (config: Partial<KiotVietIntegrationType>) => void;
   onDisconnect?: () => void;
 }
 
@@ -170,7 +169,7 @@ export function KiotVietIntegration({ integration, onSave, onDisconnect }: KiotV
       return;
     }
 
-    const config: Partial<KiotVietIntegration> = {
+    const config: Partial<KiotVietIntegrationType> = {
       retailerName: formData.retailerName,
       clientId: formData.clientId,
       isConnected: true,
