@@ -29,7 +29,21 @@ const mockUsers: User[] = [
     fullName: 'Quản Trị Viên',
     role: 'erp-admin',
     email: 'admin@company.com',
-    permissions: DEFAULT_PERMISSIONS['erp-admin']
+    phone: '0901234567',
+    status: 'active',
+    notes: 'System Administrator',
+    createdAt: new Date('2024-01-15'),
+    lastLogin: new Date('2024-05-29T14:30:00'),
+    emailVerified: true,
+    permissions: DEFAULT_PERMISSIONS['erp-admin'],
+    securitySettings: {
+      twoFactorEnabled: true,
+      loginAttemptLimit: 5,
+      passwordChangeRequired: false,
+      lastPasswordChange: new Date('2024-01-15'),
+      sessionTimeoutMinutes: 480
+    },
+    activities: []
   },
   {
     id: '2',
@@ -37,7 +51,20 @@ const mockUsers: User[] = [
     fullName: 'Quản Lý Voucher',
     role: 'voucher-admin',
     email: 'voucher.admin@company.com',
-    permissions: DEFAULT_PERMISSIONS['voucher-admin']
+    phone: '0901234568',
+    status: 'active',
+    notes: 'Voucher Module Manager',
+    createdAt: new Date('2024-02-10'),
+    lastLogin: new Date('2024-05-29T16:45:00'),
+    emailVerified: true,
+    permissions: DEFAULT_PERMISSIONS['voucher-admin'],
+    securitySettings: {
+      twoFactorEnabled: false,
+      loginAttemptLimit: 3,
+      passwordChangeRequired: false,
+      sessionTimeoutMinutes: 240
+    },
+    activities: []
   },
   {
     id: '3',
@@ -45,7 +72,20 @@ const mockUsers: User[] = [
     fullName: 'Nhân Viên Telesales',
     role: 'telesales',
     email: 'telesales@company.com',
-    permissions: DEFAULT_PERMISSIONS['telesales']
+    phone: '0901234569',
+    status: 'locked',
+    notes: 'Telesales Staff - Temporary Lock',
+    createdAt: new Date('2024-03-05'),
+    lastLogin: new Date('2024-05-25T09:15:00'),
+    emailVerified: true,
+    permissions: DEFAULT_PERMISSIONS['telesales'],
+    securitySettings: {
+      twoFactorEnabled: false,
+      loginAttemptLimit: 3,
+      passwordChangeRequired: true,
+      sessionTimeoutMinutes: 120
+    },
+    activities: []
   },
   {
     id: '4',
@@ -53,7 +93,20 @@ const mockUsers: User[] = [
     fullName: 'Người Dùng Tùy Chỉnh',
     role: 'custom',
     email: 'custom@company.com',
-    permissions: DEFAULT_PERMISSIONS['custom']
+    phone: '0901234570',
+    status: 'pending_verification',
+    notes: 'New employee - pending email verification',
+    createdAt: new Date('2024-05-28'),
+    lastLogin: undefined,
+    emailVerified: false,
+    permissions: DEFAULT_PERMISSIONS['custom'],
+    securitySettings: {
+      twoFactorEnabled: false,
+      loginAttemptLimit: 3,
+      passwordChangeRequired: true,
+      sessionTimeoutMinutes: 120
+    },
+    activities: []
   }
 ];
 

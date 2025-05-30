@@ -151,6 +151,10 @@ export function UserEditModal({ isOpen, onClose, user, onUserUpdated }: UserEdit
     feature.allowedRoles.includes(formData.role)
   );
 
+  // Check if user can have special permissions
+  const canManageUsers = formData.role === 'erp-admin';
+  const canViewAllVouchers = ['erp-admin', 'voucher-admin'].includes(formData.role);
+
   if (!user) return null;
 
   return (
@@ -290,7 +294,7 @@ export function UserEditModal({ isOpen, onClose, user, onUserUpdated }: UserEdit
                           canManageUsers: !!checked
                         }
                       }))}
-                      disabled={formData.role !== 'erp-admin'}
+                      disabled={!canManageUsers}
                     />
                     <Label htmlFor="canManageUsers" className="text-sm">
                       Có thể quản lý người dùng
@@ -308,7 +312,7 @@ export function UserEditModal({ isOpen, onClose, user, onUserUpdated }: UserEdit
                           canViewAllVouchers: !!checked
                         }
                       }))}
-                      disabled={!['erp-admin', 'voucher-admin'].includes(formData.role)}
+                      disabled={!canViewAllVouchers}
                     />
                     <Label htmlFor="canViewAllVouchers" className="text-sm">
                       Có thể xem tất cả voucher
