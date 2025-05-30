@@ -2,89 +2,82 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import { 
   Shield, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Users,
-  Key,
-  Lock,
+  Users, 
+  Settings,
+  Plus,
+  Edit,
+  Trash2,
   CheckCircle,
   XCircle
 } from 'lucide-react';
 
-const mockRoles = [
+const roleData = [
   {
     id: 1,
     name: 'Quản Trị Viên',
-    description: 'Toàn quyền truy cập hệ thống',
+    description: 'Quyền truy cập đầy đủ vào tất cả chức năng hệ thống',
     userCount: 3,
     permissions: {
-      dashboard: true,
-      issueVoucher: true,
-      voucherList: true,
-      analytics: true,
-      leaderboard: true,
-      customerList: true,
-      userManagement: true,
-      systemSettings: true,
-      auditLog: true,
-      rolePermissions: true
-    }
+      voucher: { read: true, write: true, delete: true },
+      customer: { read: true, write: true, delete: true },
+      analytics: { read: true, write: true, delete: false },
+      leaderboard: { read: true, write: true, delete: false },
+      userManagement: { read: true, write: true, delete: true },
+      systemSettings: { read: true, write: true, delete: true },
+      auditLog: { read: true, write: false, delete: false },
+      rolePermissions: { read: true, write: true, delete: true }
+    },
+    isSystem: true
   },
   {
     id: 2,
     name: 'Nhân Viên Telesales',
-    description: 'Nhân viên bán hàng qua điện thoại',
+    description: 'Quyền phát hành voucher và quản lý khách hàng cơ bản',
     userCount: 18,
     permissions: {
-      dashboard: true,
-      issueVoucher: true,
-      voucherList: true,
-      analytics: true,
-      leaderboard: true,
-      customerList: true,
-      userManagement: false,
-      systemSettings: false,
-      auditLog: false,
-      rolePermissions: false
-    }
+      voucher: { read: true, write: true, delete: false },
+      customer: { read: true, write: true, delete: false },
+      analytics: { read: true, write: false, delete: false },
+      leaderboard: { read: true, write: false, delete: false },
+      userManagement: { read: false, write: false, delete: false },
+      systemSettings: { read: false, write: false, delete: false },
+      auditLog: { read: false, write: false, delete: false },
+      rolePermissions: { read: false, write: false, delete: false }
+    },
+    isSystem: true
   },
   {
     id: 3,
-    name: 'Trưởng Nhóm',
-    description: 'Quản lý nhóm telesales',
-    userCount: 2,
+    name: 'Trưởng Nhóm Telesales',
+    description: 'Quyền quản lý nhóm và xem báo cáo chi tiết',
+    userCount: 3,
     permissions: {
-      dashboard: true,
-      issueVoucher: true,
-      voucherList: true,
-      analytics: true,
-      leaderboard: true,
-      customerList: true,
-      userManagement: false,
-      systemSettings: false,
-      auditLog: true,
-      rolePermissions: false
-    }
+      voucher: { read: true, write: true, delete: true },
+      customer: { read: true, write: true, delete: true },
+      analytics: { read: true, write: true, delete: false },
+      leaderboard: { read: true, write: true, delete: false },
+      userManagement: { read: true, write: false, delete: false },
+      systemSettings: { read: true, write: false, delete: false },
+      auditLog: { read: true, write: false, delete: false },
+      rolePermissions: { read: true, write: false, delete: false }
+    },
+    isSystem: false
   }
 ];
 
 const permissionLabels = {
-  dashboard: 'Bảng Điều Khiển',
-  issueVoucher: 'Phát Hành Voucher',
-  voucherList: 'Danh Sách Voucher',
+  voucher: 'Quản Lý Voucher',
+  customer: 'Quản Lý Khách Hàng',
   analytics: 'Báo Cáo Phân Tích',
   leaderboard: 'Bảng Xếp Hạng',
-  customerList: 'Danh Sách Khách Hàng',
   userManagement: 'Quản Lý Người Dùng',
   systemSettings: 'Cài Đặt Hệ Thống',
   auditLog: 'Nhật Ký Hoạt Động',
@@ -92,41 +85,87 @@ const permissionLabels = {
 };
 
 export function RolePermissions() {
-  const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
-  const [selectedRole, setSelectedRole] = useState(mockRoles[0]);
+  const [selectedRole, setSelectedRole] = useState<any>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+
+  const handleEditRole = (role: any) => {
+    setSelectedRole(role);
+    setShowEditDialog(true);
+  };
+
+  const getPermissionIcon = (hasPermission: boolean) => {
+    return hasPermission ? 
+      <CheckCircle className="w-4 h-4 text-green-500" /> : 
+      <XCircle className="w-4 h-4 text-red-500" />;
+  };
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Phân Quyền & Vai Trò</h2>
-          <p className="text-gray-600">Quản lý vai trò và phân quyền truy cập các chức năng hệ thống</p>
+          <h2 className="text-2xl font-bold text-gray-900">Phân Quyền Vai Trò</h2>
+          <p className="text-gray-600">Quản lý vai trò và quyền truy cập trong hệ thống</p>
         </div>
         
-        <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
+        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
-            <Button className="bg-purple-600 hover:bg-purple-700">
+            <Button className="bg-blue-600 hover:bg-blue-700">
               <Plus className="w-4 h-4 mr-2" />
               Tạo Vai Trò Mới
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Tạo Vai Trò Mới</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Tên vai trò</Label>
-                <Input placeholder="VD: Nhân viên kỹ thuật" />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Tên vai trò</Label>
+                  <Input placeholder="Nhập tên vai trò" />
+                </div>
+                <div>
+                  <Label>Số lượng người dùng</Label>
+                  <Input type="number" placeholder="0" disabled />
+                </div>
               </div>
-              <div className="space-y-2">
+              <div>
                 <Label>Mô tả</Label>
-                <Input placeholder="Mô tả chi tiết về vai trò" />
+                <Textarea placeholder="Mô tả vai trò và trách nhiệm" rows={3} />
               </div>
+              
+              <div className="space-y-4">
+                <h4 className="font-semibold">Phân Quyền</h4>
+                <div className="grid grid-cols-1 gap-4">
+                  {Object.entries(permissionLabels).map(([key, label]) => (
+                    <div key={key} className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h5 className="font-medium">{label}</h5>
+                      </div>
+                      <div className="flex space-x-6">
+                        <div className="flex items-center space-x-2">
+                          <Switch id={`${key}-read`} />
+                          <Label htmlFor={`${key}-read`} className="text-sm">Xem</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch id={`${key}-write`} />
+                          <Label htmlFor={`${key}-write`} className="text-sm">Sửa</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch id={`${key}-delete`} />
+                          <Label htmlFor={`${key}-delete`} className="text-sm">Xóa</Label>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
               <div className="flex space-x-2 pt-4">
                 <Button className="flex-1">Tạo Vai Trò</Button>
-                <Button variant="outline" onClick={() => setIsRoleDialogOpen(false)}>
+                <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
                   Hủy
                 </Button>
               </div>
@@ -135,223 +174,223 @@ export function RolePermissions() {
         </Dialog>
       </div>
 
-      <Tabs defaultValue="roles" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="roles">Quản Lý Vai Trò</TabsTrigger>
-          <TabsTrigger value="permissions">Ma Trận Phân Quyền</TabsTrigger>
-        </TabsList>
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <CardContent className="flex items-center p-6">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Shield className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Tổng Vai Trò</p>
+                <p className="text-2xl font-bold text-gray-900">{roleData.length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-        <TabsContent value="roles" className="space-y-6">
-          {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card>
-              <CardContent className="flex items-center p-6">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <Shield className="w-6 h-6 text-purple-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Tổng Vai Trò</p>
-                    <p className="text-2xl font-bold text-gray-900">{mockRoles.length}</p>
-                  </div>
+        <Card>
+          <CardContent className="flex items-center p-6">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <Users className="w-6 h-6 text-green-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Người Dùng</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {roleData.reduce((sum, role) => sum + role.userCount, 0)}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="flex items-center p-6">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <Settings className="w-6 h-6 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Quyền Hệ Thống</p>
+                <p className="text-2xl font-bold text-gray-900">8</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Roles Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {roleData.map((role) => (
+          <Card key={role.id} className="relative">
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">{role.name}</CardTitle>
+                <div className="flex items-center space-x-2">
+                  {role.isSystem && (
+                    <Badge variant="secondary" className="text-xs">
+                      Hệ Thống
+                    </Badge>
+                  )}
+                  <Badge variant="outline">{role.userCount} người</Badge>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="flex items-center p-6">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Users className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Người Dùng Được Phân Quyền</p>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {mockRoles.reduce((total, role) => total + role.userCount, 0)}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="flex items-center p-6">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                    <Key className="w-6 h-6 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Quyền Khả Dụng</p>
-                    <p className="text-2xl font-bold text-gray-900">
-                      {Object.keys(permissionLabels).length}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Roles Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Danh Sách Vai Trò</CardTitle>
+              </div>
             </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Vai Trò</TableHead>
-                    <TableHead>Số Người Dùng</TableHead>
-                    <TableHead>Quyền Được Cấp</TableHead>
-                    <TableHead className="text-right">Thao Tác</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {mockRoles.map((role) => {
-                    const grantedPermissions = Object.values(role.permissions).filter(p => p).length;
-                    const totalPermissions = Object.keys(role.permissions).length;
-                    
+            <CardContent className="space-y-4">
+              <p className="text-sm text-gray-600">{role.description}</p>
+              
+              <div className="space-y-3">
+                <h4 className="font-medium text-sm">Quyền Truy Cập:</h4>
+                <div className="grid grid-cols-1 gap-2">
+                  {Object.entries(role.permissions).map(([key, perms]) => {
+                    const hasAnyPermission = perms.read || perms.write || perms.delete;
                     return (
-                      <TableRow key={role.id}>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium text-gray-900">{role.name}</p>
-                            <p className="text-sm text-gray-500">{role.description}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary">
-                            <Users className="w-3 h-3 mr-1" />
-                            {role.userCount} người
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <div className="flex-1 bg-gray-200 rounded-full h-2">
-                              <div 
-                                className="bg-green-600 h-2 rounded-full" 
-                                style={{ width: `${(grantedPermissions / totalPermissions) * 100}%` }}
-                              ></div>
-                            </div>
-                            <span className="text-sm text-gray-600">
-                              {grantedPermissions}/{totalPermissions}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end space-x-1">
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => setSelectedRole(role)}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm" className="text-red-600">
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
+                      <div key={key} className="flex items-center justify-between text-sm">
+                        <span className="text-gray-700">
+                          {permissionLabels[key as keyof typeof permissionLabels]}
+                        </span>
+                        <div className="flex items-center space-x-1">
+                          {perms.read && (
+                            <Badge variant="outline" className="text-xs px-1 py-0">
+                              Xem
+                            </Badge>
+                          )}
+                          {perms.write && (
+                            <Badge variant="outline" className="text-xs px-1 py-0">
+                              Sửa
+                            </Badge>
+                          )}
+                          {perms.delete && (
+                            <Badge variant="outline" className="text-xs px-1 py-0">
+                              Xóa
+                            </Badge>
+                          )}
+                          {!hasAnyPermission && (
+                            <Badge variant="secondary" className="text-xs px-1 py-0">
+                              Không
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
                     );
                   })}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-
-          {/* Role Permission Editor */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Lock className="w-5 h-5" />
-                <span>Chỉnh Sửa Quyền - {selectedRole.name}</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(permissionLabels).map(([key, label]) => (
-                  <div key={key} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      {selectedRole.permissions[key as keyof typeof selectedRole.permissions] ? (
-                        <CheckCircle className="w-5 h-5 text-green-600" />
-                      ) : (
-                        <XCircle className="w-5 h-5 text-red-600" />
-                      )}
-                      <div>
-                        <p className="font-medium">{label}</p>
-                        <p className="text-sm text-gray-500">
-                          {key === 'dashboard' && 'Truy cập bảng điều khiển chính'}
-                          {key === 'issueVoucher' && 'Phát hành voucher cho khách hàng'}
-                          {key === 'voucherList' && 'Xem và quản lý danh sách voucher'}
-                          {key === 'analytics' && 'Truy cập báo cáo và phân tích'}
-                          {key === 'leaderboard' && 'Xem bảng xếp hạng nhân viên'}
-                          {key === 'customerList' && 'Quản lý thông tin khách hàng'}
-                          {key === 'userManagement' && 'Quản lý tài khoản người dùng'}
-                          {key === 'systemSettings' && 'Cấu hình hệ thống'}
-                          {key === 'auditLog' && 'Xem nhật ký hoạt động'}
-                          {key === 'rolePermissions' && 'Quản lý vai trò và phân quyền'}
-                        </p>
-                      </div>
-                    </div>
-                    <Switch 
-                      checked={selectedRole.permissions[key as keyof typeof selectedRole.permissions]}
-                    />
-                  </div>
-                ))}
+                </div>
               </div>
               
-              <div className="flex justify-end space-x-2 mt-6">
-                <Button variant="outline">Hủy Thay Đổi</Button>
-                <Button className="bg-green-600 hover:bg-green-700">
-                  Lưu Phân Quyền
+              <div className="flex space-x-2 pt-4 border-t">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1"
+                  onClick={() => handleEditRole(role)}
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Chỉnh Sửa
+                </Button>
+                {!role.isSystem && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Edit Role Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Chỉnh Sửa Vai Trò: {selectedRole?.name}</DialogTitle>
+          </DialogHeader>
+          
+          {selectedRole && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Tên vai trò</Label>
+                  <Input value={selectedRole.name} disabled={selectedRole.isSystem} />
+                </div>
+                <div>
+                  <Label>Số lượng người dùng</Label>
+                  <Input value={selectedRole.userCount} disabled />
+                </div>
+              </div>
+              
+              <div>
+                <Label>Mô tả</Label>
+                <Textarea value={selectedRole.description} rows={3} />
+              </div>
+              
+              <div className="space-y-4">
+                <h4 className="font-semibold">Chi Tiết Phân Quyền</h4>
+                <div className="space-y-4">
+                  {Object.entries(selectedRole.permissions).map(([key, perms]) => (
+                    <div key={key} className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h5 className="font-medium">
+                          {permissionLabels[key as keyof typeof permissionLabels]}
+                        </h5>
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="flex items-center space-x-2">
+                          <Switch 
+                            checked={perms.read} 
+                            disabled={selectedRole.isSystem}
+                          />
+                          <Label className="text-sm">Xem</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch 
+                            checked={perms.write} 
+                            disabled={selectedRole.isSystem}
+                          />
+                          <Label className="text-sm">Thêm/Sửa</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch 
+                            checked={perms.delete} 
+                            disabled={selectedRole.isSystem}
+                          />
+                          <Label className="text-sm">Xóa</Label>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="flex space-x-2 pt-4">
+                <Button 
+                  className="flex-1"
+                  disabled={selectedRole.isSystem}
+                >
+                  Lưu Thay Đổi
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowEditDialog(false)}
+                >
+                  Hủy
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="permissions" className="space-y-6">
-          {/* Permission Matrix */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Ma Trận Phân Quyền</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr>
-                      <th className="text-left p-3 border-b font-medium">Chức Năng</th>
-                      {mockRoles.map(role => (
-                        <th key={role.id} className="text-center p-3 border-b font-medium min-w-32">
-                          {role.name}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Object.entries(permissionLabels).map(([key, label]) => (
-                      <tr key={key} className="border-b">
-                        <td className="p-3 font-medium">{label}</td>
-                        {mockRoles.map(role => (
-                          <td key={role.id} className="p-3 text-center">
-                            {role.permissions[key as keyof typeof role.permissions] ? (
-                              <CheckCircle className="w-5 h-5 text-green-600 mx-auto" />
-                            ) : (
-                              <XCircle className="w-5 h-5 text-red-600 mx-auto" />
-                            )}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+              
+              {selectedRole.isSystem && (
+                <p className="text-sm text-orange-600 bg-orange-50 p-3 rounded-lg">
+                  Vai trò hệ thống không thể chỉnh sửa để đảm bảo tính bảo mật.
+                </p>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

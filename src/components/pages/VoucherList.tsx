@@ -23,67 +23,67 @@ const voucherData = [
   {
     id: 1,
     code: 'VCH-2024-001',
-    customerName: 'Alice Johnson',
-    customerPhone: '+1 (555) 123-4567',
+    customerName: 'Nguyễn Thị Hoa',
+    customerPhone: '0901234567',
     customerType: 'Premium',
-    value: '$50',
+    value: '500.000đ',
     status: 'active',
-    issuedBy: 'John Smith',
-    issueDate: '2024-01-20',
-    expiryDate: '2024-02-20',
-    notes: 'First-time customer promotion'
+    issuedBy: 'Nguyễn Văn An',
+    issueDate: '20/01/2024',
+    expiryDate: '20/02/2024',
+    notes: 'Khuyến mãi khách hàng lần đầu'
   },
   {
     id: 2,
     code: 'VCH-2024-002',
-    customerName: 'Bob Wilson',
-    customerPhone: '+1 (555) 987-6543',
-    customerType: 'Regular',
-    value: '$25',
+    customerName: 'Trần Văn Nam',
+    customerPhone: '0907654321',
+    customerType: 'Thường',
+    value: '250.000đ',
     status: 'used',
-    issuedBy: 'Jane Doe',
-    issueDate: '2024-01-19',
-    expiryDate: '2024-02-19',
-    notes: 'Referral bonus'
+    issuedBy: 'Trần Thị Lan',
+    issueDate: '19/01/2024',
+    expiryDate: '19/02/2024',
+    notes: 'Thưởng giới thiệu'
   },
   {
     id: 3,
     code: 'VCH-2024-003',
-    customerName: 'Carol Davis',
-    customerPhone: '+1 (555) 456-7890',
+    customerName: 'Lê Thị Minh',
+    customerPhone: '0909876543',
     customerType: 'VIP',
-    value: '$100',
+    value: '1.000.000đ',
     status: 'active',
-    issuedBy: 'Mike Brown',
-    issueDate: '2024-01-18',
-    expiryDate: '2024-02-18',
-    notes: 'VIP loyalty reward'
+    issuedBy: 'Lê Minh Cường',
+    issueDate: '18/01/2024',
+    expiryDate: '18/02/2024',
+    notes: 'Phần thưởng khách hàng VIP'
   },
   {
     id: 4,
     code: 'VCH-2024-004',
-    customerName: 'David Lee',
-    customerPhone: '+1 (555) 321-0987',
-    customerType: 'New',
-    value: '$30',
+    customerName: 'Phạm Văn Tuấn',
+    customerPhone: '0902468135',
+    customerType: 'Mới',
+    value: '300.000đ',
     status: 'expired',
-    issuedBy: 'Sarah Johnson',
-    issueDate: '2024-01-01',
-    expiryDate: '2024-01-15',
-    notes: 'Welcome offer'
+    issuedBy: 'Phạm Thị Minh',
+    issueDate: '01/01/2024',
+    expiryDate: '15/01/2024',
+    notes: 'Ưu đãi chào mừng'
   },
   {
     id: 5,
     code: 'VCH-2024-005',
-    customerName: 'Emma Thompson',
-    customerPhone: '+1 (555) 654-3210',
+    customerName: 'Vũ Thị Nga',
+    customerPhone: '0905432109',
     customerType: 'Premium',
-    value: '$75',
+    value: '750.000đ',
     status: 'cancelled',
-    issuedBy: 'Tom Wilson',
-    issueDate: '2024-01-17',
-    expiryDate: '2024-02-17',
-    notes: 'Customer request cancellation'
+    issuedBy: 'Vũ Thanh Hải',
+    issueDate: '17/01/2024',
+    expiryDate: '17/02/2024',
+    notes: 'Khách hàng yêu cầu hủy'
   }
 ];
 
@@ -106,6 +106,21 @@ export function VoucherList() {
         return 'bg-gray-100 text-gray-800';
       default:
         return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'Đang Hoạt Động';
+      case 'used':
+        return 'Đã Sử Dụng';
+      case 'expired':
+        return 'Hết Hạn';
+      case 'cancelled':
+        return 'Đã Hủy';
+      default:
+        return status;
     }
   };
 
@@ -132,15 +147,15 @@ export function VoucherList() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>Voucher Management</span>
+            <span>Quản Lý Voucher</span>
             <div className="flex space-x-2">
               <Button variant="outline" size="sm">
                 <Download className="w-4 h-4 mr-2" />
-                Export
+                Xuất File
               </Button>
               <Button variant="outline" size="sm">
                 <Printer className="w-4 h-4 mr-2" />
-                Print
+                In
               </Button>
             </div>
           </CardTitle>
@@ -151,7 +166,7 @@ export function VoucherList() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
-                  placeholder="Search by code, customer name, or phone..."
+                  placeholder="Tìm kiếm theo mã, tên khách hàng, hoặc số điện thoại..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -160,26 +175,26 @@ export function VoucherList() {
             </div>
             
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-40">
-                <SelectValue placeholder="Status" />
+              <SelectTrigger className="w-full md:w-48">
+                <SelectValue placeholder="Trạng thái" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="used">Used</SelectItem>
-                <SelectItem value="expired">Expired</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
+                <SelectItem value="all">Tất Cả Trạng Thái</SelectItem>
+                <SelectItem value="active">Đang Hoạt Động</SelectItem>
+                <SelectItem value="used">Đã Sử Dụng</SelectItem>
+                <SelectItem value="expired">Hết Hạn</SelectItem>
+                <SelectItem value="cancelled">Đã Hủy</SelectItem>
               </SelectContent>
             </Select>
             
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-full md:w-40">
-                <SelectValue placeholder="Customer Type" />
+              <SelectTrigger className="w-full md:w-48">
+                <SelectValue placeholder="Loại khách hàng" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="new">New</SelectItem>
-                <SelectItem value="regular">Regular</SelectItem>
+                <SelectItem value="all">Tất Cả Loại</SelectItem>
+                <SelectItem value="mới">Mới</SelectItem>
+                <SelectItem value="thường">Thường</SelectItem>
                 <SelectItem value="premium">Premium</SelectItem>
                 <SelectItem value="vip">VIP</SelectItem>
               </SelectContent>
@@ -192,9 +207,9 @@ export function VoucherList() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>Vouchers ({filteredVouchers.length})</span>
+            <span>Danh Sách Voucher ({filteredVouchers.length})</span>
             <Badge variant="secondary">
-              {filteredVouchers.filter(v => v.status === 'active').length} Active
+              {filteredVouchers.filter(v => v.status === 'active').length} Đang Hoạt Động
             </Badge>
           </CardTitle>
         </CardHeader>
@@ -203,15 +218,15 @@ export function VoucherList() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Voucher Code</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Value</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Issued By</TableHead>
-                  <TableHead>Issue Date</TableHead>
-                  <TableHead>Expiry Date</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>Mã Voucher</TableHead>
+                  <TableHead>Khách Hàng</TableHead>
+                  <TableHead>Loại</TableHead>
+                  <TableHead>Giá Trị</TableHead>
+                  <TableHead>Trạng Thái</TableHead>
+                  <TableHead>Người Phát Hành</TableHead>
+                  <TableHead>Ngày Phát Hành</TableHead>
+                  <TableHead>Ngày Hết Hạn</TableHead>
+                  <TableHead>Thao Tác</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -234,14 +249,14 @@ export function VoucherList() {
                     </TableCell>
                     <TableCell>
                       <Badge className={getStatusColor(voucher.status)}>
-                        {voucher.status.charAt(0).toUpperCase() + voucher.status.slice(1)}
+                        {getStatusText(voucher.status)}
                       </Badge>
                     </TableCell>
                     <TableCell>{voucher.issuedBy}</TableCell>
                     <TableCell>{voucher.issueDate}</TableCell>
                     <TableCell>{voucher.expiryDate}</TableCell>
                     <TableCell>
-                      <div className="flex space-x-2">
+                      <div className="flex space-x-1">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -266,66 +281,63 @@ export function VoucherList() {
       <Dialog open={showDetails} onOpenChange={setShowDetails}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="flex items-center space-x-2">
-              <Eye className="w-5 h-5" />
-              <span>Voucher Details</span>
-            </DialogTitle>
+            <DialogTitle>Chi Tiết Voucher</DialogTitle>
           </DialogHeader>
           
           {selectedVoucher && (
             <div className="space-y-6">
               {/* Voucher Code Display */}
-              <div className="bg-gray-50 border rounded-lg p-4 text-center">
-                <div className="text-3xl font-mono font-bold text-gray-900 mb-2">
+              <div className="text-center p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border">
+                <div className="text-3xl font-mono font-bold text-blue-800 mb-2">
                   {selectedVoucher.code}
                 </div>
                 <div className="text-xl font-semibold text-green-600">
-                  Value: {selectedVoucher.value}
+                  {selectedVoucher.value}
                 </div>
-                <Badge className={getStatusColor(selectedVoucher.status)} variant="secondary">
-                  {selectedVoucher.status.charAt(0).toUpperCase() + selectedVoucher.status.slice(1)}
+                <Badge className={`mt-2 ${getStatusColor(selectedVoucher.status)}`}>
+                  {getStatusText(selectedVoucher.status)}
                 </Badge>
               </div>
 
               {/* Customer Information */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                  <h3 className="font-semibold text-gray-900 flex items-center">
-                    <User className="w-4 h-4 mr-2" />
-                    Customer Information
+                  <h3 className="font-semibold text-lg flex items-center">
+                    <User className="w-5 h-5 mr-2" />
+                    Thông Tin Khách Hàng
                   </h3>
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Name:</span>
+                      <span className="text-gray-600">Tên:</span>
                       <span className="font-medium">{selectedVoucher.customerName}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Phone:</span>
+                      <span className="text-gray-600">Điện thoại:</span>
                       <span className="font-medium">{selectedVoucher.customerPhone}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Type:</span>
+                      <span className="text-gray-600">Loại:</span>
                       <Badge variant="outline">{selectedVoucher.customerType}</Badge>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  <h3 className="font-semibold text-gray-900 flex items-center">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    Voucher Details
+                  <h3 className="font-semibold text-lg flex items-center">
+                    <Calendar className="w-5 h-5 mr-2" />
+                    Thông Tin Voucher
                   </h3>
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Issued By:</span>
+                      <span className="text-gray-600">Người phát hành:</span>
                       <span className="font-medium">{selectedVoucher.issuedBy}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Issue Date:</span>
+                      <span className="text-gray-600">Ngày phát hành:</span>
                       <span className="font-medium">{selectedVoucher.issueDate}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Expiry Date:</span>
+                      <span className="text-gray-600">Ngày hết hạn:</span>
                       <span className="font-medium">{selectedVoucher.expiryDate}</span>
                     </div>
                   </div>
@@ -333,24 +345,22 @@ export function VoucherList() {
               </div>
 
               {/* Notes */}
-              {selectedVoucher.notes && (
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Notes</h3>
-                  <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
-                    {selectedVoucher.notes}
-                  </p>
-                </div>
-              )}
+              <div>
+                <h3 className="font-semibold text-lg mb-2">Ghi Chú</h3>
+                <p className="text-gray-600 bg-gray-50 p-3 rounded-lg">
+                  {selectedVoucher.notes || 'Không có ghi chú'}
+                </p>
+              </div>
 
-              {/* Actions */}
+              {/* Action Buttons */}
               <div className="flex justify-end space-x-2 pt-4 border-t">
                 <Button variant="outline">
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit Notes
+                  <Printer className="w-4 h-4 mr-2" />
+                  In Voucher
                 </Button>
                 <Button variant="outline">
-                  <Printer className="w-4 h-4 mr-2" />
-                  Print
+                  <Edit className="w-4 h-4 mr-2" />
+                  Chỉnh Sửa
                 </Button>
               </div>
             </div>

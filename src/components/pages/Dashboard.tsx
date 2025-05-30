@@ -15,27 +15,27 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 
 const dailyData = [
-  { name: 'Mon', vouchers: 45, used: 32 },
-  { name: 'Tue', vouchers: 52, used: 38 },
-  { name: 'Wed', vouchers: 38, used: 28 },
-  { name: 'Thu', vouchers: 61, used: 45 },
-  { name: 'Fri', vouchers: 58, used: 42 },
-  { name: 'Sat', vouchers: 42, used: 35 },
-  { name: 'Sun', vouchers: 35, used: 28 },
+  { name: 'T2', vouchers: 45, used: 32 },
+  { name: 'T3', vouchers: 52, used: 38 },
+  { name: 'T4', vouchers: 38, used: 28 },
+  { name: 'T5', vouchers: 61, used: 45 },
+  { name: 'T6', vouchers: 58, used: 42 },
+  { name: 'T7', vouchers: 42, used: 35 },
+  { name: 'CN', vouchers: 35, used: 28 },
 ];
 
 const statusData = [
-  { name: 'Active', value: 1245, color: '#22c55e' },
-  { name: 'Used', value: 892, color: '#3b82f6' },
-  { name: 'Expired', value: 156, color: '#ef4444' },
-  { name: 'Cancelled', value: 43, color: '#6b7280' },
+  { name: 'Đang Hoạt Động', value: 1245, color: '#22c55e' },
+  { name: 'Đã Sử Dụng', value: 892, color: '#3b82f6' },
+  { name: 'Hết Hạn', value: 156, color: '#ef4444' },
+  { name: 'Đã Hủy', value: 43, color: '#6b7280' },
 ];
 
 const recentVouchers = [
-  { id: 'VCH001', customer: 'Alice Johnson', phone: '+1 (555) 123-4567', value: '$50', status: 'active', time: '2 mins ago' },
-  { id: 'VCH002', customer: 'Bob Smith', phone: '+1 (555) 987-6543', value: '$25', status: 'used', time: '5 mins ago' },
-  { id: 'VCH003', customer: 'Carol Davis', phone: '+1 (555) 456-7890', value: '$100', status: 'active', time: '8 mins ago' },
-  { id: 'VCH004', customer: 'David Wilson', phone: '+1 (555) 321-0987', value: '$75', status: 'active', time: '12 mins ago' },
+  { id: 'VCH001', customer: 'Nguyễn Thị Hoa', phone: '0901234567', value: '500.000đ', status: 'active', time: '2 phút trước' },
+  { id: 'VCH002', customer: 'Trần Văn Nam', phone: '0907654321', value: '250.000đ', status: 'used', time: '5 phút trước' },
+  { id: 'VCH003', customer: 'Lê Thị Lan', phone: '0909876543', value: '1.000.000đ', status: 'active', time: '8 phút trước' },
+  { id: 'VCH004', customer: 'Phạm Minh Tuấn', phone: '0902468135', value: '750.000đ', status: 'active', time: '12 phút trước' },
 ];
 
 export function Dashboard() {
@@ -45,56 +45,56 @@ export function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="border-l-4 border-l-blue-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Today's Vouchers</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-600">Voucher Hôm Nay</CardTitle>
             <Receipt className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">58</div>
             <div className="flex items-center text-sm text-green-600">
               <ArrowUp className="w-4 h-4 mr-1" />
-              <span>+12% from yesterday</span>
+              <span>+12% so với hôm qua</span>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-l-4 border-l-green-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Vouchers Used</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-600">Voucher Đã Dùng</CardTitle>
             <TrendingUp className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">42</div>
             <div className="flex items-center text-sm text-green-600">
               <ArrowUp className="w-4 h-4 mr-1" />
-              <span>72% usage rate</span>
+              <span>Tỷ lệ sử dụng 72%</span>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-l-4 border-l-purple-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">New Customers</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-600">Khách Hàng Mới</CardTitle>
             <Users className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">23</div>
             <div className="flex items-center text-sm text-purple-600">
               <ArrowUp className="w-4 h-4 mr-1" />
-              <span>+8% this week</span>
+              <span>+8% tuần này</span>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-l-4 border-l-orange-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Expiring Soon</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-600">Sắp Hết Hạn</CardTitle>
             <Clock className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">12</div>
             <div className="flex items-center text-sm text-orange-600">
               <AlertTriangle className="w-4 h-4 mr-1" />
-              <span>Next 7 days</span>
+              <span>Trong 7 ngày tới</span>
             </div>
           </CardContent>
         </Card>
@@ -104,7 +104,7 @@ export function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-semibold">Weekly Voucher Activity</CardTitle>
+            <CardTitle className="text-lg font-semibold">Hoạt Động Voucher Hàng Tuần</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -113,8 +113,8 @@ export function Dashboard() {
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="vouchers" fill="#3b82f6" name="Issued" />
-                <Bar dataKey="used" fill="#22c55e" name="Used" />
+                <Bar dataKey="vouchers" fill="#3b82f6" name="Đã Phát" />
+                <Bar dataKey="used" fill="#22c55e" name="Đã Dùng" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -122,7 +122,7 @@ export function Dashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-semibold">Voucher Status Distribution</CardTitle>
+            <CardTitle className="text-lg font-semibold">Phân Bố Trạng Thái Voucher</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -150,10 +150,10 @@ export function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-lg font-semibold">Recent Vouchers</CardTitle>
+            <CardTitle className="text-lg font-semibold">Voucher Gần Đây</CardTitle>
             <Button variant="outline" size="sm">
               <Eye className="w-4 h-4 mr-2" />
-              View All
+              Xem Tất Cả
             </Button>
           </CardHeader>
           <CardContent>
@@ -167,7 +167,7 @@ export function Dashboard() {
                         variant={voucher.status === 'active' ? 'default' : 'secondary'}
                         className={voucher.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}
                       >
-                        {voucher.status}
+                        {voucher.status === 'active' ? 'Hoạt động' : 'Đã dùng'}
                       </Badge>
                     </div>
                     <p className="text-sm text-gray-600">{voucher.customer}</p>
@@ -185,31 +185,31 @@ export function Dashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-semibold">System Notifications</CardTitle>
+            <CardTitle className="text-lg font-semibold">Thông Báo Hệ Thống</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="flex items-start space-x-3 p-3 border rounded-lg bg-red-50 border-red-200">
                 <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-red-800">12 vouchers expiring soon</p>
-                  <p className="text-xs text-red-600">Action required within 7 days</p>
+                  <p className="text-sm font-medium text-red-800">12 voucher sắp hết hạn</p>
+                  <p className="text-xs text-red-600">Cần xử lý trong 7 ngày tới</p>
                 </div>
               </div>
               
               <div className="flex items-start space-x-3 p-3 border rounded-lg bg-blue-50 border-blue-200">
                 <TrendingUp className="w-5 h-5 text-blue-500 mt-0.5" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-blue-800">Daily target achieved</p>
-                  <p className="text-xs text-blue-600">58/50 vouchers issued today</p>
+                  <p className="text-sm font-medium text-blue-800">Đạt chỉ tiêu hàng ngày</p>
+                  <p className="text-xs text-blue-600">58/50 voucher đã phát hôm nay</p>
                 </div>
               </div>
               
               <div className="flex items-start space-x-3 p-3 border rounded-lg bg-green-50 border-green-200">
                 <Users className="w-5 h-5 text-green-500 mt-0.5" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-green-800">New customer record</p>
-                  <p className="text-xs text-green-600">23 new customers this week</p>
+                  <p className="text-sm font-medium text-green-800">Kỷ lục khách hàng mới</p>
+                  <p className="text-xs text-green-600">23 khách hàng mới tuần này</p>
                 </div>
               </div>
             </div>

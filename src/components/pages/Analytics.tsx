@@ -16,37 +16,37 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 
 const monthlyData = [
-  { month: 'Jan', issued: 245, used: 198, expired: 12, revenue: 12250 },
-  { month: 'Feb', issued: 289, used: 234, expired: 18, revenue: 14450 },
-  { month: 'Mar', issued: 321, used: 267, expired: 15, revenue: 16050 },
-  { month: 'Apr', issued: 298, used: 241, expired: 22, revenue: 14900 },
-  { month: 'May', issued: 356, used: 298, expired: 19, revenue: 17800 },
-  { month: 'Jun', issued: 398, used: 334, expired: 24, revenue: 19900 },
+  { month: 'T1', issued: 245, used: 198, expired: 12, revenue: 12250000 },
+  { month: 'T2', issued: 289, used: 234, expired: 18, revenue: 14450000 },
+  { month: 'T3', issued: 321, used: 267, expired: 15, revenue: 16050000 },
+  { month: 'T4', issued: 298, used: 241, expired: 22, revenue: 14900000 },
+  { month: 'T5', issued: 356, used: 298, expired: 19, revenue: 17800000 },
+  { month: 'T6', issued: 398, used: 334, expired: 24, revenue: 19900000 },
 ];
 
 const conversionData = [
-  { name: 'Week 1', rate: 78 },
-  { name: 'Week 2', rate: 82 },
-  { name: 'Week 3', rate: 76 },
-  { name: 'Week 4', rate: 84 },
-  { name: 'Week 5', rate: 81 },
-  { name: 'Week 6', rate: 87 },
+  { name: 'Tuần 1', rate: 78 },
+  { name: 'Tuần 2', rate: 82 },
+  { name: 'Tuần 3', rate: 76 },
+  { name: 'Tuần 4', rate: 84 },
+  { name: 'Tuần 5', rate: 81 },
+  { name: 'Tuần 6', rate: 87 },
 ];
 
 const staffPerformance = [
-  { name: 'John Smith', issued: 89, used: 74, conversion: 83 },
-  { name: 'Jane Doe', issued: 76, used: 68, conversion: 89 },
-  { name: 'Mike Brown', issued: 92, used: 78, conversion: 85 },
-  { name: 'Sarah Johnson', issued: 68, used: 59, conversion: 87 },
-  { name: 'Tom Wilson', issued: 84, used: 71, conversion: 85 },
+  { name: 'Nguyễn Văn An', issued: 89, used: 74, conversion: 83 },
+  { name: 'Trần Thị Bình', issued: 76, used: 68, conversion: 89 },
+  { name: 'Lê Minh Cường', issued: 92, used: 78, conversion: 85 },
+  { name: 'Phạm Thị Diệu', issued: 68, used: 59, conversion: 87 },
+  { name: 'Vũ Thanh Hải', issued: 84, used: 71, conversion: 85 },
 ];
 
 const voucherValueData = [
-  { name: '$10', value: 145, color: '#8b5cf6' },
-  { name: '$25', value: 234, color: '#3b82f6' },
-  { name: '$50', value: 189, color: '#10b981' },
-  { name: '$75', value: 98, color: '#f59e0b' },
-  { name: '$100+', value: 67, color: '#ef4444' },
+  { name: '100.000đ', value: 145, color: '#8b5cf6' },
+  { name: '250.000đ', value: 234, color: '#3b82f6' },
+  { name: '500.000đ', value: 189, color: '#10b981' },
+  { name: '750.000đ', value: 98, color: '#f59e0b' },
+  { name: '1.000.000đ+', value: 67, color: '#ef4444' },
 ];
 
 export function Analytics() {
@@ -55,8 +55,8 @@ export function Analytics() {
       {/* Header with Filters */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Analytics & Reports</h2>
-          <p className="text-gray-600">Comprehensive voucher performance insights</p>
+          <h2 className="text-2xl font-bold text-gray-900">Báo Cáo Phân Tích</h2>
+          <p className="text-gray-600">Thông tin chi tiết về hiệu suất voucher</p>
         </div>
         <div className="flex space-x-2">
           <Select defaultValue="6months">
@@ -64,15 +64,15 @@ export function Analytics() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="1month">Last Month</SelectItem>
-              <SelectItem value="3months">Last 3 Months</SelectItem>
-              <SelectItem value="6months">Last 6 Months</SelectItem>
-              <SelectItem value="1year">Last Year</SelectItem>
+              <SelectItem value="1month">Tháng Trước</SelectItem>
+              <SelectItem value="3months">3 Tháng Trước</SelectItem>
+              <SelectItem value="6months">6 Tháng Trước</SelectItem>
+              <SelectItem value="1year">Năm Trước</SelectItem>
             </SelectContent>
           </Select>
           <Button variant="outline">
             <Download className="w-4 h-4 mr-2" />
-            Export
+            Xuất File
           </Button>
         </div>
       </div>
@@ -81,60 +81,60 @@ export function Analytics() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="border-l-4 border-l-blue-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Total Issued</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-600">Tổng Số Phát Hành</CardTitle>
             <Receipt className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">1,907</div>
+            <div className="text-2xl font-bold text-gray-900">1.907</div>
             <div className="flex items-center text-sm">
               <TrendingUp className="w-4 h-4 mr-1 text-green-500" />
-              <span className="text-green-600">+12.5%</span>
-              <span className="text-gray-500 ml-1">vs last period</span>
+              <span className="text-green-600">+12,5%</span>
+              <span className="text-gray-500 ml-1">so với kỳ trước</span>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-l-4 border-l-green-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Conversion Rate</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-600">Tỷ Lệ Chuyển Đổi</CardTitle>
             <Percent className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">84.2%</div>
+            <div className="text-2xl font-bold text-gray-900">84,2%</div>
             <div className="flex items-center text-sm">
               <TrendingUp className="w-4 h-4 mr-1 text-green-500" />
-              <span className="text-green-600">+3.2%</span>
-              <span className="text-gray-500 ml-1">vs last period</span>
+              <span className="text-green-600">+3,2%</span>
+              <span className="text-gray-500 ml-1">so với kỳ trước</span>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-l-4 border-l-purple-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Revenue Impact</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-600">Tác Động Doanh Thu</CardTitle>
             <DollarSign className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">$95,350</div>
+            <div className="text-2xl font-bold text-gray-900">95.350.000đ</div>
             <div className="flex items-center text-sm">
               <TrendingUp className="w-4 h-4 mr-1 text-green-500" />
-              <span className="text-green-600">+18.7%</span>
-              <span className="text-gray-500 ml-1">vs last period</span>
+              <span className="text-green-600">+18,7%</span>
+              <span className="text-gray-500 ml-1">so với kỳ trước</span>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-l-4 border-l-orange-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Avg. Voucher Value</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-600">Giá Trị TB Voucher</CardTitle>
             <Receipt className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">$50.12</div>
+            <div className="text-2xl font-bold text-gray-900">501.200đ</div>
             <div className="flex items-center text-sm">
               <TrendingDown className="w-4 h-4 mr-1 text-red-500" />
-              <span className="text-red-600">-2.1%</span>
-              <span className="text-gray-500 ml-1">vs last period</span>
+              <span className="text-red-600">-2,1%</span>
+              <span className="text-gray-500 ml-1">so với kỳ trước</span>
             </div>
           </CardContent>
         </Card>
@@ -146,7 +146,7 @@ export function Analytics() {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Calendar className="w-5 h-5" />
-              <span>Monthly Performance</span>
+              <span>Hiệu Suất Theo Tháng</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -165,7 +165,7 @@ export function Analytics() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Conversion Rate Trend</CardTitle>
+            <CardTitle>Xu Hướng Tỷ Lệ Chuyển Đổi</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -173,7 +173,7 @@ export function Analytics() {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis domain={[70, 90]} />
-                <Tooltip formatter={(value) => [`${value}%`, 'Conversion Rate']} />
+                <Tooltip formatter={(value) => [`${value}%`, 'Tỷ Lệ Chuyển Đổi']} />
                 <Line 
                   type="monotone" 
                   dataKey="rate" 
@@ -191,7 +191,7 @@ export function Analytics() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Voucher Value Distribution</CardTitle>
+            <CardTitle>Phân Bố Giá Trị Voucher</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -216,17 +216,17 @@ export function Analytics() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Staff Performance Comparison</CardTitle>
+            <CardTitle>So Sánh Hiệu Suất Nhân Viên</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={staffPerformance} layout="horizontal">
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis type="number" />
-                <YAxis dataKey="name" type="category" width={80} />
+                <YAxis dataKey="name" type="category" width={100} />
                 <Tooltip />
-                <Bar dataKey="issued" fill="#3b82f6" name="Issued" />
-                <Bar dataKey="used" fill="#10b981" name="Used" />
+                <Bar dataKey="issued" fill="#3b82f6" name="Đã Phát" />
+                <Bar dataKey="used" fill="#10b981" name="Đã Dùng" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -238,7 +238,7 @@ export function Analytics() {
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Users className="w-5 h-5" />
-            <span>Detailed Staff Performance</span>
+            <span>Hiệu Suất Chi Tiết Nhân Viên</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -246,11 +246,11 @@ export function Analytics() {
             <table className="w-full">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Staff Member</th>
-                  <th className="text-center py-3 px-4 font-semibold text-gray-700">Vouchers Issued</th>
-                  <th className="text-center py-3 px-4 font-semibold text-gray-700">Vouchers Used</th>
-                  <th className="text-center py-3 px-4 font-semibold text-gray-700">Conversion Rate</th>
-                  <th className="text-center py-3 px-4 font-semibold text-gray-700">Performance</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Nhân Viên</th>
+                  <th className="text-center py-3 px-4 font-semibold text-gray-700">Voucher Đã Phát</th>
+                  <th className="text-center py-3 px-4 font-semibold text-gray-700">Voucher Đã Dùng</th>
+                  <th className="text-center py-3 px-4 font-semibold text-gray-700">Tỷ Lệ Chuyển Đổi</th>
+                  <th className="text-center py-3 px-4 font-semibold text-gray-700">Hiệu Suất</th>
                 </tr>
               </thead>
               <tbody>
@@ -260,7 +260,7 @@ export function Analytics() {
                       <div className="flex items-center space-x-3">
                         <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                           <span className="text-sm font-medium text-blue-600">
-                            {staff.name.split(' ').map(n => n[0]).join('')}
+                            {staff.name.split(' ').slice(-1)[0].charAt(0)}
                           </span>
                         </div>
                         <span className="font-medium">{staff.name}</span>

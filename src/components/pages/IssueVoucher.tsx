@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -43,22 +44,22 @@ export function IssueVoucher() {
     setTimeout(() => {
       // Simulate found customer
       const foundCustomer = {
-        name: 'John Doe',
+        name: 'Nguyễn Văn Tuấn',
         phone: phoneNumber,
-        email: 'john.doe@email.com',
-        lastVoucher: '2024-01-15',
+        email: 'nguyen.van.tuan@email.com',
+        lastVoucher: '15/01/2024',
         totalVouchers: 3,
-        type: 'Premium'
+        type: 'VIP'
       };
       
       // Simulate existing active voucher
       const activeVoucher = {
         code: 'VCH-2024-001234',
-        value: '$50',
+        value: '500.000đ',
         status: 'active',
-        issueDate: '2024-01-20',
-        expiryDate: '2024-02-20',
-        issuedBy: 'Jane Smith'
+        issueDate: '20/01/2024',
+        expiryDate: '20/02/2024',
+        issuedBy: 'Trần Thị Lan'
       };
       
       setCustomerFound(foundCustomer);
@@ -70,8 +71,8 @@ export function IssueVoucher() {
   const handleIssueVoucher = () => {
     if (!formData.customerSource || !formData.customerType || !formData.voucherValue) {
       toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields.",
+        title: "Thiếu Thông Tin",
+        description: "Vui lòng điền đầy đủ các trường bắt buộc.",
         variant: "destructive",
       });
       return;
@@ -83,11 +84,11 @@ export function IssueVoucher() {
       const voucher = {
         code: `VCH-${Date.now()}`,
         value: formData.voucherValue,
-        customer: customerFound?.name || 'New Customer',
+        customer: customerFound?.name || 'Khách Hàng Mới',
         phone: phoneNumber,
-        issueDate: new Date().toLocaleDateString(),
-        expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
-        issuedBy: 'John Smith'
+        issueDate: new Date().toLocaleDateString('vi-VN'),
+        expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN'),
+        issuedBy: 'Nguyễn Văn An'
       };
       
       setNewVoucher(voucher);
@@ -95,8 +96,8 @@ export function IssueVoucher() {
       setIsLoading(false);
       
       toast({
-        title: "Voucher Issued Successfully!",
-        description: `Voucher ${voucher.code} has been generated.`,
+        title: "Phát Hành Voucher Thành Công!",
+        description: `Voucher ${voucher.code} đã được tạo.`,
       });
     }, 1500);
   };
@@ -104,15 +105,15 @@ export function IssueVoucher() {
   const copyVoucherCode = () => {
     navigator.clipboard.writeText(newVoucher.code);
     toast({
-      title: "Copied!",
-      description: "Voucher code copied to clipboard.",
+      title: "Đã Sao Chép!",
+      description: "Mã voucher đã được sao chép vào clipboard.",
     });
   };
 
   const printVoucher = () => {
     toast({
-      title: "Printing...",
-      description: "Voucher is being sent to printer.",
+      title: "Đang In...",
+      description: "Voucher đang được gửi tới máy in.",
     });
   };
 
@@ -122,7 +123,7 @@ export function IssueVoucher() {
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Gift className="w-5 h-5 text-blue-600" />
-            <span>Issue New Voucher</span>
+            <span>Phát Hành Voucher Mới</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -130,11 +131,11 @@ export function IssueVoucher() {
           <div className="space-y-4">
             <div className="flex items-end space-x-4">
               <div className="flex-1">
-                <Label htmlFor="phone">Customer Phone Number *</Label>
+                <Label htmlFor="phone">Số Điện Thoại Khách Hàng *</Label>
                 <Input
                   id="phone"
                   type="tel"
-                  placeholder="+1 (555) 123-4567"
+                  placeholder="0901234567"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   className="mt-1"
@@ -146,7 +147,7 @@ export function IssueVoucher() {
                 className="mb-0"
               >
                 <Search className="w-4 h-4 mr-2" />
-                {isLoading ? 'Searching...' : 'Search'}
+                {isLoading ? 'Đang Tìm...' : 'Tìm Kiếm'}
               </Button>
             </div>
 
@@ -166,9 +167,9 @@ export function IssueVoucher() {
                           <span>{customerFound.phone}</span>
                         </div>
                         <div className="flex items-center space-x-4 mt-1">
-                          <Badge variant="secondary">{customerFound.type} Customer</Badge>
+                          <Badge variant="secondary">Khách Hàng {customerFound.type}</Badge>
                           <span className="text-xs text-gray-500">
-                            {customerFound.totalVouchers} vouchers issued
+                            {customerFound.totalVouchers} voucher đã phát hành
                           </span>
                         </div>
                       </div>
@@ -183,10 +184,10 @@ export function IssueVoucher() {
               <Alert className="border-orange-200 bg-orange-50">
                 <AlertTriangle className="h-4 w-4 text-orange-600" />
                 <AlertDescription className="text-orange-800">
-                  <strong>Active voucher found:</strong> {existingVoucher.code} ({existingVoucher.value}) 
-                  expires on {existingVoucher.expiryDate}. 
+                  <strong>Tìm thấy voucher đang hoạt động:</strong> {existingVoucher.code} ({existingVoucher.value}) 
+                  hết hạn vào {existingVoucher.expiryDate}. 
                   <Button variant="link" className="p-0 h-auto text-orange-800 underline ml-1">
-                    View details
+                    Xem chi tiết
                   </Button>
                 </AlertDescription>
               </Alert>
@@ -197,36 +198,36 @@ export function IssueVoucher() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div>
-                <Label htmlFor="source">Customer Source *</Label>
+                <Label htmlFor="source">Nguồn Khách Hàng *</Label>
                 <Select value={formData.customerSource} onValueChange={(value) => 
                   setFormData({...formData, customerSource: value})
                 }>
                   <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select source" />
+                    <SelectValue placeholder="Chọn nguồn" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="website">Website</SelectItem>
-                    <SelectItem value="phone">Phone Call</SelectItem>
-                    <SelectItem value="referral">Referral</SelectItem>
-                    <SelectItem value="social-media">Social Media</SelectItem>
-                    <SelectItem value="walk-in">Walk-in</SelectItem>
+                    <SelectItem value="phone">Cuộc Gọi</SelectItem>
+                    <SelectItem value="referral">Giới Thiệu</SelectItem>
+                    <SelectItem value="social-media">Mạng Xã Hội</SelectItem>
+                    <SelectItem value="walk-in">Khách Vãng Lai</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
-                <Label htmlFor="type">Customer Type *</Label>
+                <Label htmlFor="type">Loại Khách Hàng *</Label>
                 <Select value={formData.customerType} onValueChange={(value) => 
                   setFormData({...formData, customerType: value})
                 }>
                   <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select type" />
+                    <SelectValue placeholder="Chọn loại" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="new">New Customer</SelectItem>
-                    <SelectItem value="returning">Returning Customer</SelectItem>
-                    <SelectItem value="premium">Premium Customer</SelectItem>
-                    <SelectItem value="vip">VIP Customer</SelectItem>
+                    <SelectItem value="new">Khách Hàng Mới</SelectItem>
+                    <SelectItem value="returning">Khách Hàng Cũ</SelectItem>
+                    <SelectItem value="premium">Khách Hàng Premium</SelectItem>
+                    <SelectItem value="vip">Khách Hàng VIP</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -234,30 +235,30 @@ export function IssueVoucher() {
 
             <div className="space-y-4">
               <div>
-                <Label htmlFor="value">Voucher Value *</Label>
+                <Label htmlFor="value">Giá Trị Voucher *</Label>
                 <Select value={formData.voucherValue} onValueChange={(value) => 
                   setFormData({...formData, voucherValue: value})
                 }>
                   <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select value" />
+                    <SelectValue placeholder="Chọn giá trị" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="$10">$10</SelectItem>
-                    <SelectItem value="$25">$25</SelectItem>
-                    <SelectItem value="$50">$50</SelectItem>
-                    <SelectItem value="$75">$75</SelectItem>
-                    <SelectItem value="$100">$100</SelectItem>
-                    <SelectItem value="$150">$150</SelectItem>
-                    <SelectItem value="$200">$200</SelectItem>
+                    <SelectItem value="100.000đ">100.000đ</SelectItem>
+                    <SelectItem value="250.000đ">250.000đ</SelectItem>
+                    <SelectItem value="500.000đ">500.000đ</SelectItem>
+                    <SelectItem value="750.000đ">750.000đ</SelectItem>
+                    <SelectItem value="1.000.000đ">1.000.000đ</SelectItem>
+                    <SelectItem value="1.500.000đ">1.500.000đ</SelectItem>
+                    <SelectItem value="2.000.000đ">2.000.000đ</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
-                <Label htmlFor="notes">Notes (Optional)</Label>
+                <Label htmlFor="notes">Ghi Chú (Không Bắt Buộc)</Label>
                 <Textarea
                   id="notes"
-                  placeholder="Add any additional notes..."
+                  placeholder="Thêm ghi chú bổ sung..."
                   value={formData.notes}
                   onChange={(e) => setFormData({...formData, notes: e.target.value})}
                   className="mt-1"
@@ -276,7 +277,7 @@ export function IssueVoucher() {
               className="bg-green-600 hover:bg-green-700 text-white px-8"
             >
               <Receipt className="w-5 h-5 mr-2" />
-              {isLoading ? 'Issuing Voucher...' : 'Issue Voucher'}
+              {isLoading ? 'Đang Phát Hành...' : 'Phát Hành Voucher'}
             </Button>
           </div>
         </CardContent>
@@ -288,7 +289,7 @@ export function IssueVoucher() {
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2 text-green-600">
               <CheckCircle className="w-6 h-6" />
-              <span>Voucher Issued Successfully!</span>
+              <span>Phát Hành Voucher Thành Công!</span>
             </DialogTitle>
           </DialogHeader>
           
@@ -300,30 +301,30 @@ export function IssueVoucher() {
                     {newVoucher.code}
                   </div>
                   <div className="text-lg font-semibold text-green-600">
-                    Value: {newVoucher.value}
+                    Giá trị: {newVoucher.value}
                   </div>
                 </div>
               </div>
               
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Customer:</span>
+                  <span className="text-gray-600">Khách hàng:</span>
                   <span className="font-medium">{newVoucher.customer}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Phone:</span>
+                  <span className="text-gray-600">Điện thoại:</span>
                   <span className="font-medium">{newVoucher.phone}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Issue Date:</span>
+                  <span className="text-gray-600">Ngày phát hành:</span>
                   <span className="font-medium">{newVoucher.issueDate}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Expiry Date:</span>
+                  <span className="text-gray-600">Ngày hết hạn:</span>
                   <span className="font-medium">{newVoucher.expiryDate}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Issued By:</span>
+                  <span className="text-gray-600">Người phát hành:</span>
                   <span className="font-medium">{newVoucher.issuedBy}</span>
                 </div>
               </div>
@@ -335,7 +336,7 @@ export function IssueVoucher() {
                   onClick={copyVoucherCode}
                 >
                   <Copy className="w-4 h-4 mr-2" />
-                  Copy Code
+                  Sao Chép Mã
                 </Button>
                 <Button 
                   variant="outline" 
@@ -343,7 +344,7 @@ export function IssueVoucher() {
                   onClick={printVoucher}
                 >
                   <Printer className="w-4 h-4 mr-2" />
-                  Print
+                  In
                 </Button>
               </div>
             </div>

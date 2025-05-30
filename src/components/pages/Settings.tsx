@@ -1,390 +1,471 @@
 
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { toast } from '@/hooks/use-toast';
 import { 
-  Settings as SettingsIcon, 
   User, 
   Bell, 
-  Shield,
-  Save,
-  Upload,
+  Shield, 
   Key,
-  Database
+  Save,
+  Eye,
+  EyeOff,
+  Camera
 } from 'lucide-react';
 
 export function Settings() {
+  const [showPassword, setShowPassword] = useState(false);
+  const [notifications, setNotifications] = useState({
+    email: true,
+    sms: false,
+    desktop: true,
+    voucherExpiry: true,
+    newCustomer: false
+  });
+
+  const [profile, setProfile] = useState({
+    fullName: 'Nguyễn Văn Quản',
+    email: 'nguyen.van.quan@company.com',
+    phone: '0901234567',
+    position: 'Quản Trị Viên',
+    department: 'Bộ Phận IT',
+    bio: 'Quản trị viên hệ thống với 5 năm kinh nghiệm trong lĩnh vực CRM và telesales.'
+  });
+
+  const handleSaveProfile = () => {
+    toast({
+      title: "Cập Nhật Thành Công",
+      description: "Thông tin cá nhân đã được lưu.",
+    });
+  };
+
+  const handleSaveNotifications = () => {
+    toast({
+      title: "Cài Đặt Đã Lưu",
+      description: "Tùy chọn thông báo đã được cập nhật.",
+    });
+  };
+
+  const handleChangePassword = () => {
+    toast({
+      title: "Đổi Mật Khẩu Thành Công",
+      description: "Mật khẩu của bạn đã được thay đổi.",
+    });
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-gray-900 flex items-center justify-center space-x-2">
-          <SettingsIcon className="w-6 h-6" />
-          <span>Settings</span>
-        </h2>
-        <p className="text-gray-600">Manage your account and system preferences</p>
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900">Cài Đặt Cá Nhân</h2>
+        <p className="text-gray-600">Quản lý thông tin tài khoản và tùy chọn cá nhân</p>
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="system">System</TabsTrigger>
+          <TabsTrigger value="profile">Hồ Sơ</TabsTrigger>
+          <TabsTrigger value="notifications">Thông Báo</TabsTrigger>
+          <TabsTrigger value="security">Bảo Mật</TabsTrigger>
+          <TabsTrigger value="preferences">Tùy Chọn</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="profile" className="space-y-6">
+        {/* Profile Tab */}
+        <TabsContent value="profile">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <User className="w-5 h-5" />
-                <span>Profile Information</span>
+                <span>Thông Tin Cá Nhân</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Profile Picture */}
+              {/* Avatar Section */}
               <div className="flex items-center space-x-6">
-                <Avatar className="w-20 h-20">
-                  <AvatarImage src="/placeholder.svg" />
-                  <AvatarFallback className="bg-blue-100 text-blue-600 text-xl">JS</AvatarFallback>
-                </Avatar>
-                <div className="space-y-2">
-                  <h3 className="font-semibold">Profile Picture</h3>
-                  <div className="flex space-x-2">
-                    <Button variant="outline" size="sm">
-                      <Upload className="w-4 h-4 mr-2" />
-                      Upload New
-                    </Button>
-                    <Button variant="ghost" size="sm">Remove</Button>
+                <div className="relative">
+                  <Avatar className="w-24 h-24">
+                    <AvatarImage src="/placeholder.svg" />
+                    <AvatarFallback className="bg-blue-100 text-blue-600 text-2xl">
+                      QT
+                    </AvatarFallback>
+                  </Avatar>
+                  <Button 
+                    size="sm" 
+                    className="absolute bottom-0 right-0 rounded-full w-8 h-8 p-0"
+                  >
+                    <Camera className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold">{profile.fullName}</h3>
+                  <p className="text-gray-600">{profile.position}</p>
+                  <Badge variant="secondary" className="mt-1">
+                    {profile.department}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Profile Form */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="fullName">Họ và Tên</Label>
+                    <Input
+                      id="fullName"
+                      value={profile.fullName}
+                      onChange={(e) => setProfile({...profile, fullName: e.target.value})}
+                      className="mt-1"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={profile.email}
+                      onChange={(e) => setProfile({...profile, email: e.target.value})}
+                      className="mt-1"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="phone">Số Điện Thoại</Label>
+                    <Input
+                      id="phone"
+                      value={profile.phone}
+                      onChange={(e) => setProfile({...profile, phone: e.target.value})}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="position">Chức Vụ</Label>
+                    <Input
+                      id="position"
+                      value={profile.position}
+                      onChange={(e) => setProfile({...profile, position: e.target.value})}
+                      className="mt-1"
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="department">Bộ Phận</Label>
+                    <Select value={profile.department} onValueChange={(value) => 
+                      setProfile({...profile, department: value})
+                    }>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Bộ Phận IT">Bộ Phận IT</SelectItem>
+                        <SelectItem value="Bộ Phận Telesales">Bộ Phận Telesales</SelectItem>
+                        <SelectItem value="Bộ Phận Quản Lý">Bộ Phận Quản Lý</SelectItem>
+                        <SelectItem value="Bộ Phận Marketing">Bộ Phận Marketing</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="bio">Giới Thiệu</Label>
+                    <Textarea
+                      id="bio"
+                      value={profile.bio}
+                      onChange={(e) => setProfile({...profile, bio: e.target.value})}
+                      className="mt-1"
+                      rows={3}
+                    />
                   </div>
                 </div>
               </div>
 
-              {/* Personal Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input id="firstName" defaultValue="John" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input id="lastName" defaultValue="Smith" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" defaultValue="john.smith@company.com" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input id="phone" type="tel" defaultValue="+1 (555) 123-4567" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
-                  <Select defaultValue="telesales">
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="telesales">Telesales Agent</SelectItem>
-                      <SelectItem value="manager">Team Manager</SelectItem>
-                      <SelectItem value="admin">Administrator</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="department">Department</Label>
-                  <Select defaultValue="sales">
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="sales">Sales</SelectItem>
-                      <SelectItem value="marketing">Marketing</SelectItem>
-                      <SelectItem value="support">Support</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="flex justify-end">
-                <Button>
+              <div className="flex justify-end pt-4 border-t">
+                <Button onClick={handleSaveProfile}>
                   <Save className="w-4 h-4 mr-2" />
-                  Save Changes
+                  Lưu Thay Đổi
                 </Button>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="notifications" className="space-y-6">
+        {/* Notifications Tab */}
+        <TabsContent value="notifications">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Bell className="w-5 h-5" />
-                <span>Notification Preferences</span>
+                <span>Cài Đặt Thông Báo</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between p-4 border rounded-lg">
                   <div>
-                    <h4 className="font-medium">Email Notifications</h4>
-                    <p className="text-sm text-gray-600">Receive email updates about voucher activities</p>
+                    <h4 className="font-medium">Thông Báo Email</h4>
+                    <p className="text-sm text-gray-600">Nhận thông báo qua email</p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch
+                    checked={notifications.email}
+                    onCheckedChange={(checked) => 
+                      setNotifications({...notifications, email: checked})
+                    }
+                  />
                 </div>
-                
-                <div className="flex items-center justify-between">
+
+                <div className="flex items-center justify-between p-4 border rounded-lg">
                   <div>
-                    <h4 className="font-medium">Daily Summary</h4>
-                    <p className="text-sm text-gray-600">Get a daily summary of your voucher performance</p>
+                    <h4 className="font-medium">Thông Báo SMS</h4>
+                    <p className="text-sm text-gray-600">Nhận thông báo qua tin nhắn</p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch
+                    checked={notifications.sms}
+                    onCheckedChange={(checked) => 
+                      setNotifications({...notifications, sms: checked})
+                    }
+                  />
                 </div>
-                
-                <div className="flex items-center justify-between">
+
+                <div className="flex items-center justify-between p-4 border rounded-lg">
                   <div>
-                    <h4 className="font-medium">Leaderboard Updates</h4>
-                    <p className="text-sm text-gray-600">Notifications when your ranking changes</p>
+                    <h4 className="font-medium">Thông Báo Màn Hình</h4>
+                    <p className="text-sm text-gray-600">Hiển thị thông báo trên trình duyệt</p>
                   </div>
-                  <Switch />
+                  <Switch
+                    checked={notifications.desktop}
+                    onCheckedChange={(checked) => 
+                      setNotifications({...notifications, desktop: checked})
+                    }
+                  />
                 </div>
-                
-                <div className="flex items-center justify-between">
+
+                <div className="flex items-center justify-between p-4 border rounded-lg">
                   <div>
-                    <h4 className="font-medium">Voucher Expiry Alerts</h4>
-                    <p className="text-sm text-gray-600">Alerts for vouchers expiring soon</p>
+                    <h4 className="font-medium">Cảnh Báo Voucher Hết Hạn</h4>
+                    <p className="text-sm text-gray-600">Thông báo khi voucher sắp hết hạn</p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch
+                    checked={notifications.voucherExpiry}
+                    onCheckedChange={(checked) => 
+                      setNotifications({...notifications, voucherExpiry: checked})
+                    }
+                  />
                 </div>
-                
-                <div className="flex items-center justify-between">
+
+                <div className="flex items-center justify-between p-4 border rounded-lg">
                   <div>
-                    <h4 className="font-medium">Customer Follow-up Reminders</h4>
-                    <p className="text-sm text-gray-600">Reminders to follow up with inactive customers</p>
+                    <h4 className="font-medium">Khách Hàng Mới</h4>
+                    <p className="text-sm text-gray-600">Thông báo khi có khách hàng mới đăng ký</p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch
+                    checked={notifications.newCustomer}
+                    onCheckedChange={(checked) => 
+                      setNotifications({...notifications, newCustomer: checked})
+                    }
+                  />
                 </div>
               </div>
 
-              <div className="space-y-4 pt-4 border-t">
-                <h4 className="font-medium">Notification Frequency</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Email Frequency</Label>
-                    <Select defaultValue="immediate">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="immediate">Immediate</SelectItem>
-                        <SelectItem value="hourly">Hourly</SelectItem>
-                        <SelectItem value="daily">Daily</SelectItem>
-                        <SelectItem value="weekly">Weekly</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Quiet Hours</Label>
-                    <Select defaultValue="10pm-8am">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
-                        <SelectItem value="10pm-8am">10 PM - 8 AM</SelectItem>
-                        <SelectItem value="11pm-7am">11 PM - 7 AM</SelectItem>
-                        <SelectItem value="9pm-9am">9 PM - 9 AM</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end">
-                <Button>
+              <div className="flex justify-end pt-4 border-t">
+                <Button onClick={handleSaveNotifications}>
                   <Save className="w-4 h-4 mr-2" />
-                  Save Preferences
+                  Lưu Cài Đặt
                 </Button>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="security" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Shield className="w-5 h-5" />
-                <span>Security Settings</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Password Change */}
-              <div className="space-y-4">
-                <h4 className="font-medium">Change Password</h4>
-                <div className="space-y-4 max-w-md">
-                  <div className="space-y-2">
-                    <Label htmlFor="currentPassword">Current Password</Label>
-                    <Input id="currentPassword" type="password" />
+        {/* Security Tab */}
+        <TabsContent value="security">
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Key className="w-5 h-5" />
+                  <span>Đổi Mật Khẩu</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="currentPassword">Mật Khẩu Hiện Tại</Label>
+                  <div className="relative mt-1">
+                    <Input
+                      id="currentPassword"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Nhập mật khẩu hiện tại"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="newPassword">New Password</Label>
-                    <Input id="newPassword" type="password" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                    <Input id="confirmPassword" type="password" />
-                  </div>
-                  <Button>
+                </div>
+
+                <div>
+                  <Label htmlFor="newPassword">Mật Khẩu Mới</Label>
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    placeholder="Nhập mật khẩu mới"
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="confirmPassword">Xác Nhận Mật Khẩu</Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    placeholder="Nhập lại mật khẩu mới"
+                    className="mt-1"
+                  />
+                </div>
+
+                <div className="flex justify-end pt-4 border-t">
+                  <Button onClick={handleChangePassword}>
                     <Key className="w-4 h-4 mr-2" />
-                    Update Password
+                    Đổi Mật Khẩu
                   </Button>
                 </div>
-              </div>
+              </CardContent>
+            </Card>
 
-              {/* Two-Factor Authentication */}
-              <div className="space-y-4 pt-4 border-t">
-                <div className="flex items-center justify-between">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Shield className="w-5 h-5" />
+                  <span>Bảo Mật Tài Khoản</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-4 border rounded-lg">
                   <div>
-                    <h4 className="font-medium">Two-Factor Authentication</h4>
-                    <p className="text-sm text-gray-600">Add an extra layer of security to your account</p>
+                    <h4 className="font-medium">Xác Thực Hai Bước</h4>
+                    <p className="text-sm text-gray-600">Tăng cường bảo mật với xác thực qua SMS</p>
                   </div>
-                  <Badge variant="secondary">Not Enabled</Badge>
+                  <Switch />
                 </div>
-                <Button variant="outline">Enable 2FA</Button>
-              </div>
 
-              {/* Session Management */}
-              <div className="space-y-4 pt-4 border-t">
-                <h4 className="font-medium">Active Sessions</h4>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <p className="font-medium">Current Session</p>
-                      <p className="text-sm text-gray-600">Chrome on Windows • Last active: Now</p>
-                    </div>
-                    <Badge variant="secondary">Current</Badge>
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <h4 className="font-medium">Đăng Xuất Tự Động</h4>
+                    <p className="text-sm text-gray-600">Tự động đăng xuất sau 30 phút không hoạt động</p>
                   </div>
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <p className="font-medium">Mobile App</p>
-                      <p className="text-sm text-gray-600">iPhone • Last active: 2 hours ago</p>
-                    </div>
-                    <Button variant="ghost" size="sm">Revoke</Button>
-                  </div>
+                  <Switch defaultChecked />
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <h4 className="font-medium">Lịch Sử Đăng Nhập</h4>
+                    <p className="text-sm text-gray-600">Ghi lại các lần đăng nhập vào hệ thống</p>
+                  </div>
+                  <Switch defaultChecked />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
-        <TabsContent value="system" className="space-y-6">
+        {/* Preferences Tab */}
+        <TabsContent value="preferences">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Database className="w-5 h-5" />
-                <span>System Preferences</span>
-              </CardTitle>
+              <CardTitle>Tùy Chọn Cá Nhân</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Display Settings */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Label htmlFor="language">Ngôn Ngữ</Label>
+                  <Select defaultValue="vi">
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="vi">Tiếng Việt</SelectItem>
+                      <SelectItem value="en">English</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="timezone">Múi Giờ</Label>
+                  <Select defaultValue="asia-ho-chi-minh">
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="asia-ho-chi-minh">Hồ Chí Minh (GMT+7)</SelectItem>
+                      <SelectItem value="asia-bangkok">Bangkok (GMT+7)</SelectItem>
+                      <SelectItem value="asia-singapore">Singapore (GMT+8)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="dateFormat">Định Dạng Ngày</Label>
+                  <Select defaultValue="dd-mm-yyyy">
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="dd-mm-yyyy">DD/MM/YYYY</SelectItem>
+                      <SelectItem value="mm-dd-yyyy">MM/DD/YYYY</SelectItem>
+                      <SelectItem value="yyyy-mm-dd">YYYY-MM-DD</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="currency">Đơn Vị Tiền Tệ</Label>
+                  <Select defaultValue="vnd">
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="vnd">VND (đ)</SelectItem>
+                      <SelectItem value="usd">USD ($)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               <div className="space-y-4">
-                <h4 className="font-medium">Display Settings</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Theme</Label>
-                    <Select defaultValue="light">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="light">Light</SelectItem>
-                        <SelectItem value="dark">Dark</SelectItem>
-                        <SelectItem value="auto">Auto</SelectItem>
-                      </SelectContent>
-                    </Select>
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <h4 className="font-medium">Giao Diện Tối</h4>
+                    <p className="text-sm text-gray-600">Sử dụng giao diện tối cho hệ thống</p>
                   </div>
-                  <div className="space-y-2">
-                    <Label>Language</Label>
-                    <Select defaultValue="en">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="en">English</SelectItem>
-                        <SelectItem value="es">Español</SelectItem>
-                        <SelectItem value="fr">Français</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <Switch />
+                </div>
+
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <h4 className="font-medium">Âm Thanh Thông Báo</h4>
+                    <p className="text-sm text-gray-600">Phát âm thanh khi có thông báo mới</p>
                   </div>
-                  <div className="space-y-2">
-                    <Label>Timezone</Label>
-                    <Select defaultValue="utc-5">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="utc-5">UTC-5 (Eastern)</SelectItem>
-                        <SelectItem value="utc-6">UTC-6 (Central)</SelectItem>
-                        <SelectItem value="utc-7">UTC-7 (Mountain)</SelectItem>
-                        <SelectItem value="utc-8">UTC-8 (Pacific)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Date Format</Label>
-                    <Select defaultValue="mm/dd/yyyy">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="mm/dd/yyyy">MM/DD/YYYY</SelectItem>
-                        <SelectItem value="dd/mm/yyyy">DD/MM/YYYY</SelectItem>
-                        <SelectItem value="yyyy-mm-dd">YYYY-MM-DD</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <Switch defaultChecked />
                 </div>
               </div>
 
-              {/* Performance Settings */}
-              <div className="space-y-4 pt-4 border-t">
-                <h4 className="font-medium">Performance Settings</h4>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Auto-refresh Dashboard</p>
-                      <p className="text-sm text-gray-600">Automatically refresh dashboard data</p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Refresh Interval</Label>
-                    <Select defaultValue="30">
-                      <SelectTrigger className="w-40">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="15">15 seconds</SelectItem>
-                        <SelectItem value="30">30 seconds</SelectItem>
-                        <SelectItem value="60">1 minute</SelectItem>
-                        <SelectItem value="300">5 minutes</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end">
+              <div className="flex justify-end pt-4 border-t">
                 <Button>
                   <Save className="w-4 h-4 mr-2" />
-                  Save Settings
+                  Lưu Tùy Chọn
                 </Button>
               </div>
             </CardContent>

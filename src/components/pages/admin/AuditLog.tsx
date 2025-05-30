@@ -3,179 +3,196 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { format } from 'date-fns';
-import { vi } from 'date-fns/locale';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   Search, 
-  Filter, 
   Download, 
-  CalendarIcon,
-  ClipboardList,
-  User,
-  Receipt,
-  Settings,
+  Eye,
   Shield,
-  AlertTriangle,
+  Receipt,
+  Users,
+  Settings,
+  AlertCircle,
   CheckCircle,
-  Info
+  XCircle,
+  Calendar
 } from 'lucide-react';
 
-const mockAuditLogs = [
+const auditLogData = [
   {
     id: 1,
+    timestamp: '29/05/2024 14:30:25',
+    user: 'Nguyễn Văn An',
+    userRole: 'admin',
     action: 'Phát hành voucher',
-    description: 'Phát hành voucher V240529001 cho khách hàng 0901234567',
-    user: 'Trần Thị Bình',
-    userRole: 'Nhân Viên Telesales',
-    timestamp: '29/05/2024 16:45:23',
-    ipAddress: '192.168.1.45',
-    status: 'Thành công',
-    category: 'Voucher',
-    details: {
-      voucherCode: 'V240529001',
-      customerPhone: '0901234567',
-      voucherValue: '100,000 VNĐ'
-    }
+    resource: 'VCH-2024-001',
+    details: 'Phát hành voucher 500.000đ cho khách hàng Nguyễn Thị Hoa',
+    ipAddress: '192.168.1.100',
+    status: 'success',
+    module: 'voucher'
   },
   {
     id: 2,
-    action: 'Đăng nhập hệ thống',
-    description: 'Đăng nhập vào hệ thống',
-    user: 'Nguyễn Văn An',
-    userRole: 'Quản Trị Viên',
-    timestamp: '29/05/2024 14:30:15',
-    ipAddress: '192.168.1.12',
-    status: 'Thành công',
-    category: 'Xác thực',
-    details: {
-      browser: 'Chrome 124.0',
-      device: 'Windows 11'
-    }
+    timestamp: '29/05/2024 14:15:12',
+    user: 'Trần Thị Lan',
+    userRole: 'telesales',
+    action: 'Cập nhật thông tin khách hàng',
+    resource: 'KH-001234',
+    details: 'Cập nhật số điện thoại khách hàng từ 0901234567 thành 0901234568',
+    ipAddress: '192.168.1.105',
+    status: 'success',
+    module: 'customer'
   },
   {
     id: 3,
-    action: 'Cập nhật thông tin khách hàng',
-    description: 'Sửa thông tin khách hàng Lê Văn Cường',
-    user: 'Trần Thị Bình',
-    userRole: 'Nhân Viên Telesales',
-    timestamp: '29/05/2024 13:22:10',
-    ipAddress: '192.168.1.45',
-    status: 'Thành công',
-    category: 'Khách hàng',
-    details: {
-      customerId: 'KH001234',
-      changedFields: 'Số điện thoại, Email'
-    }
+    timestamp: '29/05/2024 13:45:33',
+    user: 'Lê Minh Cường',
+    userRole: 'telesales',
+    action: 'Đăng nhập hệ thống',
+    resource: 'AUTH',
+    details: 'Đăng nhập thành công vào hệ thống',
+    ipAddress: '192.168.1.102',
+    status: 'success',
+    module: 'auth'
   },
   {
     id: 4,
-    action: 'Thay đổi cấu hình hệ thống',
-    description: 'Cập nhật thời hạn voucher mặc định từ 30 ngày thành 45 ngày',
-    user: 'Nguyễn Văn An',
-    userRole: 'Quản Trị Viên',
-    timestamp: '29/05/2024 11:15:45',
-    ipAddress: '192.168.1.12',
-    status: 'Thành công',
-    category: 'Cấu hình',
-    details: {
-      setting: 'Thời hạn voucher mặc định',
-      oldValue: '30 ngày',
-      newValue: '45 ngày'
-    }
+    timestamp: '29/05/2024 13:30:45',
+    user: 'Phạm Thị Minh',
+    userRole: 'telesales',
+    action: 'Thêm khách hàng mới',
+    resource: 'KH-001235',
+    details: 'Tạo mới khách hàng: Trần Văn Nam - 0907654321',
+    ipAddress: '192.168.1.103',
+    status: 'success',
+    module: 'customer'
   },
   {
     id: 5,
-    action: 'Đăng nhập thất bại',
-    description: 'Thử đăng nhập với mật khẩu không đúng',
-    user: 'levancuong',
-    userRole: 'Nhân Viên Telesales',
-    timestamp: '29/05/2024 09:30:22',
-    ipAddress: '192.168.1.78',
-    status: 'Thất bại',
-    category: 'Xác thực',
-    details: {
-      reason: 'Mật khẩu không chính xác',
-      attempts: '3/5'
-    }
+    timestamp: '29/05/2024 12:15:20',
+    user: 'Vũ Thanh Hải',
+    userRole: 'telesales',
+    action: 'Cố gắng truy cập trang admin',
+    resource: 'ADMIN_PANEL',
+    details: 'Cố gắng truy cập trang quản trị hệ thống mà không có quyền',
+    ipAddress: '192.168.1.104',
+    status: 'failed',
+    module: 'auth'
+  },
+  {
+    id: 6,
+    timestamp: '29/05/2024 11:45:10',
+    user: 'Nguyễn Văn An',
+    userRole: 'admin',
+    action: 'Cập nhật cài đặt hệ thống',
+    resource: 'SYSTEM_CONFIG',
+    details: 'Thay đổi thời gian hết hạn mặc định voucher từ 30 ngày thành 45 ngày',
+    ipAddress: '192.168.1.100',
+    status: 'success',
+    module: 'system'
+  },
+  {
+    id: 7,
+    timestamp: '29/05/2024 10:30:15',
+    user: 'Trần Thị Lan',
+    userRole: 'telesales',
+    action: 'Hủy voucher',
+    resource: 'VCH-2024-002',
+    details: 'Hủy voucher theo yêu cầu khách hàng',
+    ipAddress: '192.168.1.105',
+    status: 'warning',
+    module: 'voucher'
   }
 ];
 
 export function AuditLog() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedStatus, setSelectedStatus] = useState('all');
-  const [selectedUser, setSelectedUser] = useState('all');
-  const [dateFrom, setDateFrom] = useState<Date>();
-  const [dateTo, setDateTo] = useState<Date>();
+  const [userFilter, setUserFilter] = useState('all');
+  const [actionFilter, setActionFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [moduleFilter, setModuleFilter] = useState('all');
 
-  const filteredLogs = mockAuditLogs.filter(log => {
-    const matchesSearch = log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         log.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         log.user.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || log.category === selectedCategory;
-    const matchesStatus = selectedStatus === 'all' || log.status === selectedStatus;
-    const matchesUser = selectedUser === 'all' || log.user === selectedUser;
-    
-    return matchesSearch && matchesCategory && matchesStatus && matchesUser;
-  });
-
-  const getStatusBadge = (status: string) => {
+  const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'Thành công':
-        return (
-          <Badge className="bg-green-100 text-green-800">
-            <CheckCircle className="w-3 h-3 mr-1" />
-            Thành công
-          </Badge>
-        );
-      case 'Thất bại':
-        return (
-          <Badge className="bg-red-100 text-red-800">
-            <AlertTriangle className="w-3 h-3 mr-1" />
-            Thất bại
-          </Badge>
-        );
+      case 'success':
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'failed':
+        return <XCircle className="w-4 h-4 text-red-500" />;
+      case 'warning':
+        return <AlertCircle className="w-4 h-4 text-orange-500" />;
       default:
-        return (
-          <Badge className="bg-gray-100 text-gray-800">
-            <Info className="w-3 h-3 mr-1" />
-            {status}
-          </Badge>
-        );
+        return <Shield className="w-4 h-4 text-gray-500" />;
     }
   };
 
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'Voucher':
-        return <Receipt className="w-4 h-4 text-blue-600" />;
-      case 'Khách hàng':
-        return <User className="w-4 h-4 text-green-600" />;
-      case 'Cấu hình':
-        return <Settings className="w-4 h-4 text-purple-600" />;
-      case 'Xác thực':
-        return <Shield className="w-4 h-4 text-orange-600" />;
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'success':
+        return 'bg-green-100 text-green-800';
+      case 'failed':
+        return 'bg-red-100 text-red-800';
+      case 'warning':
+        return 'bg-orange-100 text-orange-800';
       default:
-        return <ClipboardList className="w-4 h-4 text-gray-600" />;
+        return 'bg-gray-100 text-gray-800';
     }
   };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'success':
+        return 'Thành Công';
+      case 'failed':
+        return 'Thất Bại';
+      case 'warning':
+        return 'Cảnh Báo';
+      default:
+        return status;
+    }
+  };
+
+  const getModuleIcon = (module: string) => {
+    switch (module) {
+      case 'voucher':
+        return <Receipt className="w-4 h-4" />;
+      case 'customer':
+        return <Users className="w-4 h-4" />;
+      case 'auth':
+        return <Shield className="w-4 h-4" />;
+      case 'system':
+        return <Settings className="w-4 h-4" />;
+      default:
+        return <Shield className="w-4 h-4" />;
+    }
+  };
+
+  const filteredLogs = auditLogData.filter(log => {
+    const matchesSearch = 
+      log.user.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      log.details.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesUser = userFilter === 'all' || log.user === userFilter;
+    const matchesAction = actionFilter === 'all' || log.action === actionFilter;
+    const matchesStatus = statusFilter === 'all' || log.status === statusFilter;
+    const matchesModule = moduleFilter === 'all' || log.module === moduleFilter;
+    
+    return matchesSearch && matchesUser && matchesAction && matchesStatus && matchesModule;
+  });
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Nhật Ký Hoạt Động</h2>
-          <p className="text-gray-600">Theo dõi và kiểm toán tất cả hoạt động trong hệ thống</p>
+          <p className="text-gray-600">Theo dõi tất cả hoạt động trong hệ thống</p>
         </div>
         
-        <Button className="bg-green-600 hover:bg-green-700">
+        <Button variant="outline">
           <Download className="w-4 h-4 mr-2" />
           Xuất Báo Cáo
         </Button>
@@ -187,11 +204,11 @@ export function AuditLog() {
           <CardContent className="flex items-center p-6">
             <div className="flex items-center space-x-4">
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <ClipboardList className="w-6 h-6 text-blue-600" />
+                <Shield className="w-6 h-6 text-blue-600" />
               </div>
               <div>
                 <p className="text-sm text-gray-600">Tổng Hoạt Động</p>
-                <p className="text-2xl font-bold text-gray-900">1,247</p>
+                <p className="text-2xl font-bold text-gray-900">1.247</p>
               </div>
             </div>
           </CardContent>
@@ -205,7 +222,7 @@ export function AuditLog() {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Thành Công</p>
-                <p className="text-2xl font-bold text-gray-900">1,201</p>
+                <p className="text-2xl font-bold text-gray-900">1.198</p>
               </div>
             </div>
           </CardContent>
@@ -215,11 +232,11 @@ export function AuditLog() {
           <CardContent className="flex items-center p-6">
             <div className="flex items-center space-x-4">
               <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                <AlertTriangle className="w-6 h-6 text-red-600" />
+                <XCircle className="w-6 h-6 text-red-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Lỗi/Thất Bại</p>
-                <p className="text-2xl font-bold text-gray-900">46</p>
+                <p className="text-sm text-gray-600">Thất Bại</p>
+                <p className="text-2xl font-bold text-gray-900">38</p>
               </div>
             </div>
           </CardContent>
@@ -228,12 +245,12 @@ export function AuditLog() {
         <Card>
           <CardContent className="flex items-center p-6">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <User className="w-6 h-6 text-purple-600" />
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                <AlertCircle className="w-6 h-6 text-orange-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-600">Người Dùng Hoạt Động</p>
-                <p className="text-2xl font-bold text-gray-900">18</p>
+                <p className="text-sm text-gray-600">Cảnh Báo</p>
+                <p className="text-2xl font-bold text-gray-900">11</p>
               </div>
             </div>
           </CardContent>
@@ -244,94 +261,68 @@ export function AuditLog() {
       <Card>
         <CardContent className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-            {/* Search */}
-            <div className="relative lg:col-span-2">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <Input
-                placeholder="Tìm kiếm hoạt động, người dùng..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+            <div className="lg:col-span-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Tìm kiếm hoạt động..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
             </div>
-
-            {/* Category Filter */}
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger>
-                <SelectValue placeholder="Danh mục" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tất cả danh mục</SelectItem>
-                <SelectItem value="Voucher">Voucher</SelectItem>
-                <SelectItem value="Khách hàng">Khách hàng</SelectItem>
-                <SelectItem value="Cấu hình">Cấu hình</SelectItem>
-                <SelectItem value="Xác thực">Xác thực</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Status Filter */}
-            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-              <SelectTrigger>
-                <SelectValue placeholder="Trạng thái" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tất cả trạng thái</SelectItem>
-                <SelectItem value="Thành công">Thành công</SelectItem>
-                <SelectItem value="Thất bại">Thất bại</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* User Filter */}
-            <Select value={selectedUser} onValueChange={setSelectedUser}>
+            
+            <Select value={userFilter} onValueChange={setUserFilter}>
               <SelectTrigger>
                 <SelectValue placeholder="Người dùng" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Tất cả người dùng</SelectItem>
+                <SelectItem value="all">Tất Cả Người Dùng</SelectItem>
                 <SelectItem value="Nguyễn Văn An">Nguyễn Văn An</SelectItem>
-                <SelectItem value="Trần Thị Bình">Trần Thị Bình</SelectItem>
-                <SelectItem value="Lê Văn Cường">Lê Văn Cường</SelectItem>
+                <SelectItem value="Trần Thị Lan">Trần Thị Lan</SelectItem>
+                <SelectItem value="Lê Minh Cường">Lê Minh Cường</SelectItem>
+                <SelectItem value="Phạm Thị Minh">Phạm Thị Minh</SelectItem>
               </SelectContent>
             </Select>
-
-            {/* Date Range */}
-            <div className="flex space-x-2">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="flex-1">
-                    <CalendarIcon className="w-4 h-4 mr-2" />
-                    {dateFrom ? format(dateFrom, 'dd/MM', { locale: vi }) : 'Từ ngày'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={dateFrom}
-                    onSelect={setDateFrom}
-                    initialFocus
-                    className="p-3 pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="flex-1">
-                    <CalendarIcon className="w-4 h-4 mr-2" />
-                    {dateTo ? format(dateTo, 'dd/MM', { locale: vi }) : 'Đến ngày'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={dateTo}
-                    onSelect={setDateTo}
-                    initialFocus
-                    className="p-3 pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
+            
+            <Select value={actionFilter} onValueChange={setActionFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Hành động" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tất Cả Hành Động</SelectItem>
+                <SelectItem value="Phát hành voucher">Phát Hành Voucher</SelectItem>
+                <SelectItem value="Đăng nhập hệ thống">Đăng Nhập</SelectItem>
+                <SelectItem value="Cập nhật thông tin">Cập Nhật Thông Tin</SelectItem>
+                <SelectItem value="Thêm khách hàng mới">Thêm Khách Hàng</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Trạng thái" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tất Cả Trạng Thái</SelectItem>
+                <SelectItem value="success">Thành Công</SelectItem>
+                <SelectItem value="failed">Thất Bại</SelectItem>
+                <SelectItem value="warning">Cảnh Báo</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select value={moduleFilter} onValueChange={setModuleFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Mô-đun" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tất Cả Mô-đun</SelectItem>
+                <SelectItem value="voucher">Voucher</SelectItem>
+                <SelectItem value="customer">Khách Hàng</SelectItem>
+                <SelectItem value="auth">Xác Thực</SelectItem>
+                <SelectItem value="system">Hệ Thống</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
@@ -339,68 +330,83 @@ export function AuditLog() {
       {/* Audit Log Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Nhật Ký Hoạt Động ({filteredLogs.length})</CardTitle>
+          <CardTitle>Nhật Ký Chi Tiết ({filteredLogs.length} hoạt động)</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Thời Gian</TableHead>
-                <TableHead>Người Dùng</TableHead>
-                <TableHead>Hoạt Động</TableHead>
-                <TableHead>Danh Mục</TableHead>
-                <TableHead>Trạng Thái</TableHead>
-                <TableHead>IP Address</TableHead>
-                <TableHead className="text-right">Chi Tiết</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredLogs.map((log) => (
-                <TableRow key={log.id}>
-                  <TableCell className="text-sm text-gray-600">
-                    {log.timestamp}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Avatar className="w-8 h-8">
-                        <AvatarImage src="/placeholder.svg" />
-                        <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
-                          {log.user.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium text-sm">{log.user}</p>
-                        <p className="text-xs text-gray-500">{log.userRole}</p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium text-sm">{log.action}</p>
-                      <p className="text-xs text-gray-600">{log.description}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      {getCategoryIcon(log.category)}
-                      <span className="text-sm">{log.category}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {getStatusBadge(log.status)}
-                  </TableCell>
-                  <TableCell className="text-sm text-gray-600">
-                    {log.ipAddress}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="sm">
-                      <Info className="w-4 h-4" />
-                    </Button>
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Thời Gian</TableHead>
+                  <TableHead>Người Dùng</TableHead>
+                  <TableHead>Hành Động</TableHead>
+                  <TableHead>Tài Nguyên</TableHead>
+                  <TableHead>Trạng Thái</TableHead>
+                  <TableHead>Mô-đun</TableHead>
+                  <TableHead>IP Address</TableHead>
+                  <TableHead>Chi Tiết</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredLogs.map((log) => (
+                  <TableRow key={log.id} className="hover:bg-gray-50">
+                    <TableCell className="font-mono text-sm">
+                      <div className="flex items-center space-x-2">
+                        <Calendar className="w-4 h-4 text-gray-400" />
+                        <span>{log.timestamp}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-3">
+                        <Avatar className="w-8 h-8">
+                          <AvatarImage src="/placeholder.svg" />
+                          <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
+                            {log.user.split(' ').slice(-1)[0].charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="font-medium text-sm">{log.user}</div>
+                          <div className="text-xs text-gray-500">
+                            {log.userRole === 'admin' ? 'Quản Trị Viên' : 'Telesales'}
+                          </div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-medium">{log.action}</span>
+                    </TableCell>
+                    <TableCell>
+                      <code className="bg-gray-100 px-2 py-1 rounded text-sm">
+                        {log.resource}
+                      </code>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        {getStatusIcon(log.status)}
+                        <Badge className={getStatusColor(log.status)}>
+                          {getStatusText(log.status)}
+                        </Badge>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        {getModuleIcon(log.module)}
+                        <span className="capitalize">{log.module}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-mono text-sm text-gray-600">
+                      {log.ipAddress}
+                    </TableCell>
+                    <TableCell className="max-w-xs">
+                      <div className="truncate" title={log.details}>
+                        {log.details}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>
