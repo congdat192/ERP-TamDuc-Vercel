@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,7 +13,8 @@ import {
   Settings,
   Menu,
   X,
-  Shield
+  Shield,
+  Package
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -27,31 +27,32 @@ interface PlatformAdminLayoutProps {
 const menuItems = [
   { id: 'dashboard', label: 'Tổng Quan', icon: LayoutDashboard },
   { id: 'tenants', label: 'Quản Lý Khách Hàng', icon: Building2 },
+  { id: 'module-licensing', label: 'Licensing & Module', icon: Package },
   { id: 'billing', label: 'Thanh Toán & Hóa Đơn', icon: CreditCard },
-  { id: 'audit-logs', label: 'Nhật Ký Hệ Thống', icon: FileText },
   { id: 'support', label: 'Hỗ Trợ Khách Hàng', icon: MessageSquare },
+  { id: 'audit-logs', label: 'Nhật Ký Hệ Thống', icon: FileText },
   { id: 'system-health', label: 'Tình Trạng Hệ Thống', icon: Activity },
-  { id: 'admin-users', label: 'Quản Lý Admin', icon: Users },
+  { id: 'admin-users', label: 'Quản Lý Admin', icon: Shield },
   { id: 'settings', label: 'Cài Đặt Nền Tảng', icon: Settings },
 ];
 
 export function PlatformAdminLayout({ currentPage, onPageChange, children }: PlatformAdminLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Mobile sidebar backdrop */}
-      {sidebarOpen && (
+      {sidebarCollapsed && (
         <div 
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
+          onClick={() => setSidebarCollapsed(false)}
         />
       )}
       
       {/* Sidebar */}
       <div className={cn(
         "fixed inset-y-0 left-0 z-50 w-72 bg-slate-900 text-white transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0",
-        sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        sidebarCollapsed ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex flex-col h-full">
           {/* Header */}
@@ -65,7 +66,7 @@ export function PlatformAdminLayout({ currentPage, onPageChange, children }: Pla
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setSidebarOpen(false)}
+              onClick={() => setSidebarCollapsed(false)}
               className="lg:hidden text-white hover:bg-slate-700"
             >
               <X className="w-5 h-5" />
@@ -114,7 +115,7 @@ export function PlatformAdminLayout({ currentPage, onPageChange, children }: Pla
                     )}
                     onClick={() => {
                       onPageChange(item.id);
-                      setSidebarOpen(false);
+                      setSidebarCollapsed(false);
                     }}
                   >
                     <Icon className="w-5 h-5 mr-3" />
@@ -142,7 +143,7 @@ export function PlatformAdminLayout({ currentPage, onPageChange, children }: Pla
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setSidebarOpen(true)}
+              onClick={() => setSidebarCollapsed(true)}
               className="lg:hidden"
             >
               <Menu className="w-5 h-5" />

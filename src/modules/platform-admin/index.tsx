@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { PlatformAdminLayout } from './components/PlatformAdminLayout';
 import { PlatformAdminDashboard } from './pages/Dashboard';
 import { TenantManagement } from './pages/TenantManagement';
+import { ModuleLicensing } from './pages/ModuleLicensing';
 import { AuditLogs } from './pages/AuditLogs';
 import { SupportTickets } from './pages/SupportTickets';
 import { EnhancedEmptyState } from '@/components/ui/enhanced-empty-states';
@@ -17,6 +18,8 @@ export function PlatformAdmin() {
         return <PlatformAdminDashboard />;
       case 'tenants':
         return <TenantManagement />;
+      case 'module-licensing':
+        return <ModuleLicensing />;
       case 'audit-logs':
         return <AuditLogs />;
       case 'support':
