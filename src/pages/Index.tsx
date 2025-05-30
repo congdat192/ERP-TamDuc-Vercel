@@ -20,7 +20,7 @@ import { AuditLog } from '@/modules/admin/pages/AuditLog';
 import { RolePermissions } from '@/modules/admin/pages/RolePermissions';
 import { SystemSettings } from '@/modules/admin/pages/SystemSettings';
 import { UserManagement } from '@/modules/admin/pages/UserManagement';
-import { SecuritySettings } from '@/modules/admin/pages/SecuritySettings';
+import { Settings } from '@/modules/admin/pages/Settings';
 
 import { ERPModule, VoucherFeature, User } from '@/types/auth';
 import { DEFAULT_PERMISSIONS } from '@/constants/permissions';
@@ -349,15 +349,10 @@ const Index = () => {
 
     // Admin module pages
     if (currentModule === 'system-settings') {
-      return <SystemSettings />;
+      return <Settings />;
     }
     if (currentModule === 'user-management') {
       return <UserManagement />;
-    }
-
-    // Security Settings module
-    if (currentModule === 'security-settings') {
-      return <SecuritySettings currentUser={currentUser} onLogout={handleLogout} />;
     }
 
     // Other modules show empty state
