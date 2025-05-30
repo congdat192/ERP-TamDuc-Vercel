@@ -1,5 +1,5 @@
 
-import { ModulePermission, UserRole } from '@/types/auth';
+import { ModulePermission, UserRole, ERPModule, VoucherFeature } from '@/types/auth';
 
 export const MODULE_PERMISSIONS: ModulePermission[] = [
   {
@@ -69,26 +69,26 @@ export const VOUCHER_FEATURES = [
 
 export const DEFAULT_PERMISSIONS = {
   'erp-admin': {
-    modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'system-settings', 'user-management'],
-    voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
+    modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'system-settings', 'user-management'] as ERPModule[],
+    voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'] as VoucherFeature[],
     canManageUsers: true,
     canViewAllVouchers: true
   },
   'voucher-admin': {
-    modules: ['dashboard', 'voucher'],
-    voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
+    modules: ['dashboard', 'voucher'] as ERPModule[],
+    voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'] as VoucherFeature[],
     canManageUsers: false,
     canViewAllVouchers: true
   },
   'telesales': {
-    modules: ['dashboard', 'voucher'],
-    voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list', 'voucher-leaderboard'],
+    modules: ['dashboard', 'voucher'] as ERPModule[],
+    voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list', 'voucher-leaderboard'] as VoucherFeature[],
     canManageUsers: false,
     canViewAllVouchers: false
   },
   'custom': {
-    modules: ['dashboard'],
-    voucherFeatures: [],
+    modules: ['dashboard'] as ERPModule[],
+    voucherFeatures: [] as VoucherFeature[],
     canManageUsers: false,
     canViewAllVouchers: false
   }
