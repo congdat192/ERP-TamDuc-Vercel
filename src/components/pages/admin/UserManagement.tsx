@@ -370,13 +370,11 @@ export function UserManagement() {
             ) : filteredUsers.length === 0 ? (
               searchTerm ? (
                 <EnhancedEmptyState
-                  type="no-results"
+                  variant="no-results"
                   title="Không tìm thấy người dùng"
                   description={`Không có người dùng nào phù hợp với "${searchTerm}"`}
-                  primaryAction={{
-                    label: 'Xóa Tìm Kiếm',
-                    onClick: handleClearSearch
-                  }}
+                  actionLabel="Xóa Tìm Kiếm"
+                  onAction={handleClearSearch}
                 />
               ) : (
                 <NoDataEmptyState 

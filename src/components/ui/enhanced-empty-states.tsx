@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, Database, Inbox, Maintenance } from 'lucide-react';
+import { AlertTriangle, Database, Inbox, Settings } from 'lucide-react';
 
 interface EmptyStateConfig {
   icon: React.ComponentType<any>;
@@ -33,7 +34,7 @@ export const emptyStateConfigs: EmptyStateConfigs = {
     defaultAction: 'Tải lại'
   },
   'maintenance': {
-    icon: Maintenance,
+    icon: Settings,
     message: 'Hệ thống đang bảo trì. Vui lòng quay lại sau.',
     defaultAction: 'Tải lại'
   },
@@ -108,5 +109,23 @@ export const EnhancedEmptyState = ({
       
       {children}
     </div>
+  );
+};
+
+// Add NoDataEmptyState component for backwards compatibility
+interface NoDataEmptyStateProps {
+  entityName: string;
+  onAdd?: () => void;
+}
+
+export const NoDataEmptyState = ({ entityName, onAdd }: NoDataEmptyStateProps) => {
+  return (
+    <EnhancedEmptyState
+      variant="no-data"
+      title={`Chưa có ${entityName} nào`}
+      description={`Bắt đầu bằng cách tạo ${entityName} đầu tiên của bạn.`}
+      actionLabel={`Thêm ${entityName}`}
+      onAction={onAdd}
+    />
   );
 };
