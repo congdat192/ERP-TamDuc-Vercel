@@ -12,7 +12,6 @@ import {
   CheckCircle2, 
   AlertCircle, 
   Loader, 
-  Building2, 
   Shield,
   Clock,
   Users,
@@ -205,9 +204,11 @@ export function KiotVietIntegration({ integration, onSave, onDisconnect }: KiotV
       <Card className="w-full max-w-4xl">
         <CardHeader>
           <CardTitle className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center text-white">
-              <Building2 className="w-5 h-5" />
-            </div>
+            <img 
+              src="https://miniapp.bestbuysaigon.com/image/kiotviet.jpg" 
+              alt="KiotViet logo"
+              className="w-10 h-10 rounded-lg object-cover"
+            />
             <div>
               <h3 className="text-lg font-semibold">KiotViet - {integration.retailerName}</h3>
               <div className="flex items-center space-x-2 mt-1">
@@ -264,9 +265,11 @@ export function KiotVietIntegration({ integration, onSave, onDisconnect }: KiotV
     <Card className="w-full max-w-4xl">
       <CardHeader>
         <CardTitle className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center text-white">
-            <Building2 className="w-5 h-5" />
-          </div>
+          <img 
+            src="https://miniapp.bestbuysaigon.com/image/kiotviet.jpg" 
+            alt="KiotViet logo"
+            className="w-10 h-10 rounded-lg object-cover"
+          />
           <div>
             <h3 className="text-lg font-semibold">Cấu hình tích hợp KiotViet</h3>
             <p className="text-sm text-gray-600">Kết nối hệ thống ERP với tài khoản KiotViet của bạn</p>
