@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
@@ -15,13 +13,10 @@ import {
   CheckCircle2,
   AlertCircle,
   Clock,
-  Settings,
-  Copy,
-  Eye,
-  EyeOff,
-  ExternalLink
+  Settings
 } from 'lucide-react';
-import { ThirdPartyIntegration } from '../../types/settings';
+import { ThirdPartyIntegration, KiotVietIntegration } from '../../types/settings';
+import { KiotVietIntegration as KiotVietIntegrationComponent } from '../../components/KiotVietIntegration';
 
 // Mock data for Vietnamese market integrations
 const mockIntegrations: ThirdPartyIntegration[] = [
@@ -150,8 +145,7 @@ const statusConfig = {
 export function ThirdPartyIntegrations() {
   const [selectedIntegration, setSelectedIntegration] = useState<ThirdPartyIntegration | null>(null);
   const [isSetupDialogOpen, setIsSetupDialogOpen] = useState(false);
-  const [apiKeyVisible, setApiKeyVisible] = useState(false);
-  const [apiKey, setApiKey] = useState('');
+  const [kiotVietConfig, setKiotVietConfig] = useState<KiotVietIntegration | null>(null);
 
   const handleIntegrationClick = (integration: ThirdPartyIntegration) => {
     if (!integration.isSupported) {
@@ -163,51 +157,79 @@ export function ThirdPartyIntegrations() {
     }
 
     setSelectedIntegration(integration);
-    setApiKey(integration.apiKey || '');
     setIsSetupDialogOpen(true);
   };
 
-  const handleConnect = () => {
-    if (!selectedIntegration || !apiKey.trim()) {
-      toast({
-        title: "Thiếu thông tin",
-        description: "Vui lòng nhập API Key để kết nối.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    toast({
-      title: "Đang kết nối",
-      description: `Đang thiết lập kết nối với ${selectedIntegration.name}...`,
+  const handleKiotVietSave = (config: Partial<KiotVietIntegration>) => {
+    setKiotVietConfig({
+      id: 'kiotviet',
+      retailerName: config.retailerName || '',
+      clientId: config.clientId || '',
+      isConnected: config.isConnected || false,
+      connectedApiGroups: config.connectedApiGroups || [],
+      connectionStatus: config.connectionStatus || 'disconnected',
+      lastSync: config.lastSync
     });
-
-    // Simulate connection
-    setTimeout(() => {
-      toast({
-        title: "Kết nối thành công",
-        description: `${selectedIntegration.name} đã được kết nối thành công.`,
-      });
-      setIsSetupDialogOpen(false);
-    }, 2000);
-  };
-
-  const handleDisconnect = () => {
-    if (!selectedIntegration) return;
-
-    toast({
-      title: "Đã ngắt kết nối",
-      description: `${selectedIntegration.name} đã được ngắt kết nối.`,
-    });
+    
     setIsSetupDialogOpen(false);
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
+  const handleKiotVietDisconnect = () => {
+    setKiotVietConfig(null);
     toast({
-      title: "Đã sao chép",
-      description: "Thông tin đã được sao chép vào clipboard.",
+      title: "Đã ngắt kết nối",
+      description: "KiotViet đã được ngắt kết nối khỏi hệ thống.",
     });
+  };
+
+  const renderIntegrationDialog = () => {
+    if (!selectedIntegration) return null;
+
+    if (selectedIntegration.id === 'kiotviet') {
+      return (
+        <KiotVietIntegrationComponent
+          integration={kiotVietConfig || undefined}
+          onSave={handleKiotVietSave}
+          onDisconnect={handleKiotVietDisconnect}
+        />
+      );
+    }
+
+    // Default dialog for other integrations
+    return (
+      <div className="space-y-6">
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h4 className="font-medium text-gray-900 mb-2">Về {selectedIntegration.name}</h4>
+          <p className="text-sm text-gray-600 mb-3">{selectedIntegration.description}</p>
+          
+          <div className="space-y-2">
+            <div className="text-sm font-medium">Tính năng hỗ trợ:</div>
+            <div className="flex flex-wrap gap-2">
+              {selectedIntegration.features.map((feature, index) => (
+                <Badge key={index} variant="outline" className="text-xs">
+                  {feature}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="text-center py-8">
+          <AlertCircle className="w-12 h-12 text-yellow-500 mx-auto mb-3" />
+          <p className="text-sm text-gray-600">
+            Tích hợp {selectedIntegration.name} đang được phát triển.
+            <br />
+            Vui lòng quay lại sau để sử dụng tính năng này.
+          </p>
+        </div>
+
+        <div className="flex justify-center">
+          <Button variant="outline" onClick={() => setIsSetupDialogOpen(false)}>
+            Đóng
+          </Button>
+        </div>
+      </div>
+    );
   };
 
   const getIntegrationsByCategory = () => {
@@ -244,12 +266,17 @@ export function ThirdPartyIntegrations() {
               const StatusIcon = statusConfig[integration.status].icon;
               const CategoryIcon = categoryIcons[integration.category];
               
+              // Check if this integration has custom configuration
+              const isKiotVietConnected = integration.id === 'kiotviet' && kiotVietConfig?.isConnected;
+              const currentStatus = isKiotVietConnected ? 'connected' : integration.status;
+              const currentStatusConfig = statusConfig[currentStatus];
+              
               return (
                 <Card 
                   key={integration.id}
                   className={`
                     cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-105
-                    ${integration.status === 'connected' ? 'ring-2 ring-green-200 bg-green-50/50' : ''}
+                    ${currentStatus === 'connected' ? 'ring-2 ring-green-200 bg-green-50/50' : ''}
                     ${!integration.isSupported ? 'opacity-60' : ''}
                   `}
                   onClick={() => handleIntegrationClick(integration)}
@@ -266,12 +293,17 @@ export function ThirdPartyIntegrations() {
                         <div>
                           <CardTitle className="text-base font-semibold">
                             {integration.name}
+                            {integration.id === 'kiotviet' && kiotVietConfig?.retailerName && (
+                              <span className="text-sm font-normal text-gray-600 block">
+                                {kiotVietConfig.retailerName}
+                              </span>
+                            )}
                           </CardTitle>
                         </div>
                       </div>
-                      <Badge variant={statusConfig[integration.status].variant} className="text-xs">
-                        <StatusIcon className="w-3 h-3 mr-1" />
-                        {statusConfig[integration.status].label}
+                      <Badge variant={currentStatusConfig.variant} className="text-xs">
+                        <currentStatusConfig.icon className="w-3 h-3 mr-1" />
+                        {currentStatusConfig.label}
                       </Badge>
                     </div>
                   </CardHeader>
@@ -298,9 +330,11 @@ export function ThirdPartyIntegrations() {
                         )}
                       </div>
                       
-                      {integration.lastSync && (
+                      {(integration.lastSync || (integration.id === 'kiotviet' && kiotVietConfig?.lastSync)) && (
                         <p className="text-xs text-gray-500">
-                          Đồng bộ cuối: {integration.lastSync}
+                          Đồng bộ cuối: {integration.id === 'kiotviet' && kiotVietConfig?.lastSync 
+                            ? kiotVietConfig.lastSync 
+                            : integration.lastSync}
                         </p>
                       )}
                     </div>
@@ -314,7 +348,7 @@ export function ThirdPartyIntegrations() {
 
       {/* Setup Dialog */}
       <Dialog open={isSetupDialogOpen} onOpenChange={setIsSetupDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-3">
               {selectedIntegration && (
@@ -331,93 +365,7 @@ export function ThirdPartyIntegrations() {
             </DialogTitle>
           </DialogHeader>
           
-          {selectedIntegration && (
-            <div className="space-y-6">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-medium text-gray-900 mb-2">Về {selectedIntegration.name}</h4>
-                <p className="text-sm text-gray-600 mb-3">{selectedIntegration.description}</p>
-                
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Tính năng hỗ trợ:</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedIntegration.features.map((feature, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {feature}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="apiKey">API Key / Token</Label>
-                  <div className="flex items-center space-x-2">
-                    <Input
-                      id="apiKey"
-                      type={apiKeyVisible ? "text" : "password"}
-                      value={apiKey}
-                      onChange={(e) => setApiKey(e.target.value)}
-                      placeholder="Nhập API Key từ dashboard của bạn"
-                      className="flex-1"
-                    />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setApiKeyVisible(!apiKeyVisible)}
-                    >
-                      {apiKeyVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </Button>
-                    {apiKey && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => copyToClipboard(apiKey)}
-                      >
-                        <Copy className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
-                </div>
-
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <div className="flex items-start space-x-2">
-                    <ExternalLink className="w-4 h-4 text-blue-600 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-blue-900">Hướng dẫn lấy API Key</p>
-                      <p className="text-sm text-blue-700">
-                        Truy cập dashboard {selectedIntegration.name} → Cài đặt → API/Tích hợp → Tạo API Key mới
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex space-x-3 pt-4 border-t">
-                {selectedIntegration.status === 'connected' ? (
-                  <>
-                    <Button variant="outline" onClick={handleDisconnect} className="flex-1">
-                      Ngắt kết nối
-                    </Button>
-                    <Button onClick={handleConnect} className="flex-1">
-                      <Settings className="w-4 h-4 mr-2" />
-                      Cập nhật cấu hình
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button variant="outline" onClick={() => setIsSetupDialogOpen(false)} className="flex-1">
-                      Hủy
-                    </Button>
-                    <Button onClick={handleConnect} className="flex-1">
-                      <CheckCircle2 className="w-4 h-4 mr-2" />
-                      Kết nối ngay
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
+          {renderIntegrationDialog()}
         </DialogContent>
       </Dialog>
     </div>

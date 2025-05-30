@@ -16,5 +16,8 @@ export { ThirdPartyIntegrations } from './pages/settings/ThirdPartyIntegrations'
 export { BackupRestore } from './pages/settings/BackupRestore';
 export { FeaturesPlans } from './pages/settings/FeaturesPlans';
 
+// Integration Components
+export { KiotVietIntegration } from './components/KiotVietIntegration';
+
 // Types
 export type * from './types/settings';

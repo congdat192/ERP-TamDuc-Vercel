@@ -1,4 +1,3 @@
-
 export type SettingsCategory = 
   | 'general-info'
   | 'email'
@@ -82,4 +81,29 @@ export interface ApiIntegration {
   apiKey?: string;
   lastSync?: string;
   features: string[];
+}
+
+export interface KiotVietIntegration {
+  id: string;
+  retailerName: string;
+  clientId: string;
+  isConnected: boolean;
+  lastSync?: string;
+  connectedApiGroups: string[];
+  connectionStatus: 'connected' | 'disconnected' | 'testing' | 'error';
+  errorMessage?: string;
+}
+
+export interface KiotVietApiGroup {
+  id: string;
+  name: string;
+  description: string;
+  enabled: boolean;
+  accessible?: boolean;
+}
+
+export interface ConnectionTestResult {
+  success: boolean;
+  accessibleGroups?: string[];
+  errorMessage?: string;
 }
