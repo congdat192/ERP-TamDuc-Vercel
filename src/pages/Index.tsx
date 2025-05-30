@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ERPLayout } from '@/components/layout/ERPLayout';
 import { LoginPage } from '@/components/pages/LoginPage';
 import { ERPHome } from './ERPHome';
@@ -21,6 +21,9 @@ import { SecuritySettings } from '@/modules/admin/pages/SecuritySettings';
 
 import { ERPModule, VoucherFeature, User } from '@/types/auth';
 import { DEFAULT_PERMISSIONS } from '@/constants/permissions';
+import { useKeyboardShortcuts } from '@/components/ui/keyboard-shortcuts';
+import { PageTransition } from '@/components/ui/page-transitions';
+import { useToast } from '@/hooks/use-toast';
 
 // Mock users for demo
 const mockUsers: User[] = [
@@ -116,32 +119,114 @@ const Index = () => {
   const [currentVoucherPage, setCurrentVoucherPage] = useState<VoucherFeature>('voucher-dashboard');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
-  const handleLogin = (username: string, password: string) => {
+  // Keyboard shortcuts
+  useKeyboardShortcuts({
+    'ctrl+h': () => {
+      if (isLoggedIn) {
+        setCurrentModule('dashboard');
+        toast({
+          title: "Điều hướng",
+          description: "Đã chuyển về trang chủ",
+        });
+      }
+    },
+    'ctrl+d': () => {
+      if (isLoggedIn) {
+        setCurrentModule('dashboard');
+        toast({
+          title: "Điều hướng", 
+          description: "Đã mở Dashboard",
+        });
+      }
+    },
+    'ctrl+u': () => {
+      if (isLoggedIn && currentUser?.permissions.modules.includes('user-management')) {
+        setCurrentModule('user-management');
+        toast({
+          title: "Điều hướng",
+          description: "Đã mở Quản lý người dùng",
+        });
+      }
+    },
+    'ctrl+v': () => {
+      if (isLoggedIn && currentUser?.permissions.modules.includes('voucher')) {
+        setCurrentModule('voucher');
+        toast({
+          title: "Điều hướng",
+          description: "Đã mở Module Voucher",
+        });
+      }
+    },
+    'ctrl+s': () => {
+      if (isLoggedIn && currentUser?.permissions.modules.includes('system-settings')) {
+        setCurrentModule('system-settings');
+        toast({
+          title: "Điều hướng",
+          description: "Đã mở Cài đặt hệ thống",
+        });
+      }
+    },
+    '?': () => {
+      if (isLoggedIn) {
+        // This will be handled by the KeyboardShortcutsDialog component
+      }
+    }
+  });
+
+  const handleLogin = async (username: string, password: string) => {
+    setIsLoading(true);
+    
+    // Simulate loading
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
     // Find user by username for demo purposes
     const user = mockUsers.find(u => u.username === username);
     if (user) {
       setCurrentUser(user);
       setIsLoggedIn(true);
       setCurrentModule('dashboard');
+      toast({
+        title: "Đăng nhập thành công",
+        description: `Chào mừng bạn trở lại, ${user.fullName}!`,
+      });
     }
+    
+    setIsLoading(false);
   };
 
   const handleLogout = () => {
     setIsLoggedIn(false);
     setCurrentUser(null);
     setCurrentModule('dashboard');
+    toast({
+      title: "Đăng xuất thành công",
+      description: "Hẹn gặp lại bạn!",
+    });
   };
 
-  const handleModuleChange = (module: ERPModule) => {
+  const handleModuleChange = async (module: ERPModule) => {
+    setIsLoading(true);
+    
+    // Simulate loading for module transition
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
     setCurrentModule(module);
     if (module === 'voucher') {
       setCurrentVoucherPage('voucher-dashboard');
     }
+    
+    setIsLoading(false);
   };
 
   if (!isLoggedIn || !currentUser) {
-    return <LoginPage onLogin={handleLogin} mockUsers={mockUsers} />;
+    return (
+      <PageTransition isLoading={isLoading}>
+        <LoginPage onLogin={handleLogin} mockUsers={mockUsers} />
+      </PageTransition>
+    );
   }
 
   const renderMainContent = () => {
@@ -194,7 +279,9 @@ const Index = () => {
       onVoucherPageChange={currentModule === 'voucher' ? setCurrentVoucherPage : undefined}
       onLogout={handleLogout}
     >
-      {renderMainContent()}
+      <PageTransition isLoading={isLoading} type="fade">
+        {renderMainContent()}
+      </PageTransition>
     </ERPLayout>
   );
 };
