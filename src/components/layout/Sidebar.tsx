@@ -1,4 +1,3 @@
-
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -17,11 +16,11 @@ import {
   ClipboardList,
   UserCog
 } from 'lucide-react';
-import { PageType } from '@/pages/Index';
+import { VoucherFeature } from '@/types/auth';
 
 interface SidebarProps {
-  currentPage: PageType;
-  onPageChange: (page: PageType) => void;
+  currentPage: VoucherFeature;
+  onPageChange: (page: VoucherFeature) => void;
   isOpen: boolean;
   onToggle: () => void;
   userRole: 'admin' | 'telesales';
@@ -33,30 +32,24 @@ interface SidebarProps {
 }
 
 const telesalesItems = [
-  { id: 'dashboard' as PageType, label: 'Bảng Điều Khiển', icon: LayoutDashboard },
-  { id: 'issue-voucher' as PageType, label: 'Phát Hành Voucher', icon: Receipt },
-  { id: 'voucher-list' as PageType, label: 'Danh Sách Voucher', icon: FileText },
-  { id: 'analytics' as PageType, label: 'Báo Cáo Phân Tích', icon: BarChart3 },
-  { id: 'leaderboard' as PageType, label: 'Bảng Xếp Hạng', icon: Trophy },
-  { id: 'customer-list' as PageType, label: 'Danh Sách Khách Hàng', icon: Users },
-  { id: 'settings' as PageType, label: 'Cài Đặt Cá Nhân', icon: Settings },
+  { id: 'voucher-dashboard' as VoucherFeature, label: 'Bảng Điều Khiển', icon: LayoutDashboard },
+  { id: 'issue-voucher' as VoucherFeature, label: 'Phát Hành Voucher', icon: Receipt },
+  { id: 'voucher-list' as VoucherFeature, label: 'Danh Sách Voucher', icon: FileText },
+  { id: 'voucher-analytics' as VoucherFeature, label: 'Báo Cáo Phân Tích', icon: BarChart3 },
+  { id: 'voucher-leaderboard' as VoucherFeature, label: 'Bảng Xếp Hạng', icon: Trophy },
+  { id: 'voucher-settings' as VoucherFeature, label: 'Cài Đặt Cá Nhân', icon: Settings },
 ];
 
 const adminItems = [
-  { id: 'dashboard' as PageType, label: 'Bảng Điều Khiển', icon: LayoutDashboard },
-  { id: 'issue-voucher' as PageType, label: 'Phát Hành Voucher', icon: Receipt },
-  { id: 'voucher-list' as PageType, label: 'Danh Sách Voucher', icon: FileText },
-  { id: 'analytics' as PageType, label: 'Báo Cáo Phân Tích', icon: BarChart3 },
-  { id: 'leaderboard' as PageType, label: 'Bảng Xếp Hạng', icon: Trophy },
-  { id: 'customer-list' as PageType, label: 'Danh Sách Khách Hàng', icon: Users },
+  { id: 'voucher-dashboard' as VoucherFeature, label: 'Bảng Điều Khiển', icon: LayoutDashboard },
+  { id: 'issue-voucher' as VoucherFeature, label: 'Phát Hành Voucher', icon: Receipt },
+  { id: 'voucher-list' as VoucherFeature, label: 'Danh Sách Voucher', icon: FileText },
+  { id: 'voucher-analytics' as VoucherFeature, label: 'Báo Cáo Phân Tích', icon: BarChart3 },
+  { id: 'voucher-leaderboard' as VoucherFeature, label: 'Bảng Xếp Hạng', icon: Trophy },
 ];
 
 const adminOnlyItems = [
-  { id: 'user-management' as PageType, label: 'Quản Lý Người Dùng', icon: UserCog },
-  { id: 'system-settings' as PageType, label: 'Cài Đặt Hệ Thống', icon: Database },
-  { id: 'audit-log' as PageType, label: 'Nhật Ký Hoạt Động', icon: ClipboardList },
-  { id: 'role-permissions' as PageType, label: 'Phân Quyền', icon: Shield },
-  { id: 'settings' as PageType, label: 'Cài Đặt', icon: Settings },
+  { id: 'voucher-settings' as VoucherFeature, label: 'Cài Đặt Hệ Thống', icon: Database },
 ];
 
 export function Sidebar({ currentPage, onPageChange, isOpen, onToggle, userRole, currentUser }: SidebarProps) {

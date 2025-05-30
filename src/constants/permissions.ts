@@ -69,26 +69,26 @@ export const VOUCHER_FEATURES = [
 
 export const DEFAULT_PERMISSIONS = {
   'erp-admin': {
-    modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'system-settings', 'user-management'] as const,
-    voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'] as const,
+    modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'system-settings', 'user-management'],
+    voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
     canManageUsers: true,
     canViewAllVouchers: true
   },
   'voucher-admin': {
-    modules: ['dashboard', 'voucher'] as const,
-    voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'] as const,
+    modules: ['dashboard', 'voucher'],
+    voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
     canManageUsers: false,
     canViewAllVouchers: true
   },
   'telesales': {
-    modules: ['dashboard', 'voucher'] as const,
-    voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list', 'voucher-leaderboard'] as const,
+    modules: ['dashboard', 'voucher'],
+    voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list', 'voucher-leaderboard'],
     canManageUsers: false,
     canViewAllVouchers: false
   },
   'custom': {
-    modules: ['dashboard'] as const,
-    voucherFeatures: [] as const,
+    modules: ['dashboard'],
+    voucherFeatures: [],
     canManageUsers: false,
     canViewAllVouchers: false
   }

@@ -1,4 +1,3 @@
-
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -11,7 +10,7 @@ import {
   Shield,
   Construction 
 } from 'lucide-react';
-import { ERPModule } from '@/types/erp';
+import { ERPModule } from '@/types/auth';
 
 interface ModuleEmptyStateProps {
   module: ERPModule;

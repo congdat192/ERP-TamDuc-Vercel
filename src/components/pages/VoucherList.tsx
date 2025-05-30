@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Search, Filter, RotateCcw, Plus } from 'lucide-react';
-import { User } from '@/types/erp';
+import { User } from '@/types/auth';
 
 interface VoucherListProps {
   currentUser: User;
