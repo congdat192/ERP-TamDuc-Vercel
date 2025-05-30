@@ -1,4 +1,3 @@
-
 export type UserRole = 
   | 'erp-admin' 
   | 'voucher-admin' 
@@ -14,7 +13,8 @@ export type ERPModule =
   | 'hr' 
   | 'voucher' 
   | 'system-settings' 
-  | 'user-management';
+  | 'user-management'
+  | 'security-settings';
 
 export type VoucherFeature = 
   | 'voucher-dashboard' 
