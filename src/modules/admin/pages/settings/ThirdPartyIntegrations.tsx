@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,20 +15,8 @@ import {
   Clock,
   Settings
 } from 'lucide-react';
-import type { ThirdPartyIntegration, KiotVietIntegration } from '../../types/settings';
+import { ThirdPartyIntegration, KiotVietIntegration } from '../../types/settings';
 import { KiotVietIntegration as KiotVietIntegrationComponent } from '../../components/KiotVietIntegration';
-
-// Service logos mapping
-const serviceLogos = {
-  kiotviet: 'https://miniapp.bestbuysaigon.com/image/kiotviet.jpg',
-  sapo: 'https://miniapp.bestbuysaigon.com/image/nhanh.jpg', // Using nhanh as placeholder for sapo
-  'zalo-oa': 'https://miniapp.bestbuysaigon.com/image/zalo.jpg',
-  misa: 'https://miniapp.bestbuysaigon.com/image/vihat.jpg', // Using vihat as placeholder for misa
-  pos365: 'https://miniapp.bestbuysaigon.com/image/kiotviet.jpg', // Using kiotviet as placeholder for pos365
-  haravan: 'https://miniapp.bestbuysaigon.com/image/nhanh.jpg', // Using nhanh as placeholder for haravan
-  vnpay: 'https://miniapp.bestbuysaigon.com/image/vihat.jpg', // Using vihat as placeholder for vnpay
-  momo: 'https://miniapp.bestbuysaigon.com/image/zalo.jpg' // Using zalo as placeholder for momo
-};
 
 // Mock data for Vietnamese market integrations
 const mockIntegrations: ThirdPartyIntegration[] = [
@@ -212,14 +199,7 @@ export function ThirdPartyIntegrations() {
     return (
       <div className="space-y-6">
         <div className="bg-gray-50 p-4 rounded-lg">
-          <div className="flex items-center space-x-3 mb-3">
-            <img 
-              src={serviceLogos[selectedIntegration.id as keyof typeof serviceLogos]} 
-              alt={`${selectedIntegration.name} logo`}
-              className="w-8 h-8 rounded-lg object-cover"
-            />
-            <h4 className="font-medium text-gray-900">Về {selectedIntegration.name}</h4>
-          </div>
+          <h4 className="font-medium text-gray-900 mb-2">Về {selectedIntegration.name}</h4>
           <p className="text-sm text-gray-600 mb-3">{selectedIntegration.description}</p>
           
           <div className="space-y-2">
@@ -284,15 +264,12 @@ export function ThirdPartyIntegrations() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {integrations.map((integration) => {
               const StatusIcon = statusConfig[integration.status].icon;
+              const CategoryIcon = categoryIcons[integration.category];
               
               // Check if this integration has custom configuration
               const isKiotVietConnected = integration.id === 'kiotviet' && kiotVietConfig?.isConnected;
               const currentStatus = isKiotVietConnected ? 'connected' : integration.status;
               const currentStatusConfig = statusConfig[currentStatus];
-              
-              // Determine icon opacity based on status
-              const isConnected = currentStatus === 'connected';
-              const iconOpacity = isConnected || integration.isSupported ? 'opacity-100' : 'opacity-50';
               
               return (
                 <Card 
@@ -307,11 +284,12 @@ export function ThirdPartyIntegrations() {
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center space-x-3">
-                        <img 
-                          src={serviceLogos[integration.id as keyof typeof serviceLogos]} 
-                          alt={`${integration.name} logo`}
-                          className={`w-10 h-10 rounded-lg object-cover ${iconOpacity}`}
-                        />
+                        <div 
+                          className="w-10 h-10 rounded-lg flex items-center justify-center text-white"
+                          style={{ backgroundColor: integration.color }}
+                        >
+                          <CategoryIcon className="w-5 h-5" />
+                        </div>
                         <div>
                           <CardTitle className="text-base font-semibold">
                             {integration.name}
@@ -375,11 +353,12 @@ export function ThirdPartyIntegrations() {
             <DialogTitle className="flex items-center space-x-3">
               {selectedIntegration && (
                 <>
-                  <img 
-                    src={serviceLogos[selectedIntegration.id as keyof typeof serviceLogos]} 
-                    alt={`${selectedIntegration.name} logo`}
-                    className="w-8 h-8 rounded-lg object-cover"
-                  />
+                  <div 
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-white"
+                    style={{ backgroundColor: selectedIntegration.color }}
+                  >
+                    {React.createElement(categoryIcons[selectedIntegration.category], { className: "w-4 h-4" })}
+                  </div>
                   <span>Cấu hình {selectedIntegration.name}</span>
                 </>
               )}
