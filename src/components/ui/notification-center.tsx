@@ -18,10 +18,17 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useNotifications } from '@/hooks/useNotifications';
 import { Notification, NotificationType } from '@/types/notification';
 import { cn } from '@/lib/utils';
 import { EmptyState } from '@/components/ui/empty-states';
+import { NotificationPreferences } from '@/components/ui/notification-preferences';
 
 const getNotificationIcon = (type: NotificationType) => {
   switch (type) {
@@ -200,6 +207,7 @@ export const NotificationCenter = () => {
   
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
   const [activeTab, setActiveTab] = useState('all');
+  const [showSettings, setShowSettings] = useState(false);
 
   const handleViewDetails = (notification: Notification) => {
     setSelectedNotification(notification);
@@ -211,72 +219,84 @@ export const NotificationCenter = () => {
   const filteredNotifications = getNotificationsByType(activeTab);
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="ghost" size="sm" className="relative">
-          <Bell className="w-5 h-5" />
-          {unreadCount > 0 && (
-            <Badge 
-              variant="destructive" 
-              className="absolute -top-1 -right-1 w-5 h-5 rounded-full p-0 text-xs flex items-center justify-center"
-            >
-              {unreadCount > 9 ? '9+' : unreadCount}
-            </Badge>
-          )}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-96 p-0" align="end">
-        <div className="flex items-center justify-between p-4 border-b">
-          <h3 className="font-semibold">Thông Báo</h3>
-          <div className="flex items-center space-x-2">
+    <>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="ghost" size="sm" className="relative">
+            <Bell className="w-5 h-5" />
             {unreadCount > 0 && (
-              <Button variant="ghost" size="sm" onClick={markAllAsRead}>
-                <Check className="w-4 h-4 mr-1" />
-                Đọc Tất Cả
-              </Button>
+              <Badge 
+                variant="destructive" 
+                className="absolute -top-1 -right-1 w-5 h-5 rounded-full p-0 text-xs flex items-center justify-center"
+              >
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </Badge>
             )}
-            <Button variant="ghost" size="sm">
-              <Settings className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 px-4 py-2">
-            <TabsTrigger value="all" className="text-xs">Tất Cả</TabsTrigger>
-            <TabsTrigger value="system" className="text-xs">Hệ Thống</TabsTrigger>
-            <TabsTrigger value="voucher" className="text-xs">Voucher</TabsTrigger>
-            <TabsTrigger value="security" className="text-xs">Bảo Mật</TabsTrigger>
-          </TabsList>
-          
-          <ScrollArea className="h-96">
-            <TabsContent value={activeTab} className="m-0">
-              {filteredNotifications.length === 0 ? (
-                <div className="p-4">
-                  <EmptyState
-                    icon={<Bell className="w-8 h-8 text-gray-400" />}
-                    title="Không Có Thông Báo"
-                    description="Bạn đã xem hết tất cả thông báo."
-                  />
-                </div>
-              ) : (
-                <div className="divide-y">
-                  {filteredNotifications.map((notification) => (
-                    <NotificationItem
-                      key={notification.id}
-                      notification={notification}
-                      onMarkAsRead={markAsRead}
-                      onMarkAsUnread={markAsUnread}
-                      onDelete={deleteNotification}
-                      onViewDetails={handleViewDetails}
-                    />
-                  ))}
-                </div>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-96 p-0" align="end">
+          <div className="flex items-center justify-between p-4 border-b">
+            <h3 className="font-semibold">Thông Báo</h3>
+            <div className="flex items-center space-x-2">
+              {unreadCount > 0 && (
+                <Button variant="ghost" size="sm" onClick={markAllAsRead}>
+                  <Check className="w-4 h-4 mr-1" />
+                  Đọc Tất Cả
+                </Button>
               )}
-            </TabsContent>
-          </ScrollArea>
-        </Tabs>
-      </PopoverContent>
-    </Popover>
+              <Button variant="ghost" size="sm" onClick={() => setShowSettings(true)}>
+                <Settings className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-4 px-4 py-2">
+              <TabsTrigger value="all" className="text-xs">Tất Cả</TabsTrigger>
+              <TabsTrigger value="system" className="text-xs">Hệ Thống</TabsTrigger>
+              <TabsTrigger value="voucher" className="text-xs">Voucher</TabsTrigger>
+              <TabsTrigger value="security" className="text-xs">Bảo Mật</TabsTrigger>
+            </TabsList>
+            
+            <ScrollArea className="h-96">
+              <TabsContent value={activeTab} className="m-0">
+                {filteredNotifications.length === 0 ? (
+                  <div className="p-4">
+                    <EmptyState
+                      icon={<Bell className="w-8 h-8 text-gray-400" />}
+                      title="Không Có Thông Báo"
+                      description="Bạn đã xem hết tất cả thông báo."
+                    />
+                  </div>
+                ) : (
+                  <div className="divide-y">
+                    {filteredNotifications.map((notification) => (
+                      <NotificationItem
+                        key={notification.id}
+                        notification={notification}
+                        onMarkAsRead={markAsRead}
+                        onMarkAsUnread={markAsUnread}
+                        onDelete={deleteNotification}
+                        onViewDetails={handleViewDetails}
+                      />
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            </ScrollArea>
+          </Tabs>
+        </PopoverContent>
+      </Popover>
+
+      {/* Notification Settings Dialog */}
+      <Dialog open={showSettings} onOpenChange={setShowSettings}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Cài Đặt Thông Báo</DialogTitle>
+          </DialogHeader>
+          <NotificationPreferences />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };

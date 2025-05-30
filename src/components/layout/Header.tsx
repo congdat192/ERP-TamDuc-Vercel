@@ -1,4 +1,5 @@
 
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Menu, Ticket, LogOut, User } from 'lucide-react';
@@ -10,6 +11,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { NotificationCenter } from '@/components/ui/notification-center';
 import { User as UserType } from '@/types/auth';
@@ -22,7 +29,11 @@ interface HeaderProps {
   currentUser: UserType;
 }
 
-export function Header({ onSidebarToggle, currentPage, onLogout, currentUser }: HeaderProps) {
+export function Header({ onSidebarToggle, currentPage, onPageChange, onLogout, currentUser }: HeaderProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showQuickVoucher, setShowQuickVoucher] = useState(false);
+  const [showUserSettings, setShowUserSettings] = useState(false);
+
   const getRoleDisplayName = (role: string) => {
     switch (role) {
       case 'erp-admin': return 'Quản Trị ERP';
@@ -33,89 +44,139 @@ export function Header({ onSidebarToggle, currentPage, onLogout, currentUser }: 
     }
   };
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      console.log('Searching for:', searchQuery);
+      // TODO: Implement search functionality
+    }
+  };
+
+  const handleQuickVoucher = () => {
+    setShowQuickVoucher(true);
+  };
+
+  const handleUserSettings = () => {
+    setShowUserSettings(true);
+  };
+
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onSidebarToggle}
-            className="lg:hidden"
-          >
-            <Menu className="w-5 h-5" />
-          </Button>
-          
-          <div className="flex items-center space-x-2">
-            <h2 className="text-2xl font-bold text-gray-900">
-              {currentPage}
-            </h2>
-            <Badge variant="secondary" className="ml-2">Trực Tuyến</Badge>
-          </div>
-        </div>
-
-        <div className="flex items-center space-x-4">
-          {/* Quick Voucher Button - only show if user has voucher access */}
-          {currentUser.permissions.modules.includes('voucher') && (
-            <Button 
-              className="bg-orange-600 hover:bg-orange-700 text-white shadow-lg"
-              onClick={() => {/* This will be handled by parent component */}}
+    <>
+      <header className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onSidebarToggle}
+              className="lg:hidden"
             >
-              <Ticket className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">Phát Hành Nhanh</span>
+              <Menu className="w-5 h-5" />
             </Button>
-          )}
-
-          {/* Search */}
-          <div className="relative hidden md:block">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              placeholder="Tìm kiếm trong hệ thống..."
-              className="pl-10 w-64"
-            />
+            
+            <div className="flex items-center space-x-2">
+              <h2 className="text-2xl font-bold text-gray-900">
+                {currentPage}
+              </h2>
+              <Badge variant="secondary" className="ml-2">Trực Tuyến</Badge>
+            </div>
           </div>
 
-          {/* Notifications */}
-          <NotificationCenter />
-
-          {/* User Menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src="/placeholder.svg" />
-                  <AvatarFallback className="bg-blue-100 text-blue-600">
-                    {currentUser.fullName.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
+          <div className="flex items-center space-x-4">
+            {/* Quick Voucher Button - only show if user has voucher access */}
+            {currentUser.permissions.modules.includes('voucher') && (
+              <Button 
+                className="bg-orange-600 hover:bg-orange-700 text-white shadow-lg"
+                onClick={handleQuickVoucher}
+              >
+                <Ticket className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Phát Hành Nhanh</span>
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end" forceMount>
-              <div className="flex items-center justify-start gap-2 p-2">
-                <div className="flex flex-col space-y-1 leading-none">
-                  <p className="font-medium">{currentUser.fullName}</p>
-                  <p className="w-[200px] truncate text-sm text-muted-foreground">
-                    {getRoleDisplayName(currentUser.role)}
-                  </p>
-                  <p className="w-[200px] truncate text-xs text-muted-foreground">
-                    {currentUser.email}
-                  </p>
+            )}
+
+            {/* Search */}
+            <form onSubmit={handleSearch} className="relative hidden md:block">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                placeholder="Tìm kiếm trong hệ thống..."
+                className="pl-10 w-64"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </form>
+
+            {/* Notifications */}
+            <NotificationCenter />
+
+            {/* User Menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src="/placeholder.svg" />
+                    <AvatarFallback className="bg-blue-100 text-blue-600">
+                      {currentUser.fullName.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <div className="flex items-center justify-start gap-2 p-2">
+                  <div className="flex flex-col space-y-1 leading-none">
+                    <p className="font-medium">{currentUser.fullName}</p>
+                    <p className="w-[200px] truncate text-sm text-muted-foreground">
+                      {getRoleDisplayName(currentUser.role)}
+                    </p>
+                    <p className="w-[200px] truncate text-xs text-muted-foreground">
+                      {currentUser.email}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                <span>Cài Đặt Cá Nhân</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onLogout} className="text-red-600">
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Đăng Xuất</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleUserSettings}>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Cài Đặt Cá Nhân</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={onLogout} className="text-red-600">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Đăng Xuất</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* Quick Voucher Dialog */}
+      <Dialog open={showQuickVoucher} onOpenChange={setShowQuickVoucher}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Phát Hành Voucher Nhanh</DialogTitle>
+          </DialogHeader>
+          <div className="p-4">
+            <p className="text-gray-600">Tính năng phát hành voucher nhanh sẽ được triển khai.</p>
+            <Button className="mt-4" onClick={() => setShowQuickVoucher(false)}>
+              Đóng
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* User Settings Dialog */}
+      <Dialog open={showUserSettings} onOpenChange={setShowUserSettings}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cài Đặt Cá Nhân</DialogTitle>
+          </DialogHeader>
+          <div className="p-4">
+            <p className="text-gray-600">Trang cài đặt cá nhân sẽ được triển khai.</p>
+            <Button className="mt-4" onClick={() => setShowUserSettings(false)}>
+              Đóng
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

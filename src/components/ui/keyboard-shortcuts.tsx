@@ -82,6 +82,12 @@ export const KeyboardShortcutsDialog = () => {
     return groups;
   }, {} as Record<string, KeyboardShortcut[]>);
 
+  // Add keyboard shortcut to open dialog
+  useKeyboardShortcuts({
+    '?': () => setOpen(true),
+    'escape': () => setOpen(false)
+  });
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -217,7 +223,11 @@ export const useKeyboardShortcuts = (shortcuts: Record<string, () => void>) => {
       if (alt) shortcut += 'alt+';
       shortcut += key;
 
-      if (shortcuts[shortcut]) {
+      // Handle simple key shortcuts
+      if (shortcuts[key] && !ctrl && !shift && !alt) {
+        event.preventDefault();
+        shortcuts[key]();
+      } else if (shortcuts[shortcut]) {
         event.preventDefault();
         shortcuts[shortcut]();
       }
