@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Bell, Check, X, Settings, MoreVertical, AlertTriangle, Info, Shield, User, Ticket, Monitor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -22,7 +21,7 @@ import {
 import { useNotifications } from '@/hooks/useNotifications';
 import { Notification, NotificationType } from '@/types/notification';
 import { cn } from '@/lib/utils';
-import { EmptyStateCard } from '@/components/ui/empty-states';
+import { EmptyState } from '@/components/ui/empty-states';
 
 const getNotificationIcon = (type: NotificationType) => {
   switch (type) {
@@ -254,8 +253,8 @@ export const NotificationCenter = () => {
             <TabsContent value={activeTab} className="m-0">
               {filteredNotifications.length === 0 ? (
                 <div className="p-4">
-                  <EmptyStateCard
-                    icon={Bell}
+                  <EmptyState
+                    icon={<Bell className="w-8 h-8 text-gray-400" />}
                     title="Không Có Thông Báo"
                     description="Bạn đã xem hết tất cả thông báo."
                   />
