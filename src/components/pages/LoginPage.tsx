@@ -257,7 +257,7 @@ export function LoginPage({ onLogin, mockUsers, loginAttempts = 0 }: LoginPagePr
                   <Checkbox
                     id="remember"
                     checked={rememberMe}
-                    onCheckedChange={setRememberMe}
+                    onCheckedChange={(checked) => setRememberMe(checked === true)}
                     disabled={isAccountLocked}
                   />
                   <Label htmlFor="remember" className="text-sm font-normal">
