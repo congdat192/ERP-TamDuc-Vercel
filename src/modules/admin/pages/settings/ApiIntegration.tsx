@@ -4,253 +4,373 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from '@/hooks/use-toast';
-import { Save, Plus, Key, Link, RefreshCw, Trash2 } from 'lucide-react';
-import { ApiIntegration as ApiIntegrationType } from '../../types/settings';
+import { 
+  Key, 
+  Globe, 
+  Webhook, 
+  Eye, 
+  EyeOff, 
+  Copy, 
+  RefreshCw,
+  Plus,
+  Trash2,
+  Settings
+} from 'lucide-react';
 
-const mockIntegrations: ApiIntegrationType[] = [
+// Mock data for API integrations
+const mockIntegrations = [
   {
-    id: '1',
-    name: 'KiotViet POS',
-    description: 'Đồng bộ dữ liệu với hệ thống KiotViet',
-    status: 'connected',
-    apiKey: 'kv_****_****_1234',
-    lastSync: '2024-01-15 10:30:00',
+    id: 'kiotviet',
+    name: 'KiotViet',
+    description: 'Tích hợp hệ thống POS KiotViet',
+    status: 'connected' as const,
+    lastSync: '2024-01-15 14:30',
     features: ['Đồng bộ sản phẩm', 'Đồng bộ đơn hàng', 'Báo cáo bán hàng']
   },
   {
-    id: '2',
-    name: 'Sapo Web',
-    description: 'Kết nối với nền tảng Sapo',
-    status: 'disconnected',
+    id: 'sapo',
+    name: 'Sapo',
+    description: 'Tích hợp hệ thống bán lẻ Sapo',
+    status: 'disconnected' as const,
+    lastSync: null,
     features: ['Quản lý kho', 'Đồng bộ khách hàng']
   },
   {
-    id: '3',
-    name: 'Zalo Official Account',
-    description: 'Gửi thông báo qua Zalo OA',
-    status: 'error',
-    apiKey: 'zalo_****_****_5678',
-    lastSync: '2024-01-10 14:20:00',
-    features: ['Gửi thông báo', 'Tin nhắn tự động']
+    id: 'zalo-oa',
+    name: 'Zalo OA',
+    description: 'Gửi thông báo qua Zalo Official Account',
+    status: 'connected' as const,
+    lastSync: '2024-01-15 16:45',
+    features: ['Gửi thông báo', 'Chat với khách hàng']
+  }
+];
+
+const mockWebhooks = [
+  {
+    id: '1',
+    name: 'Voucher Created',
+    url: 'https://api.example.com/webhooks/voucher-created',
+    events: ['voucher.created'],
+    status: 'active' as const,
+    lastTriggered: '2024-01-15 15:30'
+  },
+  {
+    id: '2',
+    name: 'Customer Registration',
+    url: 'https://api.example.com/webhooks/customer-registration',
+    events: ['customer.created'],
+    status: 'inactive' as const,
+    lastTriggered: null
   }
 ];
 
 export function ApiIntegration() {
-  const [integrations, setIntegrations] = useState<ApiIntegrationType[]>(mockIntegrations);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [apiKeys, setApiKeys] = useState({
+    primary: 'vck_live_1234567890abcdef',
+    secondary: 'vck_test_abcdef1234567890'
+  });
 
-  const getStatusBadge = (status: ApiIntegrationType['status']) => {
-    switch (status) {
-      case 'connected':
-        return <Badge variant="default" className="bg-green-100 text-green-800">Đã Kết Nối</Badge>;
-      case 'disconnected':
-        return <Badge variant="secondary">Chưa Kết Nối</Badge>;
-      case 'error':
-        return <Badge variant="destructive">Lỗi</Badge>;
-      default:
-        return <Badge variant="secondary">Không Xác Định</Badge>;
-    }
-  };
-
-  const handleConnect = (id: string) => {
-    setIntegrations(prev => prev.map(integration => 
-      integration.id === id 
-        ? { ...integration, status: 'connected' as const, lastSync: new Date().toLocaleString('vi-VN') }
-        : integration
-    ));
-    toast({
-      title: "Kết Nối Thành Công",
-      description: "Đã kết nối với dịch vụ bên thứ ba.",
-    });
-  };
-
-  const handleDisconnect = (id: string) => {
-    setIntegrations(prev => prev.map(integration => 
-      integration.id === id 
-        ? { ...integration, status: 'disconnected' as const, apiKey: undefined, lastSync: undefined }
-        : integration
-    ));
-    toast({
-      title: "Đã Ngắt Kết Nối",
-      description: "Đã ngắt kết nối với dịch vụ bên thứ ba.",
-    });
-  };
-
-  const handleRegenerateKey = (id: string) => {
+  const generateNewKey = (keyType: 'primary' | 'secondary') => {
+    const newKey = `vck_${keyType === 'primary' ? 'live' : 'test'}_${Math.random().toString(36).substring(2, 18)}`;
+    setApiKeys(prev => ({ ...prev, [keyType]: newKey }));
     toast({
       title: "API Key Đã Được Tạo Mới",
-      description: "Vui lòng cập nhật API key mới trong ứng dụng của bạn.",
+      description: `${keyType === 'primary' ? 'Primary' : 'Secondary'} API key đã được cập nhật.`,
+    });
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "Đã Sao Chép",
+      description: "API key đã được sao chép vào clipboard.",
+    });
+  };
+
+  const connectIntegration = (integrationId: string) => {
+    toast({
+      title: "Đang Kết Nối",
+      description: "Đang thiết lập kết nối với dịch vụ bên thứ 3...",
     });
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">API & Kết Nối</h2>
-          <p className="text-gray-600">Quản lý kết nối với các dịch vụ bên thứ ba</p>
-        </div>
-        
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Thêm Kết Nối
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Thêm Kết Nối Mới</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Tên dịch vụ</Label>
-                <Input placeholder="VD: Shopee API, Lazada..." />
-              </div>
-              <div className="space-y-2">
-                <Label>API Key</Label>
-                <Input placeholder="Nhập API key..." />
-              </div>
-              <div className="space-y-2">
-                <Label>API Secret</Label>
-                <Input type="password" placeholder="Nhập API secret..." />
-              </div>
-              <div className="flex space-x-2 pt-4">
-                <Button className="flex-1">Thêm Kết Nối</Button>
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                  Hủy
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900">API & Kết Nối</h2>
+        <p className="text-gray-600">Quản lý API keys, webhooks và tích hợp bên thứ 3</p>
       </div>
 
-      {/* Integration List */}
-      <div className="space-y-4">
-        {integrations.map((integration) => (
-          <Card key={integration.id}>
+      <Tabs defaultValue="api-keys" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="api-keys">API Keys</TabsTrigger>
+          <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
+          <TabsTrigger value="integrations">Tích Hợp Bên Thứ 3</TabsTrigger>
+        </TabsList>
+
+        {/* API Keys Tab */}
+        <TabsContent value="api-keys" className="space-y-6">
+          <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Link className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg">{integration.name}</CardTitle>
-                    <p className="text-sm text-gray-600">{integration.description}</p>
-                  </div>
-                </div>
-                {getStatusBadge(integration.status)}
-              </div>
+              <CardTitle className="flex items-center space-x-2">
+                <Key className="w-5 h-5" />
+                <span>Quản Lý API Keys</span>
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {integration.apiKey && (
+            <CardContent className="space-y-6">
+              {/* Primary API Key */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
                   <div>
-                    <Label className="text-sm font-medium">API Key</Label>
-                    <p className="text-sm text-gray-600 font-mono">{integration.apiKey}</p>
+                    <Label className="text-base font-medium">Primary API Key (Production)</Label>
+                    <p className="text-sm text-gray-600">Sử dụng cho môi trường production</p>
                   </div>
-                )}
+                  <Badge variant="default">Active</Badge>
+                </div>
                 
-                {integration.lastSync && (
-                  <div>
-                    <Label className="text-sm font-medium">Đồng Bộ Lần Cuối</Label>
-                    <p className="text-sm text-gray-600">{integration.lastSync}</p>
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <Label className="text-sm font-medium">Tính Năng</Label>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {integration.features.map((feature, index) => (
-                    <Badge key={index} variant="outline" className="text-xs">
-                      {feature}
-                    </Badge>
-                  ))}
+                <div className="flex items-center space-x-2">
+                  <Input
+                    type={showApiKey ? "text" : "password"}
+                    value={apiKeys.primary}
+                    readOnly
+                    className="font-mono"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowApiKey(!showApiKey)}
+                  >
+                    {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => copyToClipboard(apiKeys.primary)}
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => generateNewKey('primary')}
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </Button>
                 </div>
               </div>
 
-              <div className="flex space-x-2 pt-2 border-t">
-                {integration.status === 'connected' ? (
-                  <>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleDisconnect(integration.id)}
-                    >
-                      Ngắt Kết Nối
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => handleRegenerateKey(integration.id)}
-                    >
-                      <RefreshCw className="w-4 h-4 mr-1" />
-                      Tạo Lại Key
-                    </Button>
-                  </>
-                ) : (
-                  <Button 
-                    size="sm"
-                    onClick={() => handleConnect(integration.id)}
-                  >
-                    <Link className="w-4 h-4 mr-1" />
-                    Kết Nối
-                  </Button>
-                )}
+              {/* Secondary API Key */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-base font-medium">Secondary API Key (Testing)</Label>
+                    <p className="text-sm text-gray-600">Sử dụng cho môi trường test/development</p>
+                  </div>
+                  <Badge variant="secondary">Test</Badge>
+                </div>
                 
-                <Button variant="ghost" size="sm" className="text-red-600">
-                  <Trash2 className="w-4 h-4" />
-                </Button>
+                <div className="flex items-center space-x-2">
+                  <Input
+                    type={showApiKey ? "text" : "password"}
+                    value={apiKeys.secondary}
+                    readOnly
+                    className="font-mono"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowApiKey(!showApiKey)}
+                  >
+                    {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => copyToClipboard(apiKeys.secondary)}
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => generateNewKey('secondary')}
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* API Usage Settings */}
+              <div className="pt-6 border-t space-y-4">
+                <h4 className="font-medium">Cài Đặt API</h4>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>Rate Limiting</Label>
+                      <p className="text-sm text-gray-600">Giới hạn số request/phút</p>
+                    </div>
+                    <Input type="number" defaultValue="1000" className="w-24" />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>IP Whitelist</Label>
+                      <p className="text-sm text-gray-600">Chỉ cho phép IP được chỉ định</p>
+                    </div>
+                    <Switch />
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>API Logging</Label>
+                      <p className="text-sm text-gray-600">Ghi log tất cả API calls</p>
+                    </div>
+                    <Switch defaultChecked />
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
-        ))}
-      </div>
+        </TabsContent>
 
-      {/* API Settings */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Key className="w-5 h-5" />
-            <span>Cài Đặt API</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="webhookUrl">Webhook URL</Label>
-              <Input
-                id="webhookUrl"
-                value="https://api.yourcompany.com/webhook"
-                placeholder="https://api.yourcompany.com/webhook"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="apiTimeout">API Timeout (giây)</Label>
-              <Input
-                id="apiTimeout"
-                type="number"
-                defaultValue="30"
-                placeholder="30"
-              />
-            </div>
-          </div>
+        {/* Webhooks Tab */}
+        <TabsContent value="webhooks" className="space-y-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center space-x-2">
+                <Webhook className="w-5 h-5" />
+                <span>Quản Lý Webhooks</span>
+              </CardTitle>
+              <Button size="sm">
+                <Plus className="w-4 h-4 mr-2" />
+                Thêm Webhook
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Tên</TableHead>
+                    <TableHead>URL</TableHead>
+                    <TableHead>Events</TableHead>
+                    <TableHead>Trạng Thái</TableHead>
+                    <TableHead>Lần Cuối</TableHead>
+                    <TableHead className="text-right">Thao Tác</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {mockWebhooks.map((webhook) => (
+                    <TableRow key={webhook.id}>
+                      <TableCell className="font-medium">{webhook.name}</TableCell>
+                      <TableCell className="font-mono text-sm">{webhook.url}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {webhook.events.map((event) => (
+                            <Badge key={event} variant="outline" className="text-xs">
+                              {event}
+                            </Badge>
+                          ))}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={webhook.status === 'active' ? 'default' : 'secondary'}>
+                          {webhook.status === 'active' ? 'Hoạt động' : 'Tạm dừng'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {webhook.lastTriggered || 'Chưa có'}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end space-x-1">
+                          <Button variant="ghost" size="sm">
+                            <Settings className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="text-red-600">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-          <div className="flex justify-end pt-4 border-t">
-            <Button>
-              <Save className="w-4 h-4 mr-2" />
-              Lưu Cài Đặt
-            </Button>
+        {/* Third-party Integrations Tab */}
+        <TabsContent value="integrations" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {mockIntegrations.map((integration) => (
+              <Card key={integration.id} className="relative">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center space-x-2">
+                      <Globe className="w-5 h-5" />
+                      <span>{integration.name}</span>
+                    </CardTitle>
+                    <Badge 
+                      variant={integration.status === 'connected' ? 'default' : 'secondary'}
+                    >
+                      {integration.status === 'connected' ? 'Đã kết nối' : 'Chưa kết nối'}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm text-gray-600">{integration.description}</p>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Tính năng:</Label>
+                    <div className="space-y-1">
+                      {integration.features.map((feature, index) => (
+                        <div key={index} className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full" />
+                          <span className="text-sm">{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {integration.lastSync && (
+                    <div>
+                      <Label className="text-sm font-medium">Đồng bộ cuối:</Label>
+                      <p className="text-sm text-gray-600">{integration.lastSync}</p>
+                    </div>
+                  )}
+                  
+                  <div className="pt-4 border-t">
+                    {integration.status === 'connected' ? (
+                      <div className="flex space-x-2">
+                        <Button variant="outline" size="sm" className="flex-1">
+                          Cài Đặt
+                        </Button>
+                        <Button variant="outline" size="sm" className="flex-1">
+                          Ngắt Kết Nối
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button 
+                        size="sm" 
+                        className="w-full"
+                        onClick={() => connectIntegration(integration.id)}
+                      >
+                        Kết Nối
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        </CardContent>
-      </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -1,16 +1,23 @@
-
 export type SettingsCategory = 
   | 'general-info'
   | 'email'
   | 'security'
   | 'api-integration'
+  | 'api-keys'
+  | 'webhooks'
+  | 'third-party'
   | 'backup-restore'
   | 'features-plans';
 
 export interface SettingsMenuItem {
   id: SettingsCategory;
   label: string;
-  icon: string;
+  icon?: string;
+  type?: 'single' | 'expandable';
+  subItems?: Array<{
+    id: string;
+    label: string;
+  }>;
 }
 
 export interface CompanySettings {
