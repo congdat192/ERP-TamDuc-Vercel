@@ -4,6 +4,9 @@ import { LoginPage } from '@/components/pages/LoginPage';
 import { ERPHome } from './ERPHome';
 import { ModuleEmptyState } from '@/components/pages/ModuleEmptyState';
 
+// Platform Admin module
+import { PlatformAdmin } from '@/modules/platform-admin';
+
 // Voucher module pages
 import { VoucherDashboard } from '@/modules/voucher/pages/VoucherDashboard';
 import { VoucherIssue } from '@/modules/voucher/pages/VoucherIssue';
@@ -310,6 +313,16 @@ const Index = () => {
     );
   }
 
+  // Platform Admin Interface - only for platform-admin role
+  if (currentUser.role === 'platform-admin') {
+    return (
+      <PageTransition isLoading={isLoading} type="fade">
+        <PlatformAdmin />
+      </PageTransition>
+    );
+  }
+
+  // Regular ERP Interface - for all other roles
   const renderMainContent = () => {
     if (currentModule === 'dashboard') {
       return <ERPHome currentUser={currentUser} onModuleChange={handleModuleChange} />;
