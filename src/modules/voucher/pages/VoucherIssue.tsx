@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +22,27 @@ import {
   Gift
 } from 'lucide-react';
 
+// Mock dynamic data that would come from settings
+const mockDenominations = [
+  { id: '1', value: 100000, label: '100.000đ', isActive: true },
+  { id: '2', value: 250000, label: '250.000đ', isActive: true },
+  { id: '3', value: 500000, label: '500.000đ', isActive: true },
+  { id: '4', value: 1000000, label: '1.000.000đ', isActive: true },
+];
+
+const mockCustomerSources = [
+  { id: '1', name: 'Website', isActive: true },
+  { id: '2', name: 'Facebook', isActive: true },
+  { id: '3', name: 'Giới thiệu', isActive: true },
+  { id: '4', name: 'Hotline', isActive: true },
+];
+
+const mockCustomerTypes = [
+  { id: '1', name: 'Khách hàng mới', isActive: true },
+  { id: '2', name: 'Khách hàng thân thiết', isActive: true },
+  { id: '3', name: 'Khách hàng VIP', isActive: true },
+];
+
 export function VoucherIssue() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [customerFound, setCustomerFound] = useState<any>(null);
@@ -28,12 +50,20 @@ export function VoucherIssue() {
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [newVoucher, setNewVoucher] = useState<any>(null);
+  const [allowCustomValue, setAllowCustomValue] = useState(false);
+  const [showCustomValueInput, setShowCustomValueInput] = useState(false);
   const [formData, setFormData] = useState({
     customerSource: '',
     customerType: '',
     voucherValue: '',
+    customValue: '',
     notes: ''
   });
+
+  // Filter active options
+  const activeDenominations = mockDenominations.filter(d => d.isActive);
+  const activeCustomerSources = mockCustomerSources.filter(s => s.isActive);
+  const activeCustomerTypes = mockCustomerTypes.filter(t => t.isActive);
 
   const handlePhoneSearch = async () => {
     if (!phoneNumber) return;
@@ -67,6 +97,16 @@ export function VoucherIssue() {
     }, 1000);
   };
 
+  const handleVoucherValueChange = (value: string) => {
+    if (value === 'custom') {
+      setShowCustomValueInput(true);
+      setFormData({...formData, voucherValue: 'custom'});
+    } else {
+      setShowCustomValueInput(false);
+      setFormData({...formData, voucherValue: value, customValue: ''});
+    }
+  };
+
   const handleIssueVoucher = () => {
     if (!formData.customerSource || !formData.customerType || !formData.voucherValue) {
       toast({
@@ -77,17 +117,37 @@ export function VoucherIssue() {
       return;
     }
 
+    if (formData.voucherValue === 'custom' && !formData.customValue) {
+      toast({
+        title: "Thiếu Giá Trị Voucher",
+        description: "Vui lòng nhập giá trị voucher tùy chỉnh.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
-    // Simulate voucher generation
+    // Simulate voucher generation with backend logic
     setTimeout(() => {
+      const finalValue = formData.voucherValue === 'custom' 
+        ? `${parseInt(formData.customValue).toLocaleString('vi-VN')}đ`
+        : formData.voucherValue;
+
       const voucher = {
-        code: `VCH-${Date.now()}`,
-        value: formData.voucherValue,
+        code: `VCH-${Date.now()}`, // Backend would generate based on source/type/employee
+        value: finalValue,
         customer: customerFound?.name || 'Khách Hàng Mới',
         phone: phoneNumber,
         issueDate: new Date().toLocaleDateString('vi-VN'),
         expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN'),
-        issuedBy: 'Nguyễn Văn An'
+        issuedBy: 'Nguyễn Văn An',
+        content: generateVoucherContent({
+          customerName: customerFound?.name || 'Khách Hàng Mới',
+          voucherCode: `VCH-${Date.now()}`,
+          phoneNumber: phoneNumber,
+          expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN'),
+          employeeName: 'Nguyễn Văn An'
+        })
       };
       
       setNewVoucher(voucher);
@@ -99,6 +159,25 @@ export function VoucherIssue() {
         description: `Voucher ${voucher.code} đã được tạo.`,
       });
     }, 1500);
+  };
+
+  const generateVoucherContent = (data: any) => {
+    // Default template with variable replacement
+    const template = `Xin chào $tenKH,
+
+Bạn đã nhận được voucher $mavoucher trị giá $giatri.
+Số điện thoại: $sdt
+Hạn sử dụng: $hansudung
+Nhân viên phát hành: $nhanvien
+
+Cảm ơn bạn đã tin tưởng dịch vụ của chúng tôi!`;
+
+    return template
+      .replace(/\$tenKH/g, data.customerName)
+      .replace(/\$mavoucher/g, data.voucherCode)
+      .replace(/\$sdt/g, data.phoneNumber)
+      .replace(/\$hansudung/g, data.expiryDate)
+      .replace(/\$nhanvien/g, data.employeeName);
   };
 
   const copyVoucherCode = () => {
@@ -205,11 +284,11 @@ export function VoucherIssue() {
                     <SelectValue placeholder="Chọn nguồn" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="website">Website</SelectItem>
-                    <SelectItem value="phone">Cuộc Gọi</SelectItem>
-                    <SelectItem value="referral">Giới Thiệu</SelectItem>
-                    <SelectItem value="social-media">Mạng Xã Hội</SelectItem>
-                    <SelectItem value="walk-in">Khách Vãng Lai</SelectItem>
+                    {activeCustomerSources.map((source) => (
+                      <SelectItem key={source.id} value={source.name}>
+                        {source.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -223,10 +302,11 @@ export function VoucherIssue() {
                     <SelectValue placeholder="Chọn loại" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="new">Khách Hàng Mới</SelectItem>
-                    <SelectItem value="returning">Khách Hàng Cũ</SelectItem>
-                    <SelectItem value="premium">Khách Hàng Premium</SelectItem>
-                    <SelectItem value="vip">Khách Hàng VIP</SelectItem>
+                    {activeCustomerTypes.map((type) => (
+                      <SelectItem key={type.id} value={type.name}>
+                        {type.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -235,23 +315,36 @@ export function VoucherIssue() {
             <div className="space-y-4">
               <div>
                 <Label htmlFor="value">Giá Trị Voucher *</Label>
-                <Select value={formData.voucherValue} onValueChange={(value) => 
-                  setFormData({...formData, voucherValue: value})
-                }>
+                <Select value={formData.voucherValue} onValueChange={handleVoucherValueChange}>
                   <SelectTrigger className="mt-1">
                     <SelectValue placeholder="Chọn giá trị" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="100.000đ">100.000đ</SelectItem>
-                    <SelectItem value="250.000đ">250.000đ</SelectItem>
-                    <SelectItem value="500.000đ">500.000đ</SelectItem>
-                    <SelectItem value="750.000đ">750.000đ</SelectItem>
-                    <SelectItem value="1.000.000đ">1.000.000đ</SelectItem>
-                    <SelectItem value="1.500.000đ">1.500.000đ</SelectItem>
-                    <SelectItem value="2.000.000đ">2.000.000đ</SelectItem>
+                    {activeDenominations.map((denomination) => (
+                      <SelectItem key={denomination.id} value={denomination.label}>
+                        {denomination.label}
+                      </SelectItem>
+                    ))}
+                    {allowCustomValue && (
+                      <SelectItem value="custom">Giá trị tùy chỉnh</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
+
+              {showCustomValueInput && (
+                <div>
+                  <Label htmlFor="custom-value">Giá Trị Tùy Chỉnh (VNĐ) *</Label>
+                  <Input
+                    id="custom-value"
+                    type="number"
+                    placeholder="50000"
+                    value={formData.customValue}
+                    onChange={(e) => setFormData({...formData, customValue: e.target.value})}
+                    className="mt-1"
+                  />
+                </div>
+              )}
 
               <div>
                 <Label htmlFor="notes">Ghi Chú (Không Bắt Buộc)</Label>
@@ -284,7 +377,7 @@ export function VoucherIssue() {
 
       {/* Success Modal */}
       <Dialog open={showSuccess} onOpenChange={setShowSuccess}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2 text-green-600">
               <CheckCircle className="w-6 h-6" />
@@ -327,6 +420,18 @@ export function VoucherIssue() {
                   <span className="font-medium">{newVoucher.issuedBy}</span>
                 </div>
               </div>
+
+              {/* Voucher Content Preview */}
+              {newVoucher.content && (
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 mb-2">Nội Dung Voucher:</h4>
+                  <div className="text-sm bg-white p-3 rounded border">
+                    <pre className="whitespace-pre-wrap font-mono text-xs">
+                      {newVoucher.content}
+                    </pre>
+                  </div>
+                </div>
+              )}
               
               <div className="flex space-x-2 pt-4">
                 <Button 

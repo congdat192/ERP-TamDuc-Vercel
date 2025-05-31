@@ -13,12 +13,14 @@ import {
   Bell, 
   Palette,
   AlertCircle,
-  Save
+  Save,
+  Database
 } from 'lucide-react';
+import { VoucherSettingsConfig } from '../components/VoucherSettingsConfig';
 
 export function VoucherSettings() {
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -31,13 +33,18 @@ export function VoucherSettings() {
         </Button>
       </div>
 
-      <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs defaultValue="configuration" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="configuration">Cấu Hình</TabsTrigger>
           <TabsTrigger value="general">Chung</TabsTrigger>
           <TabsTrigger value="permissions">Quyền Hạn</TabsTrigger>
           <TabsTrigger value="notifications">Thông Báo</TabsTrigger>
           <TabsTrigger value="appearance">Giao Diện</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="configuration" className="space-y-6">
+          <VoucherSettingsConfig />
+        </TabsContent>
 
         <TabsContent value="general" className="space-y-6">
           <Card>
@@ -61,23 +68,6 @@ export function VoucherSettings() {
                   </div>
                   
                   <div>
-                    <Label htmlFor="default-value">Giá Trị Mặc Định</Label>
-                    <Select defaultValue="500000">
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Chọn giá trị" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="100000">100.000đ</SelectItem>
-                        <SelectItem value="250000">250.000đ</SelectItem>
-                        <SelectItem value="500000">500.000đ</SelectItem>
-                        <SelectItem value="1000000">1.000.000đ</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
                     <Label htmlFor="expiry-days">Thời Hạn Voucher (Ngày)</Label>
                     <Input
                       id="expiry-days"
@@ -87,13 +77,23 @@ export function VoucherSettings() {
                       className="mt-1"
                     />
                   </div>
+                </div>
 
+                <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <Label htmlFor="auto-approve">Tự Động Phê Duyệt</Label>
                       <p className="text-sm text-gray-600">Voucher tự động được phê duyệt</p>
                     </div>
                     <Switch id="auto-approve" defaultChecked />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="allow-duplicate">Cho Phép Trùng Lặp</Label>
+                      <p className="text-sm text-gray-600">Khách hàng có thể nhận nhiều voucher</p>
+                    </div>
+                    <Switch id="allow-duplicate" defaultChecked />
                   </div>
                 </div>
               </div>
@@ -237,7 +237,8 @@ export function VoucherSettings() {
             <div>
               <h3 className="font-medium text-gray-900">Trạng Thái Cài Đặt</h3>
               <p className="text-sm text-gray-600 mt-1">
-                Tất cả các cài đặt đã được thiết kế hoàn chỉnh và sẵn sàng để tùy chỉnh. 
+                Các cài đặt cấu hình voucher đã được thiết kế để quản lý mệnh giá, nguồn khách hàng, 
+                loại khách hàng và mẫu nội dung voucher một cách linh hoạt. 
                 Các thay đổi sẽ được áp dụng ngay lập tức cho module voucher.
               </p>
               <Badge variant="secondary" className="mt-2">
