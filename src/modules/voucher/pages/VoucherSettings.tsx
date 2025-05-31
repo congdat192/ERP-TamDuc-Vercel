@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -14,14 +13,17 @@ import {
   Palette,
   AlertCircle,
   Save,
-  Database
+  CheckCircle
 } from 'lucide-react';
 import { VoucherSettingsConfig } from '../components/VoucherSettingsConfig';
 import { VoucherBatchSelector } from '../components/VoucherBatchSelector';
+import { VoucherCodeCustomization } from '../components/VoucherCodeCustomization';
+import { VoucherCustomerSettings } from '../components/VoucherCustomerSettings';
 import { toast } from '@/hooks/use-toast';
 
 export function VoucherSettings() {
   const [selectedBatch, setSelectedBatch] = useState('');
+  const [autoIssue, setAutoIssue] = useState(false);
 
   const handleBatchChange = (batch: string) => {
     setSelectedBatch(batch);
@@ -54,18 +56,14 @@ export function VoucherSettings() {
         </Button>
       </div>
 
-      <Tabs defaultValue="configuration" className="space-y-6">
+      <Tabs defaultValue="general" className="space-y-6">
         <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="general">Cài Đặt Chung</TabsTrigger>
           <TabsTrigger value="configuration">Cấu Hình</TabsTrigger>
-          <TabsTrigger value="general">Chung</TabsTrigger>
           <TabsTrigger value="permissions">Quyền Hạn</TabsTrigger>
           <TabsTrigger value="notifications">Thông Báo</TabsTrigger>
           <TabsTrigger value="appearance">Giao Diện</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="configuration" className="space-y-6">
-          <VoucherSettingsConfig />
-        </TabsContent>
 
         <TabsContent value="general" className="space-y-6">
           <Card>
@@ -75,61 +73,51 @@ export function VoucherSettings() {
                 <span>Cài Đặt Chung</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-8">
               {/* Voucher Batch Selection */}
               <div className="border-b border-gray-200 pb-6">
                 <VoucherBatchSelector
                   selectedBatch={selectedBatch}
                   onBatchChange={handleBatchChange}
-                  label="Mã Batch Voucher"
-                  placeholder="Chọn mã batch để cấu hình..."
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
+              {/* Voucher Issuance Option */}
+              <div className="border-b border-gray-200 pb-6">
+                <div className="flex items-center justify-between">
                   <div>
-                    <Label htmlFor="voucher-prefix">Tiền Tố Mã Voucher</Label>
-                    <Input
-                      id="voucher-prefix"
-                      placeholder="VCH"
-                      defaultValue="VCH"
-                      className="mt-1"
-                    />
+                    <Label htmlFor="auto-issue">Tự động phát hành voucher khi khởi tạo</Label>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Automatically issue the voucher immediately upon creation, no manual approval needed.
+                    </p>
                   </div>
-                  
-                  <div>
-                    <Label htmlFor="expiry-days">Thời Hạn Voucher (Ngày)</Label>
-                    <Input
-                      id="expiry-days"
-                      type="number"
-                      placeholder="30"
-                      defaultValue="30"
-                      className="mt-1"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label htmlFor="auto-approve">Tự Động Phê Duyệt</Label>
-                      <p className="text-sm text-gray-600">Voucher tự động được phê duyệt</p>
-                    </div>
-                    <Switch id="auto-approve" defaultChecked />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label htmlFor="allow-duplicate">Cho Phép Trùng Lặp</Label>
-                      <p className="text-sm text-gray-600">Khách hàng có thể nhận nhiều voucher</p>
-                    </div>
-                    <Switch id="allow-duplicate" defaultChecked />
-                  </div>
+                  <Switch 
+                    id="auto-issue" 
+                    checked={autoIssue}
+                    onCheckedChange={setAutoIssue}
+                  />
                 </div>
               </div>
             </CardContent>
           </Card>
+
+          {/* Voucher Code UI Customization */}
+          <VoucherCodeCustomization 
+            onSettingsChange={(settings) => {
+              console.log('Code customization settings:', settings);
+            }}
+          />
+
+          {/* Voucher Customer Settings */}
+          <VoucherCustomerSettings 
+            onSettingsChange={(settings) => {
+              console.log('Customer settings:', settings);
+            }}
+          />
+        </TabsContent>
+
+        <TabsContent value="configuration" className="space-y-6">
+          <VoucherSettingsConfig />
         </TabsContent>
 
         <TabsContent value="permissions">
@@ -264,7 +252,7 @@ export function VoucherSettings() {
       <Card>
         <CardContent className="p-6">
           <div className="flex items-start space-x-3">
-            <AlertCircle className="w-5 h-5 text-blue-500 mt-0.5" />
+            <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
             <div>
               <h3 className="font-medium text-gray-900">Trạng Thái Cài Đặt</h3>
               <p className="text-sm text-gray-600 mt-1">
@@ -273,11 +261,12 @@ export function VoucherSettings() {
                 Các thay đổi sẽ được áp dụng ngay lập tức cho module voucher.
                 {selectedBatch && (
                   <span className="block mt-2 font-medium text-blue-600">
-                    Batch hiện tại: {selectedBatch}
+                    Đợt phát hành hiện tại: {selectedBatch}
                   </span>
                 )}
               </p>
-              <Badge variant="secondary" className="mt-2">
+              <Badge variant="secondary" className="mt-2 bg-green-100 text-green-800">
+                <CheckCircle className="w-3 h-3 mr-1" />
                 Cấu Hình Hoàn Tất
               </Badge>
             </div>

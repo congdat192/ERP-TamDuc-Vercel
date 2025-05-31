@@ -7,56 +7,58 @@ import { Badge } from '@/components/ui/badge';
 import { X, Info } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-// Mock voucher batch data - will be replaced with API data later
+// Mock voucher batch data with codes and names
 const mockVoucherBatches: ComboboxOption[] = [
   { 
     value: 'PHVC000407', 
-    label: 'PHVC000407', 
-    description: 'Batch ngày 15/12/2024 - 100.000đ' 
+    label: 'PHVC000407'
   },
   { 
     value: 'PHVC000408', 
-    label: 'PHVC000408', 
-    description: 'Batch ngày 16/12/2024 - 250.000đ' 
+    label: 'PHVC000408'
   },
   { 
     value: 'PHVC000409', 
-    label: 'PHVC000409', 
-    description: 'Batch ngày 17/12/2024 - 500.000đ' 
+    label: 'PHVC000409'
   },
   { 
     value: 'PHVC000410', 
-    label: 'PHVC000410', 
-    description: 'Batch ngày 18/12/2024 - 100.000đ' 
+    label: 'PHVC000410'
   },
   { 
     value: 'PHVC000411', 
-    label: 'PHVC000411', 
-    description: 'Batch ngày 19/12/2024 - 1.000.000đ' 
+    label: 'PHVC000411'
   },
   { 
     value: 'PHVC000412', 
-    label: 'PHVC000412', 
-    description: 'Batch ngày 20/12/2024 - 250.000đ' 
+    label: 'PHVC000412'
   },
   { 
     value: 'PHVC000413', 
-    label: 'PHVC000413', 
-    description: 'Batch ngày 21/12/2024 - 500.000đ' 
+    label: 'PHVC000413'
   },
   { 
     value: 'PHVC000414', 
-    label: 'PHVC000414', 
-    description: 'Batch ngày 22/12/2024 - 100.000đ' 
+    label: 'PHVC000414'
   }
 ];
+
+// Mock batch names mapping
+const batchNames: Record<string, string> = {
+  'PHVC000407': 'Quà tặng Minigame Hanvis – 1 cặp tròng Kodak Clean&Clear FSV UV400 1.56',
+  'PHVC000408': 'Chương trình khuyến mãi Black Friday 2024',
+  'PHVC000409': 'Ưu đãi đặc biệt khách hàng VIP',
+  'PHVC000410': 'Voucher sinh nhật khách hàng tháng 12',
+  'PHVC000411': 'Chương trình tri ân khách hàng thân thiết',
+  'PHVC000412': 'Ưu đãi cuối năm 2024',
+  'PHVC000413': 'Khuyến mãi mua 1 tặng 1',
+  'PHVC000414': 'Voucher welcome cho khách hàng mới'
+};
 
 interface VoucherBatchSelectorProps {
   selectedBatch?: string;
   onBatchChange: (batch: string) => void;
   disabled?: boolean;
-  label?: string;
-  placeholder?: string;
   className?: string;
 }
 
@@ -64,8 +66,6 @@ export function VoucherBatchSelector({
   selectedBatch,
   onBatchChange,
   disabled = false,
-  label = "Voucher Batch",
-  placeholder = "Chọn mã batch voucher...",
   className
 }: VoucherBatchSelectorProps) {
   const [selectedValue, setSelectedValue] = useState(selectedBatch || '');
@@ -80,12 +80,12 @@ export function VoucherBatchSelector({
     onBatchChange('');
   };
 
-  const selectedBatchInfo = mockVoucherBatches.find(batch => batch.value === selectedValue);
+  const selectedBatchName = selectedValue ? batchNames[selectedValue] : '';
 
   return (
     <div className={`space-y-3 ${className || ''}`}>
       <div className="flex items-center space-x-2">
-        <Label htmlFor="voucher-batch-selector">{label} *</Label>
+        <Label htmlFor="voucher-batch-selector">Mã đợt phát hành *</Label>
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -93,52 +93,55 @@ export function VoucherBatchSelector({
             </TooltipTrigger>
             <TooltipContent>
               <p className="max-w-xs">
-                Chọn mã batch voucher để cấu hình quy trình phát hành voucher. 
-                Mỗi batch có thông tin về ngày tạo và mệnh giá voucher.
+                Chọn mã đợt phát hành voucher để cấu hình quy trình phát hành voucher.
               </p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-3">
         <Combobox
           options={mockVoucherBatches}
           value={selectedValue}
           onValueChange={handleBatchSelect}
-          placeholder={placeholder}
-          searchPlaceholder="Tìm kiếm mã batch..."
-          emptyMessage="Không tìm thấy batch nào."
+          placeholder="Chọn mã đợt phát hành..."
+          searchPlaceholder="Tìm kiếm mã đợt..."
+          emptyMessage="Không tìm thấy đợt phát hành nào."
           disabled={disabled}
           className="w-full"
         />
 
-        {selectedValue && selectedBatchInfo && (
-          <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-center space-x-3">
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                {selectedBatchInfo.label}
-              </Badge>
-              <span className="text-sm text-gray-600">
-                {selectedBatchInfo.description}
-              </span>
+        {selectedValue && selectedBatchName && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                  {selectedValue}
+                </Badge>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClearSelection}
+                  disabled={disabled}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleClearSelection}
-              disabled={disabled}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              <X className="w-4 h-4" />
-            </Button>
+            <div className="pl-3">
+              <p className="text-sm text-gray-600">
+                <span className="font-medium">Tên đợt phát hành:</span> {selectedBatchName}
+              </p>
+            </div>
           </div>
         )}
       </div>
 
       {!selectedValue && (
         <p className="text-sm text-gray-500">
-          Vui lòng chọn mã batch voucher để tiếp tục cấu hình.
+          Vui lòng chọn mã đợt phát hành để tiếp tục cấu hình.
         </p>
       )}
     </div>
