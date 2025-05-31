@@ -1,4 +1,4 @@
-
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,8 +17,29 @@ import {
   Database
 } from 'lucide-react';
 import { VoucherSettingsConfig } from '../components/VoucherSettingsConfig';
+import { VoucherBatchSelector } from '../components/VoucherBatchSelector';
+import { toast } from '@/hooks/use-toast';
 
 export function VoucherSettings() {
+  const [selectedBatch, setSelectedBatch] = useState('');
+
+  const handleBatchChange = (batch: string) => {
+    setSelectedBatch(batch);
+    if (batch) {
+      toast({
+        title: "Batch đã được chọn",
+        description: `Đã chọn voucher batch: ${batch}`
+      });
+    }
+  };
+
+  const handleSaveSettings = () => {
+    toast({
+      title: "Thành công",
+      description: "Cài đặt đã được lưu thành công."
+    });
+  };
+
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
@@ -27,7 +48,7 @@ export function VoucherSettings() {
           <h2 className="text-2xl font-bold text-gray-900">Cài Đặt Module Voucher</h2>
           <p className="text-gray-600">Cấu hình và tùy chỉnh module voucher</p>
         </div>
-        <Button>
+        <Button onClick={handleSaveSettings}>
           <Save className="w-4 h-4 mr-2" />
           Lưu Cài Đặt
         </Button>
@@ -55,6 +76,16 @@ export function VoucherSettings() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Voucher Batch Selection */}
+              <div className="border-b border-gray-200 pb-6">
+                <VoucherBatchSelector
+                  selectedBatch={selectedBatch}
+                  onBatchChange={handleBatchChange}
+                  label="Mã Batch Voucher"
+                  placeholder="Chọn mã batch để cấu hình..."
+                />
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div>
@@ -240,6 +271,11 @@ export function VoucherSettings() {
                 Các cài đặt cấu hình voucher đã được thiết kế để quản lý mệnh giá, nguồn khách hàng, 
                 loại khách hàng và mẫu nội dung voucher một cách linh hoạt. 
                 Các thay đổi sẽ được áp dụng ngay lập tức cho module voucher.
+                {selectedBatch && (
+                  <span className="block mt-2 font-medium text-blue-600">
+                    Batch hiện tại: {selectedBatch}
+                  </span>
+                )}
               </p>
               <Badge variant="secondary" className="mt-2">
                 Cấu Hình Hoàn Tất
