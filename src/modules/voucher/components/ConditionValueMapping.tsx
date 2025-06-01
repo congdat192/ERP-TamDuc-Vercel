@@ -5,241 +5,277 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
-  Settings, 
+  MapPin, 
   Plus, 
-  Edit, 
   Trash2, 
+  Edit, 
+  Save, 
+  X,
   Info,
-  Save,
-  X
+  AlertCircle
 } from 'lucide-react';
 import { 
-  ConditionValueMapping, 
+  ConditionValueMapping as ConditionValueMappingType, 
   CONDITION_TYPES, 
   MOCK_CONDITION_VALUES,
   MOCK_VALUE_MAPPINGS 
 } from '../types/conditionBuilder';
 
 interface ConditionValueMappingProps {
-  onMappingsChange?: (mappings: ConditionValueMapping[]) => void;
+  onMappingsChange?: (mappings: ConditionValueMappingType[]) => void;
 }
 
 export function ConditionValueMapping({ onMappingsChange }: ConditionValueMappingProps) {
-  const [mappings, setMappings] = useState<ConditionValueMapping[]>(MOCK_VALUE_MAPPINGS);
-  const [selectedGroup, setSelectedGroup] = useState<string>('customerType');
+  const [mappings, setMappings] = useState<ConditionValueMappingType[]>(MOCK_VALUE_MAPPINGS);
+  const [selectedConditionType, setSelectedConditionType] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editingCode, setEditingCode] = useState('');
-
-  const handleMappingUpdate = (id: string, updates: Partial<ConditionValueMapping>) => {
-    const newMappings = mappings.map(mapping => 
-      mapping.id === id ? { ...mapping, ...updates } : mapping
-    );
-    setMappings(newMappings);
-    onMappingsChange?.(newMappings);
-  };
+  const [newMapping, setNewMapping] = useState({
+    value: '',
+    label: '',
+    code: ''
+  });
 
   const handleAddMapping = () => {
-    const availableValues = MOCK_CONDITION_VALUES[selectedGroup as keyof typeof MOCK_CONDITION_VALUES] || [];
-    const mappedValues = mappings
-      .filter(m => m.conditionType === selectedGroup)
-      .map(m => m.value);
+    if (!selectedConditionType || !newMapping.value || !newMapping.code) return;
+
+    const mapping: ConditionValueMappingType = {
+      id: `mapping-${Date.now()}`,
+      conditionType: selectedConditionType as any,
+      value: newMapping.value,
+      label: newMapping.label || newMapping.value,
+      code: newMapping.code.toUpperCase(),
+      active: true
+    };
+
+    const updatedMappings = [...mappings, mapping];
+    setMappings(updatedMappings);
+    onMappingsChange?.(updatedMappings);
     
-    const unmappedValue = availableValues.find(v => !mappedValues.includes(v.value));
-    
-    if (unmappedValue) {
-      const newMapping: ConditionValueMapping = {
-        id: `mapping-${Date.now()}`,
-        conditionType: selectedGroup as any,
-        value: unmappedValue.value,
-        label: unmappedValue.label,
-        code: unmappedValue.label.charAt(0).toUpperCase(),
-        active: true
-      };
-      
-      const newMappings = [...mappings, newMapping];
-      setMappings(newMappings);
-      onMappingsChange?.(newMappings);
-    }
+    setNewMapping({ value: '', label: '', code: '' });
+    setSelectedConditionType('');
+  };
+
+  const handleUpdateMapping = (id: string, updates: Partial<ConditionValueMappingType>) => {
+    const updatedMappings = mappings.map(m => 
+      m.id === id ? { ...m, ...updates } : m
+    );
+    setMappings(updatedMappings);
+    onMappingsChange?.(updatedMappings);
   };
 
   const handleDeleteMapping = (id: string) => {
-    const newMappings = mappings.filter(m => m.id !== id);
-    setMappings(newMappings);
-    onMappingsChange?.(newMappings);
+    const updatedMappings = mappings.filter(m => m.id !== id);
+    setMappings(updatedMappings);
+    onMappingsChange?.(updatedMappings);
   };
 
-  const startEdit = (mapping: ConditionValueMapping) => {
-    setEditingId(mapping.id);
-    setEditingCode(mapping.code);
-  };
-
-  const saveEdit = () => {
-    if (editingId && editingCode.trim()) {
-      handleMappingUpdate(editingId, { code: editingCode.trim().toUpperCase() });
-      setEditingId(null);
-      setEditingCode('');
+  const handleToggleActive = (id: string) => {
+    const mapping = mappings.find(m => m.id === id);
+    if (mapping) {
+      handleUpdateMapping(id, { active: !mapping.active });
     }
   };
 
-  const cancelEdit = () => {
-    setEditingId(null);
-    setEditingCode('');
+  const getConditionTypeLabel = (type: string) => {
+    return CONDITION_TYPES.find(t => t.value === type)?.label || type;
   };
 
-  const filteredMappings = mappings.filter(m => m.conditionType === selectedGroup);
-  const groupLabel = CONDITION_TYPES.find(t => t.value === selectedGroup)?.label || selectedGroup;
+  const getAvailableValues = () => {
+    if (!selectedConditionType) return [];
+    return MOCK_CONDITION_VALUES[selectedConditionType as keyof typeof MOCK_CONDITION_VALUES] || [];
+  };
 
   return (
     <TooltipProvider>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <Settings className="w-5 h-5" />
-            <span>Thiết Lập Giá Trị Điều Kiện</span>
+            <MapPin className="w-5 h-5" />
+            <span>Thiết Lập Mapping Giá Trị Điều Kiện</span>
             <Tooltip>
               <TooltipTrigger>
                 <Info className="w-4 h-4 text-gray-400" />
               </TooltipTrigger>
               <TooltipContent>
-                <p>Gán mã 1-2 ký tự cho mỗi giá trị điều kiện để tạo prefix cho voucher code</p>
+                <p>Mapping các giá trị điều kiện thành mã code ngắn để tạo prefix voucher</p>
               </TooltipContent>
             </Tooltip>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Group Selection */}
-          <div className="flex items-center space-x-4">
-            <div className="space-y-2">
-              <Label>Chọn nhóm điều kiện</Label>
-              <Select value={selectedGroup} onValueChange={setSelectedGroup}>
-                <SelectTrigger className="w-48">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CONDITION_TYPES.map(type => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          {/* Add New Mapping */}
+          <div className="space-y-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+            <h4 className="font-medium text-gray-900">Thêm Mapping Mới</h4>
+            
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <Label>Nhóm Điều Kiện</Label>
+                <Select value={selectedConditionType} onValueChange={setSelectedConditionType}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Chọn nhóm..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CONDITION_TYPES.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Giá Trị</Label>
+                <Select 
+                  value={newMapping.value} 
+                  onValueChange={(value) => {
+                    const option = getAvailableValues().find(v => v.value === value);
+                    setNewMapping({
+                      ...newMapping,
+                      value,
+                      label: option?.label || value
+                    });
+                  }}
+                  disabled={!selectedConditionType}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Chọn giá trị..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getAvailableValues().map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Mã Code (1-2 ký tự)</Label>
+                <Input
+                  value={newMapping.code}
+                  onChange={(e) => setNewMapping({
+                    ...newMapping,
+                    code: e.target.value.slice(0, 2).toUpperCase()
+                  })}
+                  placeholder="VD: V, VIP"
+                  className="mt-1"
+                  maxLength={2}
+                />
+              </div>
+
+              <div className="flex items-end">
+                <Button 
+                  onClick={handleAddMapping}
+                  disabled={!selectedConditionType || !newMapping.value || !newMapping.code}
+                  className="w-full"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Thêm
+                </Button>
+              </div>
             </div>
-            
-            <div className="flex-1" />
-            
-            <Button onClick={handleAddMapping} size="sm">
-              <Plus className="w-4 h-4 mr-1" />
-              Thêm Mapping
-            </Button>
           </div>
 
-          {/* Mapping Table */}
-          <div className="border rounded-lg">
-            <div className="p-4 bg-gray-50 border-b">
-              <h4 className="font-medium">Mapping cho: {groupLabel}</h4>
-              <p className="text-sm text-gray-600">
-                Gán mã ký tự ngắn (1-2 ký tự) cho mỗi giá trị để tạo prefix tự động
-              </p>
-            </div>
+          {/* Mappings Table */}
+          <div className="space-y-4">
+            <h4 className="font-medium text-gray-900">Danh Sách Mapping Hiện Tại</h4>
             
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Giá Trị</TableHead>
-                  <TableHead>Nhãn Hiển Thị</TableHead>
-                  <TableHead>Mã Ký Tự</TableHead>
-                  <TableHead>Trạng Thái</TableHead>
-                  <TableHead className="text-right">Thao Tác</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredMappings.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-gray-500">
-                      Chưa có mapping nào cho nhóm này
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredMappings.map((mapping) => (
-                    <TableRow key={mapping.id}>
-                      <TableCell className="font-mono text-sm">
-                        {mapping.value}
-                      </TableCell>
-                      <TableCell>{mapping.label}</TableCell>
-                      <TableCell>
-                        {editingId === mapping.id ? (
-                          <div className="flex items-center space-x-2">
-                            <Input
-                              value={editingCode}
-                              onChange={(e) => setEditingCode(e.target.value.slice(0, 2))}
-                              className="w-16 text-center font-mono"
-                              placeholder="AB"
-                              maxLength={2}
-                            />
-                            <Button size="sm" onClick={saveEdit}>
-                              <Save className="w-3 h-3" />
-                            </Button>
-                            <Button size="sm" variant="ghost" onClick={cancelEdit}>
-                              <X className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <Badge variant="secondary" className="font-mono">
-                            {mapping.code}
+            {mappings.length === 0 ? (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Chưa có mapping nào được thiết lập. Thêm mapping đầu tiên để bắt đầu.
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <div className="space-y-2">
+                {CONDITION_TYPES.map((type) => {
+                  const typeMappings = mappings.filter(m => m.conditionType === type.value);
+                  if (typeMappings.length === 0) return null;
+
+                  return (
+                    <div key={type.value} className="border border-gray-200 rounded-lg">
+                      <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                        <div className="flex items-center justify-between">
+                          <h5 className="font-medium text-gray-900">{type.label}</h5>
+                          <Badge variant="secondary">
+                            {typeMappings.filter(m => m.active).length} active
                           </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Switch 
-                          checked={mapping.active}
-                          onCheckedChange={(checked) => 
-                            handleMappingUpdate(mapping.id, { active: checked })
-                          }
-                        />
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end space-x-1">
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => startEdit(mapping)}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleDeleteMapping(mapping.id)}
-                            className="text-red-600"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                      </div>
+                      
+                      <div className="p-4 space-y-3">
+                        {typeMappings.map((mapping) => (
+                          <div key={mapping.id} className="flex items-center space-x-4 p-3 border border-gray-100 rounded bg-white">
+                            <div className="flex-1 grid grid-cols-3 gap-4">
+                              <div>
+                                <span className="text-sm text-gray-600">Giá trị:</span>
+                                <div className="font-medium">{mapping.label}</div>
+                              </div>
+                              <div>
+                                <span className="text-sm text-gray-600">Code:</span>
+                                <div className="font-mono font-bold text-blue-600">{mapping.code}</div>
+                              </div>
+                              <div>
+                                <span className="text-sm text-gray-600">Trạng thái:</span>
+                                <div className="flex items-center space-x-2">
+                                  <Switch
+                                    checked={mapping.active}
+                                    onCheckedChange={() => handleToggleActive(mapping.id)}
+                                    size="sm"
+                                  />
+                                  <span className="text-sm">
+                                    {mapping.active ? 'Active' : 'Inactive'}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="flex space-x-1">
+                              <Button variant="ghost" size="sm">
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleDeleteMapping(mapping.id)}
+                                className="text-red-600"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
-          {/* Preview Section */}
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h4 className="font-medium text-blue-800 mb-2">Preview Mapping</h4>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {filteredMappings.filter(m => m.active).map(mapping => (
-                <div key={mapping.id} className="text-sm">
-                  <span className="text-gray-600">{mapping.label}:</span>
-                  <span className="ml-1 font-mono font-bold text-blue-600">{mapping.code}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          {/* Usage Instructions */}
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              <div className="text-sm">
+                <div className="font-medium text-gray-900 mb-1">Hướng Dẫn Mapping</div>
+                <ul className="list-disc list-inside space-y-1 text-gray-600">
+                  <li>Mỗi giá trị điều kiện cần được mapping thành 1-2 ký tự code</li>
+                  <li>Code này sẽ được dùng để tạo prefix cho mã voucher</li>
+                  <li>Ví dụ: VIP → V, Premium → P, Website → W</li>
+                  <li>Chỉ những mapping được đánh dấu "Active" mới được sử dụng</li>
+                </ul>
+              </div>
+            </AlertDescription>
+          </Alert>
         </CardContent>
       </Card>
     </TooltipProvider>

@@ -17,24 +17,13 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { VoucherSettingsConfig } from '../components/VoucherSettingsConfig';
-import { VoucherBatchSelector } from '../components/VoucherBatchSelector';
-import { VoucherCodeCustomization } from '../components/VoucherCodeCustomization';
+import { UnifiedVoucherCodeGenerator } from '../components/UnifiedVoucherCodeGenerator';
 import { VoucherCustomerSettings } from '../components/VoucherCustomerSettings';
 import { toast } from '@/hooks/use-toast';
 
 export function VoucherSettings() {
-  const [selectedBatch, setSelectedBatch] = useState('');
   const [autoIssue, setAutoIssue] = useState(false);
-
-  const handleBatchChange = (batch: string) => {
-    setSelectedBatch(batch);
-    if (batch) {
-      toast({
-        title: "Batch đã được chọn",
-        description: `Đã chọn voucher batch: ${batch}. Bạn có thể bắt đầu cấu hình điều kiện tạo mã.`
-      });
-    }
-  };
+  const [voucherCodeConfig, setVoucherCodeConfig] = useState<any>(null);
 
   const handleSaveSettings = () => {
     toast({
@@ -43,9 +32,9 @@ export function VoucherSettings() {
     });
   };
 
-  const handleCodeCustomizationChange = (settings: any) => {
-    console.log('Code customization settings updated:', settings);
-    // In a real app, this would save to backend
+  const handleVoucherCodeConfigChange = (config: any) => {
+    setVoucherCodeConfig(config);
+    console.log('Voucher code configuration updated:', config);
   };
 
   return (
@@ -72,6 +61,7 @@ export function VoucherSettings() {
         </TabsList>
 
         <TabsContent value="general" className="space-y-6">
+          {/* Auto Issue Setting */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
@@ -79,38 +69,26 @@ export function VoucherSettings() {
                 <span>Cài Đặt Chung</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-8">
-              {/* Voucher Batch Selection */}
-              <div className="border-b border-gray-200 pb-6">
-                <VoucherBatchSelector
-                  selectedBatch={selectedBatch}
-                  onBatchChange={handleBatchChange}
-                />
-              </div>
-
-              {/* Voucher Issuance Option */}
-              <div className="border-b border-gray-200 pb-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="auto-issue">Tự động phát hành voucher khi khởi tạo</Label>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Automatically issue the voucher immediately upon creation, no manual approval needed.
-                    </p>
-                  </div>
-                  <Switch 
-                    id="auto-issue" 
-                    checked={autoIssue}
-                    onCheckedChange={setAutoIssue}
-                  />
+            <CardContent className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="auto-issue">Tự động phát hành voucher khi khởi tạo</Label>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Automatically issue the voucher immediately upon creation, no manual approval needed.
+                  </p>
                 </div>
+                <Switch 
+                  id="auto-issue" 
+                  checked={autoIssue}
+                  onCheckedChange={setAutoIssue}
+                />
               </div>
             </CardContent>
           </Card>
 
-          {/* Voucher Code UI Customization - Enhanced with new features */}
-          <VoucherCodeCustomization 
-            selectedBatch={selectedBatch}
-            onSettingsChange={handleCodeCustomizationChange}
+          {/* Unified Voucher Code Generator */}
+          <UnifiedVoucherCodeGenerator 
+            onSettingsChange={handleVoucherCodeConfigChange}
           />
 
           {/* Voucher Customer Settings */}
@@ -263,9 +241,9 @@ export function VoucherSettings() {
               <p className="text-sm text-gray-600 mt-1">
                 Hệ thống quản lý voucher code với mapping giá trị điều kiện và thứ tự ưu tiên đã được thiết lập. 
                 Các thay đổi sẽ được áp dụng ngay lập tức cho module voucher.
-                {selectedBatch && (
+                {voucherCodeConfig && (
                   <span className="block mt-2 font-medium text-blue-600">
-                    Đợt phát hành hiện tại: {selectedBatch}
+                    Đợt phát hành hiện tại: {voucherCodeConfig.selectedBatch}
                   </span>
                 )}
               </p>
