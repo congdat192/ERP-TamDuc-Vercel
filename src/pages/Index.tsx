@@ -7,13 +7,8 @@ import { ModuleEmptyState } from '@/components/pages/ModuleEmptyState';
 // Platform Admin module
 import { PlatformAdmin } from '@/modules/platform-admin';
 
-// Voucher module pages
-import { VoucherDashboard } from '@/modules/voucher/pages/VoucherDashboard';
-import { VoucherIssue } from '@/modules/voucher/pages/VoucherIssue';
-import { VoucherList } from '@/modules/voucher/pages/VoucherList';
-import { VoucherAnalytics } from '@/modules/voucher/pages/VoucherAnalytics';
-import { VoucherLeaderboard } from '@/modules/voucher/pages/VoucherLeaderboard';
-import { VoucherSettings } from '@/modules/voucher/pages/VoucherSettings';
+// Voucher module
+import { VoucherModule } from '@/modules/voucher';
 
 // Admin module pages
 import { AuditLog } from '@/modules/admin/pages/AuditLog';
@@ -141,7 +136,6 @@ const mockUsers: User[] = [
 
 const Index = () => {
   const [currentModule, setCurrentModule] = useState<ERPModule>('dashboard');
-  const [currentVoucherPage, setCurrentVoucherPage] = useState<VoucherFeature>('voucher-dashboard');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -294,10 +288,6 @@ const Index = () => {
     await new Promise(resolve => setTimeout(resolve, 300));
     
     setCurrentModule(module);
-    if (module === 'voucher') {
-      setCurrentVoucherPage('voucher-dashboard');
-    }
-    
     setIsLoading(false);
   };
 
@@ -329,22 +319,12 @@ const Index = () => {
     }
 
     if (currentModule === 'voucher') {
-      switch (currentVoucherPage) {
-        case 'voucher-dashboard':
-          return <VoucherDashboard />;
-        case 'issue-voucher':
-          return <VoucherIssue />;
-        case 'voucher-list':
-          return <VoucherList currentUser={currentUser} />;
-        case 'voucher-analytics':
-          return <VoucherAnalytics />;
-        case 'voucher-leaderboard':
-          return <VoucherLeaderboard />;
-        case 'voucher-settings':
-          return <VoucherSettings />;
-        default:
-          return <VoucherDashboard />;
-      }
+      return (
+        <VoucherModule 
+          currentUser={currentUser} 
+          onBackToModules={() => setCurrentModule('dashboard')}
+        />
+      );
     }
 
     // Admin module pages
@@ -363,9 +343,7 @@ const Index = () => {
     <ERPLayout
       currentUser={currentUser}
       currentModule={currentModule}
-      currentVoucherPage={currentModule === 'voucher' ? currentVoucherPage : undefined}
       onModuleChange={handleModuleChange}
-      onVoucherPageChange={currentModule === 'voucher' ? setCurrentVoucherPage : undefined}
       onLogout={handleLogout}
     >
       <PageTransition isLoading={isLoading} type="fade">

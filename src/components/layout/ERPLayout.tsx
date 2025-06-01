@@ -1,16 +1,13 @@
 
 import { useState } from 'react';
 import { ERPMainSidebar } from './ERPMainSidebar';
-import { VoucherModuleSidebar } from './VoucherModuleSidebar';
 import { Header } from './Header';
-import { User, ERPModule, VoucherFeature } from '@/types/auth';
+import { User, ERPModule } from '@/types/auth';
 
 interface ERPLayoutProps {
   currentUser: User;
   currentModule: ERPModule;
-  currentVoucherPage?: VoucherFeature;
   onModuleChange: (module: ERPModule) => void;
-  onVoucherPageChange?: (page: VoucherFeature) => void;
   onLogout: () => void;
   children: React.ReactNode;
 }
@@ -18,9 +15,7 @@ interface ERPLayoutProps {
 export function ERPLayout({
   currentUser,
   currentModule,
-  currentVoucherPage,
   onModuleChange,
-  onVoucherPageChange,
   onLogout,
   children
 }: ERPLayoutProps) {
@@ -31,16 +26,8 @@ export function ERPLayout({
       return 'Tổng Quan ERP';
     }
     
-    if (currentModule === 'voucher' && currentVoucherPage) {
-      const pageTitles = {
-        'voucher-dashboard': 'Tổng Quan Voucher',
-        'issue-voucher': 'Phát Hành Voucher',
-        'voucher-list': 'Danh Sách Voucher',
-        'voucher-analytics': 'Báo Cáo Voucher',
-        'voucher-leaderboard': 'Bảng Xếp Hạng',
-        'voucher-settings': 'Cài Đặt Voucher'
-      };
-      return pageTitles[currentVoucherPage] || 'Module Voucher';
+    if (currentModule === 'voucher') {
+      return 'Module Voucher';
     }
 
     const moduleTitles = {
@@ -57,6 +44,15 @@ export function ERPLayout({
     return moduleTitles[currentModule as keyof typeof moduleTitles] || 'ERP System';
   };
 
+  // For voucher module, don't render the main sidebar since VoucherModule has its own layout
+  if (currentModule === 'voucher') {
+    return (
+      <div className="min-h-screen bg-gray-50 w-full">
+        {children}
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex w-full">
       <ERPMainSidebar 
@@ -66,16 +62,6 @@ export function ERPLayout({
         onToggle={() => setSidebarOpen(!sidebarOpen)}
         currentUser={currentUser}
       />
-      
-      {/* Voucher Module Secondary Sidebar */}
-      {currentModule === 'voucher' && currentVoucherPage && onVoucherPageChange && (
-        <VoucherModuleSidebar
-          currentPage={currentVoucherPage}
-          onPageChange={onVoucherPageChange}
-          currentUser={currentUser}
-          onBackToModules={() => onModuleChange('dashboard')}
-        />
-      )}
       
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
