@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, AlertCircle, CheckCircle } from 'lucide-react';
@@ -67,6 +66,9 @@ export function CampaignConfigurationWizard({
   const isNameValid = formData.name.trim().length > 0;
   const hasChoices = formData.choices.length > 0;
   const isFormValid = isNameValid && hasChoices;
+
+  // Check if current choice is configured (ready to be added)
+  const isCurrentChoiceConfigured = currentChoice.value > 0;
 
   const getValidationMessages = () => {
     const messages = [];
@@ -189,9 +191,18 @@ export function CampaignConfigurationWizard({
                   <AlertCircle className="w-4 h-4 text-gray-400" />
                 )}
                 <span className={cn("text-sm", hasChoices ? "text-green-600" : "text-gray-500")}>
-                  Cấu hình lựa chọn ({formData.choices.length} lựa chọn)
+                  Cấu hình lựa chọn ({formData.choices.length} lựa chọn đã thêm)
                 </span>
               </div>
+              {/* Show current choice status */}
+              {isCurrentChoiceConfigured && !hasChoices && (
+                <div className="flex items-center space-x-2 ml-6">
+                  <AlertCircle className="w-4 h-4 text-orange-500" />
+                  <span className="text-sm text-orange-600">
+                    Lựa chọn đã cấu hình - nhấn "Thêm Lựa Chọn" để hoàn thành
+                  </span>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -207,6 +218,11 @@ export function CampaignConfigurationWizard({
                       <li key={index}>{message}</li>
                     ))}
                   </ul>
+                  {isCurrentChoiceConfigured && !hasChoices && (
+                    <li className="text-orange-600 font-medium">
+                      Nhấn nút "Thêm Lựa Chọn" để thêm cấu hình voucher vào danh sách
+                    </li>
+                  )}
                 </div>
               </AlertDescription>
             </Alert>
@@ -380,8 +396,11 @@ export function CampaignConfigurationWizard({
             <CardContent>
               <Tabs defaultValue="choice-config" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="choice-config">
+                  <TabsTrigger value="choice-config" className="relative">
                     {editingChoiceIndex !== null ? 'Chỉnh Sửa Lựa Chọn' : 'Thêm Lựa Chọn Mới'}
+                    {isCurrentChoiceConfigured && editingChoiceIndex === null && (
+                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-orange-500 rounded-full animate-pulse" />
+                    )}
                   </TabsTrigger>
                   <TabsTrigger value="choices-list">
                     Danh Sách Lựa Chọn ({formData.choices.length})
@@ -389,11 +408,34 @@ export function CampaignConfigurationWizard({
                 </TabsList>
 
                 <TabsContent value="choice-config" className="space-y-6 mt-6">
-                  {!hasChoices && (
+                  {/* Enhanced helper text */}
+                  {!hasChoices && !isCurrentChoiceConfigured && (
                     <Alert>
                       <AlertCircle className="h-4 w-4" />
                       <AlertDescription>
-                        Bạn cần thêm ít nhất một lựa chọn voucher hoặc coupon để có thể tạo chiến dịch.
+                        <div className="space-y-2">
+                          <p className="font-medium">Hướng dẫn tạo lựa chọn voucher/coupon:</p>
+                          <ol className="list-decimal list-inside text-sm space-y-1">
+                            <li>Chọn loại voucher hoặc coupon</li>
+                            <li>Cấu hình đối tượng và giá trị</li>
+                            <li>Thêm điều kiện sử dụng (nếu cần)</li>
+                            <li><strong>Nhấn nút "Thêm Lựa Chọn" để lưu vào danh sách</strong></li>
+                          </ol>
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  {/* Show current choice status */}
+                  {isCurrentChoiceConfigured && (
+                    <Alert className="border-orange-200 bg-orange-50">
+                      <CheckCircle className="h-4 w-4 text-orange-600" />
+                      <AlertDescription className="text-orange-800">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">
+                            Lựa chọn đã được cấu hình! Nhấn "Thêm Lựa Chọn" bên dưới để thêm vào danh sách.
+                          </span>
+                        </div>
                       </AlertDescription>
                     </Alert>
                   )}
@@ -429,30 +471,65 @@ export function CampaignConfigurationWizard({
                     onChange={(value) => setCurrentChoice({ ...currentChoice, conditions: value })}
                   />
 
-                  <div className="flex justify-end space-x-2">
-                    {editingChoiceIndex !== null && (
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setEditingChoiceIndex(null);
-                          setCurrentChoice({
-                            id: '',
-                            voucherType: 'voucher',
-                            staffTypes: [],
-                            customerTargets: [],
-                            value: 0,
-                            valueType: 'fixed',
-                            conditions: []
-                          });
-                        }}
-                      >
-                        Hủy
-                      </Button>
+                  {/* Enhanced Add Choice Button Section */}
+                  <div className="border-t pt-6">
+                    <div className="flex justify-between items-center">
+                      <div className="flex-1">
+                        {editingChoiceIndex !== null ? (
+                          <p className="text-sm text-gray-600">
+                            Chỉnh sửa lựa chọn #{editingChoiceIndex + 1}
+                          </p>
+                        ) : (
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium text-gray-900">
+                              Bước cuối: Thêm lựa chọn vào danh sách
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              Sau khi cấu hình xong, nhấn nút bên dưới để thêm lựa chọn này vào chiến dịch
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex space-x-2">
+                        {editingChoiceIndex !== null && (
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setEditingChoiceIndex(null);
+                              setCurrentChoice({
+                                id: '',
+                                voucherType: 'voucher',
+                                staffTypes: [],
+                                customerTargets: [],
+                                value: 0,
+                                valueType: 'fixed',
+                                conditions: []
+                              });
+                            }}
+                          >
+                            Hủy
+                          </Button>
+                        )}
+                        <Button 
+                          onClick={addChoice}
+                          className={cn(
+                            "min-w-[140px]",
+                            isCurrentChoiceConfigured && editingChoiceIndex === null && "bg-orange-600 hover:bg-orange-700 animate-pulse"
+                          )}
+                          disabled={!isCurrentChoiceConfigured}
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          {editingChoiceIndex !== null ? 'Cập Nhật Lựa Chọn' : 'Thêm Lựa Chọn'}
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    {/* Button help text */}
+                    {!isCurrentChoiceConfigured && editingChoiceIndex === null && (
+                      <p className="text-sm text-gray-500 mt-2 text-right">
+                        Vui lòng cấu hình giá trị voucher để kích hoạt nút thêm
+                      </p>
                     )}
-                    <Button onClick={addChoice}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      {editingChoiceIndex !== null ? 'Cập Nhật Lựa Chọn' : 'Thêm Lựa Chọn'}
-                    </Button>
                   </div>
                 </TabsContent>
 
@@ -460,8 +537,19 @@ export function CampaignConfigurationWizard({
                   {formData.choices.length === 0 ? (
                     <div className="text-center py-8 text-gray-500">
                       <AlertCircle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                      <p className="text-lg font-medium mb-2">Chưa có lựa chọn nào</p>
-                      <p>Vui lòng thêm ít nhất một lựa chọn voucher hoặc coupon</p>
+                      <p className="text-lg font-medium mb-2">Chưa có lựa chọn nào trong danh sách</p>
+                      <p>Vui lòng cấu hình và thêm ít nhất một lựa chọn voucher hoặc coupon</p>
+                      <Button 
+                        variant="outline" 
+                        className="mt-4"
+                        onClick={() => {
+                          // Switch to choice-config tab
+                          const tabsTrigger = document.querySelector('[value="choice-config"]') as HTMLElement;
+                          tabsTrigger?.click();
+                        }}
+                      >
+                        Bắt đầu cấu hình
+                      </Button>
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -533,12 +621,17 @@ export function CampaignConfigurationWizard({
             </Button>
           </div>
           
-          {/* Button Help Text */}
+          {/* Enhanced Button Help Text */}
           {!isFormValid && (
-            <div className="text-center">
+            <div className="text-center space-y-2">
               <p className="text-sm text-gray-500">
                 Hoàn thành tất cả các bước bắt buộc để kích hoạt nút tạo chiến dịch
               </p>
+              {isCurrentChoiceConfigured && !hasChoices && (
+                <p className="text-sm text-orange-600 font-medium">
+                  ⚠️ Bạn đã cấu hình voucher nhưng chưa thêm vào danh sách. Vui lòng nhấn "Thêm Lựa Chọn" trước.
+                </p>
+              )}
             </div>
           )}
         </div>
