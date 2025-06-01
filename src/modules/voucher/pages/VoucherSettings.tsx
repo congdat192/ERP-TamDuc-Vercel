@@ -31,7 +31,7 @@ export function VoucherSettings() {
     if (batch) {
       toast({
         title: "Batch đã được chọn",
-        description: `Đã chọn voucher batch: ${batch}`
+        description: `Đã chọn voucher batch: ${batch}. Bạn có thể bắt đầu cấu hình điều kiện tạo mã.`
       });
     }
   };
@@ -41,6 +41,11 @@ export function VoucherSettings() {
       title: "Thành công",
       description: "Cài đặt đã được lưu thành công."
     });
+  };
+
+  const handleCodeCustomizationChange = (settings: any) => {
+    console.log('Code customization settings updated:', settings);
+    // In a real app, this would save to backend
   };
 
   return (
@@ -102,11 +107,10 @@ export function VoucherSettings() {
             </CardContent>
           </Card>
 
-          {/* Voucher Code UI Customization */}
+          {/* Voucher Code UI Customization - Enhanced with new features */}
           <VoucherCodeCustomization 
-            onSettingsChange={(settings) => {
-              console.log('Code customization settings:', settings);
-            }}
+            selectedBatch={selectedBatch}
+            onSettingsChange={handleCodeCustomizationChange}
           />
 
           {/* Voucher Customer Settings */}
@@ -257,8 +261,7 @@ export function VoucherSettings() {
             <div>
               <h3 className="font-medium text-gray-900">Trạng Thái Cài Đặt</h3>
               <p className="text-sm text-gray-600 mt-1">
-                Các cài đặt cấu hình voucher đã được thiết kế để quản lý mệnh giá, nguồn khách hàng, 
-                loại khách hàng và mẫu nội dung voucher một cách linh hoạt. 
+                Hệ thống quản lý voucher code với mapping giá trị điều kiện và thứ tự ưu tiên đã được thiết lập. 
                 Các thay đổi sẽ được áp dụng ngay lập tức cho module voucher.
                 {selectedBatch && (
                   <span className="block mt-2 font-medium text-blue-600">
