@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { Campaign, CampaignStatus } from '../types/campaign';
 
-// Mock data
+// Mock data with choices
 const mockCampaigns: Campaign[] = [
   {
     id: '1',
@@ -15,6 +14,17 @@ const mockCampaigns: Campaign[] = [
     },
     status: 'active',
     description: 'Chiến dịch khuyến mãi đặc biệt dành cho Black Friday',
+    choices: [
+      {
+        id: 'choice1',
+        voucherType: 'coupon',
+        staffTypes: ['telesales'],
+        customerTargets: ['new', 'vip'],
+        value: 15,
+        valueType: 'percentage',
+        conditions: ['Áp dụng cho đơn hàng từ 500,000 VNĐ', 'Có hiệu lực trong 30 ngày']
+      }
+    ],
     createdAt: new Date('2024-11-01'),
     updatedAt: new Date('2024-11-15'),
     createdBy: 'Admin'
@@ -30,24 +40,20 @@ const mockCampaigns: Campaign[] = [
     },
     status: 'draft',
     description: 'Voucher hàng tháng cho tháng 12/2024',
+    choices: [
+      {
+        id: 'choice2',
+        voucherType: 'voucher',
+        staffTypes: ['cskh', 'telesales'],
+        customerTargets: ['all'],
+        value: 100000,
+        valueType: 'fixed',
+        conditions: ['Chỉ sử dụng 1 lần/khách hàng']
+      }
+    ],
     createdAt: new Date('2024-11-10'),
     updatedAt: new Date('2024-11-10'),
     createdBy: 'Manager'
-  },
-  {
-    id: '3',
-    name: 'Chương Trình Khách Hàng Thân Thiết',
-    types: ['ongoing'],
-    schedule: {
-      startDate: new Date('2024-01-01'),
-      isCustom: true,
-      customDescription: 'Chương trình liên tục cho khách hàng VIP'
-    },
-    status: 'active',
-    description: 'Chương trình voucher liên tục cho khách hàng thân thiết',
-    createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-11-01'),
-    createdBy: 'System'
   }
 ];
 
@@ -76,6 +82,7 @@ export function useCampaignManagement() {
       schedule: data.schedule,
       status: data.status,
       description: data.description,
+      choices: data.choices,
       createdAt: new Date(),
       updatedAt: new Date(),
       createdBy: 'Current User'

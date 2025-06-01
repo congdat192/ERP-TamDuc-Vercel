@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,7 +13,7 @@ import {
   PowerOff
 } from 'lucide-react';
 import { CampaignTable } from '../components/CampaignTable';
-import { CampaignForm } from '../components/CampaignForm';
+import { CampaignConfigurationWizard } from '../components/CampaignConfigurationWizard';
 import { Campaign, CampaignType, CampaignStatus } from '../types/campaign';
 import { useCampaignManagement } from '../hooks/useCampaignManagement';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -34,7 +33,7 @@ export function CampaignManagement() {
   const [statusFilter, setStatusFilter] = useState<CampaignStatus | 'all'>('all');
   const [typeFilter, setTypeFilter] = useState<CampaignType | 'all'>('all');
   const [selectedCampaigns, setSelectedCampaigns] = useState<string[]>([]);
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
 
   const filteredCampaigns = useMemo(() => {
@@ -51,7 +50,7 @@ export function CampaignManagement() {
   const handleCreateCampaign = async (data: any) => {
     try {
       await createCampaign(data);
-      setIsFormOpen(false);
+      setIsWizardOpen(false);
       toast({
         title: "Thành công",
         description: "Chiến dịch đã được tạo thành công."
@@ -71,7 +70,7 @@ export function CampaignManagement() {
     try {
       await updateCampaign(editingCampaign.id, data);
       setEditingCampaign(null);
-      setIsFormOpen(false);
+      setIsWizardOpen(false);
       toast({
         title: "Thành công",
         description: "Chiến dịch đã được cập nhật thành công."
@@ -137,7 +136,7 @@ export function CampaignManagement() {
 
   const openEditForm = (campaign: Campaign) => {
     setEditingCampaign(campaign);
-    setIsFormOpen(true);
+    setIsWizardOpen(true);
   };
 
   return (
@@ -148,7 +147,7 @@ export function CampaignManagement() {
           <h2 className="text-2xl font-bold text-gray-900">Quản Lý Chiến Dịch</h2>
           <p className="text-gray-600">Cấu hình và quản lý các chiến dịch phát hành voucher</p>
         </div>
-        <Button onClick={() => setIsFormOpen(true)}>
+        <Button onClick={() => setIsWizardOpen(true)}>
           <Plus className="w-4 h-4 mr-2" />
           Tạo Chiến Dịch Mới
         </Button>
@@ -242,11 +241,11 @@ export function CampaignManagement() {
         onDelete={handleDeleteCampaign}
       />
 
-      {/* Campaign Form Modal */}
-      <CampaignForm
-        isOpen={isFormOpen}
+      {/* Campaign Configuration Wizard */}
+      <CampaignConfigurationWizard
+        isOpen={isWizardOpen}
         onClose={() => {
-          setIsFormOpen(false);
+          setIsWizardOpen(false);
           setEditingCampaign(null);
         }}
         onSubmit={editingCampaign ? handleEditCampaign : handleCreateCampaign}
