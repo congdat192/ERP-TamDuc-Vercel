@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon } from 'lucide-react';
+import { Calendar as CalendarIcon, AlertCircle, CheckCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { VoucherTypeSelector } from './VoucherTypeSelector';
 import { StaffTypeSelector } from './StaffTypeSelector';
 import { CustomerTargetSelector } from './CustomerTargetSelector';
@@ -61,6 +62,22 @@ export function CampaignConfigurationWizard({
 
   const [editingChoiceIndex, setEditingChoiceIndex] = useState<number | null>(null);
   const [hasEndDate, setHasEndDate] = useState(!!initialData?.schedule.endDate);
+
+  // Validation helpers
+  const isNameValid = formData.name.trim().length > 0;
+  const hasChoices = formData.choices.length > 0;
+  const isFormValid = isNameValid && hasChoices;
+
+  const getValidationMessages = () => {
+    const messages = [];
+    if (!isNameValid) {
+      messages.push('Vui lòng nhập tên chiến dịch');
+    }
+    if (!hasChoices) {
+      messages.push('Vui lòng thêm ít nhất một lựa chọn voucher/coupon');
+    }
+    return messages;
+  };
 
   const handleEndDateToggle = (enabled: boolean) => {
     setHasEndDate(enabled);
@@ -134,7 +151,9 @@ export function CampaignConfigurationWizard({
   };
 
   const handleSubmit = () => {
-    onSubmit(formData);
+    if (isFormValid) {
+      onSubmit(formData);
+    }
   };
 
   return (
@@ -147,21 +166,78 @@ export function CampaignConfigurationWizard({
         </DialogHeader>
 
         <div className="space-y-6">
+          {/* Progress Indicators */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm font-medium">Tiến Độ Hoàn Thành</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center space-x-2">
+                {isNameValid ? (
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 text-gray-400" />
+                )}
+                <span className={cn("text-sm", isNameValid ? "text-green-600" : "text-gray-500")}>
+                  Thông tin chiến dịch
+                </span>
+              </div>
+              <div className="flex items-center space-x-2">
+                {hasChoices ? (
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 text-gray-400" />
+                )}
+                <span className={cn("text-sm", hasChoices ? "text-green-600" : "text-gray-500")}>
+                  Cấu hình lựa chọn ({formData.choices.length} lựa chọn)
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Validation Messages */}
+          {!isFormValid && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                <div className="space-y-1">
+                  <p className="font-medium">Vui lòng hoàn thành các bước sau:</p>
+                  <ul className="list-disc list-inside text-sm space-y-1">
+                    {getValidationMessages().map((message, index) => (
+                      <li key={index}>{message}</li>
+                    ))}
+                  </ul>
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Campaign Settings */}
           <Card>
             <CardHeader>
-              <CardTitle>Cài Đặt Chiến Dịch</CardTitle>
+              <CardTitle className="flex items-center space-x-2">
+                <span>Cài Đặt Chiến Dịch</span>
+                {isNameValid ? (
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                ) : (
+                  <AlertCircle className="w-5 h-5 text-gray-400" />
+                )}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Tên Chiến Dịch</Label>
+                  <Label htmlFor="name">Tên Chiến Dịch *</Label>
                   <Input
                     id="name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="Nhập tên chiến dịch"
+                    className={cn(!isNameValid && formData.name === '' ? "border-red-300" : "")}
                   />
+                  {!isNameValid && formData.name === '' && (
+                    <p className="text-sm text-red-600">Tên chiến dịch là bắt buộc</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -292,7 +368,14 @@ export function CampaignConfigurationWizard({
           {/* Choice Configuration */}
           <Card>
             <CardHeader>
-              <CardTitle>Cấu Hình Lựa Chọn</CardTitle>
+              <CardTitle className="flex items-center space-x-2">
+                <span>Cấu Hình Lựa Chọn</span>
+                {hasChoices ? (
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                ) : (
+                  <AlertCircle className="w-5 h-5 text-gray-400" />
+                )}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="choice-config" className="w-full">
@@ -306,6 +389,15 @@ export function CampaignConfigurationWizard({
                 </TabsList>
 
                 <TabsContent value="choice-config" className="space-y-6 mt-6">
+                  {!hasChoices && (
+                    <Alert>
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>
+                        Bạn cần thêm ít nhất một lựa chọn voucher hoặc coupon để có thể tạo chiến dịch.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
                   <VoucherTypeSelector
                     value={currentChoice.voucherType}
                     onChange={(value) => setCurrentChoice({ ...currentChoice, voucherType: value })}
@@ -367,7 +459,9 @@ export function CampaignConfigurationWizard({
                 <TabsContent value="choices-list" className="mt-6">
                   {formData.choices.length === 0 ? (
                     <div className="text-center py-8 text-gray-500">
-                      Chưa có lựa chọn nào được cấu hình
+                      <AlertCircle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                      <p className="text-lg font-medium mb-2">Chưa có lựa chọn nào</p>
+                      <p>Vui lòng thêm ít nhất một lựa chọn voucher hoặc coupon</p>
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -429,11 +523,24 @@ export function CampaignConfigurationWizard({
             </Button>
             <Button 
               onClick={handleSubmit}
-              disabled={!formData.name || formData.choices.length === 0}
+              disabled={!isFormValid}
+              className={cn(!isFormValid && "cursor-not-allowed")}
             >
               {mode === 'create' ? 'Tạo Chiến Dịch' : 'Cập Nhật Chiến Dịch'}
+              {!isFormValid && (
+                <AlertCircle className="w-4 h-4 ml-2" />
+              )}
             </Button>
           </div>
+          
+          {/* Button Help Text */}
+          {!isFormValid && (
+            <div className="text-center">
+              <p className="text-sm text-gray-500">
+                Hoàn thành tất cả các bước bắt buộc để kích hoạt nút tạo chiến dịch
+              </p>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
