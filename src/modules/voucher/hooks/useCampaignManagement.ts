@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Campaign, CampaignStatus } from '../types/campaign';
 
@@ -79,10 +80,15 @@ export function useCampaignManagement() {
       id: Date.now().toString(),
       name: data.name,
       types: data.types,
-      schedule: data.schedule,
-      status: data.status,
+      schedule: {
+        startDate: data.schedule.startDate,
+        endDate: data.schedule.endDate,
+        isCustom: data.schedule.isCustom,
+        customDescription: data.schedule.customDescription
+      },
+      status: data.status || 'draft',
       description: data.description,
-      choices: data.choices,
+      choices: data.choices || [],
       createdAt: new Date(),
       updatedAt: new Date(),
       createdBy: 'Current User'
@@ -103,7 +109,10 @@ export function useCampaignManagement() {
         ? {
             ...campaign,
             ...data,
-            schedule: data.schedule,
+            schedule: {
+              ...campaign.schedule,
+              ...data.schedule
+            },
             updatedAt: new Date()
           }
         : campaign

@@ -26,9 +26,19 @@ const campaignSchema = z.object({
   types: z.array(z.enum(['monthly', 'promotion-batch', 'ongoing'])).min(1, 'Chọn ít nhất một loại chiến dịch'),
   startDate: z.date({ required_error: 'Ngày bắt đầu là bắt buộc' }),
   endDate: z.date().optional(),
+  hasEndDate: z.boolean().default(false),
   isCustomSchedule: z.boolean().default(false),
   customDescription: z.string().optional(),
-  status: z.enum(['active', 'inactive', 'draft', 'completed'])
+  status: z.enum(['active', 'inactive', 'draft', 'completed']),
+  isActive: z.boolean().default(false)
+}).refine((data) => {
+  if (data.hasEndDate && data.endDate && data.startDate) {
+    return data.endDate > data.startDate;
+  }
+  return true;
+}, {
+  message: "Ngày kết thúc phải sau ngày bắt đầu",
+  path: ["endDate"]
 });
 
 type CampaignFormData = z.infer<typeof campaignSchema>;
@@ -53,6 +63,8 @@ export function CampaignForm({ isOpen, onClose, onSubmit, initialData, mode }: C
       description: '',
       types: [],
       status: 'draft',
+      isActive: false,
+      hasEndDate: false,
       isCustomSchedule: false,
       customDescription: ''
     }
@@ -60,15 +72,18 @@ export function CampaignForm({ isOpen, onClose, onSubmit, initialData, mode }: C
 
   useEffect(() => {
     if (initialData && mode === 'edit') {
+      const hasEndDate = !!initialData.schedule.endDate;
       form.reset({
         name: initialData.name,
         description: initialData.description || '',
         types: initialData.types,
         startDate: initialData.schedule.startDate,
         endDate: initialData.schedule.endDate,
+        hasEndDate,
         isCustomSchedule: initialData.schedule.isCustom,
         customDescription: initialData.schedule.customDescription || '',
-        status: initialData.status
+        status: initialData.status,
+        isActive: initialData.status === 'active'
       });
       setSelectedTypes(initialData.types);
     } else {
@@ -77,6 +92,8 @@ export function CampaignForm({ isOpen, onClose, onSubmit, initialData, mode }: C
         description: '',
         types: [],
         status: 'draft',
+        isActive: false,
+        hasEndDate: false,
         isCustomSchedule: false,
         customDescription: ''
       });
@@ -93,6 +110,18 @@ export function CampaignForm({ isOpen, onClose, onSubmit, initialData, mode }: C
     form.setValue('types', newTypes);
   };
 
+  const handleActiveToggle = (isActive: boolean) => {
+    form.setValue('isActive', isActive);
+    form.setValue('status', isActive ? 'active' : 'draft');
+  };
+
+  const handleEndDateToggle = (hasEndDate: boolean) => {
+    form.setValue('hasEndDate', hasEndDate);
+    if (!hasEndDate) {
+      form.setValue('endDate', undefined);
+    }
+  };
+
   const handleSubmit = (data: CampaignFormData) => {
     const campaignData = {
       name: data.name,
@@ -100,11 +129,11 @@ export function CampaignForm({ isOpen, onClose, onSubmit, initialData, mode }: C
       types: data.types,
       schedule: {
         startDate: data.startDate,
-        endDate: data.endDate,
+        endDate: data.hasEndDate ? data.endDate : undefined,
         isCustom: data.isCustomSchedule,
         customDescription: data.customDescription
       },
-      status: data.status
+      status: data.isActive ? 'active' : data.status
     };
 
     onSubmit(campaignData);
@@ -150,22 +179,23 @@ export function CampaignForm({ isOpen, onClose, onSubmit, initialData, mode }: C
                 />
               </div>
 
-              <div>
-                <Label>Trạng Thái</Label>
-                <Select
-                  value={form.watch('status')}
-                  onValueChange={(value: CampaignStatus) => form.setValue('status', value)}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Chọn trạng thái" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="draft">Nháp</SelectItem>
-                    <SelectItem value="active">Hoạt động</SelectItem>
-                    <SelectItem value="inactive">Tạm dừng</SelectItem>
-                    <SelectItem value="completed">Hoàn thành</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Trạng Thái Chiến Dịch</Label>
+                  <p className="text-sm text-gray-500">
+                    {form.watch('isActive') ? 'Chiến dịch sẽ được kích hoạt ngay lập tức' : 'Chiến dịch sẽ được lưu dưới dạng nháp'}
+                  </p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Label htmlFor="active-toggle" className="text-sm">
+                    {form.watch('isActive') ? 'Kích hoạt' : 'Nháp'}
+                  </Label>
+                  <Switch
+                    id="active-toggle"
+                    checked={form.watch('isActive')}
+                    onCheckedChange={handleActiveToggle}
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -239,7 +269,7 @@ export function CampaignForm({ isOpen, onClose, onSubmit, initialData, mode }: C
                         selected={form.watch('startDate')}
                         onSelect={(date) => form.setValue('startDate', date!)}
                         initialFocus
-                        className="pointer-events-auto"
+                        className="p-3 pointer-events-auto"
                       />
                     </PopoverContent>
                   </Popover>
@@ -249,18 +279,29 @@ export function CampaignForm({ isOpen, onClose, onSubmit, initialData, mode }: C
                 </div>
 
                 <div>
-                  <Label>Ngày Kết Thúc</Label>
+                  <div className="flex items-center justify-between mb-1">
+                    <Label>Ngày Kết Thúc</Label>
+                    <div className="flex items-center space-x-2">
+                      <Label htmlFor="has-end-date" className="text-sm">Có ngày kết thúc</Label>
+                      <Switch
+                        id="has-end-date"
+                        checked={form.watch('hasEndDate')}
+                        onCheckedChange={handleEndDateToggle}
+                      />
+                    </div>
+                  </div>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
+                        disabled={!form.watch('hasEndDate')}
                         className={cn(
                           "w-full mt-1 justify-start text-left font-normal",
-                          !form.watch('endDate') && "text-muted-foreground"
+                          (!form.watch('endDate') || !form.watch('hasEndDate')) && "text-muted-foreground"
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {form.watch('endDate') ? (
+                        {form.watch('endDate') && form.watch('hasEndDate') ? (
                           format(form.watch('endDate'), "dd/MM/yyyy")
                         ) : (
                           <span>Không giới hạn</span>
@@ -273,7 +314,7 @@ export function CampaignForm({ isOpen, onClose, onSubmit, initialData, mode }: C
                         selected={form.watch('endDate')}
                         onSelect={(date) => form.setValue('endDate', date)}
                         initialFocus
-                        className="pointer-events-auto"
+                        className="p-3 pointer-events-auto"
                         disabled={(date) => {
                           const startDate = form.watch('startDate');
                           return startDate ? date < startDate : false;
@@ -281,6 +322,9 @@ export function CampaignForm({ isOpen, onClose, onSubmit, initialData, mode }: C
                       />
                     </PopoverContent>
                   </Popover>
+                  {form.formState.errors.endDate && (
+                    <p className="text-sm text-red-600 mt-1">{form.formState.errors.endDate.message}</p>
+                  )}
                 </div>
               </div>
 
