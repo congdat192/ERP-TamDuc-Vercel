@@ -1,11 +1,10 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { VoucherConditionBuilder } from './VoucherConditionBuilder';
 import { ConditionTemplateManager } from './ConditionTemplateManager';
 import { ConditionRow, ConditionTemplate } from '../types/conditionBuilder';
-import { Settings, FileTemplate } from 'lucide-react';
+import { Settings, FileText } from 'lucide-react';
 
 interface VoucherCodeCustomizationProps {
   onSettingsChange?: (settings: {
@@ -62,7 +61,7 @@ export function VoucherCodeCustomization({ onSettingsChange }: VoucherCodeCustom
             <span>Điều Kiện Tạo Mã</span>
           </TabsTrigger>
           <TabsTrigger value="template-manager" className="flex items-center space-x-2">
-            <FileTemplate className="w-4 h-4" />
+            <FileText className="w-4 h-4" />
             <span>Quản Lý Template</span>
           </TabsTrigger>
         </TabsList>
