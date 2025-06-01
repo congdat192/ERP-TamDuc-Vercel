@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, AlertCircle, CheckCircle } from 'lucide-react';
@@ -62,19 +61,21 @@ export function CampaignConfigurationWizard({
 
   const [hasEndDate, setHasEndDate] = useState(!!initialData?.schedule.endDate);
 
-  // Validation helpers
+  // Validation helpers - simplified and more direct
   const isNameValid = formData.name.trim().length > 0;
-  const currentChoice = formData.choices[0] || {
-    id: '1',
-    voucherType: 'voucher',
-    staffTypes: [],
-    customerTargets: [],
-    value: 0,
-    valueType: 'fixed',
-    conditions: []
-  };
-  const isChoiceConfigured = currentChoice.value > 0;
+  const currentChoice = formData.choices[0];
+  const isChoiceConfigured = currentChoice && currentChoice.value > 0;
   const isFormValid = isNameValid && isChoiceConfigured;
+
+  // Debug logging to track state changes
+  console.log('CampaignWizard Debug:', {
+    formDataName: formData.name,
+    currentChoiceValue: currentChoice?.value,
+    isNameValid,
+    isChoiceConfigured,
+    isFormValid,
+    fullCurrentChoice: currentChoice
+  });
 
   const getValidationMessages = () => {
     const messages = [];
@@ -88,11 +89,17 @@ export function CampaignConfigurationWizard({
   };
 
   const updateCurrentChoice = (updates: Partial<CampaignChoice>) => {
+    console.log('Updating choice with:', updates);
     const updatedChoice = { ...currentChoice, ...updates };
-    setFormData({
+    console.log('Updated choice:', updatedChoice);
+    
+    const newFormData = {
       ...formData,
       choices: [updatedChoice]
-    });
+    };
+    
+    console.log('New form data:', newFormData);
+    setFormData(newFormData);
   };
 
   const handleEndDateToggle = (enabled: boolean) => {
@@ -116,8 +123,12 @@ export function CampaignConfigurationWizard({
   };
 
   const handleSubmit = () => {
+    console.log('Submit attempted with formValid:', isFormValid);
     if (isFormValid) {
+      console.log('Submitting form data:', formData);
       onSubmit(formData);
+    } else {
+      console.log('Form validation failed:', { isNameValid, isChoiceConfigured });
     }
   };
 
@@ -154,7 +165,7 @@ export function CampaignConfigurationWizard({
                   <AlertCircle className="w-4 h-4 text-gray-400" />
                 )}
                 <span className={cn("text-sm", isChoiceConfigured ? "text-green-600" : "text-gray-500")}>
-                  Cấu hình voucher/coupon
+                  Cấu hình voucher/coupon (Giá trị: {currentChoice?.value || 0})
                 </span>
               </div>
             </CardContent>
