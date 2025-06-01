@@ -1,5 +1,7 @@
 
 import { useState } from 'react';
+import { format } from 'date-fns';
+import { Calendar as CalendarIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +10,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { VoucherTypeSelector } from './VoucherTypeSelector';
 import { StaffTypeSelector } from './StaffTypeSelector';
 import { CustomerTargetSelector } from './CustomerTargetSelector';
@@ -15,6 +20,7 @@ import { ValueSelector } from './ValueSelector';
 import { ConditionsSelector } from './ConditionsSelector';
 import { Campaign, CampaignChoice, CampaignFormData } from '../types/campaign';
 import { Plus, Trash2, Copy } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface CampaignConfigurationWizardProps {
   isOpen: boolean;
@@ -54,6 +60,27 @@ export function CampaignConfigurationWizard({
   });
 
   const [editingChoiceIndex, setEditingChoiceIndex] = useState<number | null>(null);
+  const [hasEndDate, setHasEndDate] = useState(!!initialData?.schedule.endDate);
+
+  const handleEndDateToggle = (enabled: boolean) => {
+    setHasEndDate(enabled);
+    if (!enabled) {
+      setFormData({
+        ...formData,
+        schedule: {
+          ...formData.schedule,
+          endDate: undefined
+        }
+      });
+    }
+  };
+
+  const handleStatusToggle = (isActive: boolean) => {
+    setFormData({
+      ...formData,
+      status: isActive ? 'active' : 'draft'
+    });
+  };
 
   const addChoice = () => {
     const newChoice: CampaignChoice = {
@@ -137,21 +164,119 @@ export function CampaignConfigurationWizard({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="startDate">Ngày Bắt Đầu</Label>
-                  <Input
-                    id="startDate"
-                    type="date"
-                    value={formData.schedule.startDate.toISOString().split('T')[0]}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      schedule: {
-                        ...formData.schedule,
-                        startDate: new Date(e.target.value)
-                      }
-                    })}
-                  />
+                  <div className="flex items-center justify-between">
+                    <Label>Trạng Thái Chiến Dịch</Label>
+                    <div className="flex items-center space-x-2">
+                      <Label htmlFor="status-toggle" className="text-sm">
+                        {formData.status === 'active' ? 'Kích hoạt' : 'Nháp'}
+                      </Label>
+                      <Switch
+                        id="status-toggle"
+                        checked={formData.status === 'active'}
+                        onCheckedChange={handleStatusToggle}
+                      />
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    {formData.status === 'active' 
+                      ? 'Chiến dịch sẽ được kích hoạt ngay lập tức' 
+                      : 'Chiến dịch sẽ được lưu dưới dạng nháp'
+                    }
+                  </p>
                 </div>
               </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Ngày Bắt Đầu</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !formData.schedule.startDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {formData.schedule.startDate ? (
+                          format(formData.schedule.startDate, "dd/MM/yyyy")
+                        ) : (
+                          <span>Chọn ngày</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={formData.schedule.startDate}
+                        onSelect={(date) => setFormData({
+                          ...formData,
+                          schedule: {
+                            ...formData.schedule,
+                            startDate: date || new Date()
+                          }
+                        })}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Ngày Kết Thúc</Label>
+                    <div className="flex items-center space-x-2">
+                      <Label htmlFor="has-end-date" className="text-sm">Có ngày kết thúc</Label>
+                      <Switch
+                        id="has-end-date"
+                        checked={hasEndDate}
+                        onCheckedChange={handleEndDateToggle}
+                      />
+                    </div>
+                  </div>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        disabled={!hasEndDate}
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          (!formData.schedule.endDate || !hasEndDate) && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {formData.schedule.endDate && hasEndDate ? (
+                          format(formData.schedule.endDate, "dd/MM/yyyy")
+                        ) : (
+                          <span>Không giới hạn</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={formData.schedule.endDate}
+                        onSelect={(date) => setFormData({
+                          ...formData,
+                          schedule: {
+                            ...formData.schedule,
+                            endDate: date
+                          }
+                        })}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                        disabled={(date) => {
+                          const startDate = formData.schedule.startDate;
+                          return startDate ? date < startDate : false;
+                        }}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="description">Mô Tả</Label>
                 <Textarea
