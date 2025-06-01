@@ -18,7 +18,7 @@ const mockCampaigns: Campaign[] = [
       {
         id: 'choice1',
         voucherType: 'coupon',
-        staffTypes: ['telesales'],
+        staffTypes: ['telesale'],
         customerTargets: ['new', 'vip'],
         value: 15,
         valueType: 'percentage',
@@ -44,7 +44,7 @@ const mockCampaigns: Campaign[] = [
       {
         id: 'choice2',
         voucherType: 'voucher',
-        staffTypes: ['cskh', 'telesales'],
+        staffTypes: ['cskh', 'telesale'],
         customerTargets: ['all'],
         value: 100000,
         valueType: 'fixed',
