@@ -27,7 +27,7 @@ export function VoucherModule({ currentUser, onBackToModules }: VoucherModulePro
       case 'issue-voucher':
         return <VoucherIssue />;
       case 'voucher-list':
-        return <VoucherList />;
+        return <VoucherList currentUser={currentUser} />;
       case 'voucher-analytics':
         return <VoucherAnalytics />;
       case 'voucher-leaderboard':
