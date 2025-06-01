@@ -18,7 +18,8 @@ export type ERPModule =
   | 'security-settings';
 
 export type VoucherFeature = 
-  | 'voucher-dashboard' 
+  | 'voucher-dashboard'
+  | 'campaign-management'
   | 'issue-voucher' 
   | 'voucher-list' 
   | 'voucher-analytics' 

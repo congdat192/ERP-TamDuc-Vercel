@@ -8,7 +8,8 @@ import {
   BarChart3, 
   Trophy, 
   Settings,
-  ChevronLeft
+  ChevronLeft,
+  Target
 } from 'lucide-react';
 import { VoucherFeature, User } from '@/types/auth';
 
@@ -21,6 +22,7 @@ interface VoucherModuleSidebarProps {
 
 const voucherPages = [
   { id: 'voucher-dashboard' as VoucherFeature, label: 'Tổng Quan', icon: LayoutDashboard },
+  { id: 'campaign-management' as VoucherFeature, label: 'Quản Lý Chiến Dịch', icon: Target },
   { id: 'issue-voucher' as VoucherFeature, label: 'Phát Hành Voucher', icon: Ticket },
   { id: 'voucher-list' as VoucherFeature, label: 'Danh Sách Voucher', icon: FileText },
   { id: 'voucher-analytics' as VoucherFeature, label: 'Báo Cáo Phân Tích', icon: BarChart3 },
