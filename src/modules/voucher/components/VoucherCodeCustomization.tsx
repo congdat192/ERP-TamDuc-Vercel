@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { VoucherConditionBuilder } from './VoucherConditionBuilder';
 import { ConditionTemplateManager } from './ConditionTemplateManager';
 import { ConditionRow, ConditionTemplate } from '../types/conditionBuilder';
-import { Settings, Template } from 'lucide-react';
+import { Settings, FileTemplate } from 'lucide-react';
 
 interface VoucherCodeCustomizationProps {
   onSettingsChange?: (settings: {
@@ -62,7 +62,7 @@ export function VoucherCodeCustomization({ onSettingsChange }: VoucherCodeCustom
             <span>Điều Kiện Tạo Mã</span>
           </TabsTrigger>
           <TabsTrigger value="template-manager" className="flex items-center space-x-2">
-            <Template className="w-4 h-4" />
+            <FileTemplate className="w-4 h-4" />
             <span>Quản Lý Template</span>
           </TabsTrigger>
         </TabsList>

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Template, 
+  FileTemplate, 
   Search, 
   Play, 
   Edit, 
@@ -105,7 +104,7 @@ export function ConditionTemplateManager({
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Template className="w-5 h-5" />
+            <FileTemplate className="w-5 h-5" />
             <span>Quản Lý Template Điều Kiện</span>
           </div>
           <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
