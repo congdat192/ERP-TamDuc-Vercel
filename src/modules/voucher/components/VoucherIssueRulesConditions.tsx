@@ -398,7 +398,7 @@ export function VoucherIssueRulesConditions({ onSettingsChange }: VoucherIssueRu
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Khách hàng VIP">Khách hàng VIP</SelectItem>
-                  <SelectItem value="Chi tiêu > 5M">Chi tiêu > 5M tháng</SelectItem>
+                  <SelectItem value="Chi tiêu > 5M">Chi tiêu {'>'}5M tháng</SelectItem>
                   <SelectItem value="Sinh nhật">Sinh nhật tháng này</SelectItem>
                   <SelectItem value="Đơn hàng đầu">Đơn hàng đầu tiên</SelectItem>
                 </SelectContent>
