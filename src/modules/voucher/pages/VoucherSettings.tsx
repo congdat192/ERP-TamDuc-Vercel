@@ -71,10 +71,6 @@ export function VoucherSettings() {
             }}
             onCreateTemplate={(name, description) => {
               console.log('Creating template:', name, description);
-              toast({
-                title: "Tạo template",
-                description: `Template "${name}" đã được tạo thành công.`
-              });
             }}
           />
         </TabsContent>
