@@ -229,7 +229,6 @@ export function ConditionValueMapping({ onMappingsChange }: ConditionValueMappin
                                   <Switch
                                     checked={mapping.active}
                                     onCheckedChange={() => handleToggleActive(mapping.id)}
-                                    size="sm"
                                   />
                                   <span className="text-sm">
                                     {mapping.active ? 'Active' : 'Inactive'}
