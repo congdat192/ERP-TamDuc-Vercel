@@ -11,7 +11,6 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { VoucherSettingsConfig } from '../components/VoucherSettingsConfig';
-import { VoucherCodeGenerationForm } from '../components/VoucherCodeGenerationForm';
 import { VoucherCustomerSettings } from '../components/VoucherCustomerSettings';
 import { ConditionTemplateManager } from '../components/ConditionTemplateManager';
 import { toast } from '@/hooks/use-toast';
@@ -45,20 +44,13 @@ export function VoucherSettings() {
         </Button>
       </div>
 
-      <Tabs defaultValue="code-generation" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="code-generation">Tạo Mã Voucher</TabsTrigger>
+      <Tabs defaultValue="template-management" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="template-management">Quản Lý Template</TabsTrigger>
           <TabsTrigger value="customer-settings">Cài Đặt Khách Hàng</TabsTrigger>
           <TabsTrigger value="system-config">Cấu Hình Hệ Thống</TabsTrigger>
           <TabsTrigger value="permissions">Quyền Hạn & Thông Báo</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="code-generation" className="space-y-6">
-          <VoucherCodeGenerationForm 
-            onSettingsChange={handleVoucherCodeConfigChange}
-          />
-        </TabsContent>
 
         <TabsContent value="template-management" className="space-y-6">
           <ConditionTemplateManager
@@ -103,7 +95,7 @@ export function VoucherSettings() {
                       <label className="font-medium">Telesales Có Thể Xem Tất Cả Voucher</label>
                       <p className="text-sm text-gray-600">Cho phép xem voucher của người khác</p>
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => toast({ description: "Tính năng đang phát triển" })}>
+                    <Button variant="outline" size="sm" onClick={() => toast({ description: "Demo: Cập nhật quyền hạn" })}>
                       Cập Nhật
                     </Button>
                   </div>
@@ -113,7 +105,7 @@ export function VoucherSettings() {
                       <label className="font-medium">Yêu Cầu Phê Duyệt Voucher Cao Giá Trị</label>
                       <p className="text-sm text-gray-600">Voucher trên 1.000.000đ cần phê duyệt</p>
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => toast({ description: "Tính năng đang phát triển" })}>
+                    <Button variant="outline" size="sm" onClick={() => toast({ description: "Demo: Cập nhật phê duyệt" })}>
                       Cập Nhật
                     </Button>
                   </div>
@@ -123,7 +115,7 @@ export function VoucherSettings() {
                       <label className="font-medium">Cho Phép Cấp Lại Voucher</label>
                       <p className="text-sm text-gray-600">Nhân viên có thể cấp lại voucher</p>
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => toast({ description: "Tính năng đang phát triển" })}>
+                    <Button variant="outline" size="sm" onClick={() => toast({ description: "Demo: Cập nhật cấp lại voucher" })}>
                       Cập Nhật
                     </Button>
                   </div>
@@ -145,7 +137,7 @@ export function VoucherSettings() {
                       <label className="font-medium">Thông Báo Voucher Mới</label>
                       <p className="text-sm text-gray-600">Thông báo khi có voucher được phát hành</p>
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => toast({ description: "Tính năng đang phát triển" })}>
+                    <Button variant="outline" size="sm" onClick={() => toast({ description: "Demo: Cập nhật thông báo" })}>
                       Cập Nhật
                     </Button>
                   </div>
@@ -155,7 +147,7 @@ export function VoucherSettings() {
                       <label className="font-medium">Cảnh Báo Voucher Hết Hạn</label>
                       <p className="text-sm text-gray-600">Thông báo trước khi voucher hết hạn</p>
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => toast({ description: "Tính năng đang phát triển" })}>
+                    <Button variant="outline" size="sm" onClick={() => toast({ description: "Demo: Cập nhật cảnh báo" })}>
                       Cập Nhật
                     </Button>
                   </div>
@@ -165,7 +157,7 @@ export function VoucherSettings() {
                       <label className="font-medium">Báo Cáo Hiệu Suất Hàng Ngày</label>
                       <p className="text-sm text-gray-600">Gửi báo cáo hiệu suất cuối ngày</p>
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => toast({ description: "Tính năng đang phát triển" })}>
+                    <Button variant="outline" size="sm" onClick={() => toast({ description: "Demo: Cập nhật báo cáo" })}>
                       Cập Nhật
                     </Button>
                   </div>
@@ -184,11 +176,11 @@ export function VoucherSettings() {
             <div>
               <h3 className="font-medium text-gray-900">Trạng Thái Cài Đặt</h3>
               <p className="text-sm text-gray-600 mt-1">
-                Hệ thống quản lý voucher code với mapping giá trị điều kiện và thứ tự ưu tiên đã được thiết lập. 
+                Hệ thống quản lý voucher với template điều kiện và tạo mã tự động đã được thiết lập. 
                 Các thay đổi sẽ được áp dụng ngay lập tức cho module voucher.
                 {voucherCodeConfig && (
                   <span className="block mt-2 font-medium text-blue-600">
-                    Đợt phát hành hiện tại: {voucherCodeConfig.selectedBatch}
+                    Cấu hình hiện tại: {voucherCodeConfig.selectedBatch}
                   </span>
                 )}
               </p>
