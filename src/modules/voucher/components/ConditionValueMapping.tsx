@@ -14,8 +14,6 @@ import {
   Plus, 
   Trash2, 
   Edit, 
-  Save, 
-  X,
   Info,
   AlertCircle
 } from 'lucide-react';
@@ -25,6 +23,7 @@ import {
   MOCK_CONDITION_VALUES,
   MOCK_VALUE_MAPPINGS 
 } from '../types/conditionBuilder';
+import { toast } from '@/hooks/use-toast';
 
 interface ConditionValueMappingProps {
   onMappingsChange?: (mappings: ConditionValueMappingType[]) => void;
@@ -33,7 +32,6 @@ interface ConditionValueMappingProps {
 export function ConditionValueMapping({ onMappingsChange }: ConditionValueMappingProps) {
   const [mappings, setMappings] = useState<ConditionValueMappingType[]>(MOCK_VALUE_MAPPINGS);
   const [selectedConditionType, setSelectedConditionType] = useState('');
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [newMapping, setNewMapping] = useState({
     value: '',
     label: '',
@@ -58,6 +56,11 @@ export function ConditionValueMapping({ onMappingsChange }: ConditionValueMappin
     
     setNewMapping({ value: '', label: '', code: '' });
     setSelectedConditionType('');
+    
+    toast({
+      title: "Thêm thành công",
+      description: "Mapping mới đã được thêm vào danh sách."
+    });
   };
 
   const handleUpdateMapping = (id: string, updates: Partial<ConditionValueMappingType>) => {
@@ -72,12 +75,22 @@ export function ConditionValueMapping({ onMappingsChange }: ConditionValueMappin
     const updatedMappings = mappings.filter(m => m.id !== id);
     setMappings(updatedMappings);
     onMappingsChange?.(updatedMappings);
+    
+    toast({
+      title: "Xóa thành công",
+      description: "Mapping đã được xóa khỏi danh sách."
+    });
   };
 
   const handleToggleActive = (id: string) => {
     const mapping = mappings.find(m => m.id === id);
     if (mapping) {
       handleUpdateMapping(id, { active: !mapping.active });
+      
+      toast({
+        title: mapping.active ? "Đã tắt" : "Đã bật",
+        description: `Mapping đã được ${mapping.active ? 'tắt' : 'bật'}.`
+      });
     }
   };
 
@@ -107,14 +120,14 @@ export function ConditionValueMapping({ onMappingsChange }: ConditionValueMappin
             </Tooltip>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4">
           {/* Add New Mapping */}
-          <div className="space-y-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
-            <h4 className="font-medium text-gray-900">Thêm Mapping Mới</h4>
+          <div className="space-y-3 p-3 border border-gray-200 rounded-lg bg-gray-50">
+            <h4 className="font-medium text-gray-900 text-sm">Thêm Mapping Mới</h4>
             
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
               <div>
-                <Label>Nhóm Điều Kiện</Label>
+                <Label className="text-sm">Nhóm Điều Kiện</Label>
                 <Select value={selectedConditionType} onValueChange={setSelectedConditionType}>
                   <SelectTrigger className="mt-1">
                     <SelectValue placeholder="Chọn nhóm..." />
@@ -130,7 +143,7 @@ export function ConditionValueMapping({ onMappingsChange }: ConditionValueMappin
               </div>
 
               <div>
-                <Label>Giá Trị</Label>
+                <Label className="text-sm">Giá Trị</Label>
                 <Select 
                   value={newMapping.value} 
                   onValueChange={(value) => {
@@ -157,7 +170,7 @@ export function ConditionValueMapping({ onMappingsChange }: ConditionValueMappin
               </div>
 
               <div>
-                <Label>Mã Code (1-2 ký tự)</Label>
+                <Label className="text-sm">Mã Code (1-2 ký tự)</Label>
                 <Input
                   value={newMapping.code}
                   onChange={(e) => setNewMapping({
@@ -175,6 +188,7 @@ export function ConditionValueMapping({ onMappingsChange }: ConditionValueMappin
                   onClick={handleAddMapping}
                   disabled={!selectedConditionType || !newMapping.value || !newMapping.code}
                   className="w-full"
+                  size="sm"
                 >
                   <Plus className="w-4 h-4 mr-1" />
                   Thêm
@@ -184,8 +198,8 @@ export function ConditionValueMapping({ onMappingsChange }: ConditionValueMappin
           </div>
 
           {/* Mappings Table */}
-          <div className="space-y-4">
-            <h4 className="font-medium text-gray-900">Danh Sách Mapping Hiện Tại</h4>
+          <div className="space-y-3">
+            <h4 className="font-medium text-gray-900 text-sm">Danh Sách Mapping Hiện Tại</h4>
             
             {mappings.length === 0 ? (
               <Alert>
@@ -202,44 +216,48 @@ export function ConditionValueMapping({ onMappingsChange }: ConditionValueMappin
 
                   return (
                     <div key={type.value} className="border border-gray-200 rounded-lg">
-                      <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                      <div className="bg-gray-50 px-3 py-2 border-b border-gray-200">
                         <div className="flex items-center justify-between">
-                          <h5 className="font-medium text-gray-900">{type.label}</h5>
-                          <Badge variant="secondary">
-                            {typeMappings.filter(m => m.active).length} active
+                          <h5 className="font-medium text-gray-900 text-sm">{type.label}</h5>
+                          <Badge variant="secondary" className="text-xs">
+                            {typeMappings.filter(m => m.active).length} hoạt động
                           </Badge>
                         </div>
                       </div>
                       
-                      <div className="p-4 space-y-3">
+                      <div className="p-2 space-y-2">
                         {typeMappings.map((mapping) => (
-                          <div key={mapping.id} className="flex items-center space-x-4 p-3 border border-gray-100 rounded bg-white">
-                            <div className="flex-1 grid grid-cols-3 gap-4">
+                          <div key={mapping.id} className="flex items-center justify-between p-2 border border-gray-100 rounded bg-white">
+                            <div className="flex-1 grid grid-cols-3 gap-3 text-sm">
                               <div>
-                                <span className="text-sm text-gray-600">Giá trị:</span>
+                                <span className="text-xs text-gray-500">Giá trị:</span>
                                 <div className="font-medium">{mapping.label}</div>
                               </div>
                               <div>
-                                <span className="text-sm text-gray-600">Code:</span>
+                                <span className="text-xs text-gray-500">Code:</span>
                                 <div className="font-mono font-bold text-blue-600">{mapping.code}</div>
                               </div>
                               <div>
-                                <span className="text-sm text-gray-600">Trạng thái:</span>
+                                <span className="text-xs text-gray-500">Trạng thái:</span>
                                 <div className="flex items-center space-x-2">
                                   <Switch
                                     checked={mapping.active}
                                     onCheckedChange={() => handleToggleActive(mapping.id)}
                                   />
-                                  <span className="text-sm">
-                                    {mapping.active ? 'Active' : 'Inactive'}
+                                  <span className="text-xs">
+                                    {mapping.active ? 'Hoạt động' : 'Tắt'}
                                   </span>
                                 </div>
                               </div>
                             </div>
                             
                             <div className="flex space-x-1">
-                              <Button variant="ghost" size="sm">
-                                <Edit className="w-4 h-4" />
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => toast({ description: "Chức năng đang phát triển" })}
+                              >
+                                <Edit className="w-3 h-3" />
                               </Button>
                               <Button 
                                 variant="ghost" 
@@ -247,7 +265,7 @@ export function ConditionValueMapping({ onMappingsChange }: ConditionValueMappin
                                 onClick={() => handleDeleteMapping(mapping.id)}
                                 className="text-red-600"
                               >
-                                <Trash2 className="w-4 h-4" />
+                                <Trash2 className="w-3 h-3" />
                               </Button>
                             </div>
                           </div>
@@ -270,7 +288,7 @@ export function ConditionValueMapping({ onMappingsChange }: ConditionValueMappin
                   <li>Mỗi giá trị điều kiện cần được mapping thành 1-2 ký tự code</li>
                   <li>Code này sẽ được dùng để tạo prefix cho mã voucher</li>
                   <li>Ví dụ: VIP → V, Premium → P, Website → W</li>
-                  <li>Chỉ những mapping được đánh dấu "Active" mới được sử dụng</li>
+                  <li>Chỉ những mapping được đánh dấu "Hoạt động" mới được sử dụng</li>
                 </ul>
               </div>
             </AlertDescription>

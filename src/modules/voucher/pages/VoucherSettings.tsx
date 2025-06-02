@@ -2,17 +2,12 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 import { 
   Settings, 
   Shield, 
   Bell, 
   Palette,
-  AlertCircle,
   Save,
   CheckCircle
 } from 'lucide-react';
@@ -22,7 +17,6 @@ import { VoucherCustomerSettings } from '../components/VoucherCustomerSettings';
 import { toast } from '@/hooks/use-toast';
 
 export function VoucherSettings() {
-  const [autoIssue, setAutoIssue] = useState(false);
   const [voucherCodeConfig, setVoucherCodeConfig] = useState<any>(null);
 
   const handleSaveSettings = () => {
@@ -52,41 +46,15 @@ export function VoucherSettings() {
       </div>
 
       <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="general">Cài Đặt Chung</TabsTrigger>
-          <TabsTrigger value="configuration">Cấu Hình</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="general">Cấu Hình Mã Voucher</TabsTrigger>
+          <TabsTrigger value="configuration">Cấu Hình Hệ Thống</TabsTrigger>
           <TabsTrigger value="permissions">Quyền Hạn</TabsTrigger>
           <TabsTrigger value="notifications">Thông Báo</TabsTrigger>
-          <TabsTrigger value="appearance">Giao Diện</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="space-y-6">
-          {/* Auto Issue Setting */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Settings className="w-5 h-5" />
-                <span>Cài Đặt Chung</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="auto-issue">Tự động phát hành voucher khi khởi tạo</Label>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Automatically issue the voucher immediately upon creation, no manual approval needed.
-                  </p>
-                </div>
-                <Switch 
-                  id="auto-issue" 
-                  checked={autoIssue}
-                  onCheckedChange={setAutoIssue}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Unified Voucher Code Generator */}
+          {/* Unified Voucher Code Generator with Auto-Issue */}
           <UnifiedVoucherCodeGenerator 
             onSettingsChange={handleVoucherCodeConfigChange}
           />
@@ -115,26 +83,32 @@ export function VoucherSettings() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label>Telesales Có Thể Xem Tất Cả Voucher</Label>
+                    <label className="font-medium">Telesales Có Thể Xem Tất Cả Voucher</label>
                     <p className="text-sm text-gray-600">Cho phép xem voucher của người khác</p>
                   </div>
-                  <Switch />
+                  <Button variant="outline" size="sm" onClick={() => toast({ description: "Chức năng đang phát triển" })}>
+                    Cập Nhật
+                  </Button>
                 </div>
                 
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label>Yêu Cầu Phê Duyệt Voucher Cao Giá Trị</Label>
+                    <label className="font-medium">Yêu Cầu Phê Duyệt Voucher Cao Giá Trị</label>
                     <p className="text-sm text-gray-600">Voucher trên 1.000.000đ cần phê duyệt</p>
                   </div>
-                  <Switch defaultChecked />
+                  <Button variant="outline" size="sm" onClick={() => toast({ description: "Chức năng đang phát triển" })}>
+                    Cập Nhật
+                  </Button>
                 </div>
                 
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label>Cho Phép Cấp Lại Voucher</Label>
+                    <label className="font-medium">Cho Phép Cấp Lại Voucher</label>
                     <p className="text-sm text-gray-600">Nhân viên có thể cấp lại voucher</p>
                   </div>
-                  <Switch defaultChecked />
+                  <Button variant="outline" size="sm" onClick={() => toast({ description: "Chức năng đang phát triển" })}>
+                    Cập Nhật
+                  </Button>
                 </div>
               </div>
             </CardContent>
@@ -153,78 +127,33 @@ export function VoucherSettings() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label>Thông Báo Voucher Mới</Label>
+                    <label className="font-medium">Thông Báo Voucher Mới</label>
                     <p className="text-sm text-gray-600">Thông báo khi có voucher được phát hành</p>
                   </div>
-                  <Switch defaultChecked />
+                  <Button variant="outline" size="sm" onClick={() => toast({ description: "Chức năng đang phát triển" })}>
+                    Cập Nhật
+                  </Button>
                 </div>
                 
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label>Cảnh Báo Voucher Hết Hạn</Label>
+                    <label className="font-medium">Cảnh Báo Voucher Hết Hạn</label>
                     <p className="text-sm text-gray-600">Thông báo trước khi voucher hết hạn</p>
                   </div>
-                  <Switch defaultChecked />
+                  <Button variant="outline" size="sm" onClick={() => toast({ description: "Chức năng đang phát triển" })}>
+                    Cập Nhật
+                  </Button>
                 </div>
                 
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label>Báo Cáo Hiệu Suất Hàng Ngày</Label>
+                    <label className="font-medium">Báo Cáo Hiệu Suất Hàng Ngày</label>
                     <p className="text-sm text-gray-600">Gửi báo cáo hiệu suất cuối ngày</p>
                   </div>
-                  <Switch />
+                  <Button variant="outline" size="sm" onClick={() => toast({ description: "Chức năng đang phát triển" })}>
+                    Cập Nhật
+                  </Button>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="appearance">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Palette className="w-5 h-5" />
-                <span>Cài Đặt Giao Diện</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="theme">Chủ Đề Màu Sắc</Label>
-                  <Select defaultValue="orange">
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Chọn chủ đề" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="orange">Cam (Mặc Định)</SelectItem>
-                      <SelectItem value="blue">Xanh Dương</SelectItem>
-                      <SelectItem value="green">Xanh Lá</SelectItem>
-                      <SelectItem value="purple">Tím</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="layout">Bố Cục Dashboard</Label>
-                  <Select defaultValue="grid">
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Chọn bố cục" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="grid">Lưới</SelectItem>
-                      <SelectItem value="list">Danh Sách</SelectItem>
-                      <SelectItem value="compact">Gọn</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Hiển Thị Hình Ảnh Avatar</Label>
-                  <p className="text-sm text-gray-600">Hiển thị avatar trong bảng xếp hạng</p>
-                </div>
-                <Switch defaultChecked />
               </div>
             </CardContent>
           </Card>
@@ -233,7 +162,7 @@ export function VoucherSettings() {
 
       {/* Status Notice */}
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4">
           <div className="flex items-start space-x-3">
             <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
             <div>
@@ -247,10 +176,10 @@ export function VoucherSettings() {
                   </span>
                 )}
               </p>
-              <Badge variant="secondary" className="mt-2 bg-green-100 text-green-800">
+              <div className="mt-2 bg-green-100 text-green-800 px-2 py-1 rounded text-sm inline-flex items-center">
                 <CheckCircle className="w-3 h-3 mr-1" />
                 Cấu Hình Hoàn Tất
-              </Badge>
+              </div>
             </div>
           </div>
         </CardContent>

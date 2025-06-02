@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   Settings, 
@@ -25,6 +26,7 @@ import {
   MOCK_VALUE_MAPPINGS,
   MOCK_GROUP_PRIORITIES
 } from '../types/conditionBuilder';
+import { toast } from '@/hooks/use-toast';
 
 type CodeGenerationMethod = 'manual' | 'mapping' | 'combined';
 
@@ -38,6 +40,7 @@ export function UnifiedVoucherCodeGenerator({ onSettingsChange }: UnifiedVoucher
   const [codeLength, setCodeLength] = useState(8);
   const [manualPrefix, setManualPrefix] = useState('');
   const [manualSuffix, setManualSuffix] = useState('');
+  const [autoIssue, setAutoIssue] = useState(false);
   const [valueMappings, setValueMappings] = useState<ConditionValueMappingType[]>(MOCK_VALUE_MAPPINGS);
   const [groupPriorities, setGroupPriorities] = useState<ConditionGroupPriority[]>(MOCK_GROUP_PRIORITIES);
   const [showPreview, setShowPreview] = useState(true);
@@ -57,7 +60,6 @@ export function UnifiedVoucherCodeGenerator({ onSettingsChange }: UnifiedVoucher
     if (generationMethod === 'manual') {
       prefix = manualPrefix;
     } else if (generationMethod === 'mapping') {
-      // Generate prefix from mappings based on priority
       const activePriorities = groupPriorities.filter(p => p.active).sort((a, b) => a.priority - b.priority);
       const prefixParts: string[] = [];
       
@@ -72,7 +74,6 @@ export function UnifiedVoucherCodeGenerator({ onSettingsChange }: UnifiedVoucher
       
       prefix = prefixParts.join('');
     } else if (generationMethod === 'combined') {
-      // Combine manual prefix with mapping
       const activePriorities = groupPriorities.filter(p => p.active).sort((a, b) => a.priority - b.priority);
       const mappingParts: string[] = [];
       
@@ -101,12 +102,18 @@ export function UnifiedVoucherCodeGenerator({ onSettingsChange }: UnifiedVoucher
       codeLength,
       manualPrefix,
       manualSuffix,
+      autoIssue,
       valueMappings,
       groupPriorities
     };
     
     onSettingsChange?.(settings);
     console.log('Voucher code configuration saved:', settings);
+    
+    toast({
+      title: "Thành công",
+      description: "Cấu hình tạo mã voucher đã được lưu thành công."
+    });
   };
 
   const isFormValid = () => {
@@ -129,6 +136,11 @@ export function UnifiedVoucherCodeGenerator({ onSettingsChange }: UnifiedVoucher
     if (generationMethod === 'manual') {
       setGenerationMethod('mapping');
     }
+    
+    toast({
+      title: "Áp dụng template",
+      description: `Template "${template.name}" đã được áp dụng thành công.`
+    });
   };
 
   return (
@@ -154,13 +166,13 @@ export function UnifiedVoucherCodeGenerator({ onSettingsChange }: UnifiedVoucher
               onClick={() => setShowPreview(!showPreview)}
             >
               <Eye className="w-4 h-4 mr-1" />
-              {showPreview ? 'Ẩn' : 'Hiện'} Preview
+              {showPreview ? 'Ẩn' : 'Hiện'} Xem Trước
             </Button>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4">
           {/* Step 1: Batch Selection */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div className="flex items-center space-x-2">
               <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                 Bước 1
@@ -173,9 +185,28 @@ export function UnifiedVoucherCodeGenerator({ onSettingsChange }: UnifiedVoucher
             />
           </div>
 
+          {/* Auto Issue Setting */}
+          {selectedBatch && (
+            <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="auto-issue" className="font-medium">Tự động phát hành voucher khi khởi tạo</Label>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Tự động phát hành voucher ngay khi tạo mới, không cần duyệt thủ công.
+                  </p>
+                </div>
+                <Switch 
+                  id="auto-issue" 
+                  checked={autoIssue}
+                  onCheckedChange={setAutoIssue}
+                />
+              </div>
+            </div>
+          )}
+
           {/* Step 2: Generation Method */}
           {selectedBatch && (
-            <div className="space-y-3">
+            <div className="space-y-2">
               <div className="flex items-center space-x-2">
                 <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                   Bước 2
@@ -183,25 +214,22 @@ export function UnifiedVoucherCodeGenerator({ onSettingsChange }: UnifiedVoucher
                 <h3 className="font-medium">Cách Tạo Mã Voucher</h3>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {[
                   {
                     value: 'manual' as const,
                     title: 'Thủ Công',
-                    description: 'Nhập prefix và suffix thủ công',
-                    subtitle: 'Manual'
+                    description: 'Nhập ký tự đầu và cuối thủ công'
                   },
                   {
                     value: 'mapping' as const,
                     title: 'Theo Mapping',
-                    description: 'Sử dụng quy tắc mapping điều kiện',
-                    subtitle: 'By Mapping'
+                    description: 'Sử dụng quy tắc mapping điều kiện'
                   },
                   {
                     value: 'combined' as const,
                     title: 'Kết Hợp',
-                    description: 'Kết hợp cả thủ công và mapping',
-                    subtitle: 'Combined'
+                    description: 'Kết hợp cả thủ công và mapping'
                   }
                 ].map((method) => (
                   <Card 
@@ -213,7 +241,7 @@ export function UnifiedVoucherCodeGenerator({ onSettingsChange }: UnifiedVoucher
                     }`}
                     onClick={() => handleMethodChange(method.value)}
                   >
-                    <CardContent className="p-4">
+                    <CardContent className="p-3">
                       <div className="flex items-center space-x-2 mb-2">
                         <div className={`w-4 h-4 rounded-full border-2 ${
                           generationMethod === method.value 
@@ -224,10 +252,9 @@ export function UnifiedVoucherCodeGenerator({ onSettingsChange }: UnifiedVoucher
                             <div className="w-full h-full rounded-full bg-white scale-50"></div>
                           )}
                         </div>
-                        <h4 className="font-medium">{method.title}</h4>
+                        <h4 className="font-medium text-sm">{method.title}</h4>
                       </div>
-                      <p className="text-sm text-gray-600">{method.description}</p>
-                      <p className="text-xs text-gray-500 mt-1">{method.subtitle}</p>
+                      <p className="text-xs text-gray-600">{method.description}</p>
                     </CardContent>
                   </Card>
                 ))}
@@ -237,7 +264,7 @@ export function UnifiedVoucherCodeGenerator({ onSettingsChange }: UnifiedVoucher
 
           {/* Step 3: Code Length */}
           {selectedBatch && generationMethod && (
-            <div className="space-y-3">
+            <div className="space-y-2">
               <div className="flex items-center space-x-2">
                 <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                   Bước 3
@@ -245,7 +272,7 @@ export function UnifiedVoucherCodeGenerator({ onSettingsChange }: UnifiedVoucher
                 <h3 className="font-medium">Độ Dài Mã Voucher</h3>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
                   <Label htmlFor="code-length">Số ký tự</Label>
                   <Input
@@ -265,7 +292,7 @@ export function UnifiedVoucherCodeGenerator({ onSettingsChange }: UnifiedVoucher
 
           {/* Step 4: Method-specific Configuration */}
           {selectedBatch && generationMethod && (
-            <div className="space-y-3">
+            <div className="space-y-2">
               <div className="flex items-center space-x-2">
                 <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                   Bước 4
@@ -276,11 +303,11 @@ export function UnifiedVoucherCodeGenerator({ onSettingsChange }: UnifiedVoucher
               {/* Manual Configuration */}
               {(generationMethod === 'manual' || generationMethod === 'combined') && (
                 <Card className="border-orange-200 bg-orange-50">
-                  <CardHeader className="pb-3">
-                    <h4 className="font-medium text-orange-800">Cấu Hình Thủ Công</h4>
+                  <CardHeader className="pb-2">
+                    <h4 className="font-medium text-orange-800 text-sm">Cấu Hình Thủ Công</h4>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <CardContent className="space-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div>
                         <Label htmlFor="manual-prefix">Ký tự đầu (Prefix)</Label>
                         <Input
@@ -308,7 +335,7 @@ export function UnifiedVoucherCodeGenerator({ onSettingsChange }: UnifiedVoucher
 
               {/* Mapping Configuration */}
               {(generationMethod === 'mapping' || generationMethod === 'combined') && (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <ConditionValueMapping 
                     onMappingsChange={setValueMappings}
                   />
@@ -328,7 +355,7 @@ export function UnifiedVoucherCodeGenerator({ onSettingsChange }: UnifiedVoucher
               <CheckCircle className="h-4 w-4 text-green-600" />
               <AlertDescription>
                 <div className="space-y-2">
-                  <h4 className="font-medium text-green-800">Live Preview Mã Voucher</h4>
+                  <h4 className="font-medium text-green-800">Xem Trước Mã Voucher</h4>
                   <div className="text-sm">
                     <span className="text-gray-600">Đợt phát hành:</span>
                     <Badge variant="secondary" className="ml-2">{selectedBatch}</Badge>
@@ -342,10 +369,16 @@ export function UnifiedVoucherCodeGenerator({ onSettingsChange }: UnifiedVoucher
                     </span>
                   </div>
                   <div className="text-sm">
-                    <span className="text-gray-600">Preview code:</span>
-                    <code className="ml-2 bg-white px-3 py-1 rounded font-mono text-green-600 font-bold text-lg">
+                    <span className="text-gray-600">Mã voucher mẫu:</span>
+                    <code className="ml-2 bg-white px-2 py-1 rounded font-mono text-green-600 font-bold">
                       {generateCodePreview()}
                     </code>
+                  </div>
+                  <div className="text-sm">
+                    <span className="text-gray-600">Tự động phát hành:</span>
+                    <span className="ml-2 font-medium">
+                      {autoIssue ? 'Có' : 'Không'}
+                    </span>
                   </div>
                 </div>
               </AlertDescription>
@@ -358,12 +391,16 @@ export function UnifiedVoucherCodeGenerator({ onSettingsChange }: UnifiedVoucher
               onApplyTemplate={handleApplyTemplate}
               onCreateTemplate={(name, description) => {
                 console.log('Creating template:', name, description);
+                toast({
+                  title: "Tạo template",
+                  description: `Template "${name}" đã được tạo thành công.`
+                });
               }}
             />
           )}
 
           {/* Save Configuration */}
-          <div className="flex justify-end pt-4 border-t">
+          <div className="flex justify-end pt-3 border-t">
             <Button 
               onClick={handleSaveConfiguration}
               disabled={!isFormValid()}
@@ -385,7 +422,7 @@ export function UnifiedVoucherCodeGenerator({ onSettingsChange }: UnifiedVoucher
                     {!selectedBatch && <li>Chọn mã đợt phát hành</li>}
                     {codeLength < 4 && <li>Độ dài mã tối thiểu 4 ký tự</li>}
                     {generationMethod === 'manual' && !manualPrefix && <li>Nhập ký tự đầu (prefix)</li>}
-                    {(generationMethod === 'mapping' || generationMethod === 'combined') && !valueMappings.some(m => m.active) && <li>Thiết lập ít nhất 1 mapping active</li>}
+                    {(generationMethod === 'mapping' || generationMethod === 'combined') && !valueMappings.some(m => m.active) && <li>Thiết lập ít nhất 1 mapping hoạt động</li>}
                     {(generationMethod === 'mapping' || generationMethod === 'combined') && !groupPriorities.some(p => p.active) && <li>Kích hoạt ít nhất 1 nhóm ưu tiên</li>}
                   </ul>
                 </div>

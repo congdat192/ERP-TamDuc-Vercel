@@ -18,6 +18,7 @@ import {
   Info
 } from 'lucide-react';
 import { ConditionTemplate, MOCK_VALUE_MAPPINGS, MOCK_GROUP_PRIORITIES } from '../types/conditionBuilder';
+import { toast } from '@/hooks/use-toast';
 
 interface ConditionTemplateManagerProps {
   onApplyTemplate?: (template: ConditionTemplate) => void;
@@ -36,34 +37,34 @@ export function ConditionTemplateManager({
   const [templates] = useState<ConditionTemplate[]>([
     {
       id: 'template-1',
-      name: 'Template VIP Customer',
+      name: 'Template Khách Hàng VIP',
       description: 'Cấu hình cho khách hàng VIP với ưu tiên cao',
       conditionRows: [],
       valueMappings: MOCK_VALUE_MAPPINGS,
       groupPriorities: MOCK_GROUP_PRIORITIES,
-      createdBy: 'Admin User',
+      createdBy: 'Quản trị viên',
       createdAt: '2024-01-15T10:30:00Z',
       updatedAt: '2024-01-15T10:30:00Z'
     },
     {
       id: 'template-2',
-      name: 'Template Standard Flow',
+      name: 'Template Quy Trình Chuẩn',
       description: 'Quy trình chuẩn cho khách hàng thường',
       conditionRows: [],
       valueMappings: MOCK_VALUE_MAPPINGS,
       groupPriorities: MOCK_GROUP_PRIORITIES,
-      createdBy: 'Manager User',
+      createdBy: 'Người quản lý',
       createdAt: '2024-01-14T15:20:00Z',
       updatedAt: '2024-01-14T15:20:00Z'
     },
     {
       id: 'template-3',
-      name: 'Template Employee Priority',
+      name: 'Template Ưu Tiên Nhân Viên',
       description: 'Ưu tiên theo nhân viên phụ trách',
       conditionRows: [],
       valueMappings: MOCK_VALUE_MAPPINGS,
       groupPriorities: MOCK_GROUP_PRIORITIES,
-      createdBy: 'HR Team',
+      createdBy: 'Nhóm HR',
       createdAt: '2024-01-13T09:45:00Z',
       updatedAt: '2024-01-13T09:45:00Z'
     }
@@ -75,7 +76,33 @@ export function ConditionTemplateManager({
       setTemplateName('');
       setTemplateDescription('');
       setShowCreateForm(false);
+      
+      toast({
+        title: "Tạo thành công",
+        description: `Template "${templateName}" đã được tạo thành công.`
+      });
     }
+  };
+
+  const handleEditTemplate = (template: ConditionTemplate) => {
+    toast({
+      title: "Chỉnh sửa template",
+      description: "Chức năng đang phát triển"
+    });
+  };
+
+  const handleCopyTemplate = (template: ConditionTemplate) => {
+    toast({
+      title: "Sao chép template",
+      description: `Template "${template.name}" đã được sao chép.`
+    });
+  };
+
+  const handleDeleteTemplate = (template: ConditionTemplate) => {
+    toast({
+      title: "Xóa template",
+      description: `Template "${template.name}" đã được xóa.`
+    });
   };
 
   const formatDate = (dateString: string) => {
@@ -96,13 +123,13 @@ export function ConditionTemplateManager({
             <FileText className="w-5 h-5" />
             <span>Quản Lý Template Điều Kiện</span>
           </div>
-          <Button onClick={() => setShowCreateForm(!showCreateForm)}>
+          <Button onClick={() => setShowCreateForm(!showCreateForm)} size="sm">
             <Plus className="w-4 h-4 mr-1" />
             Tạo Template
           </Button>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4">
         {/* Create Template Form */}
         {showCreateForm && (
           <Alert>
@@ -110,7 +137,7 @@ export function ConditionTemplateManager({
             <AlertDescription>
               <div className="space-y-3 mt-2">
                 <div>
-                  <Label htmlFor="template-name">Tên Template</Label>
+                  <Label htmlFor="template-name" className="text-sm">Tên Template</Label>
                   <Input
                     id="template-name"
                     placeholder="Nhập tên template..."
@@ -120,7 +147,7 @@ export function ConditionTemplateManager({
                   />
                 </div>
                 <div>
-                  <Label htmlFor="template-description">Mô Tả (tùy chọn)</Label>
+                  <Label htmlFor="template-description" className="text-sm">Mô Tả (tùy chọn)</Label>
                   <Textarea
                     id="template-description"
                     placeholder="Mô tả về template này..."
@@ -152,34 +179,34 @@ export function ConditionTemplateManager({
         )}
 
         {/* Templates List */}
-        <div className="space-y-4">
-          <h4 className="font-medium text-gray-900">Templates Đã Lưu</h4>
+        <div className="space-y-3">
+          <h4 className="font-medium text-gray-900 text-sm">Templates Đã Lưu</h4>
           
           {templates.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-              <p>Chưa có template nào được tạo</p>
-              <p className="text-sm">Tạo template đầu tiên để lưu cấu hình điều kiện</p>
+            <div className="text-center py-6 text-gray-500">
+              <FileText className="w-10 h-10 mx-auto mb-3 text-gray-300" />
+              <p className="text-sm">Chưa có template nào được tạo</p>
+              <p className="text-xs">Tạo template đầu tiên để lưu cấu hình điều kiện</p>
             </div>
           ) : (
-            <div className="grid gap-4">
+            <div className="grid gap-3">
               {templates.map((template) => (
                 <Card key={template.id} className="border border-gray-200">
-                  <CardContent className="p-4">
+                  <CardContent className="p-3">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center space-x-2 mb-2">
-                          <h5 className="font-medium text-gray-900">{template.name}</h5>
+                          <h5 className="font-medium text-gray-900 text-sm">{template.name}</h5>
                           <Badge variant="secondary" className="text-xs">
                             Template
                           </Badge>
                         </div>
                         
                         {template.description && (
-                          <p className="text-sm text-gray-600 mb-3">{template.description}</p>
+                          <p className="text-xs text-gray-600 mb-2">{template.description}</p>
                         )}
                         
-                        <div className="flex items-center space-x-4 text-xs text-gray-500">
+                        <div className="flex items-center space-x-3 text-xs text-gray-500">
                           <div className="flex items-center space-x-1">
                             <User className="w-3 h-3" />
                             <span>{template.createdBy}</span>
@@ -191,7 +218,7 @@ export function ConditionTemplateManager({
                         </div>
                       </div>
                       
-                      <div className="flex space-x-1 ml-4">
+                      <div className="flex space-x-1 ml-3">
                         <Button
                           variant="outline"
                           size="sm"
@@ -199,14 +226,27 @@ export function ConditionTemplateManager({
                         >
                           Áp Dụng
                         </Button>
-                        <Button variant="ghost" size="sm">
-                          <Edit className="w-4 h-4" />
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleEditTemplate(template)}
+                        >
+                          <Edit className="w-3 h-3" />
                         </Button>
-                        <Button variant="ghost" size="sm">
-                          <Copy className="w-4 h-4" />
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleCopyTemplate(template)}
+                        >
+                          <Copy className="w-3 h-3" />
                         </Button>
-                        <Button variant="ghost" size="sm" className="text-red-600">
-                          <Trash2 className="w-4 h-4" />
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-red-600"
+                          onClick={() => handleDeleteTemplate(template)}
+                        >
+                          <Trash2 className="w-3 h-3" />
                         </Button>
                       </div>
                     </div>
