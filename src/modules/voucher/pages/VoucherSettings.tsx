@@ -6,14 +6,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Settings, 
   Shield, 
-  Bell, 
-  Palette,
+  Bell,
   Save,
   CheckCircle
 } from 'lucide-react';
 import { VoucherSettingsConfig } from '../components/VoucherSettingsConfig';
-import { UnifiedVoucherCodeGenerator } from '../components/UnifiedVoucherCodeGenerator';
+import { VoucherCodeGenerationForm } from '../components/VoucherCodeGenerationForm';
 import { VoucherCustomerSettings } from '../components/VoucherCustomerSettings';
+import { ConditionTemplateManager } from '../components/ConditionTemplateManager';
 import { toast } from '@/hooks/use-toast';
 
 export function VoucherSettings() {
@@ -45,21 +45,41 @@ export function VoucherSettings() {
         </Button>
       </div>
 
-      <Tabs defaultValue="general" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="general">Cấu Hình Mã Voucher</TabsTrigger>
-          <TabsTrigger value="configuration">Cấu Hình Hệ Thống</TabsTrigger>
-          <TabsTrigger value="permissions">Quyền Hạn</TabsTrigger>
-          <TabsTrigger value="notifications">Thông Báo</TabsTrigger>
+      <Tabs defaultValue="code-generation" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="code-generation">Tạo Mã Voucher</TabsTrigger>
+          <TabsTrigger value="template-management">Quản Lý Template</TabsTrigger>
+          <TabsTrigger value="customer-settings">Cài Đặt Khách Hàng</TabsTrigger>
+          <TabsTrigger value="system-config">Cấu Hình Hệ Thống</TabsTrigger>
+          <TabsTrigger value="permissions">Quyền Hạn & Thông Báo</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="general" className="space-y-6">
-          {/* Unified Voucher Code Generator with Auto-Issue */}
-          <UnifiedVoucherCodeGenerator 
+        <TabsContent value="code-generation" className="space-y-6">
+          <VoucherCodeGenerationForm 
             onSettingsChange={handleVoucherCodeConfigChange}
           />
+        </TabsContent>
 
-          {/* Voucher Customer Settings */}
+        <TabsContent value="template-management" className="space-y-6">
+          <ConditionTemplateManager
+            onApplyTemplate={(template) => {
+              console.log('Applied template:', template);
+              toast({
+                title: "Áp dụng template",
+                description: `Template "${template.name}" đã được áp dụng thành công.`
+              });
+            }}
+            onCreateTemplate={(name, description) => {
+              console.log('Creating template:', name, description);
+              toast({
+                title: "Tạo template",
+                description: `Template "${name}" đã được tạo thành công.`
+              });
+            }}
+          />
+        </TabsContent>
+
+        <TabsContent value="customer-settings" className="space-y-6">
           <VoucherCustomerSettings 
             onSettingsChange={(settings) => {
               console.log('Customer settings:', settings);
@@ -67,96 +87,96 @@ export function VoucherSettings() {
           />
         </TabsContent>
 
-        <TabsContent value="configuration" className="space-y-6">
+        <TabsContent value="system-config" className="space-y-6">
           <VoucherSettingsConfig />
         </TabsContent>
 
         <TabsContent value="permissions">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Shield className="w-5 h-5" />
-                <span>Cài Đặt Quyền Hạn</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className="font-medium">Telesales Có Thể Xem Tất Cả Voucher</label>
-                    <p className="text-sm text-gray-600">Cho phép xem voucher của người khác</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Shield className="w-5 h-5" />
+                  <span>Cài Đặt Quyền Hạn</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="font-medium">Telesales Có Thể Xem Tất Cả Voucher</label>
+                      <p className="text-sm text-gray-600">Cho phép xem voucher của người khác</p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => toast({ description: "Tính năng đang phát triển" })}>
+                      Cập Nhật
+                    </Button>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => toast({ description: "Chức năng đang phát triển" })}>
-                    Cập Nhật
-                  </Button>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className="font-medium">Yêu Cầu Phê Duyệt Voucher Cao Giá Trị</label>
-                    <p className="text-sm text-gray-600">Voucher trên 1.000.000đ cần phê duyệt</p>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="font-medium">Yêu Cầu Phê Duyệt Voucher Cao Giá Trị</label>
+                      <p className="text-sm text-gray-600">Voucher trên 1.000.000đ cần phê duyệt</p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => toast({ description: "Tính năng đang phát triển" })}>
+                      Cập Nhật
+                    </Button>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => toast({ description: "Chức năng đang phát triển" })}>
-                    Cập Nhật
-                  </Button>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className="font-medium">Cho Phép Cấp Lại Voucher</label>
-                    <p className="text-sm text-gray-600">Nhân viên có thể cấp lại voucher</p>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="font-medium">Cho Phép Cấp Lại Voucher</label>
+                      <p className="text-sm text-gray-600">Nhân viên có thể cấp lại voucher</p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => toast({ description: "Tính năng đang phát triển" })}>
+                      Cập Nhật
+                    </Button>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => toast({ description: "Chức năng đang phát triển" })}>
-                    Cập Nhật
-                  </Button>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+              </CardContent>
+            </Card>
 
-        <TabsContent value="notifications">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Bell className="w-5 h-5" />
-                <span>Cài Đặt Thông Báo</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className="font-medium">Thông Báo Voucher Mới</label>
-                    <p className="text-sm text-gray-600">Thông báo khi có voucher được phát hành</p>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Bell className="w-5 h-5" />
+                  <span>Cài Đặt Thông Báo</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="font-medium">Thông Báo Voucher Mới</label>
+                      <p className="text-sm text-gray-600">Thông báo khi có voucher được phát hành</p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => toast({ description: "Tính năng đang phát triển" })}>
+                      Cập Nhật
+                    </Button>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => toast({ description: "Chức năng đang phát triển" })}>
-                    Cập Nhật
-                  </Button>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className="font-medium">Cảnh Báo Voucher Hết Hạn</label>
-                    <p className="text-sm text-gray-600">Thông báo trước khi voucher hết hạn</p>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="font-medium">Cảnh Báo Voucher Hết Hạn</label>
+                      <p className="text-sm text-gray-600">Thông báo trước khi voucher hết hạn</p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => toast({ description: "Tính năng đang phát triển" })}>
+                      Cập Nhật
+                    </Button>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => toast({ description: "Chức năng đang phát triển" })}>
-                    Cập Nhật
-                  </Button>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className="font-medium">Báo Cáo Hiệu Suất Hàng Ngày</label>
-                    <p className="text-sm text-gray-600">Gửi báo cáo hiệu suất cuối ngày</p>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="font-medium">Báo Cáo Hiệu Suất Hàng Ngày</label>
+                      <p className="text-sm text-gray-600">Gửi báo cáo hiệu suất cuối ngày</p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => toast({ description: "Tính năng đang phát triển" })}>
+                      Cập Nhật
+                    </Button>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => toast({ description: "Chức năng đang phát triển" })}>
-                    Cập Nhật
-                  </Button>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
 
