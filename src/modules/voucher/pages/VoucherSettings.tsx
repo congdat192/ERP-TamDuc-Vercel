@@ -11,7 +11,7 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { VoucherSettingsConfig } from '../components/VoucherSettingsConfig';
-import { VoucherCustomerSettings } from '../components/VoucherCustomerSettings';
+import { VoucherIssueRulesConditions } from '../components/VoucherIssueRulesConditions';
 import { ConditionTemplateManager } from '../components/ConditionTemplateManager';
 import { toast } from '@/hooks/use-toast';
 
@@ -47,7 +47,7 @@ export function VoucherSettings() {
       <Tabs defaultValue="template-management" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="template-management">Quản Lý Template</TabsTrigger>
-          <TabsTrigger value="customer-settings">Cài Đặt Khách Hàng</TabsTrigger>
+          <TabsTrigger value="issue-rules">Quy Tắc Phát Voucher</TabsTrigger>
           <TabsTrigger value="system-config">Cấu Hình Hệ Thống</TabsTrigger>
           <TabsTrigger value="permissions">Quyền Hạn & Thông Báo</TabsTrigger>
         </TabsList>
@@ -67,10 +67,10 @@ export function VoucherSettings() {
           />
         </TabsContent>
 
-        <TabsContent value="customer-settings" className="space-y-6">
-          <VoucherCustomerSettings 
+        <TabsContent value="issue-rules" className="space-y-6">
+          <VoucherIssueRulesConditions 
             onSettingsChange={(settings) => {
-              console.log('Customer settings:', settings);
+              console.log('Issue rules settings:', settings);
             }}
           />
         </TabsContent>
