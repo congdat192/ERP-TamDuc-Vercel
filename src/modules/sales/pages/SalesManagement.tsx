@@ -480,16 +480,16 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
               <ArrowLeft className="h-4 w-4 mr-2" />
               Quay về ERP
             </Button>
-            <h1 className="text-2xl font-bold text-gray-900">Bán Hàng</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Hóa Đơn</h1>
           </div>
         </div>
       </div>
 
       <div className="flex">
-        {/* Desktop Filter Sidebar */}
+        {/* Desktop Filter Sidebar - Reduced width */}
         {!isMobile && (
-          <div className="w-80 max-w-80 bg-white border-r p-6 space-y-6">
-            <h3 className="font-semibold text-gray-900 text-lg">Bộ lọc</h3>
+          <div className="w-64 max-w-64 bg-white border-r p-4 space-y-4">
+            <h3 className="font-semibold text-gray-900 text-base">Bộ lọc</h3>
             <FilterContent />
           </div>
         )}

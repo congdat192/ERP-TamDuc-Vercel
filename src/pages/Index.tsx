@@ -140,7 +140,42 @@ const mockUsers: User[] = [
   }
 ];
 
-const Index = () => {
+const erpModules = [
+  {
+    id: 'voucher',
+    name: 'Voucher',
+    description: 'Quản lý voucher và chương trình khuyến mãi',
+    icon: Gift,
+    color: 'from-orange-500 to-red-500',
+    href: '/voucher'
+  },
+  {
+    id: 'customer',
+    name: 'Khách Hàng',
+    description: 'Quản lý thông tin khách hàng',
+    icon: Users,
+    color: 'from-blue-500 to-purple-500',
+    href: '/customer'
+  },
+  {
+    id: 'sales',
+    name: 'Hóa Đơn',
+    description: 'Quản lý hóa đơn bán hàng',
+    icon: ShoppingCart,
+    color: 'from-green-500 to-blue-500',
+    href: '/sales'
+  },
+  {
+    id: 'admin',
+    name: 'Quản Trị',
+    description: 'Cài đặt hệ thống và quản lý người dùng',
+    icon: Settings,
+    color: 'from-gray-600 to-gray-800',
+    href: '/admin'
+  }
+];
+
+export default function Index() {
   const [currentModule, setCurrentModule] = useState<ERPModule>('dashboard');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
