@@ -9,7 +9,6 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { ForbiddenPage, ServerErrorPage, NetworkErrorPage } from "./pages/ErrorPages";
 import { PlatformAdmin } from "./modules/platform-admin";
-import { CustomerManagement } from "./modules/customer";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -33,7 +32,6 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/platform-admin" element={<PlatformAdmin />} />
-            <Route path="/customer-management" element={<CustomerManagement />} />
             <Route path="/403" element={<ForbiddenPage />} />
             <Route path="/500" element={<ServerErrorPage />} />
             <Route path="/network-error" element={<NetworkErrorPage />} />
