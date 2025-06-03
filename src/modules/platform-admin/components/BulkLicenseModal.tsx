@@ -27,8 +27,22 @@ import {
   AlertTriangle,
   CheckCircle 
 } from 'lucide-react';
-import { TenantModuleLicensing, ModuleStatus, ModulePlan } from '../types/module-licensing';
-import { availableModules, mockModuleTemplates } from '../utils/moduleLicensingData';
+
+interface TenantModuleLicensing {
+  tenantId: string;
+  tenantName: string;
+  totalMonthlyRevenue: number;
+  modules: Array<{
+    moduleId: string;
+    status: 'active' | 'inactive' | 'expired';
+  }>;
+}
+
+interface ModulePlan {
+  basic: string;
+  professional: string;
+  enterprise: string;
+}
 
 interface BulkLicenseModalProps {
   tenants: TenantModuleLicensing[];
@@ -41,20 +55,50 @@ interface BulkLicenseChanges {
   selectedTenants: string[];
   action: 'enable' | 'disable' | 'upgrade' | 'extend' | 'apply_template';
   moduleIds?: string[];
-  newPlan?: ModulePlan;
+  newPlan?: string;
   templateId?: string;
   extensionMonths?: number;
 }
+
+// Mock data for available modules
+const availableModules = [
+  { id: 'erp-core', name: 'ERP Core', description: 'Core ERP functionality', category: 'Core' },
+  { id: 'crm', name: 'CRM Module', description: 'Customer relationship management', category: 'Sales' },
+  { id: 'hrm', name: 'HR Management', description: 'Human resources management', category: 'HR' },
+  { id: 'inventory', name: 'Inventory', description: 'Inventory management', category: 'Operations' }
+];
+
+// Mock data for module templates
+const moduleTemplates = [
+  {
+    id: 'starter',
+    name: 'Starter Package',
+    description: 'Basic modules for small businesses',
+    modules: [
+      { moduleId: 'erp-core' },
+      { moduleId: 'crm' }
+    ]
+  },
+  {
+    id: 'professional',
+    name: 'Professional Package',
+    description: 'Complete solution for growing businesses',
+    modules: [
+      { moduleId: 'erp-core' },
+      { moduleId: 'crm' },
+      { moduleId: 'hrm' },
+      { moduleId: 'inventory' }
+    ]
+  }
+];
 
 export function BulkLicenseModal({ tenants, isOpen, onClose, onApply }: BulkLicenseModalProps) {
   const [selectedTenants, setSelectedTenants] = useState<string[]>([]);
   const [action, setAction] = useState<string>('');
   const [selectedModules, setSelectedModules] = useState<string[]>([]);
-  const [newPlan, setNewPlan] = useState<ModulePlan>('basic');
+  const [newPlan, setNewPlan] = useState<string>('basic');
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [extensionMonths, setExtensionMonths] = useState<number>(12);
-
-  const moduleTemplates = mockModuleTemplates();
 
   const handleTenantToggle = (tenantId: string, checked: boolean) => {
     if (checked) {
@@ -106,12 +150,12 @@ export function BulkLicenseModal({ tenants, isOpen, onClose, onApply }: BulkLice
     
     if (action === 'apply_template') {
       const template = moduleTemplates.find(t => t.id === selectedTemplate);
-      return `Áp dụng gói "${template?.name}" cho ${tenantCount} khách hàng`;
+      return `Apply "${template?.name}" package to ${tenantCount} tenants`;
     }
     
-    return `${action === 'enable' ? 'Kích hoạt' : 
-             action === 'disable' ? 'Vô hiệu hóa' :
-             action === 'upgrade' ? 'Nâng cấp' : 'Gia hạn'} ${moduleCount} module cho ${tenantCount} khách hàng`;
+    return `${action === 'enable' ? 'Enable' : 
+             action === 'disable' ? 'Disable' :
+             action === 'upgrade' ? 'Upgrade' : 'Extend'} ${moduleCount} modules for ${tenantCount} tenants`;
   };
 
   return (
@@ -120,27 +164,27 @@ export function BulkLicenseModal({ tenants, isOpen, onClose, onApply }: BulkLice
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <Settings className="w-5 h-5" />
-            <span>Quản Lý License Hàng Loạt</span>
+            <span>Bulk License Management</span>
           </DialogTitle>
           <DialogDescription>
-            Thực hiện thay đổi license cho nhiều khách hàng cùng lúc
+            Perform license changes for multiple tenants at once
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
           {/* Action Selection */}
           <div>
-            <Label htmlFor="action">Chọn hành động</Label>
+            <Label htmlFor="action">Select Action</Label>
             <Select value={action} onValueChange={setAction}>
               <SelectTrigger>
-                <SelectValue placeholder="Chọn hành động cần thực hiện" />
+                <SelectValue placeholder="Choose action to perform" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="enable">Kích hoạt module</SelectItem>
-                <SelectItem value="disable">Vô hiệu hóa module</SelectItem>
-                <SelectItem value="upgrade">Nâng cấp gói</SelectItem>
-                <SelectItem value="extend">Gia hạn thời gian</SelectItem>
-                <SelectItem value="apply_template">Áp dụng gói template</SelectItem>
+                <SelectItem value="enable">Enable modules</SelectItem>
+                <SelectItem value="disable">Disable modules</SelectItem>
+                <SelectItem value="upgrade">Upgrade plan</SelectItem>
+                <SelectItem value="extend">Extend duration</SelectItem>
+                <SelectItem value="apply_template">Apply template package</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -150,13 +194,13 @@ export function BulkLicenseModal({ tenants, isOpen, onClose, onApply }: BulkLice
               {/* Tenant Selection */}
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <Label>Chọn khách hàng ({selectedTenants.length}/{tenants.length})</Label>
+                  <Label>Select Tenants ({selectedTenants.length}/{tenants.length})</Label>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => handleSelectAllTenants(selectedTenants.length !== tenants.length)}
                   >
-                    {selectedTenants.length === tenants.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
+                    {selectedTenants.length === tenants.length ? 'Deselect All' : 'Select All'}
                   </Button>
                 </div>
                 <div className="border rounded-lg p-3 max-h-64 overflow-y-auto space-y-2">
@@ -169,7 +213,7 @@ export function BulkLicenseModal({ tenants, isOpen, onClose, onApply }: BulkLice
                       <div className="flex-1">
                         <p className="font-medium text-sm">{tenant.tenantName}</p>
                         <p className="text-xs text-gray-500">
-                          {tenant.modules.filter(m => m.status === 'active').length} module hoạt động
+                          {tenant.modules.filter(m => m.status === 'active').length} active modules
                         </p>
                       </div>
                       <Badge variant="outline" className="text-xs">
@@ -184,10 +228,10 @@ export function BulkLicenseModal({ tenants, isOpen, onClose, onApply }: BulkLice
               <div>
                 {action === 'apply_template' ? (
                   <div>
-                    <Label>Chọn gói template</Label>
+                    <Label>Select Template Package</Label>
                     <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Chọn gói template" />
+                        <SelectValue placeholder="Choose template package" />
                       </SelectTrigger>
                       <SelectContent>
                         {moduleTemplates.map((template) => (
@@ -220,13 +264,13 @@ export function BulkLicenseModal({ tenants, isOpen, onClose, onApply }: BulkLice
                     {/* Module Selection */}
                     <div className="mb-4">
                       <div className="flex items-center justify-between mb-3">
-                        <Label>Chọn module ({selectedModules.length}/{availableModules.length})</Label>
+                        <Label>Select Modules ({selectedModules.length}/{availableModules.length})</Label>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleSelectAllModules(selectedModules.length !== availableModules.length)}
                         >
-                          {selectedModules.length === availableModules.length ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
+                          {selectedModules.length === availableModules.length ? 'Deselect All' : 'Select All'}
                         </Button>
                       </div>
                       <div className="border rounded-lg p-3 max-h-40 overflow-y-auto space-y-2">
@@ -252,15 +296,15 @@ export function BulkLicenseModal({ tenants, isOpen, onClose, onApply }: BulkLice
                     {/* Additional Configuration */}
                     {action === 'upgrade' && (
                       <div>
-                        <Label>Gói mới</Label>
-                        <Select value={newPlan} onValueChange={(value) => setNewPlan(value as ModulePlan)}>
+                        <Label>New Plan</Label>
+                        <Select value={newPlan} onValueChange={setNewPlan}>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="basic">Cơ bản</SelectItem>
-                            <SelectItem value="professional">Chuyên nghiệp</SelectItem>
-                            <SelectItem value="enterprise">Doanh nghiệp</SelectItem>
+                            <SelectItem value="basic">Basic</SelectItem>
+                            <SelectItem value="professional">Professional</SelectItem>
+                            <SelectItem value="enterprise">Enterprise</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -268,16 +312,16 @@ export function BulkLicenseModal({ tenants, isOpen, onClose, onApply }: BulkLice
 
                     {action === 'extend' && (
                       <div>
-                        <Label>Gia hạn (tháng)</Label>
+                        <Label>Extension Period (months)</Label>
                         <Select value={extensionMonths.toString()} onValueChange={(value) => setExtensionMonths(parseInt(value))}>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="3">3 tháng</SelectItem>
-                            <SelectItem value="6">6 tháng</SelectItem>
-                            <SelectItem value="12">12 tháng</SelectItem>
-                            <SelectItem value="24">24 tháng</SelectItem>
+                            <SelectItem value="3">3 months</SelectItem>
+                            <SelectItem value="6">6 months</SelectItem>
+                            <SelectItem value="12">12 months</SelectItem>
+                            <SelectItem value="24">24 months</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -295,7 +339,7 @@ export function BulkLicenseModal({ tenants, isOpen, onClose, onApply }: BulkLice
               <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
                 <div className="flex items-center space-x-2 mb-2">
                   <CheckCircle className="w-5 h-5 text-blue-600" />
-                  <h3 className="font-semibold text-blue-800">Tóm tắt thay đổi</h3>
+                  <h3 className="font-semibold text-blue-800">Change Summary</h3>
                 </div>
                 <p className="text-blue-700">{getImpactSummary()}</p>
               </div>
@@ -307,10 +351,10 @@ export function BulkLicenseModal({ tenants, isOpen, onClose, onApply }: BulkLice
             <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
               <div className="flex items-center space-x-2">
                 <AlertTriangle className="w-5 h-5 text-yellow-600" />
-                <p className="text-yellow-800 font-medium">Cảnh báo</p>
+                <p className="text-yellow-800 font-medium">Warning</p>
               </div>
               <p className="text-yellow-700 text-sm mt-1">
-                Bạn đang thực hiện thay đổi trên nhiều khách hàng. Vui lòng kiểm tra kỹ trước khi áp dụng.
+                You are making changes to many tenants. Please review carefully before applying.
               </p>
             </div>
           )}
@@ -318,13 +362,13 @@ export function BulkLicenseModal({ tenants, isOpen, onClose, onApply }: BulkLice
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
-            Hủy
+            Cancel
           </Button>
           <Button 
             onClick={handleApply}
             disabled={!action || selectedTenants.length === 0 || (action !== 'apply_template' && selectedModules.length === 0)}
           >
-            Áp dụng thay đổi
+            Apply Changes
           </Button>
         </DialogFooter>
       </DialogContent>
