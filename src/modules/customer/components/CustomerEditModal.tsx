@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,14 +7,16 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { Customer } from '../types';
 
-interface AddCustomerModalProps {
+interface CustomerEditModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCustomerAdded?: () => void;
+  customer: Customer | null;
+  onCustomerUpdated: (customer: Customer) => void;
 }
 
-export function AddCustomerModal({ isOpen, onClose, onCustomerAdded }: AddCustomerModalProps) {
+export function CustomerEditModal({ isOpen, onClose, customer, onCustomerUpdated }: CustomerEditModalProps) {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: '',
@@ -29,6 +31,22 @@ export function AddCustomerModal({ isOpen, onClose, onCustomerAdded }: AddCustom
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (customer) {
+      setFormData({
+        name: customer.name,
+        phone: customer.phone,
+        email: customer.email || '',
+        address: customer.address || '',
+        customerGroup: customer.customerGroup,
+        customerType: customer.customerType,
+        gender: customer.gender || '',
+        branch: customer.branch
+      });
+      setErrors({});
+    }
+  }, [customer]);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -54,40 +72,41 @@ export function AddCustomerModal({ isOpen, onClose, onCustomerAdded }: AddCustom
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) {
+    if (!validateForm() || !customer) {
       return;
     }
 
     setIsSubmitting(true);
-
+    
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Reset form
-      setFormData({
-        name: '',
-        phone: '',
-        email: '',
-        address: '',
-        customerGroup: '',
-        customerType: 'individual',
-        gender: '',
-        branch: ''
-      });
+      const updatedCustomer: Customer = {
+        ...customer,
+        name: formData.name,
+        phone: formData.phone,
+        email: formData.email || undefined,
+        address: formData.address || undefined,
+        customerGroup: formData.customerGroup,
+        customerType: formData.customerType,
+        gender: (formData.gender as 'male' | 'female') || undefined,
+        branch: formData.branch
+      };
 
+      onCustomerUpdated(updatedCustomer);
+      
       toast({
         title: "Thành công",
-        description: "Đã thêm khách hàng mới thành công"
+        description: "Đã cập nhật thông tin khách hàng"
       });
-
-      onCustomerAdded?.();
+      
       onClose();
     } catch (error) {
-      console.error('Error adding customer:', error);
+      console.error('Error updating customer:', error);
       toast({
         title: "Lỗi",
-        description: "Không thể thêm khách hàng mới",
+        description: "Không thể cập nhật thông tin khách hàng",
         variant: "destructive"
       });
     } finally {
@@ -102,28 +121,13 @@ export function AddCustomerModal({ isOpen, onClose, onCustomerAdded }: AddCustom
     }
   };
 
-  const handleClose = () => {
-    if (!isSubmitting) {
-      setFormData({
-        name: '',
-        phone: '',
-        email: '',
-        address: '',
-        customerGroup: '',
-        customerType: 'individual',
-        gender: '',
-        branch: ''
-      });
-      setErrors({});
-      onClose();
-    }
-  };
+  if (!customer) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Thêm Khách Hàng Mới</DialogTitle>
+          <DialogTitle>Chỉnh Sửa Khách Hàng - {customer.name}</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -136,7 +140,6 @@ export function AddCustomerModal({ isOpen, onClose, onCustomerAdded }: AddCustom
                 onChange={(e) => handleInputChange('name', e.target.value)}
                 placeholder="Nhập tên khách hàng"
                 className={errors.name ? 'border-red-500' : ''}
-                disabled={isSubmitting}
               />
               {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name}</p>}
             </div>
@@ -149,7 +152,6 @@ export function AddCustomerModal({ isOpen, onClose, onCustomerAdded }: AddCustom
                 onChange={(e) => handleInputChange('phone', e.target.value)}
                 placeholder="Nhập số điện thoại"
                 className={errors.phone ? 'border-red-500' : ''}
-                disabled={isSubmitting}
               />
               {errors.phone && <p className="text-sm text-red-500 mt-1">{errors.phone}</p>}
             </div>
@@ -165,18 +167,13 @@ export function AddCustomerModal({ isOpen, onClose, onCustomerAdded }: AddCustom
                 onChange={(e) => handleInputChange('email', e.target.value)}
                 placeholder="Nhập email"
                 className={errors.email ? 'border-red-500' : ''}
-                disabled={isSubmitting}
               />
               {errors.email && <p className="text-sm text-red-500 mt-1">{errors.email}</p>}
             </div>
             
             <div>
               <Label htmlFor="customerGroup">Nhóm khách hàng</Label>
-              <Select 
-                value={formData.customerGroup} 
-                onValueChange={(value) => handleInputChange('customerGroup', value)}
-                disabled={isSubmitting}
-              >
+              <Select value={formData.customerGroup} onValueChange={(value) => handleInputChange('customerGroup', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Chọn nhóm khách hàng" />
                 </SelectTrigger>
@@ -192,11 +189,7 @@ export function AddCustomerModal({ isOpen, onClose, onCustomerAdded }: AddCustom
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="customerType">Loại khách hàng</Label>
-              <Select 
-                value={formData.customerType} 
-                onValueChange={(value) => handleInputChange('customerType', value)}
-                disabled={isSubmitting}
-              >
+              <Select value={formData.customerType} onValueChange={(value) => handleInputChange('customerType', value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -209,11 +202,7 @@ export function AddCustomerModal({ isOpen, onClose, onCustomerAdded }: AddCustom
             
             <div>
               <Label htmlFor="gender">Giới tính</Label>
-              <Select 
-                value={formData.gender} 
-                onValueChange={(value) => handleInputChange('gender', value)}
-                disabled={isSubmitting}
-              >
+              <Select value={formData.gender} onValueChange={(value) => handleInputChange('gender', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Chọn giới tính" />
                 </SelectTrigger>
@@ -228,11 +217,7 @@ export function AddCustomerModal({ isOpen, onClose, onCustomerAdded }: AddCustom
 
           <div>
             <Label htmlFor="branch">Chi nhánh</Label>
-            <Select 
-              value={formData.branch} 
-              onValueChange={(value) => handleInputChange('branch', value)}
-              disabled={isSubmitting}
-            >
+            <Select value={formData.branch} onValueChange={(value) => handleInputChange('branch', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Chọn chi nhánh" />
               </SelectTrigger>
@@ -251,7 +236,6 @@ export function AddCustomerModal({ isOpen, onClose, onCustomerAdded }: AddCustom
               onChange={(e) => handleInputChange('address', e.target.value)}
               placeholder="Nhập địa chỉ"
               rows={3}
-              disabled={isSubmitting}
             />
           </div>
 
@@ -259,7 +243,7 @@ export function AddCustomerModal({ isOpen, onClose, onCustomerAdded }: AddCustom
             <Button 
               type="button" 
               variant="outline" 
-              onClick={handleClose}
+              onClick={onClose}
               disabled={isSubmitting}
             >
               Hủy
@@ -268,7 +252,7 @@ export function AddCustomerModal({ isOpen, onClose, onCustomerAdded }: AddCustom
               type="submit"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Đang thêm...' : 'Thêm Khách Hàng'}
+              {isSubmitting ? 'Đang cập nhật...' : 'Cập Nhật'}
             </Button>
           </div>
         </form>

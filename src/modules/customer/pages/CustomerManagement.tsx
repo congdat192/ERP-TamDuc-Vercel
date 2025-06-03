@@ -6,6 +6,8 @@ import { Search, Plus, RefreshCw } from 'lucide-react';
 import { CustomerSidebar } from '../components/CustomerSidebar';
 import { CustomerTable } from '../components/CustomerTable';
 import { AddCustomerModal } from '../components/AddCustomerModal';
+import { CustomerEditModal } from '../components/CustomerEditModal';
+import { CustomerDetailModal } from '../components/CustomerDetailModal';
 import { useCustomers } from '../hooks/useCustomers';
 import { Customer } from '../types';
 import { useToast } from '@/hooks/use-toast';
@@ -14,6 +16,9 @@ export function CustomerManagement() {
   const { customers, filters, setFilters, searchTerm, setSearchTerm, summary } = useCustomers();
   const { toast } = useToast();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
   const handleRefresh = () => {
     toast({
@@ -23,17 +28,39 @@ export function CustomerManagement() {
   };
 
   const handleViewCustomer = (customer: Customer) => {
-    toast({
-      title: "Xem thông tin khách hàng",
-      description: `Đang xem thông tin của ${customer.name}`
-    });
+    setSelectedCustomer(customer);
+    setIsDetailModalOpen(true);
   };
 
   const handleEditCustomer = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditFromDetail = (customer: Customer) => {
+    setIsDetailModalOpen(false);
+    setSelectedCustomer(customer);
+    setIsEditModalOpen(true);
+  };
+
+  const handleCustomerUpdated = (updatedCustomer: Customer) => {
+    // In a real app, this would update the customer list
+    console.log('Customer updated:', updatedCustomer);
+    setIsEditModalOpen(false);
+    setSelectedCustomer(null);
+  };
+
+  const handleAddCustomer = () => {
+    setIsAddModalOpen(true);
+  };
+
+  const handleCustomerAdded = () => {
+    // In a real app, this would refresh the customer list
     toast({
-      title: "Chỉnh sửa khách hàng",
-      description: `Đang chỉnh sửa thông tin của ${customer.name}`
+      title: "Thành công",
+      description: "Đã thêm khách hàng mới thành công"
     });
+    setIsAddModalOpen(false);
   };
 
   return (
@@ -57,7 +84,7 @@ export function CustomerManagement() {
                 Làm mới
               </Button>
               <Button
-                onClick={() => setIsAddModalOpen(true)}
+                onClick={handleAddCustomer}
                 className="bg-orange-600 hover:bg-orange-700"
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -89,10 +116,25 @@ export function CustomerManagement() {
         </div>
       </div>
 
-      {/* Add Customer Modal */}
+      {/* Modals */}
       <AddCustomerModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
+        onCustomerAdded={handleCustomerAdded}
+      />
+
+      <CustomerEditModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        customer={selectedCustomer}
+        onCustomerUpdated={handleCustomerUpdated}
+      />
+
+      <CustomerDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        customer={selectedCustomer}
+        onEditCustomer={handleEditFromDetail}
       />
     </div>
   );
