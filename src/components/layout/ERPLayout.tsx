@@ -30,6 +30,10 @@ export function ERPLayout({
       return 'Module Voucher';
     }
 
+    if (currentModule === 'customers') {
+      return 'Module Khách Hàng';
+    }
+
     const moduleTitles = {
       customers: 'Khách Hàng',
       sales: 'Bán Hàng',
@@ -44,8 +48,8 @@ export function ERPLayout({
     return moduleTitles[currentModule as keyof typeof moduleTitles] || 'ERP System';
   };
 
-  // For voucher module, don't render the main sidebar since VoucherModule has its own layout
-  if (currentModule === 'voucher') {
+  // For voucher and customers modules, don't render the main sidebar since they have their own layout
+  if (currentModule === 'voucher' || currentModule === 'customers') {
     return (
       <div className="min-h-screen bg-gray-50 w-full">
         {children}
