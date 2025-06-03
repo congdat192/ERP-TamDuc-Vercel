@@ -1,4 +1,3 @@
-
 import { LayoutDashboard, Users } from 'lucide-react';
 
 export type UserRole = 'platform-admin' | 'erp-admin' | 'voucher-admin' | 'telesales' | 'custom';
@@ -14,13 +13,6 @@ export interface ModulePermission {
   label: string;
   icon: keyof typeof import("lucide-react");
   description: string;
-  allowedRoles: UserRole[];
-}
-
-export interface VoucherFeature {
-  id: string;
-  label: string;
-  allowedRoles: UserRole[];
 }
 
 export type ERPModule = 
@@ -39,103 +31,56 @@ export const MODULE_PERMISSIONS: ModulePermission[] = [
     module: 'dashboard',
     label: 'Tổng Quan',
     icon: 'LayoutDashboard',
-    description: 'Dashboard và báo cáo tổng quan',
-    allowedRoles: ['platform-admin', 'erp-admin', 'voucher-admin', 'telesales']
+    description: 'Dashboard và báo cáo tổng quan'
   },
   {
     module: 'customers',
     label: 'Khách Hàng',
     icon: 'Users',
-    description: 'Quản lý thông tin khách hàng',
-    allowedRoles: ['platform-admin', 'erp-admin', 'voucher-admin', 'telesales']
+    description: 'Quản lý thông tin khách hàng'
   },
   {
     module: 'sales',
     label: 'Bán Hàng',
     icon: 'LayoutDashboard',
-    description: 'Quản lý quy trình bán hàng',
-    allowedRoles: ['platform-admin', 'erp-admin', 'telesales']
+    description: 'Quản lý quy trình bán hàng'
   },
   {
     module: 'inventory',
     label: 'Kho Hàng',
     icon: 'LayoutDashboard',
-    description: 'Quản lý kho và sản phẩm',
-    allowedRoles: ['platform-admin', 'erp-admin']
+    description: 'Quản lý kho và sản phẩm'
   },
   {
     module: 'accounting',
     label: 'Kế Toán',
     icon: 'LayoutDashboard',
-    description: 'Quản lý tài chính và kế toán',
-    allowedRoles: ['platform-admin', 'erp-admin']
+    description: 'Quản lý tài chính và kế toán'
   },
   {
     module: 'hr',
     label: 'Nhân Sự',
     icon: 'LayoutDashboard',
-    description: 'Quản lý thông tin nhân viên',
-    allowedRoles: ['platform-admin', 'erp-admin']
+    description: 'Quản lý thông tin nhân viên'
   },
   {
     module: 'voucher',
     label: 'Voucher',
     icon: 'LayoutDashboard',
-    description: 'Quản lý và phát hành voucher',
-    allowedRoles: ['platform-admin', 'erp-admin', 'voucher-admin']
+    description: 'Quản lý và phát hành voucher'
   },
   {
     module: 'system-settings',
     label: 'Cài Đặt Hệ Thống',
     icon: 'LayoutDashboard',
-    description: 'Cấu hình hệ thống và bảo mật',
-    allowedRoles: ['platform-admin', 'erp-admin']
+    description: 'Cấu hình hệ thống và bảo mật'
   },
   {
     module: 'user-management',
     label: 'Quản Lý Người Dùng',
     icon: 'LayoutDashboard',
-    description: 'Quản lý tài khoản và quyền truy cập',
-    allowedRoles: ['platform-admin', 'erp-admin']
+    description: 'Quản lý tài khoản và quyền truy cập'
   },
-];
-
-export const VOUCHER_FEATURES: VoucherFeature[] = [
-  {
-    id: 'voucher-dashboard',
-    label: 'Dashboard Voucher',
-    allowedRoles: ['platform-admin', 'erp-admin', 'voucher-admin']
-  },
-  {
-    id: 'campaign-management',
-    label: 'Quản Lý Chiến Dịch',
-    allowedRoles: ['platform-admin', 'erp-admin', 'voucher-admin']
-  },
-  {
-    id: 'issue-voucher',
-    label: 'Phát Hành Voucher',
-    allowedRoles: ['platform-admin', 'erp-admin', 'voucher-admin']
-  },
-  {
-    id: 'voucher-list',
-    label: 'Danh Sách Voucher',
-    allowedRoles: ['platform-admin', 'erp-admin', 'voucher-admin']
-  },
-  {
-    id: 'voucher-analytics',
-    label: 'Phân Tích Voucher',
-    allowedRoles: ['platform-admin', 'erp-admin', 'voucher-admin']
-  },
-  {
-    id: 'voucher-leaderboard',
-    label: 'Bảng Xếp Hạng',
-    allowedRoles: ['platform-admin', 'erp-admin', 'voucher-admin']
-  },
-  {
-    id: 'voucher-settings',
-    label: 'Cài Đặt Voucher',
-    allowedRoles: ['platform-admin', 'erp-admin', 'voucher-admin']
-  }
 ];
 
 export const DEFAULT_PERMISSIONS: Record<UserRole, UserPermissions> = {
