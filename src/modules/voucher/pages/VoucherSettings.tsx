@@ -8,15 +8,38 @@ import {
   Shield, 
   Bell,
   Save,
-  CheckCircle
+  CheckCircle,
+  Edit
 } from 'lucide-react';
 import { VoucherSettingsConfig } from '../components/VoucherSettingsConfig';
 import { VoucherIssueRulesConditions } from '../components/VoucherIssueRulesConditions';
 import { ConditionTemplateManager } from '../components/ConditionTemplateManager';
 import { toast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 
 export function VoucherSettings() {
   const [voucherCodeConfig, setVoucherCodeConfig] = useState<any>(null);
+  
+  // Permission settings state
+  const [permissionDialogOpen, setPermissionDialogOpen] = useState<string | null>(null);
+  const [permissionSettings, setPermissionSettings] = useState({
+    viewAllVouchers: { enabled: true, roles: ['admin', 'manager'] },
+    approvalRequired: { enabled: true, threshold: 1000000, approvers: ['admin'] },
+    reissueVouchers: { enabled: false, roles: ['admin', 'telesales'] }
+  });
+
+  // Notification settings state
+  const [notificationDialogOpen, setNotificationDialogOpen] = useState<string | null>(null);
+  const [notificationSettings, setNotificationSettings] = useState({
+    newVoucher: { enabled: true, recipients: ['telesales', 'admin'], method: 'both' },
+    expiration: { enabled: true, days: 3, recipients: ['customer', 'telesales'] },
+    dailyReport: { enabled: false, time: '18:00', recipients: ['admin'] }
+  });
 
   const handleSaveSettings = () => {
     toast({
@@ -28,6 +51,246 @@ export function VoucherSettings() {
   const handleVoucherCodeConfigChange = (config: any) => {
     setVoucherCodeConfig(config);
     console.log('Voucher code configuration updated:', config);
+  };
+
+  const handlePermissionUpdate = (settingKey: string, newSettings: any) => {
+    setPermissionSettings(prev => ({
+      ...prev,
+      [settingKey]: { ...prev[settingKey as keyof typeof prev], ...newSettings }
+    }));
+    setPermissionDialogOpen(null);
+    toast({
+      title: "Cập nhật thành công",
+      description: "Cài đặt quyền hạn đã được cập nhật."
+    });
+  };
+
+  const handleNotificationUpdate = (settingKey: string, newSettings: any) => {
+    setNotificationSettings(prev => ({
+      ...prev,
+      [settingKey]: { ...prev[settingKey as keyof typeof prev], ...newSettings }
+    }));
+    setNotificationDialogOpen(null);
+    toast({
+      title: "Cập nhật thành công",
+      description: "Cài đặt thông báo đã được cập nhật."
+    });
+  };
+
+  const renderPermissionDialog = () => {
+    if (!permissionDialogOpen) return null;
+
+    const currentSettings = permissionSettings[permissionDialogOpen as keyof typeof permissionSettings];
+
+    return (
+      <Dialog open={!!permissionDialogOpen} onOpenChange={() => setPermissionDialogOpen(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {permissionDialogOpen === 'viewAllVouchers' && 'Cấu Hình Quyền Xem Voucher'}
+              {permissionDialogOpen === 'approvalRequired' && 'Cấu Hình Phê Duyệt'}
+              {permissionDialogOpen === 'reissueVouchers' && 'Cấu Hình Cấp Lại Voucher'}
+            </DialogTitle>
+            <DialogDescription>
+              Điều chỉnh cài đặt quyền hạn cho tính năng này.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label>Kích hoạt tính năng</Label>
+              <Switch
+                checked={currentSettings.enabled}
+                onCheckedChange={(checked) => 
+                  setPermissionSettings(prev => ({
+                    ...prev,
+                    [permissionDialogOpen]: { ...prev[permissionDialogOpen as keyof typeof prev], enabled: checked }
+                  }))
+                }
+              />
+            </div>
+
+            {permissionDialogOpen === 'approvalRequired' && (
+              <div>
+                <Label>Ngưỡng phê duyệt (VNĐ)</Label>
+                <Input
+                  type="number"
+                  value={currentSettings.threshold}
+                  onChange={(e) => 
+                    setPermissionSettings(prev => ({
+                      ...prev,
+                      [permissionDialogOpen]: { ...prev[permissionDialogOpen as keyof typeof prev], threshold: Number(e.target.value) }
+                    }))
+                  }
+                  className="mt-1"
+                />
+              </div>
+            )}
+
+            <div>
+              <Label>Vai trò được phép</Label>
+              <Select
+                value={(currentSettings.roles || currentSettings.approvers)?.[0] || ''}
+                onValueChange={(value) => 
+                  setPermissionSettings(prev => ({
+                    ...prev,
+                    [permissionDialogOpen]: { 
+                      ...prev[permissionDialogOpen as keyof typeof prev], 
+                      [permissionDialogOpen === 'approvalRequired' ? 'approvers' : 'roles']: [value] 
+                    }
+                  }))
+                }
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Chọn vai trò" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">Quản trị viên</SelectItem>
+                  <SelectItem value="manager">Quản lý</SelectItem>
+                  <SelectItem value="telesales">Telesales</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPermissionDialogOpen(null)}>
+              Hủy
+            </Button>
+            <Button onClick={() => handlePermissionUpdate(permissionDialogOpen, currentSettings)}>
+              Lưu Thay Đổi
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
+  const renderNotificationDialog = () => {
+    if (!notificationDialogOpen) return null;
+
+    const currentSettings = notificationSettings[notificationDialogOpen as keyof typeof notificationSettings];
+
+    return (
+      <Dialog open={!!notificationDialogOpen} onOpenChange={() => setNotificationDialogOpen(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {notificationDialogOpen === 'newVoucher' && 'Cấu Hình Thông Báo Voucher Mới'}
+              {notificationDialogOpen === 'expiration' && 'Cấu Hình Cảnh Báo Hết Hạn'}
+              {notificationDialogOpen === 'dailyReport' && 'Cấu Hình Báo Cáo Hàng Ngày'}
+            </DialogTitle>
+            <DialogDescription>
+              Điều chỉnh cài đặt thông báo cho tính năng này.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label>Kích hoạt thông báo</Label>
+              <Switch
+                checked={currentSettings.enabled}
+                onCheckedChange={(checked) => 
+                  setNotificationSettings(prev => ({
+                    ...prev,
+                    [notificationDialogOpen]: { ...prev[notificationDialogOpen as keyof typeof prev], enabled: checked }
+                  }))
+                }
+              />
+            </div>
+
+            {notificationDialogOpen === 'expiration' && (
+              <div>
+                <Label>Số ngày cảnh báo trước</Label>
+                <Input
+                  type="number"
+                  value={currentSettings.days}
+                  onChange={(e) => 
+                    setNotificationSettings(prev => ({
+                      ...prev,
+                      [notificationDialogOpen]: { ...prev[notificationDialogOpen as keyof typeof prev], days: Number(e.target.value) }
+                    }))
+                  }
+                  className="mt-1"
+                />
+              </div>
+            )}
+
+            {notificationDialogOpen === 'dailyReport' && (
+              <div>
+                <Label>Thời gian gửi báo cáo</Label>
+                <Input
+                  type="time"
+                  value={currentSettings.time}
+                  onChange={(e) => 
+                    setNotificationSettings(prev => ({
+                      ...prev,
+                      [notificationDialogOpen]: { ...prev[notificationDialogOpen as keyof typeof prev], time: e.target.value }
+                    }))
+                  }
+                  className="mt-1"
+                />
+              </div>
+            )}
+
+            <div>
+              <Label>Người nhận thông báo</Label>
+              <Select
+                value={currentSettings.recipients?.[0] || ''}
+                onValueChange={(value) => 
+                  setNotificationSettings(prev => ({
+                    ...prev,
+                    [notificationDialogOpen]: { ...prev[notificationDialogOpen as keyof typeof prev], recipients: [value] }
+                  }))
+                }
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Chọn người nhận" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">Quản trị viên</SelectItem>
+                  <SelectItem value="telesales">Telesales</SelectItem>
+                  <SelectItem value="customer">Khách hàng</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {(notificationDialogOpen === 'newVoucher' || notificationDialogOpen === 'expiration') && (
+              <div>
+                <Label>Phương thức thông báo</Label>
+                <Select
+                  value={currentSettings.method || 'email'}
+                  onValueChange={(value) => 
+                    setNotificationSettings(prev => ({
+                      ...prev,
+                      [notificationDialogOpen]: { ...prev[notificationDialogOpen as keyof typeof prev], method: value }
+                    }))
+                  }
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="email">Email</SelectItem>
+                    <SelectItem value="sms">SMS</SelectItem>
+                    <SelectItem value="both">Cả email và SMS</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNotificationDialogOpen(null)}>
+              Hủy
+            </Button>
+            <Button onClick={() => handleNotificationUpdate(notificationDialogOpen, currentSettings)}>
+              Lưu Thay Đổi
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
   };
 
   return (
@@ -91,31 +354,75 @@ export function VoucherSettings() {
               <CardContent className="space-y-4">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <div>
+                    <div className="flex-1">
                       <label className="font-medium">Telesales Có Thể Xem Tất Cả Voucher</label>
                       <p className="text-sm text-gray-600">Cho phép xem voucher của người khác</p>
+                      <div className="mt-1">
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
+                          permissionSettings.viewAllVouchers.enabled 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {permissionSettings.viewAllVouchers.enabled ? 'Đã kích hoạt' : 'Đã tắt'}
+                        </span>
+                      </div>
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => toast({ description: "Demo: Cập nhật quyền hạn" })}>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setPermissionDialogOpen('viewAllVouchers')}
+                    >
+                      <Edit className="w-4 h-4 mr-1" />
                       Cập Nhật
                     </Button>
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <div>
+                    <div className="flex-1">
                       <label className="font-medium">Yêu Cầu Phê Duyệt Voucher Cao Giá Trị</label>
-                      <p className="text-sm text-gray-600">Voucher trên 1.000.000đ cần phê duyệt</p>
+                      <p className="text-sm text-gray-600">
+                        Voucher trên {permissionSettings.approvalRequired.threshold.toLocaleString()}đ cần phê duyệt
+                      </p>
+                      <div className="mt-1">
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
+                          permissionSettings.approvalRequired.enabled 
+                            ? 'bg-orange-100 text-orange-800' 
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {permissionSettings.approvalRequired.enabled ? 'Yêu cầu phê duyệt' : 'Không yêu cầu'}
+                        </span>
+                      </div>
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => toast({ description: "Demo: Cập nhật phê duyệt" })}>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setPermissionDialogOpen('approvalRequired')}
+                    >
+                      <Edit className="w-4 h-4 mr-1" />
                       Cập Nhật
                     </Button>
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <div>
+                    <div className="flex-1">
                       <label className="font-medium">Cho Phép Cấp Lại Voucher</label>
                       <p className="text-sm text-gray-600">Nhân viên có thể cấp lại voucher</p>
+                      <div className="mt-1">
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
+                          permissionSettings.reissueVouchers.enabled 
+                            ? 'bg-blue-100 text-blue-800' 
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {permissionSettings.reissueVouchers.enabled ? 'Cho phép' : 'Không cho phép'}
+                        </span>
+                      </div>
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => toast({ description: "Demo: Cập nhật cấp lại voucher" })}>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setPermissionDialogOpen('reissueVouchers')}
+                    >
+                      <Edit className="w-4 h-4 mr-1" />
                       Cập Nhật
                     </Button>
                   </div>
@@ -133,31 +440,77 @@ export function VoucherSettings() {
               <CardContent className="space-y-4">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <div>
+                    <div className="flex-1">
                       <label className="font-medium">Thông Báo Voucher Mới</label>
                       <p className="text-sm text-gray-600">Thông báo khi có voucher được phát hành</p>
+                      <div className="mt-1">
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
+                          notificationSettings.newVoucher.enabled 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {notificationSettings.newVoucher.enabled ? 'Đã bật' : 'Đã tắt'}
+                        </span>
+                      </div>
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => toast({ description: "Demo: Cập nhật thông báo" })}>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setNotificationDialogOpen('newVoucher')}
+                    >
+                      <Edit className="w-4 h-4 mr-1" />
                       Cập Nhật
                     </Button>
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <div>
+                    <div className="flex-1">
                       <label className="font-medium">Cảnh Báo Voucher Hết Hạn</label>
-                      <p className="text-sm text-gray-600">Thông báo trước khi voucher hết hạn</p>
+                      <p className="text-sm text-gray-600">
+                        Thông báo trước {notificationSettings.expiration.days} ngày khi voucher hết hạn
+                      </p>
+                      <div className="mt-1">
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
+                          notificationSettings.expiration.enabled 
+                            ? 'bg-yellow-100 text-yellow-800' 
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {notificationSettings.expiration.enabled ? 'Đã bật cảnh báo' : 'Đã tắt'}
+                        </span>
+                      </div>
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => toast({ description: "Demo: Cập nhật cảnh báo" })}>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setNotificationDialogOpen('expiration')}
+                    >
+                      <Edit className="w-4 h-4 mr-1" />
                       Cập Nhật
                     </Button>
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <div>
+                    <div className="flex-1">
                       <label className="font-medium">Báo Cáo Hiệu Suất Hàng Ngày</label>
-                      <p className="text-sm text-gray-600">Gửi báo cáo hiệu suất cuối ngày</p>
+                      <p className="text-sm text-gray-600">
+                        Gửi báo cáo hiệu suất lúc {notificationSettings.dailyReport.time}
+                      </p>
+                      <div className="mt-1">
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
+                          notificationSettings.dailyReport.enabled 
+                            ? 'bg-blue-100 text-blue-800' 
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {notificationSettings.dailyReport.enabled ? 'Đã lên lịch' : 'Đã tắt'}
+                        </span>
+                      </div>
                     </div>
-                    <Button variant="outline" size="sm" onClick={() => toast({ description: "Demo: Cập nhật báo cáo" })}>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setNotificationDialogOpen('dailyReport')}
+                    >
+                      <Edit className="w-4 h-4 mr-1" />
                       Cập Nhật
                     </Button>
                   </div>
@@ -192,6 +545,10 @@ export function VoucherSettings() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Dialogs */}
+      {renderPermissionDialog()}
+      {renderNotificationDialog()}
     </div>
   );
 }
