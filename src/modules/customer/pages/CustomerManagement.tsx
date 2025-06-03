@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ColumnVisibilityFilter, ColumnConfig } from '../components/ColumnVisibilityFilter';
 import { 
   Search, 
   Filter,
@@ -33,7 +33,20 @@ const mockCustomers = [
     birthday: '',
     lastTransaction: '03/06/2025',
     debt: 0,
-    days: 0
+    days: 0,
+    creator: 'Admin',
+    createdDate: '01/01/2025',
+    note: '',
+    email: 'tri@example.com',
+    facebook: '',
+    company: 'Công ty ABC',
+    taxCode: '',
+    address: 'Hà Nội',
+    deliveryArea: 'Hà Nội',
+    points: 0,
+    totalSpent: 5000000,
+    totalDebt: 0,
+    status: 'Hoạt động'
   },
   {
     id: 'KH869950',
@@ -190,6 +203,28 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
   const [itemsPerPage, setItemsPerPage] = useState(15);
   const [showAddModal, setShowAddModal] = useState(false);
 
+  // Column visibility state
+  const [columns, setColumns] = useState<ColumnConfig[]>([
+    { key: 'id', label: 'Mã khách hàng', visible: true },
+    { key: 'name', label: 'Tên khách hàng', visible: true },
+    { key: 'phone', label: 'Điện thoại', visible: true },
+    { key: 'group', label: 'Nhóm khách hàng', visible: true },
+    { key: 'birthday', label: 'Ngày sinh', visible: true },
+    { key: 'creator', label: 'Người tạo', visible: false },
+    { key: 'createdDate', label: 'Ngày tạo', visible: false },
+    { key: 'note', label: 'Ghi chú', visible: false },
+    { key: 'email', label: 'Email', visible: false },
+    { key: 'facebook', label: 'Facebook', visible: false },
+    { key: 'company', label: 'Công ty', visible: false },
+    { key: 'taxCode', label: 'Mã số thuế', visible: false },
+    { key: 'address', label: 'Địa chỉ', visible: false },
+    { key: 'deliveryArea', label: 'Khu vực giao hàng', visible: false },
+    { key: 'points', label: 'Điểm hiện tại', visible: false },
+    { key: 'totalSpent', label: 'Tổng bán', visible: false },
+    { key: 'totalDebt', label: 'Tổng bán trừ trả hàng', visible: false },
+    { key: 'status', label: 'Trạng thái', visible: false }
+  ]);
+
   const filteredCustomers = mockCustomers.filter(customer => {
     const matchesSearch = 
       customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -221,6 +256,14 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
     }
   };
 
+  const handleColumnToggle = (columnKey: string, visible: boolean) => {
+    setColumns(prev => 
+      prev.map(col => 
+        col.key === columnKey ? { ...col, visible } : col
+      )
+    );
+  };
+
   const getGroupBadgeColor = (group: string) => {
     switch (group) {
       case '1.Giới thiệu':
@@ -236,8 +279,56 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
     }
   };
 
+  const renderCellContent = (customer: any, columnKey: string) => {
+    switch (columnKey) {
+      case 'id':
+        return <span className="font-medium text-blue-600">{customer.id}</span>;
+      case 'name':
+        return <span className="font-medium">{customer.name}</span>;
+      case 'phone':
+        return customer.phone;
+      case 'group':
+        return (
+          <Badge className={getGroupBadgeColor(customer.group)} variant="secondary">
+            {customer.group}
+          </Badge>
+        );
+      case 'birthday':
+        return customer.birthday;
+      case 'creator':
+        return customer.creator;
+      case 'createdDate':
+        return customer.createdDate;
+      case 'note':
+        return customer.note;
+      case 'email':
+        return customer.email;
+      case 'facebook':
+        return customer.facebook;
+      case 'company':
+        return customer.company;
+      case 'taxCode':
+        return customer.taxCode;
+      case 'address':
+        return customer.address;
+      case 'deliveryArea':
+        return customer.deliveryArea;
+      case 'points':
+        return customer.points.toLocaleString();
+      case 'totalSpent':
+        return customer.totalSpent.toLocaleString();
+      case 'totalDebt':
+        return customer.totalDebt.toLocaleString();
+      case 'status':
+        return customer.status;
+      default:
+        return '';
+    }
+  };
+
   const totalCustomers = 122614;
   const totalDebt = '100,717,794';
+  const visibleColumns = columns.filter(col => col.visible);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -270,6 +361,10 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
               <Plus className="w-4 h-4 mr-2" />
               Khách hàng
             </Button>
+            <ColumnVisibilityFilter 
+              columns={columns}
+              onColumnToggle={handleColumnToggle}
+            />
             <Button variant="ghost" size="sm">
               <MoreHorizontal className="w-4 h-4" />
             </Button>
@@ -432,14 +527,9 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
                         onCheckedChange={handleSelectAll}
                       />
                     </TableHead>
-                    <TableHead>Mã khách hàng</TableHead>
-                    <TableHead>Tên khách hàng</TableHead>
-                    <TableHead>Điện thoại</TableHead>
-                    <TableHead>Nhóm khách hàng</TableHead>
-                    <TableHead>Ngày sinh</TableHead>
-                    <TableHead>Ngày giao dịch cuối</TableHead>
-                    <TableHead>Nợ hiện tại</TableHead>
-                    <TableHead>Số ngày nợ</TableHead>
+                    {visibleColumns.map((column) => (
+                      <TableHead key={column.key}>{column.label}</TableHead>
+                    ))}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -451,24 +541,11 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
                           onCheckedChange={(checked) => handleSelectCustomer(customer.id, checked as boolean)}
                         />
                       </TableCell>
-                      <TableCell className="font-medium text-blue-600">
-                        {customer.id}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {customer.name}
-                      </TableCell>
-                      <TableCell>{customer.phone}</TableCell>
-                      <TableCell>
-                        <Badge className={getGroupBadgeColor(customer.group)} variant="secondary">
-                          {customer.group}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{customer.birthday}</TableCell>
-                      <TableCell>{customer.lastTransaction}</TableCell>
-                      <TableCell className={customer.debt > 0 ? "text-red-600 font-medium" : ""}>
-                        {customer.debt.toLocaleString()}
-                      </TableCell>
-                      <TableCell>{customer.days}</TableCell>
+                      {visibleColumns.map((column) => (
+                        <TableCell key={column.key}>
+                          {renderCellContent(customer, column.key)}
+                        </TableCell>
+                      ))}
                     </TableRow>
                   ))}
                 </TableBody>
