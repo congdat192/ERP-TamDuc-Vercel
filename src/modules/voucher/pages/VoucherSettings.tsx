@@ -87,10 +87,33 @@ export function VoucherSettings() {
   };
 
   const handlePermissionUpdate = (settingKey: string, newSettings: any) => {
-    setPermissionSettings(prev => ({
-      ...prev,
-      [settingKey]: { ...prev[settingKey as keyof typeof prev], ...newSettings }
-    }));
+    if (settingKey === 'viewAllVouchers') {
+      setPermissionSettings(prev => ({
+        ...prev,
+        viewAllVouchers: { 
+          enabled: newSettings.enabled,
+          roles: newSettings.roles || prev.viewAllVouchers.roles
+        }
+      }));
+    } else if (settingKey === 'approvalRequired') {
+      setPermissionSettings(prev => ({
+        ...prev,
+        approvalRequired: {
+          enabled: newSettings.enabled,
+          threshold: newSettings.threshold || prev.approvalRequired.threshold,
+          approvers: newSettings.approvers || prev.approvalRequired.approvers
+        }
+      }));
+    } else if (settingKey === 'reissueVouchers') {
+      setPermissionSettings(prev => ({
+        ...prev,
+        reissueVouchers: {
+          enabled: newSettings.enabled,
+          roles: newSettings.roles || prev.reissueVouchers.roles
+        }
+      }));
+    }
+    
     setPermissionDialogOpen(null);
     toast({
       title: "Cập nhật thành công",
@@ -99,10 +122,35 @@ export function VoucherSettings() {
   };
 
   const handleNotificationUpdate = (settingKey: string, newSettings: any) => {
-    setNotificationSettings(prev => ({
-      ...prev,
-      [settingKey]: { ...prev[settingKey as keyof typeof prev], ...newSettings }
-    }));
+    if (settingKey === 'newVoucher') {
+      setNotificationSettings(prev => ({
+        ...prev,
+        newVoucher: {
+          enabled: newSettings.enabled,
+          recipients: newSettings.recipients || prev.newVoucher.recipients,
+          method: newSettings.method || prev.newVoucher.method
+        }
+      }));
+    } else if (settingKey === 'expiration') {
+      setNotificationSettings(prev => ({
+        ...prev,
+        expiration: {
+          enabled: newSettings.enabled,
+          days: newSettings.days || prev.expiration.days,
+          recipients: newSettings.recipients || prev.expiration.recipients
+        }
+      }));
+    } else if (settingKey === 'dailyReport') {
+      setNotificationSettings(prev => ({
+        ...prev,
+        dailyReport: {
+          enabled: newSettings.enabled,
+          time: newSettings.time || prev.dailyReport.time,
+          recipients: newSettings.recipients || prev.dailyReport.recipients
+        }
+      }));
+    }
+    
     setNotificationDialogOpen(null);
     toast({
       title: "Cập nhật thành công",
@@ -148,12 +196,24 @@ export function VoucherSettings() {
               <Label>Kích hoạt tính năng</Label>
               <Switch
                 checked={currentSettings.enabled}
-                onCheckedChange={(checked) => 
-                  setPermissionSettings(prev => ({
-                    ...prev,
-                    [permissionDialogOpen]: { ...prev[permissionDialogOpen as keyof typeof prev], enabled: checked }
-                  }))
-                }
+                onCheckedChange={(checked) => {
+                  if (permissionDialogOpen === 'viewAllVouchers') {
+                    setPermissionSettings(prev => ({
+                      ...prev,
+                      viewAllVouchers: { ...prev.viewAllVouchers, enabled: checked }
+                    }));
+                  } else if (permissionDialogOpen === 'approvalRequired') {
+                    setPermissionSettings(prev => ({
+                      ...prev,
+                      approvalRequired: { ...prev.approvalRequired, enabled: checked }
+                    }));
+                  } else if (permissionDialogOpen === 'reissueVouchers') {
+                    setPermissionSettings(prev => ({
+                      ...prev,
+                      reissueVouchers: { ...prev.reissueVouchers, enabled: checked }
+                    }));
+                  }
+                }}
               />
             </div>
 
@@ -166,7 +226,7 @@ export function VoucherSettings() {
                   onChange={(e) => 
                     setPermissionSettings(prev => ({
                       ...prev,
-                      [permissionDialogOpen]: { ...prev[permissionDialogOpen as keyof typeof prev], threshold: Number(e.target.value) }
+                      approvalRequired: { ...prev.approvalRequired, threshold: Number(e.target.value) }
                     }))
                   }
                   className="mt-1"
@@ -183,14 +243,18 @@ export function VoucherSettings() {
                   ''
                 }
                 onValueChange={(value) => {
-                  const key = permissionDialogOpen === 'approvalRequired' ? 'approvers' : 'roles';
-                  setPermissionSettings(prev => ({
-                    ...prev,
-                    [permissionDialogOpen]: { 
-                      ...prev[permissionDialogOpen as keyof typeof prev], 
-                      [key]: [value] 
-                    }
-                  }));
+                  if (permissionDialogOpen === 'approvalRequired') {
+                    setPermissionSettings(prev => ({
+                      ...prev,
+                      approvalRequired: { ...prev.approvalRequired, approvers: [value] }
+                    }));
+                  } else {
+                    const key = permissionDialogOpen as 'viewAllVouchers' | 'reissueVouchers';
+                    setPermissionSettings(prev => ({
+                      ...prev,
+                      [key]: { ...prev[key], roles: [value] }
+                    }));
+                  }
                 }}
               >
                 <SelectTrigger className="mt-1">
@@ -256,12 +320,24 @@ export function VoucherSettings() {
               <Label>Kích hoạt thông báo</Label>
               <Switch
                 checked={currentSettings.enabled}
-                onCheckedChange={(checked) => 
-                  setNotificationSettings(prev => ({
-                    ...prev,
-                    [notificationDialogOpen]: { ...prev[notificationDialogOpen as keyof typeof prev], enabled: checked }
-                  }))
-                }
+                onCheckedChange={(checked) => {
+                  if (notificationDialogOpen === 'newVoucher') {
+                    setNotificationSettings(prev => ({
+                      ...prev,
+                      newVoucher: { ...prev.newVoucher, enabled: checked }
+                    }));
+                  } else if (notificationDialogOpen === 'expiration') {
+                    setNotificationSettings(prev => ({
+                      ...prev,
+                      expiration: { ...prev.expiration, enabled: checked }
+                    }));
+                  } else if (notificationDialogOpen === 'dailyReport') {
+                    setNotificationSettings(prev => ({
+                      ...prev,
+                      dailyReport: { ...prev.dailyReport, enabled: checked }
+                    }));
+                  }
+                }}
               />
             </div>
 
@@ -274,7 +350,7 @@ export function VoucherSettings() {
                   onChange={(e) => 
                     setNotificationSettings(prev => ({
                       ...prev,
-                      [notificationDialogOpen]: { ...prev[notificationDialogOpen as keyof typeof prev], days: Number(e.target.value) }
+                      expiration: { ...prev.expiration, days: Number(e.target.value) }
                     }))
                   }
                   className="mt-1"
@@ -291,7 +367,7 @@ export function VoucherSettings() {
                   onChange={(e) => 
                     setNotificationSettings(prev => ({
                       ...prev,
-                      [notificationDialogOpen]: { ...prev[notificationDialogOpen as keyof typeof prev], time: e.target.value }
+                      dailyReport: { ...prev.dailyReport, time: e.target.value }
                     }))
                   }
                   className="mt-1"
@@ -303,12 +379,24 @@ export function VoucherSettings() {
               <Label>Người nhận thông báo</Label>
               <Select
                 value={currentSettings.recipients?.[0] || ''}
-                onValueChange={(value) => 
-                  setNotificationSettings(prev => ({
-                    ...prev,
-                    [notificationDialogOpen]: { ...prev[notificationDialogOpen as keyof typeof prev], recipients: [value] }
-                  }))
-                }
+                onValueChange={(value) => {
+                  if (notificationDialogOpen === 'newVoucher') {
+                    setNotificationSettings(prev => ({
+                      ...prev,
+                      newVoucher: { ...prev.newVoucher, recipients: [value] }
+                    }));
+                  } else if (notificationDialogOpen === 'expiration') {
+                    setNotificationSettings(prev => ({
+                      ...prev,
+                      expiration: { ...prev.expiration, recipients: [value] }
+                    }));
+                  } else if (notificationDialogOpen === 'dailyReport') {
+                    setNotificationSettings(prev => ({
+                      ...prev,
+                      dailyReport: { ...prev.dailyReport, recipients: [value] }
+                    }));
+                  }
+                }}
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Chọn người nhận" />
@@ -321,7 +409,7 @@ export function VoucherSettings() {
               </Select>
             </div>
 
-            {(notificationDialogOpen === 'newVoucher' || notificationDialogOpen === 'expiration') && 'method' in currentSettings && (
+            {(notificationDialogOpen === 'newVoucher') && 'method' in currentSettings && (
               <div>
                 <Label>Phương thức thông báo</Label>
                 <Select
@@ -329,7 +417,7 @@ export function VoucherSettings() {
                   onValueChange={(value) => 
                     setNotificationSettings(prev => ({
                       ...prev,
-                      [notificationDialogOpen]: { ...prev[notificationDialogOpen as keyof typeof prev], method: value }
+                      newVoucher: { ...prev.newVoucher, method: value }
                     }))
                   }
                 >
