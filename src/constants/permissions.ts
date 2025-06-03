@@ -1,102 +1,112 @@
+import { LayoutDashboard, Users } from 'lucide-react';
 
-import { ModulePermission, UserRole, ERPModule, VoucherFeature } from '@/types/auth';
+export type UserRole = 'platform-admin' | 'erp-admin' | 'voucher-admin' | 'telesales' | 'custom';
+
+export interface UserPermissions {
+  modules: ERPModule[];
+  actions: string[];
+  features: string[];
+}
+
+export interface ModulePermission {
+  module: ERPModule;
+  label: string;
+  icon: keyof typeof import("lucide-react");
+  description: string;
+}
+
+export type ERPModule = 
+  | 'dashboard'
+  | 'customers'
+  | 'sales'
+  | 'inventory'
+  | 'accounting'
+  | 'hr'
+  | 'voucher'
+  | 'system-settings'
+  | 'user-management';
 
 export const MODULE_PERMISSIONS: ModulePermission[] = [
   {
     module: 'dashboard',
     label: 'Tổng Quan',
     icon: 'LayoutDashboard',
-    allowedRoles: ['erp-admin', 'voucher-admin', 'telesales', 'custom']
+    description: 'Dashboard và báo cáo tổng quan'
   },
   {
     module: 'customers',
     label: 'Khách Hàng',
     icon: 'Users',
-    allowedRoles: ['erp-admin', 'custom']
+    description: 'Quản lý thông tin khách hàng'
   },
   {
     module: 'sales',
     label: 'Bán Hàng',
-    icon: 'TrendingUp',
-    allowedRoles: ['erp-admin', 'custom']
+    icon: 'LayoutDashboard',
+    description: 'Quản lý quy trình bán hàng'
   },
   {
     module: 'inventory',
     label: 'Kho Hàng',
-    icon: 'Package',
-    allowedRoles: ['erp-admin', 'custom']
+    icon: 'LayoutDashboard',
+    description: 'Quản lý kho và sản phẩm'
   },
   {
     module: 'accounting',
     label: 'Kế Toán',
-    icon: 'Calculator',
-    allowedRoles: ['erp-admin', 'custom']
+    icon: 'LayoutDashboard',
+    description: 'Quản lý tài chính và kế toán'
   },
   {
     module: 'hr',
     label: 'Nhân Sự',
-    icon: 'UserCheck',
-    allowedRoles: ['erp-admin', 'custom']
+    icon: 'LayoutDashboard',
+    description: 'Quản lý thông tin nhân viên'
   },
   {
     module: 'voucher',
     label: 'Voucher',
-    icon: 'Ticket',
-    allowedRoles: ['erp-admin', 'voucher-admin', 'telesales', 'custom']
+    icon: 'LayoutDashboard',
+    description: 'Quản lý và phát hành voucher'
   },
   {
     module: 'system-settings',
     label: 'Cài Đặt Hệ Thống',
-    icon: 'Settings',
-    allowedRoles: ['erp-admin']
+    icon: 'LayoutDashboard',
+    description: 'Cấu hình hệ thống và bảo mật'
   },
   {
     module: 'user-management',
     label: 'Quản Lý Người Dùng',
-    icon: 'Shield',
-    allowedRoles: ['erp-admin']
-  }
+    icon: 'LayoutDashboard',
+    description: 'Quản lý tài khoản và quyền truy cập'
+  },
 ];
 
-export const VOUCHER_FEATURES = [
-  { id: 'voucher-dashboard', label: 'Tổng Quan', allowedRoles: ['erp-admin', 'voucher-admin', 'telesales'] },
-  { id: 'campaign-management', label: 'Quản Lý Chiến Dịch', allowedRoles: ['erp-admin', 'voucher-admin'] },
-  { id: 'issue-voucher', label: 'Phát Hành Voucher', allowedRoles: ['erp-admin', 'voucher-admin', 'telesales'] },
-  { id: 'voucher-list', label: 'Danh Sách Voucher', allowedRoles: ['erp-admin', 'voucher-admin', 'telesales'] },
-  { id: 'voucher-analytics', label: 'Báo Cáo Phân Tích', allowedRoles: ['erp-admin', 'voucher-admin'] },
-  { id: 'voucher-leaderboard', label: 'Bảng Xếp Hạng', allowedRoles: ['erp-admin', 'voucher-admin', 'telesales'] },
-  { id: 'voucher-settings', label: 'Cài Đặt', allowedRoles: ['erp-admin', 'voucher-admin'] },
-] as const;
-
-export const DEFAULT_PERMISSIONS = {
+export const DEFAULT_PERMISSIONS: Record<UserRole, UserPermissions> = {
+  'platform-admin': {
+    modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'system-settings', 'user-management'],
+    actions: ['create', 'read', 'update', 'delete', 'export', 'import'],
+    features: ['bulk-operations', 'advanced-search', 'api-access', 'audit-log']
+  },
   'erp-admin': {
-    modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'system-settings', 'user-management'] as ERPModule[],
-    voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'] as VoucherFeature[],
-    canManageUsers: true,
-    canViewAllVouchers: true
+    modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'system-settings', 'user-management'],
+    actions: ['create', 'read', 'update', 'delete', 'export', 'import'],
+    features: ['bulk-operations', 'advanced-search', 'audit-log']
   },
   'voucher-admin': {
-    modules: ['dashboard', 'voucher'] as ERPModule[],
-    voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'] as VoucherFeature[],
-    canManageUsers: false,
-    canViewAllVouchers: true
+    modules: ['dashboard', 'customers', 'voucher', 'user-management'],
+    actions: ['create', 'read', 'update', 'delete', 'export'],
+    features: ['bulk-operations', 'advanced-search']
   },
   'telesales': {
-    modules: ['dashboard', 'voucher'] as ERPModule[],
-    voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list', 'voucher-leaderboard'] as VoucherFeature[],
-    canManageUsers: false,
-    canViewAllVouchers: false
+    modules: ['dashboard', 'customers', 'sales', 'voucher'],
+    actions: ['create', 'read', 'update', 'export'],
+    features: ['advanced-search']
   },
   'custom': {
-    modules: ['dashboard'] as ERPModule[],
-    voucherFeatures: [] as VoucherFeature[],
-    canManageUsers: false,
-    canViewAllVouchers: false
-  },
-  'platform-admin': {
-    modules: ['dashboard'] as ERPModule[],
-    voucherFeatures: [] as VoucherFeature[],
-    canManageUsers: true,
-    canViewAllVouchers: true
+    modules: ['dashboard', 'customers'],
+    actions: ['read'],
+    features: []
   }
 };

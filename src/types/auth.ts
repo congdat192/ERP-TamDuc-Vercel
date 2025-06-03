@@ -6,14 +6,14 @@ export type UserRole =
   | 'platform-admin';
 
 export type ERPModule = 
-  | 'dashboard' 
-  | 'customers' 
-  | 'sales' 
-  | 'inventory' 
-  | 'accounting' 
-  | 'hr' 
-  | 'voucher' 
-  | 'system-settings' 
+  | 'dashboard'
+  | 'customers'
+  | 'sales'
+  | 'inventory'
+  | 'accounting'
+  | 'hr'
+  | 'voucher'
+  | 'system-settings'
   | 'user-management'
   | 'security-settings';
 

@@ -134,6 +134,9 @@ const mockUsers: User[] = [
   }
 ];
 
+// Import customer module
+import { CustomerManagement } from '@/modules/customer';
+
 const Index = () => {
   const [currentModule, setCurrentModule] = useState<ERPModule>('dashboard');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -316,6 +319,10 @@ const Index = () => {
   const renderMainContent = () => {
     if (currentModule === 'dashboard') {
       return <ERPHome currentUser={currentUser} onModuleChange={handleModuleChange} />;
+    }
+
+    if (currentModule === 'customers') {
+      return <CustomerManagement />;
     }
 
     if (currentModule === 'voucher') {
