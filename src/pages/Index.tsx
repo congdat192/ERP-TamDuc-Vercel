@@ -10,6 +10,9 @@ import { PlatformAdmin } from '@/modules/platform-admin';
 // Voucher module
 import { VoucherModule } from '@/modules/voucher';
 
+// Customer module
+import { CustomerModule } from '@/modules/customer';
+
 // Admin module pages
 import { AuditLog } from '@/modules/admin/pages/AuditLog';
 import { RolePermissions } from '@/modules/admin/pages/RolePermissions';
