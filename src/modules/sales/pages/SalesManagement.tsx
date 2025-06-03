@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Search, Filter, Plus, ChevronDown, Calendar, X, Menu } from 'lucide-react';
+import { ArrowLeft, Search, Plus, ChevronDown, Calendar, X, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -12,6 +12,7 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerFooter } from '@/components/ui/drawer';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { ColumnVisibilityFilter, ColumnConfig } from '../components/ColumnVisibilityFilter';
 
 interface SalesManagementProps {
   currentUser: any;
@@ -35,7 +36,44 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
   const [salesChannel, setSalesChannel] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
+  // Column visibility state
+  const [columns, setColumns] = useState<ColumnConfig[]>([
+    { key: 'invoiceCode', label: 'Mã hóa đơn', visible: true },
+    { key: 'datetime', label: 'Thời gian', visible: true },
+    { key: 'createdTime', label: 'Thời gian tạo', visible: false },
+    { key: 'lastUpdated', label: 'Ngày cập nhật', visible: false },
+    { key: 'orderCode', label: 'Mã đặt hàng', visible: false },
+    { key: 'returnCode', label: 'Mã trả hàng', visible: true },
+    { key: 'customer', label: 'Khách hàng', visible: true },
+    { key: 'email', label: 'Email', visible: false },
+    { key: 'phone', label: 'Điện thoại', visible: false },
+    { key: 'address', label: 'Địa chỉ', visible: false },
+    { key: 'area', label: 'Khu vực', visible: false },
+    { key: 'method', label: 'Phương/Xá', visible: false },
+    { key: 'birthdate', label: 'Ngày sinh', visible: false },
+    { key: 'branch', label: 'Chi nhánh', visible: false },
+    { key: 'seller', label: 'Người bán', visible: false },
+    { key: 'creator', label: 'Người tạo', visible: false },
+    { key: 'channel', label: 'Kênh bán', visible: false },
+    { key: 'note', label: 'Ghi chú', visible: false },
+    { key: 'totalAmount', label: 'Tổng tiền hàng', visible: true },
+    { key: 'discount', label: 'Giảm giá', visible: true },
+    { key: 'tax', label: 'Giảm thuế', visible: false },
+    { key: 'needToPay', label: 'Khách cần trả', visible: false },
+    { key: 'paidAmount', label: 'Khách đã trả', visible: true },
+    { key: 'totalDiscount', label: 'Chiết khấu thanh toán', visible: false },
+    { key: 'deliveryTime', label: 'Thời gian giao hàng', visible: false },
+    { key: 'status', label: 'Trạng thái', visible: true },
+    { key: 'invoiceStatus', label: 'Trạng thái HĐDT', visible: true }
+  ]);
+
   const isMobile = useIsMobile();
+
+  const handleColumnToggle = (columnKey: string) => {
+    setColumns(prev => prev.map(col => 
+      col.key === columnKey ? { ...col, visible: !col.visible } : col
+    ));
+  };
 
   // Branch options
   const branchOptions = [
@@ -179,7 +217,6 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
   };
 
   const applyFilters = () => {
-    // Apply filter logic here
     setIsFilterOpen(false);
   };
 
@@ -486,7 +523,7 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
       </div>
 
       <div className="flex">
-        {/* Desktop Filter Sidebar - Reduced width */}
+        {/* Desktop Filter Sidebar - Keep existing sidebar */}
         {!isMobile && (
           <div className="w-64 max-w-64 bg-white border-r p-4 space-y-4">
             <h3 className="font-semibold text-gray-900 text-base">Bộ lọc</h3>
@@ -510,14 +547,14 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
                   />
                 </div>
                 
-                {/* Mobile Filter Button */}
+                {/* Replace the existing filter button with ColumnVisibilityFilter */}
                 {isMobile ? (
                   <Drawer open={isFilterOpen} onOpenChange={setIsFilterOpen}>
                     <DrawerTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <Filter className="h-4 w-4 mr-2" />
-                        Bộ lọc
-                      </Button>
+                      <ColumnVisibilityFilter 
+                        columns={columns} 
+                        onColumnToggle={handleColumnToggle} 
+                      />
                     </DrawerTrigger>
                     <DrawerContent className="h-[85vh]">
                       <DrawerHeader>
@@ -529,10 +566,10 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
                     </DrawerContent>
                   </Drawer>
                 ) : (
-                  <Button variant="outline" size="sm">
-                    <Filter className="h-4 w-4 mr-2" />
-                    Bộ lọc
-                  </Button>
+                  <ColumnVisibilityFilter 
+                    columns={columns} 
+                    onColumnToggle={handleColumnToggle} 
+                  />
                 )}
               </div>
               <Button className="bg-blue-600 hover:bg-blue-700">
@@ -562,49 +599,61 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
             </div>
           </div>
 
-          {/* Sales Table */}
+          {/* Sales Table with dynamic columns */}
           <div className="bg-white rounded-lg border overflow-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Mã hóa đơn</TableHead>
-                  <TableHead>Ngày/Giờ</TableHead>
-                  <TableHead>Mã trả hàng</TableHead>
-                  <TableHead>Khách hàng</TableHead>
-                  <TableHead>Tổng tiền</TableHead>
-                  <TableHead>Giảm giá</TableHead>
-                  <TableHead>Khách thanh toán</TableHead>
-                  <TableHead>Trạng thái</TableHead>
+                  {columns.filter(col => col.visible).map((column) => (
+                    <TableHead key={column.key}>
+                      {column.label}
+                    </TableHead>
+                  ))}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {salesData.map((sale) => (
                   <TableRow key={sale.id} className="hover:bg-gray-50">
-                    <TableCell className="font-medium">{sale.id}</TableCell>
-                    <TableCell>{sale.date}</TableCell>
-                    <TableCell>
-                      {sale.returnCode && (
-                        <Badge variant="outline" className="text-orange-600">
-                          {sale.returnCode}
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>{sale.customer}</TableCell>
-                    <TableCell>{formatCurrency(sale.totalAmount)}</TableCell>
-                    <TableCell className="text-red-600">
-                      {sale.discount > 0 ? formatCurrency(sale.discount) : '-'}
-                    </TableCell>
-                    <TableCell className="text-green-600">
-                      {formatCurrency(sale.paidAmount)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge 
-                        variant={sale.status === 'Hoàn thành' ? 'default' : 'destructive'}
-                        className={sale.status === 'Hoàn thành' ? 'bg-green-100 text-green-800' : ''}
-                      >
-                        {sale.status}
-                      </Badge>
-                    </TableCell>
+                    {columns.filter(col => col.visible).map((column) => (
+                      <TableCell key={column.key}>
+                        {column.key === 'invoiceCode' && sale.id}
+                        {column.key === 'datetime' && sale.date}
+                        {column.key === 'returnCode' && (
+                          sale.returnCode ? (
+                            <Badge variant="outline" className="text-orange-600">
+                              {sale.returnCode}
+                            </Badge>
+                          ) : null
+                        )}
+                        {column.key === 'customer' && sale.customer}
+                        {column.key === 'totalAmount' && formatCurrency(sale.totalAmount)}
+                        {column.key === 'discount' && (
+                          <span className="text-red-600">
+                            {sale.discount > 0 ? formatCurrency(sale.discount) : '-'}
+                          </span>
+                        )}
+                        {column.key === 'paidAmount' && (
+                          <span className="text-green-600">
+                            {formatCurrency(sale.paidAmount)}
+                          </span>
+                        )}
+                        {column.key === 'status' && (
+                          <Badge 
+                            variant={sale.status === 'Hoàn thành' ? 'default' : 'destructive'}
+                            className={sale.status === 'Hoàn thành' ? 'bg-green-100 text-green-800' : ''}
+                          >
+                            {sale.status}
+                          </Badge>
+                        )}
+                        {column.key === 'invoiceStatus' && (
+                          <Badge variant="outline">
+                            Chưa có
+                          </Badge>
+                        )}
+                        {/* Add default empty content for other columns */}
+                        {!['invoiceCode', 'datetime', 'returnCode', 'customer', 'totalAmount', 'discount', 'paidAmount', 'status', 'invoiceStatus'].includes(column.key) && '-'}
+                      </TableCell>
+                    ))}
                   </TableRow>
                 ))}
               </TableBody>
