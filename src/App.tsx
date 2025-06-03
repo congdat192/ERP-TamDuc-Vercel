@@ -8,13 +8,12 @@ import { ErrorBoundary } from "@/components/layout/ErrorBoundary";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { ForbiddenPage, ServerErrorPage, NetworkErrorPage } from "./pages/ErrorPages";
-import { AdminRoutes } from "./routes/adminRoutes";
+import { PlatformAdmin } from "./modules/platform-admin";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: (failureCount, error: any) => {
-        // Don't retry on 4xx errors
         if (error?.status >= 400 && error?.status < 500) return false;
         return failureCount < 3;
       },
@@ -32,13 +31,10 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/platform-admin" element={<PlatformAdmin />} />
             <Route path="/403" element={<ForbiddenPage />} />
             <Route path="/500" element={<ServerErrorPage />} />
             <Route path="/network-error" element={<NetworkErrorPage />} />
-            {/* Admin Routes */}
-            <Route path="/admin/*" element={<AdminRoutes />} />
-            <Route path="/system-settings/*" element={<AdminRoutes />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
