@@ -3,6 +3,7 @@ import { ERPLayout } from '@/components/layout/ERPLayout';
 import { LoginPage } from '@/components/pages/LoginPage';
 import { ERPHome } from './ERPHome';
 import { ModuleEmptyState } from '@/components/pages/ModuleEmptyState';
+import { Gift, Users, ShoppingCart, Settings } from 'lucide-react';
 
 // Platform Admin module
 import { PlatformAdmin } from '@/modules/platform-admin';
@@ -21,7 +22,7 @@ import { AuditLog } from '@/modules/admin/pages/AuditLog';
 import { RolePermissions } from '@/modules/admin/pages/RolePermissions';
 import { SystemSettings } from '@/modules/admin/pages/SystemSettings';
 import { UserManagement } from '@/modules/admin/pages/UserManagement';
-import { Settings } from '@/modules/admin/pages/Settings';
+import { Settings as AdminSettings } from '@/modules/admin/pages/Settings';
 
 import { ERPModule, VoucherFeature, User } from '@/types/auth';
 import { DEFAULT_PERMISSIONS } from '@/constants/permissions';
@@ -388,7 +389,7 @@ export default function Index() {
 
     // Admin module pages
     if (currentModule === 'system-settings') {
-      return <Settings />;
+      return <AdminSettings />;
     }
     if (currentModule === 'user-management') {
       return <UserManagement />;
