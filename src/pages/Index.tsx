@@ -13,6 +13,9 @@ import { VoucherModule } from '@/modules/voucher';
 // Customer module
 import { CustomerModule } from '@/modules/customer';
 
+// Sales module
+import { SalesModule } from '@/modules/sales';
+
 // Admin module pages
 import { AuditLog } from '@/modules/admin/pages/AuditLog';
 import { RolePermissions } from '@/modules/admin/pages/RolePermissions';
@@ -333,6 +336,15 @@ const Index = () => {
     if (currentModule === 'voucher') {
       return (
         <VoucherModule 
+          currentUser={currentUser} 
+          onBackToModules={() => setCurrentModule('dashboard')}
+        />
+      );
+    }
+
+    if (currentModule === 'sales') {
+      return (
+        <SalesModule 
           currentUser={currentUser} 
           onBackToModules={() => setCurrentModule('dashboard')}
         />
