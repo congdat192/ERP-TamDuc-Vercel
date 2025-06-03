@@ -411,6 +411,4 @@ export default function Index() {
       </PageTransition>
     </ERPLayout>
   );
-};
-
-export default Index;
+}
