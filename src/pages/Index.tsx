@@ -318,6 +318,15 @@ const Index = () => {
       return <ERPHome currentUser={currentUser} onModuleChange={handleModuleChange} />;
     }
 
+    if (currentModule === 'customers') {
+      return (
+        <CustomerModule 
+          currentUser={currentUser} 
+          onBackToModules={() => setCurrentModule('dashboard')}
+        />
+      );
+    }
+
     if (currentModule === 'voucher') {
       return (
         <VoucherModule 
