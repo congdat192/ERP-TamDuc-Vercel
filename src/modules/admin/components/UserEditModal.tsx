@@ -7,8 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { User, UserRole, UpdateUserData, ERPModule, VoucherFeature } from '@/types/auth';
-import { DEFAULT_PERMISSIONS, MODULE_PERMISSIONS, VOUCHER_FEATURES } from '@/constants/permissions';
+import { User, UserRole, UpdateUserData, ERPModule } from '@/types/auth';
+import { DEFAULT_PERMISSIONS, MODULE_PERMISSIONS } from '@/constants/permissions';
 
 interface UserEditModalProps {
   isOpen: boolean;
@@ -26,7 +26,6 @@ export function UserEditModal({ isOpen, onClose, user, onUserUpdated }: UserEdit
     notes: '',
     permissions: {
       modules: [],
-      voucherFeatures: [],
       canManageUsers: false,
       canViewAllVouchers: false
     }
@@ -131,29 +130,9 @@ export function UserEditModal({ isOpen, onClose, user, onUserUpdated }: UserEdit
     }));
   };
 
-  const handleVoucherFeatureChange = (feature: VoucherFeature, checked: boolean) => {
-    setFormData(prev => ({
-      ...prev,
-      permissions: {
-        ...prev.permissions!,
-        voucherFeatures: checked 
-          ? [...(prev.permissions!.voucherFeatures || []), feature]
-          : (prev.permissions!.voucherFeatures || []).filter(f => f !== feature)
-      }
-    }));
-  };
-
-  const availableModules = MODULE_PERMISSIONS.filter(module => 
-    module.allowedRoles.includes(formData.role)
-  );
-
-  const availableVoucherFeatures = VOUCHER_FEATURES.filter(feature => 
-    (feature.allowedRoles as readonly UserRole[]).includes(formData.role)
-  );
-
   // Check if user can have special permissions
-  const canManageUsers = formData.role === 'erp-admin';
-  const canViewAllVouchers = ['erp-admin', 'voucher-admin'].includes(formData.role);
+  const canManageUsers = ['platform-admin', 'erp-admin'].includes(formData.role);
+  const canViewAllVouchers = ['platform-admin', 'erp-admin', 'voucher-admin'].includes(formData.role);
 
   if (!user) return null;
 
@@ -212,6 +191,7 @@ export function UserEditModal({ isOpen, onClose, user, onUserUpdated }: UserEdit
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="platform-admin">Quản Trị Platform</SelectItem>
                   <SelectItem value="erp-admin">Quản Trị ERP</SelectItem>
                   <SelectItem value="voucher-admin">Quản Lý Voucher</SelectItem>
                   <SelectItem value="telesales">Telesales</SelectItem>
@@ -237,12 +217,12 @@ export function UserEditModal({ isOpen, onClose, user, onUserUpdated }: UserEdit
             <div className="border-t pt-4">
               <h3 className="text-lg font-medium mb-4">Phân Quyền Chi Tiết</h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-6">
                 {/* Module Permissions */}
                 <div className="space-y-3">
                   <h4 className="font-medium text-gray-900">Quyền Truy Cập Module</h4>
-                  <div className="space-y-2 max-h-40 overflow-y-auto border rounded p-3">
-                    {availableModules.map((module) => (
+                  <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto border rounded p-3">
+                    {MODULE_PERMISSIONS.map((module) => (
                       <div key={module.module} className="flex items-center space-x-2">
                         <Checkbox
                           id={`module-${module.module}`}
@@ -257,66 +237,45 @@ export function UserEditModal({ isOpen, onClose, user, onUserUpdated }: UserEdit
                   </div>
                 </div>
 
-                {/* Voucher Features */}
-                {formData.permissions?.modules.includes('voucher') && (
-                  <div className="space-y-3">
-                    <h4 className="font-medium text-gray-900">Tính Năng Voucher</h4>
-                    <div className="space-y-2 max-h-40 overflow-y-auto border rounded p-3">
-                      {availableVoucherFeatures.map((feature) => (
-                        <div key={feature.id} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`voucher-${feature.id}`}
-                            checked={formData.permissions?.voucherFeatures?.includes(feature.id as VoucherFeature) || false}
-                            onCheckedChange={(checked) => handleVoucherFeatureChange(feature.id as VoucherFeature, !!checked)}
-                          />
-                          <Label htmlFor={`voucher-${feature.id}`} className="text-sm">
-                            {feature.label}
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Special Permissions */}
-              <div className="mt-4 space-y-2">
-                <h4 className="font-medium text-gray-900">Quyền Đặc Biệt</h4>
+                {/* Special Permissions */}
                 <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="canManageUsers"
-                      checked={formData.permissions?.canManageUsers || false}
-                      onCheckedChange={(checked) => setFormData(prev => ({
-                        ...prev,
-                        permissions: {
-                          ...prev.permissions!,
-                          canManageUsers: !!checked
-                        }
-                      }))}
-                      disabled={!canManageUsers}
-                    />
-                    <Label htmlFor="canManageUsers" className="text-sm">
-                      Có thể quản lý người dùng
-                    </Label>
-                  </div>
+                  <h4 className="font-medium text-gray-900">Quyền Đặc Biệt</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="canManageUsers"
+                        checked={formData.permissions?.canManageUsers || false}
+                        onCheckedChange={(checked) => setFormData(prev => ({
+                          ...prev,
+                          permissions: {
+                            ...prev.permissions!,
+                            canManageUsers: !!checked
+                          }
+                        }))}
+                        disabled={!canManageUsers}
+                      />
+                      <Label htmlFor="canManageUsers" className="text-sm">
+                        Có thể quản lý người dùng
+                      </Label>
+                    </div>
 
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="canViewAllVouchers"
-                      checked={formData.permissions?.canViewAllVouchers || false}
-                      onCheckedChange={(checked) => setFormData(prev => ({
-                        ...prev,
-                        permissions: {
-                          ...prev.permissions!,
-                          canViewAllVouchers: !!checked
-                        }
-                      }))}
-                      disabled={!canViewAllVouchers}
-                    />
-                    <Label htmlFor="canViewAllVouchers" className="text-sm">
-                      Có thể xem tất cả voucher
-                    </Label>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="canViewAllVouchers"
+                        checked={formData.permissions?.canViewAllVouchers || false}
+                        onCheckedChange={(checked) => setFormData(prev => ({
+                          ...prev,
+                          permissions: {
+                            ...prev.permissions!,
+                            canViewAllVouchers: !!checked
+                          }
+                        }))}
+                        disabled={!canViewAllVouchers}
+                      />
+                      <Label htmlFor="canViewAllVouchers" className="text-sm">
+                        Có thể xem tất cả voucher
+                      </Label>
+                    </div>
                   </div>
                 </div>
               </div>
