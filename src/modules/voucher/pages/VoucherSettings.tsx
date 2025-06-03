@@ -20,7 +20,40 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+
+interface ViewAllVouchersSettings {
+  enabled: boolean;
+  roles: string[];
+}
+
+interface ApprovalRequiredSettings {
+  enabled: boolean;
+  threshold: number;
+  approvers: string[];
+}
+
+interface ReissueVouchersSettings {
+  enabled: boolean;
+  roles: string[];
+}
+
+interface NewVoucherNotificationSettings {
+  enabled: boolean;
+  recipients: string[];
+  method: string;
+}
+
+interface ExpirationNotificationSettings {
+  enabled: boolean;
+  days: number;
+  recipients: string[];
+}
+
+interface DailyReportNotificationSettings {
+  enabled: boolean;
+  time: string;
+  recipients: string[];
+}
 
 export function VoucherSettings() {
   const [voucherCodeConfig, setVoucherCodeConfig] = useState<any>(null);
@@ -28,17 +61,17 @@ export function VoucherSettings() {
   // Permission settings state
   const [permissionDialogOpen, setPermissionDialogOpen] = useState<string | null>(null);
   const [permissionSettings, setPermissionSettings] = useState({
-    viewAllVouchers: { enabled: true, roles: ['admin', 'manager'] },
-    approvalRequired: { enabled: true, threshold: 1000000, approvers: ['admin'] },
-    reissueVouchers: { enabled: false, roles: ['admin', 'telesales'] }
+    viewAllVouchers: { enabled: true, roles: ['admin', 'manager'] } as ViewAllVouchersSettings,
+    approvalRequired: { enabled: true, threshold: 1000000, approvers: ['admin'] } as ApprovalRequiredSettings,
+    reissueVouchers: { enabled: false, roles: ['admin', 'telesales'] } as ReissueVouchersSettings
   });
 
   // Notification settings state
   const [notificationDialogOpen, setNotificationDialogOpen] = useState<string | null>(null);
   const [notificationSettings, setNotificationSettings] = useState({
-    newVoucher: { enabled: true, recipients: ['telesales', 'admin'], method: 'both' },
-    expiration: { enabled: true, days: 3, recipients: ['customer', 'telesales'] },
-    dailyReport: { enabled: false, time: '18:00', recipients: ['admin'] }
+    newVoucher: { enabled: true, recipients: ['telesales', 'admin'], method: 'both' } as NewVoucherNotificationSettings,
+    expiration: { enabled: true, days: 3, recipients: ['customer', 'telesales'] } as ExpirationNotificationSettings,
+    dailyReport: { enabled: false, time: '18:00', recipients: ['admin'] } as DailyReportNotificationSettings
   });
 
   const handleSaveSettings = () => {
@@ -80,7 +113,21 @@ export function VoucherSettings() {
   const renderPermissionDialog = () => {
     if (!permissionDialogOpen) return null;
 
-    const currentSettings = permissionSettings[permissionDialogOpen as keyof typeof permissionSettings];
+    const getPermissionSettings = () => {
+      switch (permissionDialogOpen) {
+        case 'viewAllVouchers':
+          return permissionSettings.viewAllVouchers;
+        case 'approvalRequired':
+          return permissionSettings.approvalRequired;
+        case 'reissueVouchers':
+          return permissionSettings.reissueVouchers;
+        default:
+          return null;
+      }
+    };
+
+    const currentSettings = getPermissionSettings();
+    if (!currentSettings) return null;
 
     return (
       <Dialog open={!!permissionDialogOpen} onOpenChange={() => setPermissionDialogOpen(null)}>
@@ -110,7 +157,7 @@ export function VoucherSettings() {
               />
             </div>
 
-            {permissionDialogOpen === 'approvalRequired' && (
+            {permissionDialogOpen === 'approvalRequired' && 'threshold' in currentSettings && (
               <div>
                 <Label>Ngưỡng phê duyệt (VNĐ)</Label>
                 <Input
@@ -130,16 +177,21 @@ export function VoucherSettings() {
             <div>
               <Label>Vai trò được phép</Label>
               <Select
-                value={(currentSettings.roles || currentSettings.approvers)?.[0] || ''}
-                onValueChange={(value) => 
+                value={
+                  ('roles' in currentSettings && currentSettings.roles?.[0]) || 
+                  ('approvers' in currentSettings && currentSettings.approvers?.[0]) || 
+                  ''
+                }
+                onValueChange={(value) => {
+                  const key = permissionDialogOpen === 'approvalRequired' ? 'approvers' : 'roles';
                   setPermissionSettings(prev => ({
                     ...prev,
                     [permissionDialogOpen]: { 
                       ...prev[permissionDialogOpen as keyof typeof prev], 
-                      [permissionDialogOpen === 'approvalRequired' ? 'approvers' : 'roles']: [value] 
+                      [key]: [value] 
                     }
-                  }))
-                }
+                  }));
+                }}
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Chọn vai trò" />
@@ -169,7 +221,21 @@ export function VoucherSettings() {
   const renderNotificationDialog = () => {
     if (!notificationDialogOpen) return null;
 
-    const currentSettings = notificationSettings[notificationDialogOpen as keyof typeof notificationSettings];
+    const getNotificationSettings = () => {
+      switch (notificationDialogOpen) {
+        case 'newVoucher':
+          return notificationSettings.newVoucher;
+        case 'expiration':
+          return notificationSettings.expiration;
+        case 'dailyReport':
+          return notificationSettings.dailyReport;
+        default:
+          return null;
+      }
+    };
+
+    const currentSettings = getNotificationSettings();
+    if (!currentSettings) return null;
 
     return (
       <Dialog open={!!notificationDialogOpen} onOpenChange={() => setNotificationDialogOpen(null)}>
@@ -199,7 +265,7 @@ export function VoucherSettings() {
               />
             </div>
 
-            {notificationDialogOpen === 'expiration' && (
+            {notificationDialogOpen === 'expiration' && 'days' in currentSettings && (
               <div>
                 <Label>Số ngày cảnh báo trước</Label>
                 <Input
@@ -216,7 +282,7 @@ export function VoucherSettings() {
               </div>
             )}
 
-            {notificationDialogOpen === 'dailyReport' && (
+            {notificationDialogOpen === 'dailyReport' && 'time' in currentSettings && (
               <div>
                 <Label>Thời gian gửi báo cáo</Label>
                 <Input
@@ -255,7 +321,7 @@ export function VoucherSettings() {
               </Select>
             </div>
 
-            {(notificationDialogOpen === 'newVoucher' || notificationDialogOpen === 'expiration') && (
+            {(notificationDialogOpen === 'newVoucher' || notificationDialogOpen === 'expiration') && 'method' in currentSettings && (
               <div>
                 <Label>Phương thức thông báo</Label>
                 <Select
