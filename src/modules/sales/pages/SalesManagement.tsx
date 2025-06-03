@@ -1,6 +1,5 @@
-
 import { useState } from 'react';
-import { ArrowLeft, Search, Filter, Plus, ChevronDown, Calendar, X } from 'lucide-react';
+import { ArrowLeft, Search, Filter, Plus, ChevronDown, Calendar, X, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -10,8 +9,9 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerFooter } from '@/components/ui/drawer';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface SalesManagementProps {
   currentUser: any;
@@ -33,6 +33,9 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
   const [seller, setSeller] = useState('');
   const [priceList, setPriceList] = useState('');
   const [salesChannel, setSalesChannel] = useState('');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  const isMobile = useIsMobile();
 
   // Branch options
   const branchOptions = [
@@ -162,6 +165,306 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
   const totalDiscount = salesData.reduce((sum, item) => sum + item.discount, 0);
   const totalPaid = salesData.reduce((sum, item) => sum + item.paidAmount, 0);
 
+  const clearAllFilters = () => {
+    setSelectedBranches([]);
+    setTimeFilterType('quick');
+    setSelectedQuickTime('this-month');
+    setDateRange({});
+    setStatusFilters({ completed: true, canceled: false });
+    setPaymentMethod('');
+    setCreator('');
+    setSeller('');
+    setPriceList('');
+    setSalesChannel('');
+  };
+
+  const applyFilters = () => {
+    // Apply filter logic here
+    setIsFilterOpen(false);
+  };
+
+  const FilterContent = () => (
+    <div className="space-y-6">
+      {/* Branch Selection */}
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-gray-700">Chi nhánh</label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="w-full justify-start text-sm">
+              <span className="text-gray-500">Chọn chi nhánh</span>
+              <ChevronDown className="ml-auto h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 p-3">
+            <div className="space-y-2">
+              {branchOptions.map((branch) => (
+                <div key={branch.value} className="flex items-center space-x-2">
+                  <Checkbox 
+                    id={branch.value}
+                    checked={selectedBranches.includes(branch.value)}
+                    onCheckedChange={() => handleBranchSelect(branch.value)}
+                  />
+                  <label htmlFor={branch.value} className="text-sm cursor-pointer">
+                    {branch.label}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+        
+        {/* Selected branch tags */}
+        {selectedBranches.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {getBranchDisplayTags().map((tag) => (
+              <Badge key={tag.value} variant="secondary" className="text-xs">
+                {tag.label}
+                {tag.value !== 'more' && (
+                  <X 
+                    className="ml-1 h-3 w-3 cursor-pointer" 
+                    onClick={() => removeBranch(tag.value)}
+                  />
+                )}
+              </Badge>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Time Period */}
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-gray-700">Thời gian</label>
+        <RadioGroup value={timeFilterType} onValueChange={(value: 'quick' | 'custom') => setTimeFilterType(value)}>
+          <div className="space-y-3">
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="quick" id="quick" />
+              <label htmlFor="quick" className="text-sm">Chọn nhanh</label>
+            </div>
+            
+            {timeFilterType === 'quick' && (
+              <div className="ml-6">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="w-full justify-start text-xs">
+                      <span>
+                        {quickTimeOptions.month.find(opt => opt.value === selectedQuickTime)?.label || 'Tháng này'}
+                      </span>
+                      <ChevronDown className="ml-auto h-3 w-3" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-64 p-0">
+                    <Tabs defaultValue="month" className="w-full">
+                      <TabsList className="grid w-full grid-cols-5 text-xs h-8">
+                        <TabsTrigger value="day" className="text-xs">Ngày</TabsTrigger>
+                        <TabsTrigger value="week" className="text-xs">Tuần</TabsTrigger>
+                        <TabsTrigger value="month" className="text-xs">Tháng</TabsTrigger>
+                        <TabsTrigger value="quarter" className="text-xs">Quý</TabsTrigger>
+                        <TabsTrigger value="year" className="text-xs">Năm</TabsTrigger>
+                      </TabsList>
+                      
+                      {Object.entries(quickTimeOptions).map(([key, options]) => (
+                        <TabsContent key={key} value={key} className="p-2 space-y-1">
+                          {options.map((option) => (
+                            <Button
+                              key={option.value}
+                              variant={selectedQuickTime === option.value ? "default" : "ghost"}
+                              size="sm"
+                              className="w-full justify-start text-xs h-8"
+                              onClick={() => setSelectedQuickTime(option.value)}
+                            >
+                              {option.label}
+                            </Button>
+                          ))}
+                        </TabsContent>
+                      ))}
+                    </Tabs>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
+            
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="custom" id="custom" />
+              <label htmlFor="custom" className="text-sm">Tùy chỉnh</label>
+            </div>
+            
+            {timeFilterType === 'custom' && (
+              <div className="ml-6 space-y-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="w-full justify-start text-xs">
+                      <Calendar className="mr-2 h-3 w-3" />
+                      <span>
+                        {dateRange.from && dateRange.to 
+                          ? `${dateRange.from.toLocaleDateString('vi-VN')} - ${dateRange.to.toLocaleDateString('vi-VN')}`
+                          : 'Chọn khoảng thời gian'
+                        }
+                      </span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <div className="p-3 space-y-3">
+                      <div className="flex space-x-2">
+                        <CalendarComponent
+                          mode="single"
+                          selected={dateRange.from}
+                          onSelect={(date) => setDateRange(prev => ({ ...prev, from: date }))}
+                          className="rounded-md border"
+                        />
+                        <CalendarComponent
+                          mode="single"
+                          selected={dateRange.to}
+                          onSelect={(date) => setDateRange(prev => ({ ...prev, to: date }))}
+                          className="rounded-md border"
+                        />
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button size="sm" onClick={() => setDateRange({ from: new Date(), to: new Date() })}>
+                          Hôm nay
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          Áp dụng
+                        </Button>
+                        <Button size="sm" variant="ghost">
+                          Hủy
+                        </Button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
+          </div>
+        </RadioGroup>
+      </div>
+
+      {/* Status */}
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-gray-700">Trạng thái</label>
+        <div className="space-y-3">
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="completed"
+              checked={statusFilters.completed}
+              onCheckedChange={(checked) => 
+                setStatusFilters(prev => ({ ...prev, completed: checked as boolean }))
+              }
+            />
+            <label htmlFor="completed" className="text-sm">Hoàn thành</label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="canceled"
+              checked={statusFilters.canceled}
+              onCheckedChange={(checked) => 
+                setStatusFilters(prev => ({ ...prev, canceled: checked as boolean }))
+              }
+            />
+            <label htmlFor="canceled" className="text-sm">Đã hủy</label>
+          </div>
+        </div>
+      </div>
+
+      {/* Payment Method */}
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-gray-700">Phương thức thanh toán</label>
+        <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+          <SelectTrigger className="text-sm">
+            <SelectValue placeholder="Chọn phương thức thanh toán" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="cash">Tiền mặt</SelectItem>
+            <SelectItem value="card">Thẻ</SelectItem>
+            <SelectItem value="transfer">Chuyển khoản</SelectItem>
+            <SelectItem value="points">Điểm</SelectItem>
+            <SelectItem value="voucher">Voucher</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Creator */}
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-gray-700">Người tạo</label>
+        <Select value={creator} onValueChange={setCreator}>
+          <SelectTrigger className="text-sm">
+            <SelectValue placeholder="Chọn người tạo" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="user1">Nguyễn Văn A</SelectItem>
+            <SelectItem value="user2">Trần Thị B</SelectItem>
+            <SelectItem value="user3">Lê Văn C</SelectItem>
+            <SelectItem value="user4">Phạm Thị D</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Seller */}
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-gray-700">Người bán</label>
+        <Select value={seller} onValueChange={setSeller}>
+          <SelectTrigger className="text-sm">
+            <SelectValue placeholder="Chọn người bán" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="seller1">Lê Văn C</SelectItem>
+            <SelectItem value="seller2">Phạm Thị D</SelectItem>
+            <SelectItem value="seller3">Hoàng Văn E</SelectItem>
+            <SelectItem value="seller4">Ngô Thị F</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Price List */}
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-gray-700">Bảng giá</label>
+        <Select value={priceList} onValueChange={setPriceList}>
+          <SelectTrigger className="text-sm">
+            <SelectValue placeholder="Chọn bảng giá" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="standard">Bảng giá chuẩn</SelectItem>
+            <SelectItem value="vip">Bảng giá VIP</SelectItem>
+            <SelectItem value="wholesale">Bảng giá sỉ</SelectItem>
+            <SelectItem value="retail">Bảng giá lẻ</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Sales Channel */}
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-gray-700">Kênh bán</label>
+        <div className="space-y-2">
+          <Select value={salesChannel} onValueChange={setSalesChannel}>
+            <SelectTrigger className="text-sm">
+              <SelectValue placeholder="Chọn kênh bán" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="store">Cửa hàng</SelectItem>
+              <SelectItem value="online">Online</SelectItem>
+              <SelectItem value="phone">Điện thoại</SelectItem>
+              <SelectItem value="social">Mạng xã hội</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="link" className="text-sm p-0 h-auto text-blue-600 hover:text-blue-800">
+            Tạo mới
+          </Button>
+        </div>
+      </div>
+
+      {/* Mobile Action Buttons */}
+      {isMobile && (
+        <div className="flex space-x-3 pt-4 border-t">
+          <Button variant="outline" className="flex-1" onClick={clearAllFilters}>
+            Xóa tất cả
+          </Button>
+          <Button className="flex-1 bg-blue-600 hover:bg-blue-700" onClick={applyFilters}>
+            Áp dụng
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -183,276 +486,13 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
       </div>
 
       <div className="flex">
-        {/* Left Sidebar - Filters */}
-        <div className="w-80 bg-white border-r p-6 space-y-6">
-          <h3 className="font-semibold text-gray-900 text-lg">Bộ lọc</h3>
-          
-          {/* Branch Selection */}
-          <div className="space-y-3">
-            <label className="text-sm font-medium text-gray-700">Chi nhánh</label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full justify-start">
-                  <span className="text-gray-500">Chọn chi nhánh</span>
-                  <ChevronDown className="ml-auto h-4 w-4" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80 p-3">
-                <div className="space-y-2">
-                  {branchOptions.map((branch) => (
-                    <div key={branch.value} className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={branch.value}
-                        checked={selectedBranches.includes(branch.value)}
-                        onCheckedChange={() => handleBranchSelect(branch.value)}
-                      />
-                      <label htmlFor={branch.value} className="text-sm cursor-pointer">
-                        {branch.label}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
-            
-            {/* Selected branch tags */}
-            {selectedBranches.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {getBranchDisplayTags().map((tag) => (
-                  <Badge key={tag.value} variant="secondary" className="text-xs">
-                    {tag.label}
-                    {tag.value !== 'more' && (
-                      <X 
-                        className="ml-1 h-3 w-3 cursor-pointer" 
-                        onClick={() => removeBranch(tag.value)}
-                      />
-                    )}
-                  </Badge>
-                ))}
-              </div>
-            )}
+        {/* Desktop Filter Sidebar */}
+        {!isMobile && (
+          <div className="w-80 max-w-80 bg-white border-r p-6 space-y-6">
+            <h3 className="font-semibold text-gray-900 text-lg">Bộ lọc</h3>
+            <FilterContent />
           </div>
-
-          {/* Time Period */}
-          <div className="space-y-3">
-            <label className="text-sm font-medium text-gray-700">Thời gian</label>
-            <RadioGroup value={timeFilterType} onValueChange={(value: 'quick' | 'custom') => setTimeFilterType(value)}>
-              <div className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="quick" id="quick" />
-                  <label htmlFor="quick" className="text-sm">Chọn nhanh</label>
-                </div>
-                
-                {timeFilterType === 'quick' && (
-                  <div className="ml-6">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" size="sm" className="w-full justify-start">
-                          <span className="text-xs">
-                            {quickTimeOptions.month.find(opt => opt.value === selectedQuickTime)?.label || 'Tháng này'}
-                          </span>
-                          <ChevronDown className="ml-auto h-3 w-3" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-64 p-0">
-                        <Tabs defaultValue="month" className="w-full">
-                          <TabsList className="grid w-full grid-cols-5 text-xs h-8">
-                            <TabsTrigger value="day" className="text-xs">Ngày</TabsTrigger>
-                            <TabsTrigger value="week" className="text-xs">Tuần</TabsTrigger>
-                            <TabsTrigger value="month" className="text-xs">Tháng</TabsTrigger>
-                            <TabsTrigger value="quarter" className="text-xs">Quý</TabsTrigger>
-                            <TabsTrigger value="year" className="text-xs">Năm</TabsTrigger>
-                          </TabsList>
-                          
-                          {Object.entries(quickTimeOptions).map(([key, options]) => (
-                            <TabsContent key={key} value={key} className="p-2 space-y-1">
-                              {options.map((option) => (
-                                <Button
-                                  key={option.value}
-                                  variant={selectedQuickTime === option.value ? "default" : "ghost"}
-                                  size="sm"
-                                  className="w-full justify-start text-xs h-8"
-                                  onClick={() => setSelectedQuickTime(option.value)}
-                                >
-                                  {option.label}
-                                </Button>
-                              ))}
-                            </TabsContent>
-                          ))}
-                        </Tabs>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                )}
-                
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="custom" id="custom" />
-                  <label htmlFor="custom" className="text-sm">Tùy chỉnh</label>
-                </div>
-                
-                {timeFilterType === 'custom' && (
-                  <div className="ml-6 space-y-2">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button variant="outline" size="sm" className="w-full justify-start">
-                          <Calendar className="mr-2 h-3 w-3" />
-                          <span className="text-xs">
-                            {dateRange.from && dateRange.to 
-                              ? `${dateRange.from.toLocaleDateString('vi-VN')} - ${dateRange.to.toLocaleDateString('vi-VN')}`
-                              : 'Chọn khoảng thời gian'
-                            }
-                          </span>
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <div className="p-3 space-y-3">
-                          <div className="flex space-x-2">
-                            <CalendarComponent
-                              mode="single"
-                              selected={dateRange.from}
-                              onSelect={(date) => setDateRange(prev => ({ ...prev, from: date }))}
-                              className="rounded-md border"
-                            />
-                            <CalendarComponent
-                              mode="single"
-                              selected={dateRange.to}
-                              onSelect={(date) => setDateRange(prev => ({ ...prev, to: date }))}
-                              className="rounded-md border"
-                            />
-                          </div>
-                          <div className="flex space-x-2">
-                            <Button size="sm" onClick={() => setDateRange({ from: new Date(), to: new Date() })}>
-                              Hôm nay
-                            </Button>
-                            <Button size="sm" variant="outline">
-                              Áp dụng
-                            </Button>
-                            <Button size="sm" variant="ghost">
-                              Hủy
-                            </Button>
-                          </div>
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                )}
-              </div>
-            </RadioGroup>
-          </div>
-
-          {/* Status */}
-          <div className="space-y-3">
-            <label className="text-sm font-medium text-gray-700">Trạng thái</label>
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="completed"
-                  checked={statusFilters.completed}
-                  onCheckedChange={(checked) => 
-                    setStatusFilters(prev => ({ ...prev, completed: checked as boolean }))
-                  }
-                />
-                <label htmlFor="completed" className="text-sm">Hoàn thành</label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="canceled"
-                  checked={statusFilters.canceled}
-                  onCheckedChange={(checked) => 
-                    setStatusFilters(prev => ({ ...prev, canceled: checked as boolean }))
-                  }
-                />
-                <label htmlFor="canceled" className="text-sm">Đã hủy</label>
-              </div>
-            </div>
-          </div>
-
-          {/* Payment Method */}
-          <div className="space-y-3">
-            <label className="text-sm font-medium text-gray-700">Phương thức thanh toán</label>
-            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-              <SelectTrigger>
-                <SelectValue placeholder="Chọn phương thức thanh toán" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="cash">Tiền mặt</SelectItem>
-                <SelectItem value="card">Thẻ</SelectItem>
-                <SelectItem value="transfer">Chuyển khoản</SelectItem>
-                <SelectItem value="points">Điểm</SelectItem>
-                <SelectItem value="voucher">Voucher</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Creator */}
-          <div className="space-y-3">
-            <label className="text-sm font-medium text-gray-700">Người tạo</label>
-            <Select value={creator} onValueChange={setCreator}>
-              <SelectTrigger>
-                <SelectValue placeholder="Chọn người tạo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="user1">Nguyễn Văn A</SelectItem>
-                <SelectItem value="user2">Trần Thị B</SelectItem>
-                <SelectItem value="user3">Lê Văn C</SelectItem>
-                <SelectItem value="user4">Phạm Thị D</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Seller */}
-          <div className="space-y-3">
-            <label className="text-sm font-medium text-gray-700">Người bán</label>
-            <Select value={seller} onValueChange={setSeller}>
-              <SelectTrigger>
-                <SelectValue placeholder="Chọn người bán" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="seller1">Lê Văn C</SelectItem>
-                <SelectItem value="seller2">Phạm Thị D</SelectItem>
-                <SelectItem value="seller3">Hoàng Văn E</SelectItem>
-                <SelectItem value="seller4">Ngô Thị F</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Price List */}
-          <div className="space-y-3">
-            <label className="text-sm font-medium text-gray-700">Bảng giá</label>
-            <Select value={priceList} onValueChange={setPriceList}>
-              <SelectTrigger>
-                <SelectValue placeholder="Chọn bảng giá" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="standard">Bảng giá chuẩn</SelectItem>
-                <SelectItem value="vip">Bảng giá VIP</SelectItem>
-                <SelectItem value="wholesale">Bảng giá sỉ</SelectItem>
-                <SelectItem value="retail">Bảng giá lẻ</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Sales Channel */}
-          <div className="space-y-3">
-            <label className="text-sm font-medium text-gray-700">Kênh bán</label>
-            <div className="space-y-2">
-              <Select value={salesChannel} onValueChange={setSalesChannel}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Chọn kênh bán" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="store">Cửa hàng</SelectItem>
-                  <SelectItem value="online">Online</SelectItem>
-                  <SelectItem value="phone">Điện thoại</SelectItem>
-                  <SelectItem value="social">Mạng xã hội</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button variant="link" className="text-sm p-0 h-auto text-blue-600 hover:text-blue-800">
-                Tạo mới
-              </Button>
-            </div>
-          </div>
-        </div>
+        )}
 
         {/* Main Content */}
         <div className="flex-1 p-6">
@@ -469,10 +509,31 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
                     className="pl-10"
                   />
                 </div>
-                <Button variant="outline" size="sm">
-                  <Filter className="h-4 w-4 mr-2" />
-                  Bộ lọc
-                </Button>
+                
+                {/* Mobile Filter Button */}
+                {isMobile ? (
+                  <Drawer open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                    <DrawerTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Filter className="h-4 w-4 mr-2" />
+                        Bộ lọc
+                      </Button>
+                    </DrawerTrigger>
+                    <DrawerContent className="h-[85vh]">
+                      <DrawerHeader>
+                        <DrawerTitle>Bộ lọc</DrawerTitle>
+                      </DrawerHeader>
+                      <div className="px-4 pb-4 overflow-auto">
+                        <FilterContent />
+                      </div>
+                    </DrawerContent>
+                  </Drawer>
+                ) : (
+                  <Button variant="outline" size="sm">
+                    <Filter className="h-4 w-4 mr-2" />
+                    Bộ lọc
+                  </Button>
+                )}
               </div>
               <Button className="bg-blue-600 hover:bg-blue-700">
                 <Plus className="h-4 w-4 mr-2" />
@@ -481,7 +542,7 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
             </div>
 
             {/* Summary Row */}
-            <div className="grid grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
               <div className="text-center">
                 <div className="text-sm text-gray-600">Tổng doanh thu</div>
                 <div className="font-semibold text-lg">{formatCurrency(totalSales)}</div>
@@ -502,7 +563,7 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
           </div>
 
           {/* Sales Table */}
-          <div className="bg-white rounded-lg border">
+          <div className="bg-white rounded-lg border overflow-auto">
             <Table>
               <TableHeader>
                 <TableRow>
