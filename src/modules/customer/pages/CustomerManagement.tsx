@@ -21,7 +21,9 @@ import {
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
-  Calendar
+  Calendar,
+  Menu,
+  X
 } from 'lucide-react';
 
 const mockCustomers = [
@@ -202,6 +204,7 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(15);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Column visibility state
   const [columns, setColumns] = useState<ColumnConfig[]>([
@@ -333,7 +336,7 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <Button 
@@ -345,15 +348,15 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
               <ArrowLeft className="w-4 h-4 mr-2" />
               Quay lại
             </Button>
-            <h1 className="text-2xl font-bold text-gray-900">Khách hàng</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Khách hàng</h1>
           </div>
           
-          <div className="flex items-center space-x-3">
-            <Button variant="outline" size="sm">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <Button variant="outline" size="sm" className="hidden sm:flex">
               <Upload className="w-4 h-4 mr-2" />
               Import file
             </Button>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="hidden sm:flex">
               <Download className="w-4 h-4 mr-2" />
               Gửi tin nhắn
             </Button>
@@ -361,21 +364,45 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
               <Plus className="w-4 h-4 mr-2" />
               Khách hàng
             </Button>
-            <ColumnVisibilityFilter 
-              columns={columns}
-              onColumnToggle={handleColumnToggle}
-            />
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" className="sm:hidden" onClick={() => setSidebarOpen(true)}>
+              <Menu className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="sm" className="hidden sm:flex">
               <MoreHorizontal className="w-4 h-4" />
             </Button>
           </div>
         </div>
       </div>
 
-      <div className="flex">
+      <div className="flex relative">
+        {/* Mobile Sidebar Overlay */}
+        {sidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-40 sm:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
         {/* Left Sidebar Filters */}
-        <div className="w-64 bg-white border-r border-gray-200 min-h-screen">
+        <div className={`
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+          sm:translate-x-0 
+          fixed sm:relative 
+          z-50 sm:z-auto
+          w-64 sm:w-64 lg:w-72
+          bg-white border-r border-gray-200 
+          min-h-screen 
+          transition-transform duration-300 ease-in-out
+        `}>
           <div className="p-4">
+            {/* Mobile close button */}
+            <div className="flex justify-between items-center mb-4 sm:hidden">
+              <h3 className="font-semibold text-gray-900">Bộ lọc</h3>
+              <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(false)}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+
             <div className="space-y-6">
               {/* Overview */}
               <div>
@@ -384,14 +411,14 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Giá trị</span>
                   </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center space-x-2">
-                      <input type="text" placeholder="Từ" className="flex-1 px-2 py-1 text-xs border rounded" />
-                      <input type="text" placeholder="Nhập giá trị" className="flex-1 px-2 py-1 text-xs border rounded" />
+                  <div className="space-y-2">
+                    <div className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2">
+                      <input type="text" placeholder="Từ" className="w-full sm:flex-1 px-2 py-1 text-xs border rounded" />
+                      <input type="text" placeholder="Nhập giá trị" className="w-full sm:flex-1 px-2 py-1 text-xs border rounded" />
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <input type="text" placeholder="Tới" className="flex-1 px-2 py-1 text-xs border rounded" />
-                      <input type="text" placeholder="Nhập giá trị" className="flex-1 px-2 py-1 text-xs border rounded" />
+                    <div className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2">
+                      <input type="text" placeholder="Tới" className="w-full sm:flex-1 px-2 py-1 text-xs border rounded" />
+                      <input type="text" placeholder="Nhập giá trị" className="w-full sm:flex-1 px-2 py-1 text-xs border rounded" />
                     </div>
                   </div>
                 </div>
@@ -417,13 +444,13 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
               <div>
                 <h3 className="font-semibold text-gray-900 mb-3">Nợ hiện tại</h3>
                 <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <input type="text" placeholder="Từ" className="flex-1 px-2 py-1 text-xs border rounded" />
-                    <input type="text" placeholder="Nhập giá trị" className="flex-1 px-2 py-1 text-xs border rounded" />
+                  <div className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2">
+                    <input type="text" placeholder="Từ" className="w-full sm:flex-1 px-2 py-1 text-xs border rounded" />
+                    <input type="text" placeholder="Nhập giá trị" className="w-full sm:flex-1 px-2 py-1 text-xs border rounded" />
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <input type="text" placeholder="Tới" className="flex-1 px-2 py-1 text-xs border rounded" />
-                    <input type="text" placeholder="Nhập giá trị" className="flex-1 px-2 py-1 text-xs border rounded" />
+                  <div className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2">
+                    <input type="text" placeholder="Tới" className="w-full sm:flex-1 px-2 py-1 text-xs border rounded" />
+                    <input type="text" placeholder="Nhập giá trị" className="w-full sm:flex-1 px-2 py-1 text-xs border rounded" />
                   </div>
                 </div>
               </div>
@@ -432,13 +459,13 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
               <div>
                 <h3 className="font-semibold text-gray-900 mb-3">Số ngày nợ</h3>
                 <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <input type="text" placeholder="Từ" className="flex-1 px-2 py-1 text-xs border rounded" />
-                    <input type="text" placeholder="Nhập giá trị" className="flex-1 px-2 py-1 text-xs border rounded" />
+                  <div className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2">
+                    <input type="text" placeholder="Từ" className="w-full sm:flex-1 px-2 py-1 text-xs border rounded" />
+                    <input type="text" placeholder="Nhập giá trị" className="w-full sm:flex-1 px-2 py-1 text-xs border rounded" />
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <input type="text" placeholder="Tới" className="flex-1 px-2 py-1 text-xs border rounded" />
-                    <input type="text" placeholder="Nhập giá trị" className="flex-1 px-2 py-1 text-xs border rounded" />
+                  <div className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2">
+                    <input type="text" placeholder="Tới" className="w-full sm:flex-1 px-2 py-1 text-xs border rounded" />
+                    <input type="text" placeholder="Nhập giá trị" className="w-full sm:flex-1 px-2 py-1 text-xs border rounded" />
                   </div>
                 </div>
               </div>
@@ -447,13 +474,13 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
               <div>
                 <h3 className="font-semibold text-gray-900 mb-3">Điểm hiện tại</h3>
                 <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <input type="text" placeholder="Từ" className="flex-1 px-2 py-1 text-xs border rounded" />
-                    <input type="text" placeholder="Nhập giá trị" className="flex-1 px-2 py-1 text-xs border rounded" />
+                  <div className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2">
+                    <input type="text" placeholder="Từ" className="w-full sm:flex-1 px-2 py-1 text-xs border rounded" />
+                    <input type="text" placeholder="Nhập giá trị" className="w-full sm:flex-1 px-2 py-1 text-xs border rounded" />
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <input type="text" placeholder="Tới" className="flex-1 px-2 py-1 text-xs border rounded" />
-                    <input type="text" placeholder="Nhập giá trị" className="flex-1 px-2 py-1 text-xs border rounded" />
+                  <div className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2">
+                    <input type="text" placeholder="Tới" className="w-full sm:flex-1 px-2 py-1 text-xs border rounded" />
+                    <input type="text" placeholder="Nhập giá trị" className="w-full sm:flex-1 px-2 py-1 text-xs border rounded" />
                   </div>
                 </div>
               </div>
@@ -486,12 +513,12 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 p-6">
+        <div className="flex-1 p-4 sm:p-6">
           {/* Search and Filters */}
           <div className="bg-white rounded-lg border border-gray-200 mb-6">
             <div className="p-4">
-              <div className="flex items-center space-x-4">
-                <div className="flex-1 relative">
+              <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                <div className="flex-1 relative w-full">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <Input
                     placeholder="Theo mã, tên, số điện thoại"
@@ -500,10 +527,16 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
                     className="pl-10"
                   />
                 </div>
-                <Button variant="outline" size="sm">
-                  <Filter className="w-4 h-4 mr-2" />
-                  Lọc
-                </Button>
+                <div className="flex items-center space-x-2">
+                  <Button variant="outline" size="sm">
+                    <Filter className="w-4 h-4 mr-2" />
+                    Lọc
+                  </Button>
+                  <ColumnVisibilityFilter 
+                    columns={columns}
+                    onColumnToggle={handleColumnToggle}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -511,7 +544,7 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
           {/* Stats Summary */}
           <div className="bg-white rounded-lg border border-gray-200 mb-6 p-4">
             <div className="text-right">
-              <span className="text-2xl font-bold text-gray-900">{totalDebt}</span>
+              <span className="text-xl sm:text-2xl font-bold text-gray-900">{totalDebt}</span>
             </div>
           </div>
 
@@ -528,7 +561,9 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
                       />
                     </TableHead>
                     {visibleColumns.map((column) => (
-                      <TableHead key={column.key}>{column.label}</TableHead>
+                      <TableHead key={column.key} className="whitespace-nowrap">
+                        {column.label}
+                      </TableHead>
                     ))}
                   </TableRow>
                 </TableHeader>
@@ -542,7 +577,7 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
                         />
                       </TableCell>
                       {visibleColumns.map((column) => (
-                        <TableCell key={column.key}>
+                        <TableCell key={column.key} className="whitespace-nowrap">
                           {renderCellContent(customer, column.key)}
                         </TableCell>
                       ))}
@@ -553,7 +588,7 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 border-t border-gray-200 space-y-3 sm:space-y-0">
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-600">Hiển thị</span>
                 <Select value={itemsPerPage.toString()} onValueChange={(value) => setItemsPerPage(Number(value))}>
@@ -570,7 +605,7 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
                 <span className="text-sm text-gray-600">dòng</span>
               </div>
 
-              <div className="flex items-center space-x-4">
+              <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4">
                 <span className="text-sm text-gray-600">
                   {startIndex + 1} - {Math.min(startIndex + itemsPerPage, filteredCustomers.length)} trong {totalCustomers.toLocaleString()} khách hàng
                 </span>
