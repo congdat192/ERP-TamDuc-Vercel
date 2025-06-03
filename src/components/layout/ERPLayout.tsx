@@ -1,10 +1,8 @@
 
 import { useState } from 'react';
-import { UnifiedSidebar } from './UnifiedSidebar';
+import { ERPMainSidebar } from './ERPMainSidebar';
 import { Header } from './Header';
 import { User, ERPModule } from '@/types/auth';
-import { MODULE_PERMISSIONS } from '@/constants/permissions';
-import { getIconComponent } from '@/lib/icons';
 
 interface ERPLayoutProps {
   currentUser: User;
@@ -21,6 +19,8 @@ export function ERPLayout({
   onLogout,
   children
 }: ERPLayoutProps) {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
   const getPageTitle = () => {
     if (currentModule === 'dashboard') {
       return 'Tổng Quan ERP';
@@ -53,42 +53,19 @@ export function ERPLayout({
     );
   }
 
-  // For customer module, don't render the main sidebar since CustomerModule has its own layout  
-  if (currentModule === 'customers') {
-    return (
-      <div className="min-h-screen bg-gray-50 w-full">
-        {children}
-      </div>
-    );
-  }
-
-  const allowedModules = MODULE_PERMISSIONS.filter(module => 
-    currentUser.permissions.modules.includes(module.module)
-  );
-
-  const sidebarItems = allowedModules.map((module) => {
-    const IconComponent = getIconComponent(module.icon);
-    return {
-      id: module.module,
-      label: module.label,
-      icon: IconComponent,
-      onClick: () => onModuleChange(module.module),
-      isActive: currentModule === module.module
-    };
-  });
-
   return (
     <div className="min-h-screen bg-gray-50 flex w-full">
-      <UnifiedSidebar
-        title="ERP System"
-        subtitle="Hệ thống quản lý tổng hợp"
-        items={sidebarItems}
+      <ERPMainSidebar 
+        currentModule={currentModule}
+        onModuleChange={onModuleChange}
+        isOpen={sidebarOpen}
+        onToggle={() => setSidebarOpen(!sidebarOpen)}
         currentUser={currentUser}
       />
       
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
-          onSidebarToggle={() => {}} // Not used with unified sidebar
+          onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
           currentPage={getPageTitle()}
           onPageChange={() => {}} // Not used in ERP mode
           onLogout={onLogout}

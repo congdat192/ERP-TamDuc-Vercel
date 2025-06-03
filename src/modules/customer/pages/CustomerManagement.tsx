@@ -9,7 +9,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ColumnVisibilityFilter, ColumnConfig } from '../components/ColumnVisibilityFilter';
-import { UnifiedSidebar } from '@/components/layout/UnifiedSidebar';
 import { 
   Search, 
   Filter,
@@ -19,14 +18,12 @@ import {
   Trash2,
   Download,
   Upload,
+  ArrowLeft,
   ChevronLeft,
   ChevronRight,
   Calendar,
-  Users,
-  UserPlus,
-  FileText,
-  BarChart3,
-  Settings
+  Menu,
+  X
 } from 'lucide-react';
 
 const mockCustomers = [
@@ -207,7 +204,7 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(15);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [currentView, setCurrentView] = useState('list');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Column visibility state
   const [columns, setColumns] = useState<ColumnConfig[]>([
@@ -230,44 +227,6 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
     { key: 'totalDebt', label: 'Tổng bán trừ trả hàng', visible: false },
     { key: 'status', label: 'Trạng thái', visible: false }
   ]);
-
-  const sidebarItems = [
-    {
-      id: 'list',
-      label: 'Danh Sách Khách Hàng',
-      icon: Users,
-      onClick: () => setCurrentView('list'),
-      isActive: currentView === 'list'
-    },
-    {
-      id: 'add',
-      label: 'Thêm Khách Hàng',
-      icon: UserPlus,
-      onClick: () => setCurrentView('add'),
-      isActive: currentView === 'add'
-    },
-    {
-      id: 'import',
-      label: 'Import Khách Hàng',
-      icon: Upload,
-      onClick: () => setCurrentView('import'),
-      isActive: currentView === 'import'
-    },
-    {
-      id: 'reports',
-      label: 'Báo Cáo',
-      icon: BarChart3,
-      onClick: () => setCurrentView('reports'),
-      isActive: currentView === 'reports'
-    },
-    {
-      id: 'settings',
-      label: 'Cài Đặt',
-      icon: Settings,
-      onClick: () => setCurrentView('settings'),
-      isActive: currentView === 'settings'
-    }
-  ];
 
   const filteredCustomers = mockCustomers.filter(customer => {
     const matchesSearch = 
@@ -374,197 +333,317 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
   const totalDebt = '100,717,794';
   const visibleColumns = columns.filter(col => col.visible);
 
-  const renderMainContent = () => {
-    if (currentView !== 'list') {
-      return (
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <p className="text-gray-500 mb-4">Tính năng đang phát triển</p>
-            <Button onClick={() => setCurrentView('list')}>Quay lại danh sách</Button>
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <>
-        {/* Search and Filters */}
-        <div className="bg-white rounded-lg border border-gray-200 mb-6">
-          <div className="p-4">
-            <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4">
-              <div className="flex-1 relative w-full">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder="Theo mã, tên, số điện thoại"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <div className="flex items-center space-x-2">
-                <Button variant="outline" size="sm">
-                  <Filter className="w-4 h-4 mr-2" />
-                  Lọc
-                </Button>
-                <ColumnVisibilityFilter 
-                  columns={columns}
-                  onColumnToggle={handleColumnToggle}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats Summary */}
-        <div className="bg-white rounded-lg border border-gray-200 mb-6 p-4">
-          <div className="text-right">
-            <span className="text-xl sm:text-2xl font-bold text-gray-900">{totalDebt}</span>
-          </div>
-        </div>
-
-        {/* Customer Table */}
-        <div className="bg-white rounded-lg border border-gray-200">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-gray-50">
-                  <TableHead className="w-12">
-                    <Checkbox 
-                      checked={selectedCustomers.length === paginatedCustomers.length && paginatedCustomers.length > 0}
-                      onCheckedChange={handleSelectAll}
-                    />
-                  </TableHead>
-                  {visibleColumns.map((column) => (
-                    <TableHead key={column.key} className="whitespace-nowrap">
-                      {column.label}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedCustomers.map((customer) => (
-                  <TableRow key={customer.id} className="hover:bg-gray-50">
-                    <TableCell>
-                      <Checkbox 
-                        checked={selectedCustomers.includes(customer.id)}
-                        onCheckedChange={(checked) => handleSelectCustomer(customer.id, checked as boolean)}
-                      />
-                    </TableCell>
-                    {visibleColumns.map((column) => (
-                      <TableCell key={column.key} className="whitespace-nowrap">
-                        {renderCellContent(customer, column.key)}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-
-          {/* Pagination */}
-          <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 border-t border-gray-200 space-y-3 sm:space-y-0">
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-600">Hiển thị</span>
-              <Select value={itemsPerPage.toString()} onValueChange={(value) => setItemsPerPage(Number(value))}>
-                <SelectTrigger className="w-20 h-8">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="15">15</SelectItem>
-                  <SelectItem value="25">25</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                  <SelectItem value="100">100</SelectItem>
-                </SelectContent>
-              </Select>
-              <span className="text-sm text-gray-600">dòng</span>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4">
-              <span className="text-sm text-gray-600">
-                {startIndex + 1} - {Math.min(startIndex + itemsPerPage, filteredCustomers.length)} trong {totalCustomers.toLocaleString()} khách hàng
-              </span>
-              
-              <div className="flex items-center space-x-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                
-                <div className="flex items-center space-x-1">
-                  <Input
-                    type="number"
-                    min={1}
-                    max={totalPages}
-                    value={currentPage}
-                    onChange={(e) => setCurrentPage(Number(e.target.value))}
-                    className="w-16 h-8 text-center"
-                  />
-                </div>
-                
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </>
-    );
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 flex w-full">
-      <UnifiedSidebar
-        title="Khách Hàng"
-        subtitle="Quản lý khách hàng"
-        items={sidebarItems}
-        currentUser={currentUser}
-        onBackToModules={onBackToModules}
-      />
-      
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
-                {sidebarItems.find(item => item.isActive)?.label || 'Khách hàng'}
-              </h1>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={onBackToModules}
+              className="text-gray-600 hover:text-gray-900"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Quay lại
+            </Button>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Khách hàng</h1>
+          </div>
+          
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <Button variant="outline" size="sm" className="hidden sm:flex">
+              <Upload className="w-4 h-4 mr-2" />
+              Import file
+            </Button>
+            <Button variant="outline" size="sm" className="hidden sm:flex">
+              <Download className="w-4 h-4 mr-2" />
+              Gửi tin nhắn
+            </Button>
+            <Button size="sm">
+              <Plus className="w-4 h-4 mr-2" />
+              Khách hàng
+            </Button>
+            <Button variant="ghost" size="sm" className="sm:hidden" onClick={() => setSidebarOpen(true)}>
+              <Menu className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="sm" className="hidden sm:flex">
+              <MoreHorizontal className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex relative">
+        {/* Mobile Sidebar Overlay */}
+        {sidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-40 sm:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
+        {/* Left Sidebar Filters */}
+        <div className={`
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+          sm:translate-x-0 
+          fixed sm:relative 
+          z-50 sm:z-auto
+          w-64 sm:w-64 lg:w-72
+          bg-white border-r border-gray-200 
+          min-h-screen 
+          transition-transform duration-300 ease-in-out
+        `}>
+          <div className="p-4">
+            {/* Mobile close button */}
+            <div className="flex justify-between items-center mb-4 sm:hidden">
+              <h3 className="font-semibold text-gray-900">Bộ lọc</h3>
+              <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(false)}>
+                <X className="w-4 h-4" />
+              </Button>
             </div>
-            
-            <div className="flex items-center space-x-2 sm:space-x-3">
-              <Button variant="outline" size="sm" className="hidden sm:flex">
-                <Upload className="w-4 h-4 mr-2" />
-                Import file
-              </Button>
-              <Button variant="outline" size="sm" className="hidden sm:flex">
-                <Download className="w-4 h-4 mr-2" />
-                Gửi tin nhắn
-              </Button>
-              <Button size="sm">
-                <Plus className="w-4 h-4 mr-2" />
-                Khách hàng
-              </Button>
-              <Button variant="ghost" size="sm" className="hidden sm:flex">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
+
+            <div className="space-y-6">
+              {/* Overview */}
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-3">Tổng bán</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Giá trị</span>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2">
+                      <input type="text" placeholder="Từ" className="w-full sm:flex-1 px-2 py-1 text-xs border rounded" />
+                      <input type="text" placeholder="Nhập giá trị" className="w-full sm:flex-1 px-2 py-1 text-xs border rounded" />
+                    </div>
+                    <div className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2">
+                      <input type="text" placeholder="Tới" className="w-full sm:flex-1 px-2 py-1 text-xs border rounded" />
+                      <input type="text" placeholder="Nhập giá trị" className="w-full sm:flex-1 px-2 py-1 text-xs border rounded" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Time Period */}
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-3">Thời gian</h3>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
+                    <span className="text-sm">Toàn thời gian</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-gray-300 rounded-full"></div>
+                    <span className="text-sm">Tùy chỉnh</span>
+                    <Calendar className="w-4 h-4 text-gray-400" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Debt Status */}
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-3">Nợ hiện tại</h3>
+                <div className="space-y-2">
+                  <div className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2">
+                    <input type="text" placeholder="Từ" className="w-full sm:flex-1 px-2 py-1 text-xs border rounded" />
+                    <input type="text" placeholder="Nhập giá trị" className="w-full sm:flex-1 px-2 py-1 text-xs border rounded" />
+                  </div>
+                  <div className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2">
+                    <input type="text" placeholder="Tới" className="w-full sm:flex-1 px-2 py-1 text-xs border rounded" />
+                    <input type="text" placeholder="Nhập giá trị" className="w-full sm:flex-1 px-2 py-1 text-xs border rounded" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Days Overdue */}
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-3">Số ngày nợ</h3>
+                <div className="space-y-2">
+                  <div className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2">
+                    <input type="text" placeholder="Từ" className="w-full sm:flex-1 px-2 py-1 text-xs border rounded" />
+                    <input type="text" placeholder="Nhập giá trị" className="w-full sm:flex-1 px-2 py-1 text-xs border rounded" />
+                  </div>
+                  <div className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2">
+                    <input type="text" placeholder="Tới" className="w-full sm:flex-1 px-2 py-1 text-xs border rounded" />
+                    <input type="text" placeholder="Nhập giá trị" className="w-full sm:flex-1 px-2 py-1 text-xs border rounded" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Transaction Area */}
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-3">Điểm hiện tại</h3>
+                <div className="space-y-2">
+                  <div className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2">
+                    <input type="text" placeholder="Từ" className="w-full sm:flex-1 px-2 py-1 text-xs border rounded" />
+                    <input type="text" placeholder="Nhập giá trị" className="w-full sm:flex-1 px-2 py-1 text-xs border rounded" />
+                  </div>
+                  <div className="flex flex-col sm:flex-row items-center space-y-1 sm:space-y-0 sm:space-x-2">
+                    <input type="text" placeholder="Tới" className="w-full sm:flex-1 px-2 py-1 text-xs border rounded" />
+                    <input type="text" placeholder="Nhập giá trị" className="w-full sm:flex-1 px-2 py-1 text-xs border rounded" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Transaction Zone */}
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-3">Khu vực giao hàng</h3>
+                <select className="w-full px-2 py-1 text-xs border rounded">
+                  <option>Chọn Tỉnh/TP - Quận/Huyện</option>
+                </select>
+              </div>
+
+              {/* Status */}
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-3">Trạng thái</h3>
+                <div className="space-y-2">
+                  <Button variant="default" size="sm" className="w-full justify-start bg-blue-500 text-white">
+                    Tất cả
+                  </Button>
+                  <Button variant="outline" size="sm" className="w-full justify-start">
+                    Đang hoạt động
+                  </Button>
+                  <Button variant="outline" size="sm" className="w-full justify-start">
+                    Ngưng hoạt động
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-auto p-6">
-          {renderMainContent()}
-        </main>
+        <div className="flex-1 p-4 sm:p-6">
+          {/* Search and Filters */}
+          <div className="bg-white rounded-lg border border-gray-200 mb-6">
+            <div className="p-4">
+              <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4">
+                <div className="flex-1 relative w-full">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    placeholder="Theo mã, tên, số điện thoại"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button variant="outline" size="sm">
+                    <Filter className="w-4 h-4 mr-2" />
+                    Lọc
+                  </Button>
+                  <ColumnVisibilityFilter 
+                    columns={columns}
+                    onColumnToggle={handleColumnToggle}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Stats Summary */}
+          <div className="bg-white rounded-lg border border-gray-200 mb-6 p-4">
+            <div className="text-right">
+              <span className="text-xl sm:text-2xl font-bold text-gray-900">{totalDebt}</span>
+            </div>
+          </div>
+
+          {/* Customer Table */}
+          <div className="bg-white rounded-lg border border-gray-200">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50">
+                    <TableHead className="w-12">
+                      <Checkbox 
+                        checked={selectedCustomers.length === paginatedCustomers.length && paginatedCustomers.length > 0}
+                        onCheckedChange={handleSelectAll}
+                      />
+                    </TableHead>
+                    {visibleColumns.map((column) => (
+                      <TableHead key={column.key} className="whitespace-nowrap">
+                        {column.label}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedCustomers.map((customer) => (
+                    <TableRow key={customer.id} className="hover:bg-gray-50">
+                      <TableCell>
+                        <Checkbox 
+                          checked={selectedCustomers.includes(customer.id)}
+                          onCheckedChange={(checked) => handleSelectCustomer(customer.id, checked as boolean)}
+                        />
+                      </TableCell>
+                      {visibleColumns.map((column) => (
+                        <TableCell key={column.key} className="whitespace-nowrap">
+                          {renderCellContent(customer, column.key)}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Pagination */}
+            <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 border-t border-gray-200 space-y-3 sm:space-y-0">
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-600">Hiển thị</span>
+                <Select value={itemsPerPage.toString()} onValueChange={(value) => setItemsPerPage(Number(value))}>
+                  <SelectTrigger className="w-20 h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="15">15</SelectItem>
+                    <SelectItem value="25">25</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
+                  </SelectContent>
+                </Select>
+                <span className="text-sm text-gray-600">dòng</span>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4">
+                <span className="text-sm text-gray-600">
+                  {startIndex + 1} - {Math.min(startIndex + itemsPerPage, filteredCustomers.length)} trong {totalCustomers.toLocaleString()} khách hàng
+                </span>
+                
+                <div className="flex items-center space-x-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  
+                  <div className="flex items-center space-x-1">
+                    <Input
+                      type="number"
+                      min={1}
+                      max={totalPages}
+                      value={currentPage}
+                      onChange={(e) => setCurrentPage(Number(e.target.value))}
+                      className="w-16 h-8 text-center"
+                    />
+                  </div>
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
