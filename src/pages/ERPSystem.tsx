@@ -1,7 +1,7 @@
 
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/components/auth/AuthContext';
-import { LoginPage } from '@/components/pages/LoginPage';
+import { LoginPage } from './LoginPage';
 import { ERPHome } from './ERPHome';
 import { CustomerPage } from './CustomerPage';
 import { SalesPage } from './SalesPage';
