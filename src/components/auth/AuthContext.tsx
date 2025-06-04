@@ -30,7 +30,9 @@ const mockUsers: User[] = [
     emailVerified: true,
     permissions: {
       modules: ['dashboard', 'voucher', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'system-settings', 'user-management', 'audit-log', 'role-permissions'],
-      features: ['create', 'read', 'update', 'delete', 'export', 'import', 'approve', 'manage_users', 'manage_roles', 'view_audit_logs']
+      voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
+      canManageUsers: true,
+      canViewAllVouchers: true
     },
     securitySettings: {
       twoFactorEnabled: true,
@@ -55,7 +57,9 @@ const mockUsers: User[] = [
     emailVerified: true,
     permissions: {
       modules: ['dashboard', 'voucher'],
-      features: ['create', 'read', 'update', 'delete', 'export']
+      voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
+      canManageUsers: false,
+      canViewAllVouchers: true
     },
     securitySettings: {
       twoFactorEnabled: false,
@@ -79,7 +83,9 @@ const mockUsers: User[] = [
     emailVerified: true,
     permissions: {
       modules: ['dashboard', 'customers', 'sales'],
-      features: ['create', 'read', 'update']
+      voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list', 'voucher-leaderboard'],
+      canManageUsers: false,
+      canViewAllVouchers: false
     },
     securitySettings: {
       twoFactorEnabled: false,
@@ -103,7 +109,9 @@ const mockUsers: User[] = [
     emailVerified: false,
     permissions: {
       modules: ['dashboard'],
-      features: ['read']
+      voucherFeatures: [],
+      canManageUsers: false,
+      canViewAllVouchers: false
     },
     securitySettings: {
       twoFactorEnabled: false,
@@ -127,7 +135,9 @@ const mockUsers: User[] = [
     emailVerified: true,
     permissions: {
       modules: ['platform-admin'],
-      features: ['all']
+      voucherFeatures: [],
+      canManageUsers: true,
+      canViewAllVouchers: true
     },
     securitySettings: {
       twoFactorEnabled: true,
