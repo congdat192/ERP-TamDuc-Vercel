@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Filter } from 'lucide-react';
 
 export interface ColumnConfig {
@@ -34,45 +35,47 @@ export function ColumnVisibilityFilter({ columns, onColumnToggle }: ColumnVisibi
       <PopoverContent className="w-96 p-4" align="end">
         <div className="space-y-4">
           <h4 className="font-medium text-sm">Hiển thị cột</h4>
-          <div className="grid grid-cols-2 gap-4">
-            {/* Cột trái */}
-            <div className="space-y-3">
-              {leftColumns.map((column) => (
-                <div key={column.key} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={column.key}
-                    checked={column.visible}
-                    onCheckedChange={() => onColumnToggle(column.key)}
-                  />
-                  <label
-                    htmlFor={column.key}
-                    className="text-sm font-normal cursor-pointer"
-                  >
-                    {column.label}
-                  </label>
-                </div>
-              ))}
+          <ScrollArea className="h-auto max-h-80">
+            <div className="grid grid-cols-2 gap-4 pr-4">
+              {/* Cột trái */}
+              <div className="space-y-3">
+                {leftColumns.map((column) => (
+                  <div key={column.key} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={column.key}
+                      checked={column.visible}
+                      onCheckedChange={() => onColumnToggle(column.key)}
+                    />
+                    <label
+                      htmlFor={column.key}
+                      className="text-sm font-normal cursor-pointer"
+                    >
+                      {column.label}
+                    </label>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Cột phải */}
+              <div className="space-y-3">
+                {rightColumns.map((column) => (
+                  <div key={column.key} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={column.key}
+                      checked={column.visible}
+                      onCheckedChange={() => onColumnToggle(column.key)}
+                    />
+                    <label
+                      htmlFor={column.key}
+                      className="text-sm font-normal cursor-pointer"
+                    >
+                      {column.label}
+                    </label>
+                  </div>
+                ))}
+              </div>
             </div>
-            
-            {/* Cột phải */}
-            <div className="space-y-3">
-              {rightColumns.map((column) => (
-                <div key={column.key} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={column.key}
-                    checked={column.visible}
-                    onCheckedChange={() => onColumnToggle(column.key)}
-                  />
-                  <label
-                    htmlFor={column.key}
-                    className="text-sm font-normal cursor-pointer"
-                  >
-                    {column.label}
-                  </label>
-                </div>
-              ))}
-            </div>
-          </div>
+          </ScrollArea>
         </div>
       </PopoverContent>
     </Popover>

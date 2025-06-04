@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,6 +18,7 @@ import {
   Receipt,
   Download
 } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const customerData = [
   {
@@ -169,29 +169,33 @@ export function CustomerList() {
               </div>
             </div>
             
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-full md:w-48">
-                <SelectValue placeholder="Loại khách hàng" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tất Cả Loại</SelectItem>
-                <SelectItem value="VIP">VIP</SelectItem>
-                <SelectItem value="Premium">Premium</SelectItem>
-                <SelectItem value="Thường">Thường</SelectItem>
-                <SelectItem value="Mới">Mới</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-48">
-                <SelectValue placeholder="Trạng thái" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tất Cả Trạng Thái</SelectItem>
-                <SelectItem value="Hoạt động">Hoạt động</SelectItem>
-                <SelectItem value="Không hoạt động">Không hoạt động</SelectItem>
-              </SelectContent>
-            </Select>
+            <ScrollArea className="w-full md:w-auto">
+              <div className="flex space-x-4 md:space-x-4">
+                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                  <SelectTrigger className="w-48 min-w-48">
+                    <SelectValue placeholder="Loại khách hàng" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tất Cả Loại</SelectItem>
+                    <SelectItem value="VIP">VIP</SelectItem>
+                    <SelectItem value="Premium">Premium</SelectItem>
+                    <SelectItem value="Thường">Thường</SelectItem>
+                    <SelectItem value="Mới">Mới</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-48 min-w-48">
+                    <SelectValue placeholder="Trạng thái" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tất Cả Trạng Thái</SelectItem>
+                    <SelectItem value="Hoạt động">Hoạt động</SelectItem>
+                    <SelectItem value="Không hoạt động">Không hoạt động</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </ScrollArea>
           </div>
         </CardContent>
       </Card>
@@ -261,7 +265,7 @@ export function CustomerList() {
           <CardTitle>Danh Sách Khách Hàng ({filteredCustomers.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
+          <ScrollArea className="w-full">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -341,7 +345,7 @@ export function CustomerList() {
                 ))}
               </TableBody>
             </Table>
-          </div>
+          </ScrollArea>
         </CardContent>
       </Card>
 

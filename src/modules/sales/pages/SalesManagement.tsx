@@ -233,38 +233,42 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-80 p-3">
-            <div className="space-y-2">
-              {branchOptions.map((branch) => (
-                <div key={branch.value} className="flex items-center space-x-2">
-                  <Checkbox 
-                    id={branch.value}
-                    checked={selectedBranches.includes(branch.value)}
-                    onCheckedChange={() => handleBranchSelect(branch.value)}
-                  />
-                  <label htmlFor={branch.value} className="text-sm cursor-pointer">
-                    {branch.label}
-                  </label>
-                </div>
-              ))}
-            </div>
+            <ScrollArea className="h-auto max-h-64">
+              <div className="space-y-2 pr-4">
+                {branchOptions.map((branch) => (
+                  <div key={branch.value} className="flex items-center space-x-2">
+                    <Checkbox 
+                      id={branch.value}
+                      checked={selectedBranches.includes(branch.value)}
+                      onCheckedChange={() => handleBranchSelect(branch.value)}
+                    />
+                    <label htmlFor={branch.value} className="text-sm cursor-pointer">
+                      {branch.label}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
           </PopoverContent>
         </Popover>
         
-        {/* Selected branch tags */}
+        {/* Selected branch tags with horizontal scroll */}
         {selectedBranches.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {getBranchDisplayTags().map((tag) => (
-              <Badge key={tag.value} variant="secondary" className="text-xs">
-                {tag.label}
-                {tag.value !== 'more' && (
-                  <X 
-                    className="ml-1 h-3 w-3 cursor-pointer" 
-                    onClick={() => removeBranch(tag.value)}
-                  />
-                )}
-              </Badge>
-            ))}
-          </div>
+          <ScrollArea className="w-full">
+            <div className="flex space-x-1 pb-2">
+              {getBranchDisplayTags().map((tag) => (
+                <Badge key={tag.value} variant="secondary" className="text-xs whitespace-nowrap">
+                  {tag.label}
+                  {tag.value !== 'more' && (
+                    <X 
+                      className="ml-1 h-3 w-3 cursor-pointer" 
+                      onClick={() => removeBranch(tag.value)}
+                    />
+                  )}
+                </Badge>
+              ))}
+            </div>
+          </ScrollArea>
         )}
       </div>
 
@@ -301,17 +305,21 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
                       
                       {Object.entries(quickTimeOptions).map(([key, options]) => (
                         <TabsContent key={key} value={key} className="p-2 space-y-1">
-                          {options.map((option) => (
-                            <Button
-                              key={option.value}
-                              variant={selectedQuickTime === option.value ? "default" : "ghost"}
-                              size="sm"
-                              className="w-full justify-start text-xs h-8"
-                              onClick={() => setSelectedQuickTime(option.value)}
-                            >
-                              {option.label}
-                            </Button>
-                          ))}
+                          <ScrollArea className="h-auto max-h-40">
+                            <div className="space-y-1 pr-4">
+                              {options.map((option) => (
+                                <Button
+                                  key={option.value}
+                                  variant={selectedQuickTime === option.value ? "default" : "ghost"}
+                                  size="sm"
+                                  className="w-full justify-start text-xs h-8"
+                                  onClick={() => setSelectedQuickTime(option.value)}
+                                >
+                                  {option.label}
+                                </Button>
+                              ))}
+                            </div>
+                          </ScrollArea>
                         </TabsContent>
                       ))}
                     </Tabs>
@@ -378,28 +386,30 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
       {/* Status */}
       <div className="space-y-3">
         <label className="text-sm font-medium text-gray-700">Trạng thái</label>
-        <div className="space-y-3">
-          <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="completed"
-              checked={statusFilters.completed}
-              onCheckedChange={(checked) => 
-                setStatusFilters(prev => ({ ...prev, completed: checked as boolean }))
-              }
-            />
-            <label htmlFor="completed" className="text-sm">Hoàn thành</label>
+        <ScrollArea className="h-auto max-h-32">
+          <div className="space-y-3 pr-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="completed"
+                checked={statusFilters.completed}
+                onCheckedChange={(checked) => 
+                  setStatusFilters(prev => ({ ...prev, completed: checked as boolean }))
+                }
+              />
+              <label htmlFor="completed" className="text-sm">Hoàn thành</label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="canceled"
+                checked={statusFilters.canceled}
+                onCheckedChange={(checked) => 
+                  setStatusFilters(prev => ({ ...prev, canceled: checked as boolean }))
+                }
+              />
+              <label htmlFor="canceled" className="text-sm">Đã hủy</label>
+            </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="canceled"
-              checked={statusFilters.canceled}
-              onCheckedChange={(checked) => 
-                setStatusFilters(prev => ({ ...prev, canceled: checked as boolean }))
-              }
-            />
-            <label htmlFor="canceled" className="text-sm">Đã hủy</label>
-          </div>
-        </div>
+        </ScrollArea>
       </div>
 
       {/* Payment Method */}
@@ -527,7 +537,11 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
         {!isMobile && (
           <div className="w-64 max-w-64 bg-white border-r p-4 space-y-4">
             <h3 className="font-semibold text-gray-900 text-base">Bộ lọc</h3>
-            <FilterContent />
+            <ScrollArea className="h-[calc(100vh-200px)]">
+              <div className="pr-4">
+                <FilterContent />
+              </div>
+            </ScrollArea>
           </div>
         )}
 
@@ -601,63 +615,65 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
 
           {/* Sales Table with dynamic columns */}
           <div className="bg-white rounded-lg border overflow-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {columns.filter(col => col.visible).map((column) => (
-                    <TableHead key={column.key}>
-                      {column.label}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {salesData.map((sale) => (
-                  <TableRow key={sale.id} className="hover:bg-gray-50">
+            <ScrollArea className="w-full">
+              <Table>
+                <TableHeader>
+                  <TableRow>
                     {columns.filter(col => col.visible).map((column) => (
-                      <TableCell key={column.key}>
-                        {column.key === 'invoiceCode' && sale.id}
-                        {column.key === 'datetime' && sale.date}
-                        {column.key === 'returnCode' && (
-                          sale.returnCode ? (
-                            <Badge variant="outline" className="text-orange-600">
-                              {sale.returnCode}
-                            </Badge>
-                          ) : null
-                        )}
-                        {column.key === 'customer' && sale.customer}
-                        {column.key === 'totalAmount' && formatCurrency(sale.totalAmount)}
-                        {column.key === 'discount' && (
-                          <span className="text-red-600">
-                            {sale.discount > 0 ? formatCurrency(sale.discount) : '-'}
-                          </span>
-                        )}
-                        {column.key === 'paidAmount' && (
-                          <span className="text-green-600">
-                            {formatCurrency(sale.paidAmount)}
-                          </span>
-                        )}
-                        {column.key === 'status' && (
-                          <Badge 
-                            variant={sale.status === 'Hoàn thành' ? 'default' : 'destructive'}
-                            className={sale.status === 'Hoàn thành' ? 'bg-green-100 text-green-800' : ''}
-                          >
-                            {sale.status}
-                          </Badge>
-                        )}
-                        {column.key === 'invoiceStatus' && (
-                          <Badge variant="outline">
-                            Chưa có
-                          </Badge>
-                        )}
-                        {/* Add default empty content for other columns */}
-                        {!['invoiceCode', 'datetime', 'returnCode', 'customer', 'totalAmount', 'discount', 'paidAmount', 'status', 'invoiceStatus'].includes(column.key) && '-'}
-                      </TableCell>
+                      <TableHead key={column.key}>
+                        {column.label}
+                      </TableHead>
                     ))}
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {salesData.map((sale) => (
+                    <TableRow key={sale.id} className="hover:bg-gray-50">
+                      {columns.filter(col => col.visible).map((column) => (
+                        <TableCell key={column.key}>
+                          {column.key === 'invoiceCode' && sale.id}
+                          {column.key === 'datetime' && sale.date}
+                          {column.key === 'returnCode' && (
+                            sale.returnCode ? (
+                              <Badge variant="outline" className="text-orange-600">
+                                {sale.returnCode}
+                              </Badge>
+                            ) : null
+                          )}
+                          {column.key === 'customer' && sale.customer}
+                          {column.key === 'totalAmount' && formatCurrency(sale.totalAmount)}
+                          {column.key === 'discount' && (
+                            <span className="text-red-600">
+                              {sale.discount > 0 ? formatCurrency(sale.discount) : '-'}
+                            </span>
+                          )}
+                          {column.key === 'paidAmount' && (
+                            <span className="text-green-600">
+                              {formatCurrency(sale.paidAmount)}
+                            </span>
+                          )}
+                          {column.key === 'status' && (
+                            <Badge 
+                              variant={sale.status === 'Hoàn thành' ? 'default' : 'destructive'}
+                              className={sale.status === 'Hoàn thành' ? 'bg-green-100 text-green-800' : ''}
+                            >
+                              {sale.status}
+                            </Badge>
+                          )}
+                          {column.key === 'invoiceStatus' && (
+                            <Badge variant="outline">
+                              Chưa có
+                            </Badge>
+                          )}
+                          {/* Add default empty content for other columns */}
+                          {!['invoiceCode', 'datetime', 'returnCode', 'customer', 'totalAmount', 'discount', 'paidAmount', 'status', 'invoiceStatus'].includes(column.key) && '-'}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </ScrollArea>
           </div>
         </div>
       </div>
