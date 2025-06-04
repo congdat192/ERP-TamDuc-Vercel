@@ -32,23 +32,24 @@ export function ColumnVisibilityFilter({ columns, onColumnToggle }: ColumnVisibi
           Hiển thị cột
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-96 p-4 bg-white border border-gray-200 shadow-lg z-50" align="end" sideOffset={8}>
+      <PopoverContent className="w-[500px] p-4 bg-white border border-gray-200 shadow-lg z-50" align="end" sideOffset={8}>
         <div className="space-y-4">
           <h4 className="font-medium text-sm">Hiển thị cột</h4>
-          <ScrollArea className="h-auto max-h-96">
-            <div className="grid grid-cols-2 gap-4 pr-4">
+          <ScrollArea className="h-auto max-h-[400px]">
+            <div className="grid grid-cols-2 gap-6 pr-4">
               {/* Cột trái */}
               <div className="space-y-3">
                 {leftColumns.map((column) => (
-                  <div key={column.key} className="flex items-center space-x-2">
+                  <div key={column.key} className="flex items-start space-x-3">
                     <Checkbox
                       id={column.key}
                       checked={column.visible}
                       onCheckedChange={() => onColumnToggle(column.key)}
+                      className="h-4 w-4 mt-0.5 flex-shrink-0"
                     />
                     <label
                       htmlFor={column.key}
-                      className="text-sm font-normal cursor-pointer"
+                      className="text-sm font-normal text-gray-700 cursor-pointer select-none leading-tight flex-1"
                     >
                       {column.label}
                     </label>
@@ -59,15 +60,16 @@ export function ColumnVisibilityFilter({ columns, onColumnToggle }: ColumnVisibi
               {/* Cột phải */}
               <div className="space-y-3">
                 {rightColumns.map((column) => (
-                  <div key={column.key} className="flex items-center space-x-2">
+                  <div key={column.key} className="flex items-start space-x-3">
                     <Checkbox
                       id={column.key}
                       checked={column.visible}
                       onCheckedChange={() => onColumnToggle(column.key)}
+                      className="h-4 w-4 mt-0.5 flex-shrink-0"
                     />
                     <label
                       htmlFor={column.key}
-                      className="text-sm font-normal cursor-pointer"
+                      className="text-sm font-normal text-gray-700 cursor-pointer select-none leading-tight flex-1"
                     >
                       {column.label}
                     </label>
