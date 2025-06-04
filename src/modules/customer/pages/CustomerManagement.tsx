@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -549,46 +550,48 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
             </div>
           </div>
 
-          {/* Customer Table with proper ScrollArea */}
+          {/* Customer Table with ScrollArea */}
           <div className="bg-white rounded-lg border border-gray-200">
-            <ScrollArea className="w-full">
-              <div className="min-w-[1400px]">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-gray-50">
-                      <TableHead className="w-12">
-                        <Checkbox 
-                          checked={selectedCustomers.length === paginatedCustomers.length && paginatedCustomers.length > 0}
-                          onCheckedChange={handleSelectAll}
-                        />
-                      </TableHead>
-                      {visibleColumns.map((column) => (
-                        <TableHead key={column.key} className="whitespace-nowrap min-w-[120px]">
-                          {column.label}
-                        </TableHead>
-                      ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {paginatedCustomers.map((customer) => (
-                      <TableRow key={customer.id} className="hover:bg-gray-50">
-                        <TableCell>
+            <div className="relative">
+              <ScrollArea className="h-[600px] w-full">
+                <div style={{ minWidth: `${visibleColumns.length * 150}px` }}>
+                  <Table>
+                    <TableHeader className="sticky top-0 bg-white z-10">
+                      <TableRow className="bg-gray-50">
+                        <TableHead className="w-12 border-b">
                           <Checkbox 
-                            checked={selectedCustomers.includes(customer.id)}
-                            onCheckedChange={(checked) => handleSelectCustomer(customer.id, checked as boolean)}
+                            checked={selectedCustomers.length === paginatedCustomers.length && paginatedCustomers.length > 0}
+                            onCheckedChange={handleSelectAll}
                           />
-                        </TableCell>
+                        </TableHead>
                         {visibleColumns.map((column) => (
-                          <TableCell key={column.key} className="whitespace-nowrap">
-                            {renderCellContent(customer, column.key)}
-                          </TableCell>
+                          <TableHead key={column.key} className="whitespace-nowrap min-w-[150px] border-b">
+                            {column.label}
+                          </TableHead>
                         ))}
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </ScrollArea>
+                    </TableHeader>
+                    <TableBody>
+                      {paginatedCustomers.map((customer) => (
+                        <TableRow key={customer.id} className="hover:bg-gray-50">
+                          <TableCell>
+                            <Checkbox 
+                              checked={selectedCustomers.includes(customer.id)}
+                              onCheckedChange={(checked) => handleSelectCustomer(customer.id, checked as boolean)}
+                            />
+                          </TableCell>
+                          {visibleColumns.map((column) => (
+                            <TableCell key={column.key} className="whitespace-nowrap min-w-[150px]">
+                              {renderCellContent(customer, column.key)}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </ScrollArea>
+            </div>
 
             {/* Pagination */}
             <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 border-t border-gray-200 space-y-3 sm:space-y-0">

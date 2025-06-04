@@ -612,69 +612,70 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
             </div>
           </div>
 
-          {/* Sales Table with proper ScrollArea */}
+          {/* Sales Table with ScrollArea */}
           <div className="bg-white rounded-lg border">
-            <ScrollArea className="w-full">
-              <div className="min-w-[1200px]">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      {columns.filter(col => col.visible).map((column) => (
-                        <TableHead key={column.key} className="whitespace-nowrap min-w-[120px]">
-                          {column.label}
-                        </TableHead>
-                      ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {salesData.map((sale) => (
-                      <TableRow key={sale.id} className="hover:bg-gray-50">
+            <div className="relative">
+              <ScrollArea className="h-[600px] w-full">
+                <div style={{ minWidth: `${visibleColumns.length * 150}px` }}>
+                  <Table>
+                    <TableHeader className="sticky top-0 bg-white z-10">
+                      <TableRow>
                         {columns.filter(col => col.visible).map((column) => (
-                          <TableCell key={column.key} className="whitespace-nowrap">
-                            {column.key === 'invoiceCode' && sale.id}
-                            {column.key === 'datetime' && sale.date}
-                            {column.key === 'returnCode' && (
-                              sale.returnCode ? (
-                                <Badge variant="outline" className="text-orange-600">
-                                  {sale.returnCode}
-                                </Badge>
-                              ) : null
-                            )}
-                            {column.key === 'customer' && sale.customer}
-                            {column.key === 'totalAmount' && formatCurrency(sale.totalAmount)}
-                            {column.key === 'discount' && (
-                              <span className="text-red-600">
-                                {sale.discount > 0 ? formatCurrency(sale.discount) : '-'}
-                              </span>
-                            )}
-                            {column.key === 'paidAmount' && (
-                              <span className="text-green-600">
-                                {formatCurrency(sale.paidAmount)}
-                              </span>
-                            )}
-                            {column.key === 'status' && (
-                              <Badge 
-                                variant={sale.status === 'Hoàn thành' ? 'default' : 'destructive'}
-                                className={sale.status === 'Hoàn thành' ? 'bg-green-100 text-green-800' : ''}
-                              >
-                                {sale.status}
-                              </Badge>
-                            )}
-                            {column.key === 'invoiceStatus' && (
-                              <Badge variant="outline">
-                                Chưa có
-                              </Badge>
-                            )}
-                            {/* Add default empty content for other columns */}
-                            {!['invoiceCode', 'datetime', 'returnCode', 'customer', 'totalAmount', 'discount', 'paidAmount', 'status', 'invoiceStatus'].includes(column.key) && '-'}
-                          </TableCell>
+                          <TableHead key={column.key} className="whitespace-nowrap min-w-[150px] border-b">
+                            {column.label}
+                          </TableHead>
                         ))}
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </ScrollArea>
+                    </TableHeader>
+                    <TableBody>
+                      {salesData.map((sale) => (
+                        <TableRow key={sale.id} className="hover:bg-gray-50">
+                          {columns.filter(col => col.visible).map((column) => (
+                            <TableCell key={column.key} className="whitespace-nowrap min-w-[150px]">
+                              {column.key === 'invoiceCode' && sale.id}
+                              {column.key === 'datetime' && sale.date}
+                              {column.key === 'returnCode' && (
+                                sale.returnCode ? (
+                                  <Badge variant="outline" className="text-orange-600">
+                                    {sale.returnCode}
+                                  </Badge>
+                                ) : null
+                              )}
+                              {column.key === 'customer' && sale.customer}
+                              {column.key === 'totalAmount' && formatCurrency(sale.totalAmount)}
+                              {column.key === 'discount' && (
+                                <span className="text-red-600">
+                                  {sale.discount > 0 ? formatCurrency(sale.discount) : '-'}
+                                </span>
+                              )}
+                              {column.key === 'paidAmount' && (
+                                <span className="text-green-600">
+                                  {formatCurrency(sale.paidAmount)}
+                                </span>
+                              )}
+                              {column.key === 'status' && (
+                                <Badge 
+                                  variant={sale.status === 'Hoàn thành' ? 'default' : 'destructive'}
+                                  className={sale.status === 'Hoàn thành' ? 'bg-green-100 text-green-800' : ''}
+                                >
+                                  {sale.status}
+                                </Badge>
+                              )}
+                              {column.key === 'invoiceStatus' && (
+                                <Badge variant="outline">
+                                  Chưa có
+                                </Badge>
+                              )}
+                              {!['invoiceCode', 'datetime', 'returnCode', 'customer', 'totalAmount', 'discount', 'paidAmount', 'status', 'invoiceStatus'].includes(column.key) && '-'}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </ScrollArea>
+            </div>
           </div>
         </div>
       </div>
