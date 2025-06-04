@@ -24,15 +24,15 @@ export function ColumnVisibilityFilter({ columns, onColumnToggle }: ColumnVisibi
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline" size="sm" className="h-8 text-sm">
-          Khách hàng
+          Hiển thị cột
           <ChevronDown className="ml-2 h-4 w-4" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-3 bg-white border border-gray-200 shadow-lg" align="end">
-        <div className="space-y-2">
+      <PopoverContent className="w-80 p-4 bg-white border border-gray-200 shadow-lg z-50" align="end" sideOffset={8}>
+        <div className="space-y-3">
           <h4 className="font-medium text-sm mb-3">Hiển thị cột</h4>
-          <ScrollArea className="h-auto max-h-64">
-            <div className="space-y-2 pr-4">
+          <ScrollArea className="h-auto max-h-80">
+            <div className="space-y-3 pr-4">
               {columns.map((column) => (
                 <div key={column.key} className="flex items-center space-x-2">
                   <Checkbox

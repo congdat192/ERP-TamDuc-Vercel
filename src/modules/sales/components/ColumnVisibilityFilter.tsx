@@ -29,13 +29,13 @@ export function ColumnVisibilityFilter({ columns, onColumnToggle }: ColumnVisibi
       <PopoverTrigger asChild>
         <Button variant="outline" size="sm">
           <Filter className="h-4 w-4 mr-2" />
-          Bộ lọc
+          Hiển thị cột
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-96 p-4" align="end">
+      <PopoverContent className="w-96 p-4 bg-white border border-gray-200 shadow-lg z-50" align="end" sideOffset={8}>
         <div className="space-y-4">
           <h4 className="font-medium text-sm">Hiển thị cột</h4>
-          <ScrollArea className="h-auto max-h-80">
+          <ScrollArea className="h-auto max-h-96">
             <div className="grid grid-cols-2 gap-4 pr-4">
               {/* Cột trái */}
               <div className="space-y-3">
