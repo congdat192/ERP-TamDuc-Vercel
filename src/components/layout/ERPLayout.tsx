@@ -22,31 +22,17 @@ export function ERPLayout({
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const getPageTitle = () => {
-    if (currentModule === 'dashboard') {
-      return 'Tổng Quan ERP';
-    }
-    
-    if (currentModule === 'voucher') {
-      return 'Module Voucher';
-    }
-
-    if (currentModule === 'customers') {
-      return 'Module Khách Hàng';
-    }
-
-    if (currentModule === 'sales') {
-      return 'Module Bán Hàng';
-    }
-
     const moduleTitles = {
+      dashboard: 'Tổng Quan ERP',
       customers: 'Khách Hàng',
-      sales: 'Bán Hàng',
-      inventory: 'Kho Hàng',
+      sales: 'Hóa Đơn',
+      inventory: 'Sản Phẩm',
       accounting: 'Kế Toán',
       hr: 'Nhân Sự',
-      voucher: 'Module Voucher',
+      voucher: 'Voucher',
       'system-settings': 'Cài Đặt Hệ Thống',
-      'user-management': 'Quản Lý Người Dùng'
+      'user-management': 'Quản Lý Người Dùng',
+      'security-settings': 'Cài Đặt Bảo Mật'
     };
     
     return moduleTitles[currentModule as keyof typeof moduleTitles] || 'ERP System';
