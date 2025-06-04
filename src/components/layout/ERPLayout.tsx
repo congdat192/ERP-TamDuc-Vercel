@@ -38,15 +38,6 @@ export function ERPLayout({
     return moduleTitles[currentModule as keyof typeof moduleTitles] || 'ERP System';
   };
 
-  // For voucher, customers, and sales modules, don't render the main sidebar since they have their own layout
-  if (currentModule === 'voucher' || currentModule === 'customers' || currentModule === 'sales') {
-    return (
-      <div className="min-h-screen bg-gray-50 w-full">
-        {children}
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 flex w-full">
       <ERPMainSidebar 

@@ -8,13 +8,14 @@ import { SalesPage } from './SalesPage';
 import { VoucherPage } from './VoucherPage';
 import { ERPLayout } from '@/components/layout/ERPLayout';
 import { ERPModule } from '@/types/auth';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export function ERPSystem() {
   const { currentUser, isAuthenticated, logout } = useAuth();
   const [currentModule, setCurrentModule] = useState<ERPModule>('dashboard');
   const navigate = useNavigate();
+  const location = useLocation();
 
   if (!isAuthenticated || !currentUser) {
     return <LoginPage />;
@@ -25,6 +26,24 @@ export function ERPSystem() {
     navigate('/platformadmin');
     return null;
   }
+
+  // Update current module based on current route
+  useEffect(() => {
+    const path = location.pathname;
+    if (path.includes('/Dashboard')) {
+      setCurrentModule('dashboard');
+    } else if (path.includes('/Customers')) {
+      setCurrentModule('customers');
+    } else if (path.includes('/Invoices')) {
+      setCurrentModule('sales');
+    } else if (path.includes('/Voucher')) {
+      setCurrentModule('voucher');
+    } else if (path.includes('/Products')) {
+      setCurrentModule('inventory');
+    } else if (path.includes('/Setting')) {
+      setCurrentModule('system-settings');
+    }
+  }, [location.pathname]);
 
   const handleModuleChange = (module: ERPModule) => {
     setCurrentModule(module);
@@ -55,21 +74,65 @@ export function ERPSystem() {
   };
 
   return (
-    <ERPLayout
-      currentUser={currentUser}
-      currentModule={currentModule}
-      onModuleChange={handleModuleChange}
-      onLogout={logout}
-    >
-      <Routes>
-        <Route path="/" element={<Navigate to="/ERP/Dashboard" replace />} />
-        <Route path="/Dashboard" element={<ERPHome currentUser={currentUser} onModuleChange={handleModuleChange} />} />
-        <Route path="/Customers" element={<CustomerPage onBackToERP={() => navigate('/ERP/Dashboard')} />} />
-        <Route path="/Invoices" element={<SalesPage onBackToERP={() => navigate('/ERP/Dashboard')} />} />
-        <Route path="/Products" element={<div className="p-6"><h1 className="text-2xl font-bold">Quản Lý Sản Phẩm</h1><p>Module đang được phát triển...</p></div>} />
-        <Route path="/Voucher" element={<VoucherPage onBackToERP={() => navigate('/ERP/Dashboard')} />} />
-        <Route path="/Setting" element={<div className="p-6"><h1 className="text-2xl font-bold">Cài Đặt Hệ Thống</h1><p>Module đang được phát triển...</p></div>} />
-      </Routes>
-    </ERPLayout>
+    <Routes>
+      <Route path="/" element={<Navigate to="/ERP/Dashboard" replace />} />
+      <Route 
+        path="/Dashboard" 
+        element={
+          <ERPLayout
+            currentUser={currentUser}
+            currentModule="dashboard"
+            onModuleChange={handleModuleChange}
+            onLogout={logout}
+          >
+            <ERPHome currentUser={currentUser} onModuleChange={handleModuleChange} />
+          </ERPLayout>
+        } 
+      />
+      <Route 
+        path="/Customers" 
+        element={<CustomerPage onBackToERP={() => navigate('/ERP/Dashboard')} />} 
+      />
+      <Route 
+        path="/Invoices" 
+        element={<SalesPage onBackToERP={() => navigate('/ERP/Dashboard')} />} 
+      />
+      <Route 
+        path="/Products" 
+        element={
+          <ERPLayout
+            currentUser={currentUser}
+            currentModule="inventory"
+            onModuleChange={handleModuleChange}
+            onLogout={logout}
+          >
+            <div className="p-6">
+              <h1 className="text-2xl font-bold">Quản Lý Sản Phẩm</h1>
+              <p>Module đang được phát triển...</p>
+            </div>
+          </ERPLayout>
+        } 
+      />
+      <Route 
+        path="/Voucher" 
+        element={<VoucherPage onBackToERP={() => navigate('/ERP/Dashboard')} />} 
+      />
+      <Route 
+        path="/Setting" 
+        element={
+          <ERPLayout
+            currentUser={currentUser}
+            currentModule="system-settings"
+            onModuleChange={handleModuleChange}
+            onLogout={logout}
+          >
+            <div className="p-6">
+              <h1 className="text-2xl font-bold">Cài Đặt Hệ Thống</h1>
+              <p>Module đang được phát triển...</p>
+            </div>
+          </ERPLayout>
+        } 
+      />
+    </Routes>
   );
 }
