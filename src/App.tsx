@@ -9,7 +9,7 @@ import { AuthProvider } from "@/components/auth/AuthContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { ForbiddenPage, ServerErrorPage, NetworkErrorPage } from "./pages/ErrorPages";
-import { LoginPage } from "@/components/pages/LoginPage";
+import { LoginPage } from "./pages/LoginPage";
 import { ERPSystem } from "./pages/ERPSystem";
 import { PlatformAdmin } from "./modules/platform-admin";
 
