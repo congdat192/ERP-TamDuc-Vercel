@@ -550,56 +550,47 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
             </div>
           </div>
 
-          {/* Customer Table with properly positioned horizontal scrollbar */}
+          {/* Customer Table with horizontal scroll attached to table */}
           <div className="bg-white rounded-lg border border-gray-200 mb-6">
-            <div className="relative">
-              <div 
-                className="overflow-auto"
-                style={{ 
-                  height: '600px',
-                  width: '100%'
-                }}
-              >
-                <div style={{ minWidth: `${visibleColumns.length * 150}px` }}>
-                  <Table>
-                    <TableHeader className="sticky top-0 bg-white z-10 border-b">
-                      <TableRow className="bg-gray-50">
-                        <TableHead className="w-12 px-4 py-3">
-                          <Checkbox 
-                            checked={selectedCustomers.length === paginatedCustomers.length && paginatedCustomers.length > 0}
-                            onCheckedChange={handleSelectAll}
-                          />
-                        </TableHead>
-                        {visibleColumns.map((column) => (
-                          <TableHead key={column.key} className="whitespace-nowrap px-4 py-3 text-left font-medium text-gray-500 min-w-[150px]">
-                            {column.label}
-                          </TableHead>
-                        ))}
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {paginatedCustomers.map((customer) => (
-                        <TableRow key={customer.id} className="hover:bg-gray-50 border-b">
-                          <TableCell className="px-4 py-3">
-                            <Checkbox 
-                              checked={selectedCustomers.includes(customer.id)}
-                              onCheckedChange={(checked) => handleSelectCustomer(customer.id, checked as boolean)}
-                            />
-                          </TableCell>
-                          {visibleColumns.map((column) => (
-                            <TableCell key={column.key} className="whitespace-nowrap px-4 py-3 min-w-[150px]">
-                              {renderCellContent(customer, column.key)}
-                            </TableCell>
-                          ))}
-                        </TableRow>
+            {/* Table container with proper horizontal scroll */}
+            <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+              <table className="w-full table-fixed" style={{ minWidth: `${visibleColumns.length * 150}px` }}>
+                <thead className="sticky top-0 bg-white z-10 border-b">
+                  <tr className="bg-gray-50">
+                    <th className="w-12 px-4 py-3 text-left">
+                      <Checkbox 
+                        checked={selectedCustomers.length === paginatedCustomers.length && paginatedCustomers.length > 0}
+                        onCheckedChange={handleSelectAll}
+                      />
+                    </th>
+                    {visibleColumns.map((column) => (
+                      <th key={column.key} className="min-w-[150px] px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">
+                        {column.label}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedCustomers.map((customer) => (
+                    <tr key={customer.id} className="hover:bg-gray-50 border-b">
+                      <td className="px-4 py-3">
+                        <Checkbox 
+                          checked={selectedCustomers.includes(customer.id)}
+                          onCheckedChange={(checked) => handleSelectCustomer(customer.id, checked as boolean)}
+                        />
+                      </td>
+                      {visibleColumns.map((column) => (
+                        <td key={column.key} className="min-w-[150px] px-4 py-3 whitespace-nowrap">
+                          {renderCellContent(customer, column.key)}
+                        </td>
                       ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
 
-            {/* Pagination - outside scroll area but inside table container */}
+            {/* Pagination - outside table container but inside card */}
             <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 border-t border-gray-200 space-y-3 sm:space-y-0">
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-600">Hiển thị</span>

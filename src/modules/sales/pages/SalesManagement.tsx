@@ -615,75 +615,66 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
             </div>
           </div>
 
-          {/* Sales Table with properly positioned horizontal scrollbar */}
+          {/* Sales Table with horizontal scroll attached to table */}
           <div className="bg-white rounded-lg border mb-6">
-            <div className="relative">
-              <div 
-                className="overflow-auto"
-                style={{ 
-                  height: '600px',
-                  width: '100%'
-                }}
-              >
-                <div style={{ minWidth: `${visibleColumns.length * 150}px` }}>
-                  <Table>
-                    <TableHeader className="sticky top-0 bg-white z-10 border-b">
-                      <TableRow>
-                        {visibleColumns.map((column) => (
-                          <TableHead key={column.key} className="whitespace-nowrap px-4 py-3 text-left font-medium text-gray-500 min-w-[150px]">
-                            {column.label}
-                          </TableHead>
-                        ))}
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {salesData.map((sale) => (
-                        <TableRow key={sale.id} className="hover:bg-gray-50 border-b">
-                          {visibleColumns.map((column) => (
-                            <TableCell key={column.key} className="whitespace-nowrap px-4 py-3 min-w-[150px]">
-                              {column.key === 'invoiceCode' && sale.id}
-                              {column.key === 'datetime' && sale.date}
-                              {column.key === 'returnCode' && (
-                                sale.returnCode ? (
-                                  <Badge variant="outline" className="text-orange-600">
-                                    {sale.returnCode}
-                                  </Badge>
-                                ) : null
-                              )}
-                              {column.key === 'customer' && sale.customer}
-                              {column.key === 'totalAmount' && formatCurrency(sale.totalAmount)}
-                              {column.key === 'discount' && (
-                                <span className="text-red-600">
-                                  {sale.discount > 0 ? formatCurrency(sale.discount) : '-'}
-                                </span>
-                              )}
-                              {column.key === 'paidAmount' && (
-                                <span className="text-green-600">
-                                  {formatCurrency(sale.paidAmount)}
-                                </span>
-                              )}
-                              {column.key === 'status' && (
-                                <Badge 
-                                  variant={sale.status === 'Hoàn thành' ? 'default' : 'destructive'}
-                                  className={sale.status === 'Hoàn thành' ? 'bg-green-100 text-green-800' : ''}
-                                >
-                                  {sale.status}
-                                </Badge>
-                              )}
-                              {column.key === 'invoiceStatus' && (
-                                <Badge variant="outline">
-                                  Chưa có
-                                </Badge>
-                              )}
-                              {!['invoiceCode', 'datetime', 'returnCode', 'customer', 'totalAmount', 'discount', 'paidAmount', 'status', 'invoiceStatus'].includes(column.key) && '-'}
-                            </TableCell>
-                          ))}
-                        </TableRow>
+            {/* Table container with proper horizontal scroll */}
+            <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+              <table className="w-full table-fixed" style={{ minWidth: `${visibleColumns.length * 150}px` }}>
+                <thead className="sticky top-0 bg-white z-10 border-b">
+                  <tr>
+                    {visibleColumns.map((column) => (
+                      <th key={column.key} className="min-w-[150px] px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">
+                        {column.label}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {salesData.map((sale) => (
+                    <tr key={sale.id} className="hover:bg-gray-50 border-b">
+                      {visibleColumns.map((column) => (
+                        <td key={column.key} className="min-w-[150px] px-4 py-3 whitespace-nowrap">
+                          {column.key === 'invoiceCode' && sale.id}
+                          {column.key === 'datetime' && sale.date}
+                          {column.key === 'returnCode' && (
+                            sale.returnCode ? (
+                              <Badge variant="outline" className="text-orange-600">
+                                {sale.returnCode}
+                              </Badge>
+                            ) : null
+                          )}
+                          {column.key === 'customer' && sale.customer}
+                          {column.key === 'totalAmount' && formatCurrency(sale.totalAmount)}
+                          {column.key === 'discount' && (
+                            <span className="text-red-600">
+                              {sale.discount > 0 ? formatCurrency(sale.discount) : '-'}
+                            </span>
+                          )}
+                          {column.key === 'paidAmount' && (
+                            <span className="text-green-600">
+                              {formatCurrency(sale.paidAmount)}
+                            </span>
+                          )}
+                          {column.key === 'status' && (
+                            <Badge 
+                              variant={sale.status === 'Hoàn thành' ? 'default' : 'destructive'}
+                              className={sale.status === 'Hoàn thành' ? 'bg-green-100 text-green-800' : ''}
+                            >
+                              {sale.status}
+                            </Badge>
+                          )}
+                          {column.key === 'invoiceStatus' && (
+                            <Badge variant="outline">
+                              Chưa có
+                            </Badge>
+                          )}
+                          {!['invoiceCode', 'datetime', 'returnCode', 'customer', 'totalAmount', 'discount', 'paidAmount', 'status', 'invoiceStatus'].includes(column.key) && '-'}
+                        </td>
                       ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
