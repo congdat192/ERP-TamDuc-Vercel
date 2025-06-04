@@ -3,25 +3,41 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { X, Building2 } from 'lucide-react';
-import { ERPModule, User } from '@/types/auth';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { User } from '@/types/auth';
 import { MODULE_PERMISSIONS } from '@/constants/permissions';
 import { getIconComponent } from '@/lib/icons';
+import { useAuth } from '@/components/auth/AuthContext';
 
 interface ERPMainSidebarProps {
-  currentModule: ERPModule;
-  onModuleChange: (module: ERPModule) => void;
   isOpen: boolean;
   onToggle: () => void;
   currentUser: User;
 }
 
+// Module to route mapping
+const moduleRoutes = {
+  'dashboard': '/erp',
+  'customers': '/customer',
+  'sales': '/sales',
+  'voucher': '/voucher',
+  'inventory': '/warehouse',
+  'accounting': '/accounting',
+  'system-settings': '/admin/settings',
+  'user-management': '/admin/users',
+  'audit-log': '/admin/audit',
+  'role-permissions': '/admin/roles'
+};
+
 export function ERPMainSidebar({ 
-  currentModule, 
-  onModuleChange, 
   isOpen, 
   onToggle, 
   currentUser 
 }: ERPMainSidebarProps) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+
   const allowedModules = MODULE_PERMISSIONS.filter(module => 
     currentUser.permissions.modules.includes(module.module)
   );
@@ -34,6 +50,11 @@ export function ERPMainSidebar({
       case 'custom': return 'Vai Trò Tùy Chỉnh';
       default: return 'Người Dùng';
     }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
   };
 
   return (
@@ -54,12 +75,12 @@ export function ERPMainSidebar({
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-slate-700">
-            <div className="flex items-center space-x-3">
+            <Link to="/erp" className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <Building2 className="w-5 h-5 text-white" />
               </div>
               <h1 className="text-xl font-bold text-white">ERP System</h1>
-            </div>
+            </Link>
             <Button
               variant="ghost"
               size="sm"
@@ -101,29 +122,39 @@ export function ERPMainSidebar({
               
               {allowedModules.map((module) => {
                 const IconComponent = getIconComponent(module.icon);
+                const route = moduleRoutes[module.module as keyof typeof moduleRoutes];
+                const isActive = location.pathname === route;
+                
                 return (
-                  <Button
-                    key={module.module}
-                    variant={currentModule === module.module ? "secondary" : "ghost"}
-                    className={cn(
-                      "w-full justify-start text-left h-11",
-                      currentModule === module.module 
-                        ? "bg-blue-600 text-white hover:bg-blue-700" 
-                        : "text-slate-300 hover:bg-slate-700 hover:text-white"
-                    )}
-                    onClick={() => onModuleChange(module.module)}
-                  >
-                    <IconComponent className="w-5 h-5 mr-3" />
-                    {module.label}
-                  </Button>
+                  <Link key={module.module} to={route}>
+                    <Button
+                      variant={isActive ? "secondary" : "ghost"}
+                      className={cn(
+                        "w-full justify-start text-left h-11",
+                        isActive 
+                          ? "bg-blue-600 text-white hover:bg-blue-700" 
+                          : "text-slate-300 hover:bg-slate-700 hover:text-white"
+                      )}
+                    >
+                      <IconComponent className="w-5 h-5 mr-3" />
+                      {module.label}
+                    </Button>
+                  </Link>
                 );
               })}
             </nav>
           </div>
 
-          {/* Footer */}
+          {/* Logout Section */}
           <div className="p-6 border-t border-slate-700">
-            <div className="text-xs text-slate-400 text-center">
+            <Button 
+              variant="ghost" 
+              className="w-full text-slate-300 hover:bg-slate-700 hover:text-white"
+              onClick={handleLogout}
+            >
+              Đăng Xuất
+            </Button>
+            <div className="text-xs text-slate-400 text-center mt-2">
               ERP v1.0.0 • © 2024 Company
             </div>
           </div>
