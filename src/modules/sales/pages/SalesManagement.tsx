@@ -615,70 +615,68 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
             </div>
           </div>
 
-          {/* Sales Table with ScrollArea */}
+          {/* Sales Table with fixed height ScrollArea */}
           <div className="bg-white rounded-lg border">
-            <div className="relative">
-              <ScrollArea className="h-[600px] w-full">
-                <div style={{ minWidth: `${visibleColumns.length * 150}px` }}>
-                  <Table>
-                    <TableHeader className="sticky top-0 bg-white z-10">
-                      <TableRow>
+            <ScrollArea className="h-[600px]">
+              <div className="min-w-full overflow-x-auto">
+                <Table>
+                  <TableHeader className="sticky top-0 bg-white z-10 border-b">
+                    <TableRow>
+                      {visibleColumns.map((column) => (
+                        <TableHead key={column.key} className="whitespace-nowrap px-4 py-3 text-left font-medium text-gray-500 min-w-[150px]">
+                          {column.label}
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {salesData.map((sale) => (
+                      <TableRow key={sale.id} className="hover:bg-gray-50 border-b">
                         {visibleColumns.map((column) => (
-                          <TableHead key={column.key} className="whitespace-nowrap min-w-[150px] border-b">
-                            {column.label}
-                          </TableHead>
+                          <TableCell key={column.key} className="whitespace-nowrap px-4 py-3 min-w-[150px]">
+                            {column.key === 'invoiceCode' && sale.id}
+                            {column.key === 'datetime' && sale.date}
+                            {column.key === 'returnCode' && (
+                              sale.returnCode ? (
+                                <Badge variant="outline" className="text-orange-600">
+                                  {sale.returnCode}
+                                </Badge>
+                              ) : null
+                            )}
+                            {column.key === 'customer' && sale.customer}
+                            {column.key === 'totalAmount' && formatCurrency(sale.totalAmount)}
+                            {column.key === 'discount' && (
+                              <span className="text-red-600">
+                                {sale.discount > 0 ? formatCurrency(sale.discount) : '-'}
+                              </span>
+                            )}
+                            {column.key === 'paidAmount' && (
+                              <span className="text-green-600">
+                                {formatCurrency(sale.paidAmount)}
+                              </span>
+                            )}
+                            {column.key === 'status' && (
+                              <Badge 
+                                variant={sale.status === 'Hoàn thành' ? 'default' : 'destructive'}
+                                className={sale.status === 'Hoàn thành' ? 'bg-green-100 text-green-800' : ''}
+                              >
+                                {sale.status}
+                              </Badge>
+                            )}
+                            {column.key === 'invoiceStatus' && (
+                              <Badge variant="outline">
+                                Chưa có
+                              </Badge>
+                            )}
+                            {!['invoiceCode', 'datetime', 'returnCode', 'customer', 'totalAmount', 'discount', 'paidAmount', 'status', 'invoiceStatus'].includes(column.key) && '-'}
+                          </TableCell>
                         ))}
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {salesData.map((sale) => (
-                        <TableRow key={sale.id} className="hover:bg-gray-50">
-                          {visibleColumns.map((column) => (
-                            <TableCell key={column.key} className="whitespace-nowrap min-w-[150px]">
-                              {column.key === 'invoiceCode' && sale.id}
-                              {column.key === 'datetime' && sale.date}
-                              {column.key === 'returnCode' && (
-                                sale.returnCode ? (
-                                  <Badge variant="outline" className="text-orange-600">
-                                    {sale.returnCode}
-                                  </Badge>
-                                ) : null
-                              )}
-                              {column.key === 'customer' && sale.customer}
-                              {column.key === 'totalAmount' && formatCurrency(sale.totalAmount)}
-                              {column.key === 'discount' && (
-                                <span className="text-red-600">
-                                  {sale.discount > 0 ? formatCurrency(sale.discount) : '-'}
-                                </span>
-                              )}
-                              {column.key === 'paidAmount' && (
-                                <span className="text-green-600">
-                                  {formatCurrency(sale.paidAmount)}
-                                </span>
-                              )}
-                              {column.key === 'status' && (
-                                <Badge 
-                                  variant={sale.status === 'Hoàn thành' ? 'default' : 'destructive'}
-                                  className={sale.status === 'Hoàn thành' ? 'bg-green-100 text-green-800' : ''}
-                                >
-                                  {sale.status}
-                                </Badge>
-                              )}
-                              {column.key === 'invoiceStatus' && (
-                                <Badge variant="outline">
-                                  Chưa có
-                                </Badge>
-                              )}
-                              {!['invoiceCode', 'datetime', 'returnCode', 'customer', 'totalAmount', 'discount', 'paidAmount', 'status', 'invoiceStatus'].includes(column.key) && '-'}
-                            </TableCell>
-                          ))}
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </ScrollArea>
-            </div>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </ScrollArea>
           </div>
         </div>
       </div>

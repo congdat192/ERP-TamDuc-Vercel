@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -333,6 +332,7 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
 
   const totalCustomers = 122614;
   const totalDebt = '100,717,794';
+  // Get visible columns
   const visibleColumns = columns.filter(col => col.visible);
 
   return (
@@ -550,50 +550,48 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
             </div>
           </div>
 
-          {/* Customer Table with ScrollArea */}
+          {/* Customer Table with fixed height ScrollArea */}
           <div className="bg-white rounded-lg border border-gray-200">
-            <div className="relative">
-              <ScrollArea className="h-[600px] w-full">
-                <div style={{ minWidth: `${visibleColumns.length * 150}px` }}>
-                  <Table>
-                    <TableHeader className="sticky top-0 bg-white z-10">
-                      <TableRow className="bg-gray-50">
-                        <TableHead className="w-12 border-b">
-                          <Checkbox 
-                            checked={selectedCustomers.length === paginatedCustomers.length && paginatedCustomers.length > 0}
-                            onCheckedChange={handleSelectAll}
-                          />
+            <ScrollArea className="h-[600px]">
+              <div className="min-w-full overflow-x-auto">
+                <Table>
+                  <TableHeader className="sticky top-0 bg-white z-10 border-b">
+                    <TableRow className="bg-gray-50">
+                      <TableHead className="w-12 px-4 py-3">
+                        <Checkbox 
+                          checked={selectedCustomers.length === paginatedCustomers.length && paginatedCustomers.length > 0}
+                          onCheckedChange={handleSelectAll}
+                        />
+                      </TableHead>
+                      {visibleColumns.map((column) => (
+                        <TableHead key={column.key} className="whitespace-nowrap px-4 py-3 text-left font-medium text-gray-500 min-w-[150px]">
+                          {column.label}
                         </TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedCustomers.map((customer) => (
+                      <TableRow key={customer.id} className="hover:bg-gray-50 border-b">
+                        <TableCell className="px-4 py-3">
+                          <Checkbox 
+                            checked={selectedCustomers.includes(customer.id)}
+                            onCheckedChange={(checked) => handleSelectCustomer(customer.id, checked as boolean)}
+                          />
+                        </TableCell>
                         {visibleColumns.map((column) => (
-                          <TableHead key={column.key} className="whitespace-nowrap min-w-[150px] border-b">
-                            {column.label}
-                          </TableHead>
+                          <TableCell key={column.key} className="whitespace-nowrap px-4 py-3 min-w-[150px]">
+                            {renderCellContent(customer, column.key)}
+                          </TableCell>
                         ))}
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {paginatedCustomers.map((customer) => (
-                        <TableRow key={customer.id} className="hover:bg-gray-50">
-                          <TableCell>
-                            <Checkbox 
-                              checked={selectedCustomers.includes(customer.id)}
-                              onCheckedChange={(checked) => handleSelectCustomer(customer.id, checked as boolean)}
-                            />
-                          </TableCell>
-                          {visibleColumns.map((column) => (
-                            <TableCell key={column.key} className="whitespace-nowrap min-w-[150px]">
-                              {renderCellContent(customer, column.key)}
-                            </TableCell>
-                          ))}
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </ScrollArea>
-            </div>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </ScrollArea>
 
-            {/* Pagination */}
+            {/* Pagination - outside ScrollArea */}
             <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 border-t border-gray-200 space-y-3 sm:space-y-0">
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-600">Hiển thị</span>
