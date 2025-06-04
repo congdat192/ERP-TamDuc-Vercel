@@ -1,5 +1,3 @@
-
-
 import { useState } from 'react';
 import { ArrowLeft, Search, Plus, ChevronDown, Calendar, X, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -614,15 +612,15 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
             </div>
           </div>
 
-          {/* Sales Table with horizontal scroll */}
+          {/* Sales Table with proper ScrollArea */}
           <div className="bg-white rounded-lg border">
-            <div className="overflow-x-auto">
-              <div className="min-w-max">
+            <ScrollArea className="w-full">
+              <div className="min-w-[1200px]">
                 <Table>
                   <TableHeader>
                     <TableRow>
                       {columns.filter(col => col.visible).map((column) => (
-                        <TableHead key={column.key} className="whitespace-nowrap">
+                        <TableHead key={column.key} className="whitespace-nowrap min-w-[120px]">
                           {column.label}
                         </TableHead>
                       ))}
@@ -676,11 +674,10 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
                   </TableBody>
                 </Table>
               </div>
-            </div>
+            </ScrollArea>
           </div>
         </div>
       </div>
     </div>
   );
 }
-
