@@ -48,28 +48,28 @@ export function ERPSystem() {
   const handleModuleChange = (module: ERPModule) => {
     setCurrentModule(module);
     
-    // Navigate to the correct URL based on module with replace to update browser history
+    // Navigate to the correct URL based on module
     switch (module) {
       case 'dashboard':
-        navigate('/ERP/Dashboard', { replace: true });
+        navigate('/ERP/Dashboard');
         break;
       case 'customers':
-        navigate('/ERP/Customers', { replace: true });
+        navigate('/ERP/Customers');
         break;
       case 'sales':
-        navigate('/ERP/Invoices', { replace: true });
+        navigate('/ERP/Invoices');
         break;
       case 'voucher':
-        navigate('/ERP/Voucher', { replace: true });
+        navigate('/ERP/Voucher');
         break;
       case 'inventory':
-        navigate('/ERP/Products', { replace: true });
+        navigate('/ERP/Products');
         break;
       case 'system-settings':
-        navigate('/ERP/Setting', { replace: true });
+        navigate('/ERP/Setting');
         break;
       default:
-        navigate('/ERP/Dashboard', { replace: true });
+        navigate('/ERP/Dashboard');
     }
   };
 
@@ -91,29 +91,11 @@ export function ERPSystem() {
       />
       <Route 
         path="/Customers" 
-        element={
-          <ERPLayout
-            currentUser={currentUser}
-            currentModule="customers"
-            onModuleChange={handleModuleChange}
-            onLogout={logout}
-          >
-            <CustomerPage onBackToERP={() => navigate('/ERP/Dashboard', { replace: true })} />
-          </ERPLayout>
-        } 
+        element={<CustomerPage onBackToERP={() => navigate('/ERP/Dashboard')} />} 
       />
       <Route 
         path="/Invoices" 
-        element={
-          <ERPLayout
-            currentUser={currentUser}
-            currentModule="sales"
-            onModuleChange={handleModuleChange}
-            onLogout={logout}
-          >
-            <SalesPage onBackToERP={() => navigate('/ERP/Dashboard', { replace: true })} />
-          </ERPLayout>
-        } 
+        element={<SalesPage onBackToERP={() => navigate('/ERP/Dashboard')} />} 
       />
       <Route 
         path="/Products" 
@@ -133,16 +115,7 @@ export function ERPSystem() {
       />
       <Route 
         path="/Voucher" 
-        element={
-          <ERPLayout
-            currentUser={currentUser}
-            currentModule="voucher"
-            onModuleChange={handleModuleChange}
-            onLogout={logout}
-          >
-            <VoucherPage onBackToERP={() => navigate('/ERP/Dashboard', { replace: true })} />
-          </ERPLayout>
-        } 
+        element={<VoucherPage onBackToERP={() => navigate('/ERP/Dashboard')} />} 
       />
       <Route 
         path="/Setting" 
