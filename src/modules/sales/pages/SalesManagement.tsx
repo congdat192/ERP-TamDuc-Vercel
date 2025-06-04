@@ -70,6 +70,9 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
 
   const isMobile = useIsMobile();
 
+  // Get visible columns
+  const visibleColumns = columns.filter(col => col.visible);
+
   const handleColumnToggle = (columnKey: string) => {
     setColumns(prev => prev.map(col => 
       col.key === columnKey ? { ...col, visible: !col.visible } : col
@@ -620,7 +623,7 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
                   <Table>
                     <TableHeader className="sticky top-0 bg-white z-10">
                       <TableRow>
-                        {columns.filter(col => col.visible).map((column) => (
+                        {visibleColumns.map((column) => (
                           <TableHead key={column.key} className="whitespace-nowrap min-w-[150px] border-b">
                             {column.label}
                           </TableHead>
@@ -630,7 +633,7 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
                     <TableBody>
                       {salesData.map((sale) => (
                         <TableRow key={sale.id} className="hover:bg-gray-50">
-                          {columns.filter(col => col.visible).map((column) => (
+                          {visibleColumns.map((column) => (
                             <TableCell key={column.key} className="whitespace-nowrap min-w-[150px]">
                               {column.key === 'invoiceCode' && sale.id}
                               {column.key === 'datetime' && sale.date}
