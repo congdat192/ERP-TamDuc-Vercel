@@ -1,4 +1,5 @@
 
+
 import { useState } from 'react';
 import { ArrowLeft, Search, Plus, ChevronDown, Calendar, X, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -257,9 +258,9 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
         {/* Selected branch tags with horizontal scroll */}
         {selectedBranches.length > 0 && (
           <ScrollArea className="w-full">
-            <div className="flex space-x-1 pb-2">
+            <div className="flex space-x-1 pb-2 min-w-max">
               {getBranchDisplayTags().map((tag) => (
-                <Badge key={tag.value} variant="secondary" className="text-xs whitespace-nowrap">
+                <Badge key={tag.value} variant="secondary" className="text-xs whitespace-nowrap flex-shrink-0">
                   {tag.label}
                   {tag.value !== 'more' && (
                     <X 
@@ -388,30 +389,28 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
       {/* Status */}
       <div className="space-y-3">
         <label className="text-sm font-medium text-gray-700">Trạng thái</label>
-        <ScrollArea className="h-auto max-h-32">
-          <div className="space-y-3 pr-4">
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="completed"
-                checked={statusFilters.completed}
-                onCheckedChange={(checked) => 
-                  setStatusFilters(prev => ({ ...prev, completed: checked as boolean }))
-                }
-              />
-              <label htmlFor="completed" className="text-sm">Hoàn thành</label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="canceled"
-                checked={statusFilters.canceled}
-                onCheckedChange={(checked) => 
-                  setStatusFilters(prev => ({ ...prev, canceled: checked as boolean }))
-                }
-              />
-              <label htmlFor="canceled" className="text-sm">Đã hủy</label>
-            </div>
+        <div className="space-y-3">
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="completed"
+              checked={statusFilters.completed}
+              onCheckedChange={(checked) => 
+                setStatusFilters(prev => ({ ...prev, completed: checked as boolean }))
+              }
+            />
+            <label htmlFor="completed" className="text-sm">Hoàn thành</label>
           </div>
-        </ScrollArea>
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="canceled"
+              checked={statusFilters.canceled}
+              onCheckedChange={(checked) => 
+                setStatusFilters(prev => ({ ...prev, canceled: checked as boolean }))
+              }
+            />
+            <label htmlFor="canceled" className="text-sm">Đã hủy</label>
+          </div>
+        </div>
       </div>
 
       {/* Payment Method */}
@@ -535,7 +534,7 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
       </div>
 
       <div className="flex">
-        {/* Desktop Filter Sidebar - Keep existing sidebar */}
+        {/* Desktop Filter Sidebar */}
         {!isMobile && (
           <div className="w-64 max-w-64 bg-white border-r p-4 space-y-4">
             <h3 className="font-semibold text-gray-900 text-base">Bộ lọc</h3>
@@ -563,7 +562,7 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
                   />
                 </div>
                 
-                {/* Replace the existing filter button with ColumnVisibilityFilter */}
+                {/* Column visibility filter */}
                 {isMobile ? (
                   <Drawer open={isFilterOpen} onOpenChange={setIsFilterOpen}>
                     <DrawerTrigger asChild>
@@ -615,70 +614,73 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
             </div>
           </div>
 
-          {/* Sales Table with dynamic columns */}
-          <div className="bg-white rounded-lg border overflow-auto">
-            <ScrollArea className="w-full">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    {columns.filter(col => col.visible).map((column) => (
-                      <TableHead key={column.key}>
-                        {column.label}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {salesData.map((sale) => (
-                    <TableRow key={sale.id} className="hover:bg-gray-50">
+          {/* Sales Table with horizontal scroll */}
+          <div className="bg-white rounded-lg border">
+            <div className="overflow-x-auto">
+              <div className="min-w-max">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
                       {columns.filter(col => col.visible).map((column) => (
-                        <TableCell key={column.key}>
-                          {column.key === 'invoiceCode' && sale.id}
-                          {column.key === 'datetime' && sale.date}
-                          {column.key === 'returnCode' && (
-                            sale.returnCode ? (
-                              <Badge variant="outline" className="text-orange-600">
-                                {sale.returnCode}
-                              </Badge>
-                            ) : null
-                          )}
-                          {column.key === 'customer' && sale.customer}
-                          {column.key === 'totalAmount' && formatCurrency(sale.totalAmount)}
-                          {column.key === 'discount' && (
-                            <span className="text-red-600">
-                              {sale.discount > 0 ? formatCurrency(sale.discount) : '-'}
-                            </span>
-                          )}
-                          {column.key === 'paidAmount' && (
-                            <span className="text-green-600">
-                              {formatCurrency(sale.paidAmount)}
-                            </span>
-                          )}
-                          {column.key === 'status' && (
-                            <Badge 
-                              variant={sale.status === 'Hoàn thành' ? 'default' : 'destructive'}
-                              className={sale.status === 'Hoàn thành' ? 'bg-green-100 text-green-800' : ''}
-                            >
-                              {sale.status}
-                            </Badge>
-                          )}
-                          {column.key === 'invoiceStatus' && (
-                            <Badge variant="outline">
-                              Chưa có
-                            </Badge>
-                          )}
-                          {/* Add default empty content for other columns */}
-                          {!['invoiceCode', 'datetime', 'returnCode', 'customer', 'totalAmount', 'discount', 'paidAmount', 'status', 'invoiceStatus'].includes(column.key) && '-'}
-                        </TableCell>
+                        <TableHead key={column.key} className="whitespace-nowrap">
+                          {column.label}
+                        </TableHead>
                       ))}
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </ScrollArea>
+                  </TableHeader>
+                  <TableBody>
+                    {salesData.map((sale) => (
+                      <TableRow key={sale.id} className="hover:bg-gray-50">
+                        {columns.filter(col => col.visible).map((column) => (
+                          <TableCell key={column.key} className="whitespace-nowrap">
+                            {column.key === 'invoiceCode' && sale.id}
+                            {column.key === 'datetime' && sale.date}
+                            {column.key === 'returnCode' && (
+                              sale.returnCode ? (
+                                <Badge variant="outline" className="text-orange-600">
+                                  {sale.returnCode}
+                                </Badge>
+                              ) : null
+                            )}
+                            {column.key === 'customer' && sale.customer}
+                            {column.key === 'totalAmount' && formatCurrency(sale.totalAmount)}
+                            {column.key === 'discount' && (
+                              <span className="text-red-600">
+                                {sale.discount > 0 ? formatCurrency(sale.discount) : '-'}
+                              </span>
+                            )}
+                            {column.key === 'paidAmount' && (
+                              <span className="text-green-600">
+                                {formatCurrency(sale.paidAmount)}
+                              </span>
+                            )}
+                            {column.key === 'status' && (
+                              <Badge 
+                                variant={sale.status === 'Hoàn thành' ? 'default' : 'destructive'}
+                                className={sale.status === 'Hoàn thành' ? 'bg-green-100 text-green-800' : ''}
+                              >
+                                {sale.status}
+                              </Badge>
+                            )}
+                            {column.key === 'invoiceStatus' && (
+                              <Badge variant="outline">
+                                Chưa có
+                              </Badge>
+                            )}
+                            {/* Add default empty content for other columns */}
+                            {!['invoiceCode', 'datetime', 'returnCode', 'customer', 'totalAmount', 'discount', 'paidAmount', 'status', 'invoiceStatus'].includes(column.key) && '-'}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
 }
+
