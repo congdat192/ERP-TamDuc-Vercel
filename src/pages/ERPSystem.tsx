@@ -51,25 +51,25 @@ export function ERPSystem() {
     // Navigate to the correct URL based on module
     switch (module) {
       case 'dashboard':
-        navigate('/ERP/Dashboard');
+        navigate('/ERP/Dashboard', { replace: true });
         break;
       case 'customers':
-        navigate('/ERP/Customers');
+        navigate('/ERP/Customers', { replace: true });
         break;
       case 'sales':
-        navigate('/ERP/Invoices');
+        navigate('/ERP/Invoices', { replace: true });
         break;
       case 'voucher':
-        navigate('/ERP/Voucher');
+        navigate('/ERP/Voucher', { replace: true });
         break;
       case 'inventory':
-        navigate('/ERP/Products');
+        navigate('/ERP/Products', { replace: true });
         break;
       case 'system-settings':
-        navigate('/ERP/Setting');
+        navigate('/ERP/Setting', { replace: true });
         break;
       default:
-        navigate('/ERP/Dashboard');
+        navigate('/ERP/Dashboard', { replace: true });
     }
   };
 
