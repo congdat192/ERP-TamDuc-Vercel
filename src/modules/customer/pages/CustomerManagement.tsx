@@ -188,25 +188,32 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
   const [showAddModal, setShowAddModal] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Column visibility state
+  // Column visibility state - cập nhật để có đầy đủ các cột
   const [columns, setColumns] = useState<ColumnConfig[]>([
     { key: 'id', label: 'Mã khách hàng', visible: true },
     { key: 'name', label: 'Tên khách hàng', visible: true },
+    { key: 'group', label: 'Loại khách hàng', visible: true },
     { key: 'phone', label: 'Điện thoại', visible: true },
-    { key: 'group', label: 'Nhóm khách hàng', visible: true },
     { key: 'birthday', label: 'Ngày sinh', visible: true },
-    { key: 'creator', label: 'Người tạo', visible: false },
-    { key: 'createdDate', label: 'Ngày tạo', visible: false },
-    { key: 'note', label: 'Ghi chú', visible: false },
+    { key: 'gender', label: 'Giới tính', visible: false },
     { key: 'email', label: 'Email', visible: false },
     { key: 'facebook', label: 'Facebook', visible: false },
     { key: 'company', label: 'Công ty', visible: false },
     { key: 'taxCode', label: 'Mã số thuế', visible: false },
+    { key: 'idCard', label: 'Số CCCD/CMND', visible: false },
     { key: 'address', label: 'Địa chỉ', visible: false },
     { key: 'deliveryArea', label: 'Khu vực giao hàng', visible: false },
-    { key: 'points', label: 'Điểm hiện tại', visible: false },
-    { key: 'totalSpent', label: 'Tổng bán', visible: false },
-    { key: 'totalDebt', label: 'Tổng bán trừ trả hàng', visible: false },
+    { key: 'ward', label: 'Phường/Xã', visible: false },
+    { key: 'creator', label: 'Người tạo', visible: false },
+    { key: 'createdDate', label: 'Ngày tạo', visible: false },
+    { key: 'note', label: 'Ghi chú', visible: false },
+    { key: 'lastOrderDate', label: 'Ngày giao dịch cuối', visible: false },
+    { key: 'staffCreated', label: 'Chi nhánh tạo', visible: false },
+    { key: 'currentDebt', label: 'Nợ hiện tại', visible: false },
+    { key: 'debtDays', label: 'Số ngày nợ', visible: false },
+    { key: 'totalSales', label: 'Tổng bán', visible: false },
+    { key: 'currentPoints', label: 'Điểm hiện tại', visible: false },
+    { key: 'totalSalesMinusReturns', label: 'Tổng bán trừ trả hàng', visible: false },
     { key: 'status', label: 'Trạng thái', visible: false }
   ]);
 

@@ -1,7 +1,6 @@
 
-import { Search, Filter } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { ColumnVisibilityFilter } from './ColumnVisibilityFilter';
 import { ColumnConfig } from './ColumnVisibilityFilter';
 
@@ -31,11 +30,7 @@ export function CustomerSearchActions({
               className="pl-10"
             />
           </div>
-          <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm">
-              <Filter className="w-4 h-4 mr-2" />
-              Lọc
-            </Button>
+          <div className="flex items-center">
             <ColumnVisibilityFilter 
               columns={columns}
               onColumnToggle={handleColumnToggle}
