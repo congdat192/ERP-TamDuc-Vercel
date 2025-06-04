@@ -18,7 +18,7 @@ export function ERPSystem() {
   const location = useLocation();
 
   if (!isAuthenticated || !currentUser) {
-    return <LoginPage onLogin={() => {}} mockUsers={[]} />;
+    return <LoginPage />;
   }
 
   // Check if user is platform admin - redirect them to platform admin
