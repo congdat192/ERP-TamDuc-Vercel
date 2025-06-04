@@ -1,26 +1,37 @@
 
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 interface SalesHeaderProps {
-  onBackToModules: () => void;
+  onBackToModules?: () => void; // Made optional for backward compatibility
 }
 
 export function SalesHeader({ onBackToModules }: SalesHeaderProps) {
+  const navigate = useNavigate();
+
+  const handleBackClick = () => {
+    if (onBackToModules) {
+      onBackToModules();
+    } else {
+      navigate('/erp');
+    }
+  };
+
   return (
-    <div className="bg-white border-b px-6 py-4">
+    <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
+        <div className="flex items-center space-x-4">
+          <Button 
+            variant="ghost" 
             size="sm"
-            onClick={onBackToModules}
+            onClick={handleBackClick}
             className="text-gray-600 hover:text-gray-900"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Quay về ERP
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Quay lại ERP
           </Button>
-          <h1 className="text-2xl font-bold text-gray-900">Hóa Đơn</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Hóa Đơn Bán Hàng</h1>
         </div>
       </div>
     </div>

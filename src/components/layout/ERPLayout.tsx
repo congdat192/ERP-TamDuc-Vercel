@@ -26,23 +26,23 @@ export function ERPLayout({
     switch (path) {
       case '/erp':
         return 'Tổng Quan ERP';
-      case '/customer':
+      case '/erp/customers':
         return 'Module Khách Hàng';
-      case '/sales':
+      case '/erp/sales':
         return 'Module Hóa Đơn';
-      case '/voucher':
+      case '/erp/voucher':
         return 'Module Voucher';
-      case '/warehouse':
+      case '/erp/warehouse':
         return 'Module Kho Hàng';
-      case '/accounting':
+      case '/erp/accounting':
         return 'Module Kế Toán';
-      case '/admin/settings':
+      case '/erp/admin/settings':
         return 'Cài Đặt Hệ Thống';
-      case '/admin/users':
+      case '/erp/admin/users':
         return 'Quản Lý Người Dùng';
-      case '/admin/audit':
+      case '/erp/admin/audit':
         return 'Nhật Ký Hệ Thống';
-      case '/admin/roles':
+      case '/erp/admin/roles':
         return 'Phân Quyền';
       default:
         return 'ERP System';
@@ -50,7 +50,7 @@ export function ERPLayout({
   };
 
   // For voucher, customers, and sales modules, don't render the main sidebar since they have their own layout
-  if (location.pathname === '/voucher' || location.pathname === '/customer' || location.pathname === '/sales') {
+  if (location.pathname === '/erp/voucher' || location.pathname === '/erp/customers' || location.pathname === '/erp/sales') {
     return (
       <div className="min-h-screen bg-gray-50 w-full">
         {children}

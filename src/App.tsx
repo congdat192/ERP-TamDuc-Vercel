@@ -1,6 +1,6 @@
 
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
@@ -56,6 +56,7 @@ const App = () => (
               {/* Protected Routes */}
               <Route path="/" element={<Navigate to="/erp" replace />} />
               
+              {/* ERP Main Dashboard */}
               <Route 
                 path="/erp" 
                 element={
@@ -65,8 +66,9 @@ const App = () => (
                 } 
               />
               
+              {/* ERP Module Routes - All under /erp/ prefix */}
               <Route 
-                path="/customer" 
+                path="/erp/customers" 
                 element={
                   <ProtectedRoute requiredModule="customers">
                     <CustomerPage />
@@ -75,7 +77,7 @@ const App = () => (
               />
               
               <Route 
-                path="/sales" 
+                path="/erp/sales" 
                 element={
                   <ProtectedRoute requiredModule="sales">
                     <SalesPage />
@@ -84,7 +86,7 @@ const App = () => (
               />
               
               <Route 
-                path="/voucher" 
+                path="/erp/voucher" 
                 element={
                   <ProtectedRoute requiredModule="voucher">
                     <VoucherPage />
@@ -93,7 +95,7 @@ const App = () => (
               />
               
               <Route 
-                path="/warehouse" 
+                path="/erp/warehouse" 
                 element={
                   <ProtectedRoute requiredModule="inventory">
                     <WarehousePage />
@@ -102,7 +104,7 @@ const App = () => (
               />
               
               <Route 
-                path="/accounting" 
+                path="/erp/accounting" 
                 element={
                   <ProtectedRoute requiredModule="accounting">
                     <AccountingPage />
@@ -110,9 +112,9 @@ const App = () => (
                 } 
               />
 
-              {/* Admin Routes */}
+              {/* ERP Admin Routes - Under /erp/admin/ prefix */}
               <Route 
-                path="/admin/settings" 
+                path="/erp/admin/settings" 
                 element={
                   <ProtectedRoute requiredModule="system-settings">
                     <AdminSettings />
@@ -121,7 +123,7 @@ const App = () => (
               />
               
               <Route 
-                path="/admin/users" 
+                path="/erp/admin/users" 
                 element={
                   <ProtectedRoute requiredModule="user-management">
                     <UserManagement />
@@ -130,7 +132,7 @@ const App = () => (
               />
               
               <Route 
-                path="/admin/audit" 
+                path="/erp/admin/audit" 
                 element={
                   <ProtectedRoute requiredModule="audit-log">
                     <AuditLog />
@@ -139,7 +141,7 @@ const App = () => (
               />
               
               <Route 
-                path="/admin/roles" 
+                path="/erp/admin/roles" 
                 element={
                   <ProtectedRoute requiredModule="role-permissions">
                     <RolePermissions />
@@ -147,9 +149,9 @@ const App = () => (
                 } 
               />
 
-              {/* Platform Admin Routes */}
+              {/* Platform Admin Routes - Separate from ERP */}
               <Route 
-                path="/platform-admin" 
+                path="/platform-admin/*" 
                 element={
                   <ProtectedRoute requiredRole={['platform-admin']}>
                     <PlatformAdmin />
