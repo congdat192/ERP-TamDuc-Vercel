@@ -15,10 +15,7 @@ export type ERPModule =
   | 'voucher' 
   | 'system-settings' 
   | 'user-management'
-  | 'security-settings'
-  | 'audit-log'
-  | 'role-permissions'
-  | 'platform-admin';
+  | 'security-settings';
 
 export type VoucherFeature = 
   | 'voucher-dashboard'
