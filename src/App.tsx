@@ -96,7 +96,7 @@ const App = () => (
                 path="/ERP/Dashboard" 
                 element={
                   <ProtectedERPRoute module="dashboard">
-                    <ERPHome currentUser={null} onModuleChange={() => {}} />
+                    <ERPHome />
                   </ProtectedERPRoute>
                 } 
               />
@@ -104,7 +104,7 @@ const App = () => (
                 path="/ERP/Customers" 
                 element={
                   <ProtectedERPRoute module="customers">
-                    <CustomerPage onBackToERP={() => navigate('/ERP/Dashboard')} />
+                    <CustomerPage />
                   </ProtectedERPRoute>
                 } 
               />
@@ -112,7 +112,7 @@ const App = () => (
                 path="/ERP/Invoices" 
                 element={
                   <ProtectedERPRoute module="sales">
-                    <SalesPage onBackToERP={() => navigate('/ERP/Dashboard')} />
+                    <SalesPage />
                   </ProtectedERPRoute>
                 } 
               />
@@ -120,7 +120,7 @@ const App = () => (
                 path="/ERP/Voucher" 
                 element={
                   <ProtectedERPRoute module="voucher">
-                    <VoucherPage onBackToERP={() => navigate('/ERP/Dashboard')} />
+                    <VoucherPage />
                   </ProtectedERPRoute>
                 } 
               />
