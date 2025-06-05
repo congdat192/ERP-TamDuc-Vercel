@@ -12,20 +12,60 @@ import {
   AlertCircle 
 } from 'lucide-react';
 import { User, ERPModule } from '@/types/auth';
+import { useAuth } from '@/components/auth/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface ERPHomeProps {
-  currentUser: User;
-  onModuleChange: (module: ERPModule) => void;
+  currentUser?: User | null;
+  onModuleChange?: (module: ERPModule) => void;
 }
 
-export function ERPHome({ currentUser, onModuleChange }: ERPHomeProps) {
+export function ERPHome({ currentUser: propCurrentUser, onModuleChange: propOnModuleChange }: ERPHomeProps) {
+  const { currentUser: authCurrentUser } = useAuth();
+  const navigate = useNavigate();
+  
+  // Use auth context user if prop user is not provided
+  const currentUser = propCurrentUser || authCurrentUser;
+  
+  const handleModuleChange = (module: ERPModule) => {
+    if (propOnModuleChange) {
+      propOnModuleChange(module);
+    } else {
+      // Default navigation using react-router
+      switch (module) {
+        case 'dashboard':
+          navigate('/ERP/Dashboard');
+          break;
+        case 'customers':
+          navigate('/ERP/Customers');
+          break;
+        case 'sales':
+          navigate('/ERP/Invoices');
+          break;
+        case 'voucher':
+          navigate('/ERP/Voucher');
+          break;
+        case 'inventory':
+          navigate('/ERP/Products');
+          break;
+        case 'system-settings':
+          navigate('/ERP/Setting');
+          break;
+      }
+    }
+  };
+
+  if (!currentUser) {
+    return <div>Loading...</div>;
+  }
+
   const quickActions = [
     {
       title: 'Phát Hành Voucher',
       description: 'Tạo voucher mới cho khách hàng',
       icon: Ticket,
       color: 'bg-orange-100 text-orange-600',
-      action: () => onModuleChange('voucher'),
+      action: () => handleModuleChange('voucher'),
       available: currentUser.permissions.modules.includes('voucher')
     },
     {
@@ -33,7 +73,7 @@ export function ERPHome({ currentUser, onModuleChange }: ERPHomeProps) {
       description: 'Xem và quản lý thông tin khách hàng',
       icon: Users,
       color: 'bg-blue-100 text-blue-600',
-      action: () => onModuleChange('customers'),
+      action: () => handleModuleChange('customers'),
       available: currentUser.permissions.modules.includes('customers')
     },
     {
@@ -41,7 +81,7 @@ export function ERPHome({ currentUser, onModuleChange }: ERPHomeProps) {
       description: 'Xem báo cáo và thống kê bán hàng',
       icon: TrendingUp,
       color: 'bg-green-100 text-green-600',
-      action: () => onModuleChange('sales'),
+      action: () => handleModuleChange('sales'),
       available: currentUser.permissions.modules.includes('sales')
     },
     {
@@ -49,7 +89,7 @@ export function ERPHome({ currentUser, onModuleChange }: ERPHomeProps) {
       description: 'Theo dõi và quản lý hàng tồn kho',
       icon: Package,
       color: 'bg-purple-100 text-purple-600',
-      action: () => onModuleChange('inventory'),
+      action: () => handleModuleChange('inventory'),
       available: currentUser.permissions.modules.includes('inventory')
     }
   ];

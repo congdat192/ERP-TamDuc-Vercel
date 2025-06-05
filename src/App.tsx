@@ -17,7 +17,7 @@ import { VoucherPage } from "./pages/VoucherPage";
 import { PlatformAdmin } from "./modules/platform-admin";
 import { ERPLayout } from "@/components/layout/ERPLayout";
 import { useAuth } from "@/components/auth/AuthContext";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,9 +34,10 @@ const queryClient = new QueryClient({
 // Protected Route wrapper component
 const ProtectedERPRoute = ({ children, module }: { children: React.ReactNode; module: string }) => {
   const { currentUser, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
 
   if (!isAuthenticated || !currentUser) {
-    return <LoginPage />;
+    return <Navigate to="/login" replace />;
   }
 
   if (currentUser.role === 'platform-admin') {
@@ -46,22 +47,22 @@ const ProtectedERPRoute = ({ children, module }: { children: React.ReactNode; mo
   const handleModuleChange = (newModule: string) => {
     switch (newModule) {
       case 'dashboard':
-        window.location.href = '/ERP/Dashboard';
+        navigate('/ERP/Dashboard');
         break;
       case 'customers':
-        window.location.href = '/ERP/Customers';
+        navigate('/ERP/Customers');
         break;
       case 'sales':
-        window.location.href = '/ERP/Invoices';
+        navigate('/ERP/Invoices');
         break;
       case 'voucher':
-        window.location.href = '/ERP/Voucher';
+        navigate('/ERP/Voucher');
         break;
       case 'inventory':
-        window.location.href = '/ERP/Products';
+        navigate('/ERP/Products');
         break;
       case 'system-settings':
-        window.location.href = '/ERP/Setting';
+        navigate('/ERP/Setting');
         break;
     }
   };
@@ -103,7 +104,7 @@ const App = () => (
                 path="/ERP/Customers" 
                 element={
                   <ProtectedERPRoute module="customers">
-                    <CustomerPage onBackToERP={() => window.location.href = '/ERP/Dashboard'} />
+                    <CustomerPage onBackToERP={() => navigate('/ERP/Dashboard')} />
                   </ProtectedERPRoute>
                 } 
               />
@@ -111,7 +112,7 @@ const App = () => (
                 path="/ERP/Invoices" 
                 element={
                   <ProtectedERPRoute module="sales">
-                    <SalesPage onBackToERP={() => window.location.href = '/ERP/Dashboard'} />
+                    <SalesPage onBackToERP={() => navigate('/ERP/Dashboard')} />
                   </ProtectedERPRoute>
                 } 
               />
@@ -119,7 +120,7 @@ const App = () => (
                 path="/ERP/Voucher" 
                 element={
                   <ProtectedERPRoute module="voucher">
-                    <VoucherPage onBackToERP={() => window.location.href = '/ERP/Dashboard'} />
+                    <VoucherPage onBackToERP={() => navigate('/ERP/Dashboard')} />
                   </ProtectedERPRoute>
                 } 
               />
@@ -165,4 +166,8 @@ const App = () => (
   </ErrorBoundary>
 );
 
-export default App;
+const AppWrapper = () => {
+  return <App />;
+};
+
+export default AppWrapper;
