@@ -23,12 +23,15 @@ export function ERPLayout({
   children,
   allowSidebarToggle = true
 }: ERPLayoutProps) {
-  // Auto-hide sidebar for all modules except dashboard
-  const [sidebarOpen, setSidebarOpen] = useState(currentModule === 'dashboard');
+  // Sidebar should only be open for dashboard module
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Update sidebar visibility when module changes
   useEffect(() => {
-    setSidebarOpen(currentModule === 'dashboard');
+    console.log('Current module:', currentModule);
+    const shouldShowSidebar = currentModule === 'dashboard';
+    console.log('Should show sidebar:', shouldShowSidebar);
+    setSidebarOpen(shouldShowSidebar);
   }, [currentModule]);
 
   const getPageTitle = () => {
@@ -58,14 +61,16 @@ export function ERPLayout({
 
   return (
     <div className="min-h-screen bg-gray-50 flex w-full">
-      {/* ERP Main Sidebar */}
-      <ERPMainSidebar 
-        currentModule={currentModule}
-        onModuleChange={onModuleChange}
-        isOpen={sidebarOpen}
-        onToggle={handleSidebarToggle}
-        currentUser={currentUser}
-      />
+      {/* ERP Main Sidebar - Only show when sidebarOpen is true */}
+      {sidebarOpen && (
+        <ERPMainSidebar 
+          currentModule={currentModule}
+          onModuleChange={onModuleChange}
+          isOpen={sidebarOpen}
+          onToggle={handleSidebarToggle}
+          currentUser={currentUser}
+        />
+      )}
       
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
@@ -80,6 +85,7 @@ export function ERPLayout({
                 className="flex items-center space-x-2"
               >
                 <Menu className="w-4 h-4" />
+                <span>Menu</span>
               </Button>
             )}
             
