@@ -8,8 +8,8 @@ import {
   BarChart3, 
   Trophy, 
   Settings,
-  ChevronLeft,
-  Target
+  Target,
+  Plus
 } from 'lucide-react';
 import { VoucherFeature, User } from '@/types/auth';
 
@@ -23,7 +23,7 @@ interface VoucherModuleSidebarProps {
 const voucherPages = [
   { id: 'voucher-dashboard' as VoucherFeature, label: 'Tổng Quan', icon: LayoutDashboard },
   { id: 'campaign-management' as VoucherFeature, label: 'Quản Lý Chiến Dịch', icon: Target },
-  { id: 'issue-voucher' as VoucherFeature, label: 'Phát Hành Voucher', icon: Ticket },
+  { id: 'issue-voucher' as VoucherFeature, label: 'Phát Hành Voucher', icon: Plus },
   { id: 'voucher-list' as VoucherFeature, label: 'Danh Sách Voucher', icon: FileText },
   { id: 'voucher-analytics' as VoucherFeature, label: 'Báo Cáo Phân Tích', icon: BarChart3 },
   { id: 'voucher-leaderboard' as VoucherFeature, label: 'Bảng Xếp Hạng', icon: Trophy },
@@ -41,19 +41,9 @@ export function VoucherModuleSidebar({
   );
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
+    <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
       {/* Module Header */}
       <div className="p-4 border-b border-gray-200">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onBackToModules}
-          className="mb-3 text-gray-600 hover:text-gray-900"
-        >
-          <ChevronLeft className="w-4 h-4 mr-2" />
-          Quay Lại Modules
-        </Button>
-        
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
             <Ticket className="w-5 h-5 text-orange-600" />
@@ -75,7 +65,7 @@ export function VoucherModuleSidebar({
                 key={page.id}
                 variant={currentPage === page.id ? "secondary" : "ghost"}
                 className={cn(
-                  "w-full justify-start text-left h-10",
+                  "w-full justify-start text-left h-11",
                   currentPage === page.id 
                     ? "bg-orange-50 text-orange-700 border-r-2 border-orange-600" 
                     : "text-gray-700 hover:bg-gray-50"
@@ -88,6 +78,13 @@ export function VoucherModuleSidebar({
             );
           })}
         </nav>
+      </div>
+
+      {/* Footer */}
+      <div className="p-4 border-t border-gray-200">
+        <div className="text-xs text-gray-400 text-center">
+          Voucher Module • v1.0.0
+        </div>
       </div>
     </div>
   );

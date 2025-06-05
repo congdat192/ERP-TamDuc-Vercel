@@ -4,7 +4,7 @@ import { ERPMainSidebar } from './ERPMainSidebar';
 import { Header } from './Header';
 import { User, ERPModule } from '@/types/auth';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Menu } from 'lucide-react';
 
 interface ERPLayoutProps {
   currentUser: User;
@@ -12,22 +12,18 @@ interface ERPLayoutProps {
   onModuleChange: (module: ERPModule) => void;
   onLogout: () => void;
   children: React.ReactNode;
+  allowSidebarToggle?: boolean; // New prop to control if sidebar can be toggled
 }
-
-// Configuration for modules that should hide the sidebar
-const SIDEBAR_HIDDEN_MODULES: ERPModule[] = ['voucher'];
 
 export function ERPLayout({
   currentUser,
   currentModule,
   onModuleChange,
   onLogout,
-  children
+  children,
+  allowSidebarToggle = true // Default to allowing toggle
 }: ERPLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  
-  // Check if current module should hide sidebar
-  const shouldHideSidebar = SIDEBAR_HIDDEN_MODULES.includes(currentModule);
 
   const getPageTitle = () => {
     const moduleTitles = {
@@ -50,13 +46,31 @@ export function ERPLayout({
     onModuleChange('dashboard');
   };
 
-  // Full-width layout for modules that hide sidebar
-  if (shouldHideSidebar) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex flex-col w-full">
-        {/* Simple header for full-width modules */}
+  return (
+    <div className="min-h-screen bg-gray-50 flex w-full">
+      {/* ERP Main Sidebar - Always present but can be collapsed */}
+      <ERPMainSidebar 
+        currentModule={currentModule}
+        onModuleChange={onModuleChange}
+        isOpen={sidebarOpen}
+        onToggle={() => setSidebarOpen(!sidebarOpen)}
+        currentUser={currentUser}
+      />
+      
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header with sidebar toggle */}
         <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
+            {allowSidebarToggle && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="flex items-center space-x-2"
+              >
+                <Menu className="w-4 h-4" />
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -64,7 +78,7 @@ export function ERPLayout({
               className="flex items-center space-x-2"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>Quay lại Module</span>
+              <span>Tổng Quan</span>
             </Button>
             <h1 className="text-xl font-semibold text-gray-900">
               {getPageTitle()}
@@ -80,34 +94,8 @@ export function ERPLayout({
           </div>
         </div>
         
-        {/* Full-width content */}
+        {/* Main content area */}
         <main className="flex-1 overflow-auto">
-          {children}
-        </main>
-      </div>
-    );
-  }
-
-  // Standard layout with sidebar
-  return (
-    <div className="min-h-screen bg-gray-50 flex w-full">
-      <ERPMainSidebar 
-        currentModule={currentModule}
-        onModuleChange={onModuleChange}
-        isOpen={sidebarOpen}
-        onToggle={() => setSidebarOpen(!sidebarOpen)}
-        currentUser={currentUser}
-      />
-      
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header 
-          onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
-          currentPage={getPageTitle()}
-          onPageChange={() => {}} // Not used in ERP mode
-          onLogout={onLogout}
-          currentUser={currentUser}
-        />
-        <main className="flex-1 overflow-auto p-6">
           {children}
         </main>
       </div>
