@@ -1,10 +1,10 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ERPMainSidebar } from './ERPMainSidebar';
 import { Header } from './Header';
 import { User, ERPModule } from '@/types/auth';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Menu } from 'lucide-react';
+import { ArrowLeft, Menu, X } from 'lucide-react';
 
 interface ERPLayoutProps {
   currentUser: User;
@@ -12,7 +12,7 @@ interface ERPLayoutProps {
   onModuleChange: (module: ERPModule) => void;
   onLogout: () => void;
   children: React.ReactNode;
-  allowSidebarToggle?: boolean; // New prop to control if sidebar can be toggled
+  allowSidebarToggle?: boolean;
 }
 
 export function ERPLayout({
@@ -21,9 +21,15 @@ export function ERPLayout({
   onModuleChange,
   onLogout,
   children,
-  allowSidebarToggle = true // Default to allowing toggle
+  allowSidebarToggle = true
 }: ERPLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Auto-hide sidebar for all modules except dashboard
+  const [sidebarOpen, setSidebarOpen] = useState(currentModule === 'dashboard');
+
+  // Update sidebar visibility when module changes
+  useEffect(() => {
+    setSidebarOpen(currentModule === 'dashboard');
+  }, [currentModule]);
 
   const getPageTitle = () => {
     const moduleTitles = {
@@ -46,44 +52,55 @@ export function ERPLayout({
     onModuleChange('dashboard');
   };
 
+  const handleSidebarToggle = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex w-full">
-      {/* ERP Main Sidebar - Always present but can be collapsed */}
+      {/* ERP Main Sidebar */}
       <ERPMainSidebar 
         currentModule={currentModule}
         onModuleChange={onModuleChange}
         isOpen={sidebarOpen}
-        onToggle={() => setSidebarOpen(!sidebarOpen)}
+        onToggle={handleSidebarToggle}
         currentUser={currentUser}
       />
       
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header with sidebar toggle */}
+        {/* Header */}
         <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            {allowSidebarToggle && (
+            {/* Show menu button only when sidebar is hidden and not on dashboard */}
+            {!sidebarOpen && currentModule !== 'dashboard' && allowSidebarToggle && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setSidebarOpen(!sidebarOpen)}
+                onClick={handleSidebarToggle}
                 className="flex items-center space-x-2"
               >
                 <Menu className="w-4 h-4" />
               </Button>
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleBackToModules}
-              className="flex items-center space-x-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Tổng Quan</span>
-            </Button>
+            
+            {/* Show back button only when not on dashboard */}
+            {currentModule !== 'dashboard' && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleBackToModules}
+                className="flex items-center space-x-2"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Tổng Quan</span>
+              </Button>
+            )}
+            
             <h1 className="text-xl font-semibold text-gray-900">
               {getPageTitle()}
             </h1>
           </div>
+          
           <div className="flex items-center space-x-4">
             <span className="text-sm text-gray-600">
               {currentUser.fullName}
