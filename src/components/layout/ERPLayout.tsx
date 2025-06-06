@@ -3,8 +3,6 @@ import { useState, useEffect } from 'react';
 import { ERPMainSidebar } from './ERPMainSidebar';
 import { Header } from './Header';
 import { User, ERPModule } from '@/types/auth';
-import { Button } from '@/components/ui/button';
-import { Menu, X } from 'lucide-react';
 
 interface ERPLayoutProps {
   currentUser: User;
@@ -23,16 +21,22 @@ export function ERPLayout({
   children,
   allowSidebarToggle = true
 }: ERPLayoutProps) {
-  // Sidebar should only be open for dashboard module
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  // Sidebar luôn hiển thị, trạng thái mặc định là mở rộng
+  const [sidebarExpanded, setSidebarExpanded] = useState(true);
+  const [sidebarMobileOpen, setSidebarMobileOpen] = useState(false);
 
-  // Update sidebar visibility when module changes
+  // Load trạng thái sidebar từ localStorage
   useEffect(() => {
-    console.log('Current module:', currentModule);
-    const shouldShowSidebar = currentModule === 'dashboard';
-    console.log('Should show sidebar:', shouldShowSidebar);
-    setSidebarOpen(shouldShowSidebar);
-  }, [currentModule]);
+    const savedState = localStorage.getItem('erp-sidebar-expanded');
+    if (savedState !== null) {
+      setSidebarExpanded(JSON.parse(savedState));
+    }
+  }, []);
+
+  // Lưu trạng thái sidebar vào localStorage
+  useEffect(() => {
+    localStorage.setItem('erp-sidebar-expanded', JSON.stringify(sidebarExpanded));
+  }, [sidebarExpanded]);
 
   const getPageTitle = () => {
     const moduleTitles = {
@@ -52,53 +56,48 @@ export function ERPLayout({
   };
 
   const handleSidebarToggle = () => {
-    setSidebarOpen(!sidebarOpen);
+    setSidebarExpanded(!sidebarExpanded);
   };
+
+  const handleMobileSidebarToggle = () => {
+    setSidebarMobileOpen(!sidebarMobileOpen);
+  };
+
+  // Keyboard shortcut (Ctrl+B) để toggle sidebar
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'b') {
+        event.preventDefault();
+        handleSidebarToggle();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 flex w-full">
-      {/* ERP Main Sidebar - Only show when sidebarOpen is true */}
-      {sidebarOpen && (
-        <ERPMainSidebar 
-          currentModule={currentModule}
-          onModuleChange={onModuleChange}
-          isOpen={sidebarOpen}
-          onToggle={handleSidebarToggle}
-          currentUser={currentUser}
-        />
-      )}
+      {/* ERP Main Sidebar - Luôn hiển thị */}
+      <ERPMainSidebar 
+        currentModule={currentModule}
+        onModuleChange={onModuleChange}
+        isExpanded={sidebarExpanded}
+        isMobileOpen={sidebarMobileOpen}
+        onToggle={handleSidebarToggle}
+        onMobileToggle={handleMobileSidebarToggle}
+        currentUser={currentUser}
+      />
       
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header - Only show menu button when not on dashboard and sidebar is hidden */}
-        <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            {/* Show menu button only when sidebar is hidden and not on dashboard */}
-            {!sidebarOpen && currentModule !== 'dashboard' && allowSidebarToggle && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleSidebarToggle}
-                className="flex items-center space-x-2"
-              >
-                <Menu className="w-4 h-4" />
-                <span>Menu</span>
-              </Button>
-            )}
-            
-            <h1 className="text-xl font-semibold text-gray-900">
-              {getPageTitle()}
-            </h1>
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-600">
-              {currentUser.fullName}
-            </span>
-            <Button variant="outline" size="sm" onClick={onLogout}>
-              Đăng xuất
-            </Button>
-          </div>
-        </div>
+        {/* Enhanced Header - Luôn cố định */}
+        <Header
+          onSidebarToggle={handleMobileSidebarToggle}
+          currentPage={getPageTitle()}
+          onPageChange={() => {}}
+          onLogout={onLogout}
+          currentUser={currentUser}
+        />
         
         {/* Main content area */}
         <main className="flex-1 overflow-auto">

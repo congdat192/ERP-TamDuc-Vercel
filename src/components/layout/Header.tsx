@@ -1,7 +1,8 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Menu, Ticket, LogOut, User } from 'lucide-react';
+import { Search, Menu, Ticket, LogOut, User, Bell, Settings, Globe } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
@@ -54,18 +55,6 @@ export function Header({ onSidebarToggle, currentPage, onPageChange, onLogout, c
     }
   };
 
-  const handleQuickVoucher = () => {
-    setShowQuickVoucher(true);
-  };
-
-  const handleUserSettings = () => {
-    setShowUserSettings(true);
-  };
-
-  const handleLogout = () => {
-    setShowLogoutConfirm(true);
-  };
-
   const confirmLogout = () => {
     setShowLogoutConfirm(false);
     onLogout();
@@ -73,101 +62,125 @@ export function Header({ onSidebarToggle, currentPage, onPageChange, onLogout, c
 
   return (
     <>
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onSidebarToggle}
-              className="lg:hidden"
-            >
-              <Menu className="w-5 h-5" />
-            </Button>
-            
-            <div className="flex items-center space-x-2">
-              <h2 className="text-2xl font-bold text-gray-900">
-                {currentPage}
-              </h2>
-              <Badge variant="secondary" className="ml-2">Trực Tuyến</Badge>
-            </div>
+      <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex items-center justify-between min-h-[73px]">
+        <div className="flex items-center space-x-4">
+          {/* Mobile menu button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onSidebarToggle}
+            className="lg:hidden"
+          >
+            <Menu className="w-5 h-5" />
+          </Button>
+          
+          <div className="flex items-center space-x-3">
+            <h1 className="text-xl font-semibold text-gray-900">
+              {currentPage}
+            </h1>
+            <Badge variant="secondary" className="hidden sm:inline-flex">Trực Tuyến</Badge>
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-3">
+          {/* Search - Desktop */}
+          <div className="hidden md:block">
+            <form onSubmit={handleSearch} className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                placeholder="Tìm kiếm trong hệ thống..."
+                className="pl-10 w-64 h-9"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </form>
           </div>
 
-          <div className="flex items-center space-x-4">
-            {/* Quick Voucher Button - only show if user has voucher access */}
-            {currentUser.permissions.modules.includes('voucher') && (
-              <Button 
-                className="bg-orange-600 hover:bg-orange-700 text-white shadow-lg"
-                onClick={handleQuickVoucher}
-              >
-                <Ticket className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Phát Hành Nhanh</span>
+          {/* Mobile Search Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowSearch(true)}
+            className="md:hidden p-2"
+          >
+            <Search className="w-4 h-4" />
+          </Button>
+
+          {/* Quick Voucher Button - only show if user has voucher access */}
+          {currentUser.permissions.modules.includes('voucher') && (
+            <Button 
+              className="bg-orange-600 hover:bg-orange-700 text-white shadow-lg hidden sm:flex"
+              size="sm"
+              onClick={() => setShowQuickVoucher(true)}
+            >
+              <Ticket className="w-4 h-4 mr-2" />
+              Phát Hành Nhanh
+            </Button>
+          )}
+
+          {/* Notifications */}
+          <div className="relative">
+            <Button variant="ghost" size="sm" className="p-2">
+              <Bell className="w-4 h-4" />
+              <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+            </Button>
+          </div>
+
+          {/* Language & Settings */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="p-2">
+                <Settings className="w-4 h-4" />
               </Button>
-            )}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>
+                <Globe className="mr-2 h-4 w-4" />
+                <span>Tiếng Việt</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Cài Đặt Hệ Thống</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-            {/* Search */}
-            <div className="hidden md:block">
-              <form onSubmit={handleSearch} className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder="Tìm kiếm trong hệ thống..."
-                  className="pl-10 w-64"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </form>
-            </div>
-
-            {/* Mobile Search Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowSearch(true)}
-              className="md:hidden"
-            >
-              <Search className="w-5 h-5" />
-            </Button>
-
-            {/* Notifications */}
-            <NotificationCenter />
-
-            {/* User Menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src="/placeholder.svg" />
-                    <AvatarFallback className="bg-blue-100 text-blue-600">
-                      {currentUser.fullName.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <div className="flex items-center justify-start gap-2 p-2">
-                  <div className="flex flex-col space-y-1 leading-none">
-                    <p className="font-medium">{currentUser.fullName}</p>
-                    <p className="w-[200px] truncate text-sm text-muted-foreground">
-                      {getRoleDisplayName(currentUser.role)}
-                    </p>
-                    <p className="w-[200px] truncate text-xs text-muted-foreground">
-                      {currentUser.email}
-                    </p>
-                  </div>
+          {/* User Menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0">
+                <Avatar className="h-9 w-9">
+                  <AvatarImage src="/placeholder.svg" />
+                  <AvatarFallback className="bg-blue-100 text-blue-600 text-sm">
+                    {currentUser.fullName.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+              <div className="flex items-center justify-start gap-2 p-2">
+                <div className="flex flex-col space-y-1 leading-none">
+                  <p className="font-medium text-sm">{currentUser.fullName}</p>
+                  <p className="w-[200px] truncate text-xs text-muted-foreground">
+                    {getRoleDisplayName(currentUser.role)}
+                  </p>
+                  <p className="w-[200px] truncate text-xs text-muted-foreground">
+                    {currentUser.email}
+                  </p>
                 </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleUserSettings}>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Cài Đặt Cá Nhân</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="text-red-600">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Đăng Xuất</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+              </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setShowUserSettings(true)}>
+                <User className="mr-2 h-4 w-4" />
+                <span>Cài Đặt Cá Nhân</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setShowLogoutConfirm(true)} className="text-red-600">
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Đăng Xuất</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 
