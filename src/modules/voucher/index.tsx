@@ -40,8 +40,8 @@ export function VoucherModule({ currentUser, onBackToModules }: VoucherModulePro
   };
 
   return (
-    <div className="flex h-full bg-gray-50">
-      {/* Voucher Module Sidebar */}
+    <div className="flex h-screen bg-gray-50">
+      {/* Voucher Module Sidebar - Always visible */}
       <VoucherModuleSidebar
         currentPage={currentPage}
         onPageChange={setCurrentPage}
@@ -50,7 +50,7 @@ export function VoucherModule({ currentUser, onBackToModules }: VoucherModulePro
       />
       
       {/* Content Area */}
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto">
         {renderPage()}
       </div>
     </div>
