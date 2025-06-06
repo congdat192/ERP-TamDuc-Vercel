@@ -51,7 +51,9 @@ export function VoucherModule({ currentUser, onBackToModules }: VoucherModulePro
       
       {/* Content Area */}
       <div className="flex-1 overflow-auto">
-        {renderPage()}
+        <div className="p-6">
+          {renderPage()}
+        </div>
       </div>
     </div>
   );

@@ -9,8 +9,7 @@ import {
   Trophy, 
   Settings,
   Target,
-  Plus,
-  ArrowLeft
+  Plus
 } from 'lucide-react';
 import { VoucherFeature, User } from '@/types/auth';
 
@@ -45,7 +44,7 @@ export function VoucherModuleSidebar({
     <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
       {/* Module Header */}
       <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center space-x-3 mb-3">
+        <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
             <Ticket className="w-5 h-5 text-orange-600" />
           </div>
@@ -54,17 +53,6 @@ export function VoucherModuleSidebar({
             <p className="text-sm text-gray-500">Quản lý voucher và khuyến mãi</p>
           </div>
         </div>
-        
-        {/* Back to Dashboard Button */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onBackToModules}
-          className="w-full flex items-center space-x-2"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Về Tổng Quan</span>
-        </Button>
       </div>
 
       {/* Navigation */}
