@@ -4,7 +4,7 @@ import { ERPMainSidebar } from './ERPMainSidebar';
 import { Header } from './Header';
 import { User, ERPModule } from '@/types/auth';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 
 interface ERPLayoutProps {
   currentUser: User;
@@ -51,10 +51,6 @@ export function ERPLayout({
     return moduleTitles[currentModule as keyof typeof moduleTitles] || 'ERP System';
   };
 
-  const handleBackToModules = () => {
-    onModuleChange('dashboard');
-  };
-
   const handleSidebarToggle = () => {
     setSidebarOpen(!sidebarOpen);
   };
@@ -73,7 +69,7 @@ export function ERPLayout({
       )}
       
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
+        {/* Header - Only show menu button when not on dashboard and sidebar is hidden */}
         <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
             {/* Show menu button only when sidebar is hidden and not on dashboard */}
@@ -86,19 +82,6 @@ export function ERPLayout({
               >
                 <Menu className="w-4 h-4" />
                 <span>Menu</span>
-              </Button>
-            )}
-            
-            {/* Show back button only when not on dashboard */}
-            {currentModule !== 'dashboard' && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleBackToModules}
-                className="flex items-center space-x-2"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Tổng Quan</span>
               </Button>
             )}
             
