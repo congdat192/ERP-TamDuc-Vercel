@@ -1,7 +1,5 @@
-
 import { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { SalesHeader } from '../components/SalesHeader';
 import { SalesFilters } from '../components/SalesFilters';
 import { SalesSearchAndActions } from '../components/SalesSearchAndActions';
 import { SalesTable } from '../components/SalesTable';
@@ -104,9 +102,6 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <SalesHeader onBackToModules={onBackToModules} />
-
       <div className="flex">
         {/* Desktop Filter Sidebar */}
         {!isMobile && (

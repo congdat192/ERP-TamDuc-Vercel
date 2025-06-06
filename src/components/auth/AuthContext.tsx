@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState } from 'react';
 import { User } from '@/types/auth';
 
@@ -33,6 +32,7 @@ const mockUsers: User[] = [
     emailVerified: true,
     permissions: {
       modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'system-settings', 'user-management'],
+      voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
       canManageUsers: true,
       canViewAllVouchers: true,
     },
