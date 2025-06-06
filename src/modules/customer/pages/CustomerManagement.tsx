@@ -1,6 +1,4 @@
 import { useState } from 'react';
-import { CustomerHeader } from '../components/CustomerHeader';
-import { CustomerActions } from '../components/CustomerActions';
 import { CustomerFilters } from '../components/CustomerFilters';
 import { CustomerSearchActions } from '../components/CustomerSearchActions';
 import { CustomerStats } from '../components/CustomerStats';
@@ -263,14 +261,6 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4">
-        <div className="flex items-center justify-between">
-          <CustomerHeader onBackToModules={onBackToModules} />
-          <CustomerActions setSidebarOpen={setSidebarOpen} />
-        </div>
-      </div>
-
       <div className="flex relative">
         {/* Mobile Sidebar Overlay */}
         {sidebarOpen && (
@@ -285,7 +275,7 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
 
         {/* Main Content */}
         <div className="flex-1 p-4 sm:p-6">
-          {/* Search and Filters */}
+          {/* Search and Actions */}
           <CustomerSearchActions 
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
