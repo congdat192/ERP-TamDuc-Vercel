@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,10 @@ import {
   Bell,
   Save,
   CheckCircle,
-  Edit
+  Edit,
+  FileText,
+  Cog,
+  Users
 } from 'lucide-react';
 import { VoucherSettingsConfig } from '../components/VoucherSettingsConfig';
 import { VoucherIssueRulesConditions } from '../components/VoucherIssueRulesConditions';
@@ -454,7 +458,7 @@ export function VoucherSettings() {
           <h2 className="text-2xl font-bold theme-text">Cài Đặt Module Voucher</h2>
           <p className="theme-text-muted">Cấu hình và tùy chỉnh module voucher</p>
         </div>
-        <Button onClick={handleSaveSettings} variant="default">
+        <Button onClick={handleSaveSettings} className="voucher-button-primary">
           <Save className="w-4 h-4 mr-2" />
           Lưu Cài Đặt
         </Button>
@@ -462,18 +466,34 @@ export function VoucherSettings() {
 
       <Tabs defaultValue="template-management" className="space-y-6">
         <div className="flex justify-center">
-          <TabsList className="grid w-full max-w-md grid-cols-4">
-            <TabsTrigger value="template-management">
-              Quản Lý Template
+          <TabsList className="grid w-full max-w-4xl grid-cols-4 h-auto p-2 voucher-card">
+            <TabsTrigger 
+              value="template-management"
+              className="voucher-tabs-trigger flex flex-col items-center space-y-1 p-3 min-h-[60px]"
+            >
+              <FileText className="w-4 h-4" />
+              <span className="text-xs text-center leading-tight">Quản Lý Template</span>
             </TabsTrigger>
-            <TabsTrigger value="issue-rules">
-              Quy Tắc Phát Voucher
+            <TabsTrigger 
+              value="issue-rules"
+              className="voucher-tabs-trigger flex flex-col items-center space-y-1 p-3 min-h-[60px]"
+            >
+              <Cog className="w-4 h-4" />
+              <span className="text-xs text-center leading-tight">Quy Tắc Phát Voucher</span>
             </TabsTrigger>
-            <TabsTrigger value="system-config">
-              Cấu Hình Hệ Thống
+            <TabsTrigger 
+              value="system-config"
+              className="voucher-tabs-trigger flex flex-col items-center space-y-1 p-3 min-h-[60px]"
+            >
+              <Settings className="w-4 h-4" />
+              <span className="text-xs text-center leading-tight">Cấu Hình Hệ Thống</span>
             </TabsTrigger>
-            <TabsTrigger value="permissions">
-              Quyền Hạn & Thông Báo
+            <TabsTrigger 
+              value="permissions"
+              className="voucher-tabs-trigger flex flex-col items-center space-y-1 p-3 min-h-[60px]"
+            >
+              <Users className="w-4 h-4" />
+              <span className="text-xs text-center leading-tight">Quyền Hạn & Thông Báo</span>
             </TabsTrigger>
           </TabsList>
         </div>
@@ -534,6 +554,7 @@ export function VoucherSettings() {
                       variant="outline" 
                       size="sm" 
                       onClick={() => setPermissionDialogOpen('viewAllVouchers')}
+                      className="theme-text-primary border-current hover:berry-primary-50"
                     >
                       <Edit className="w-4 h-4 mr-1" />
                       Cập Nhật
@@ -560,6 +581,7 @@ export function VoucherSettings() {
                       variant="outline" 
                       size="sm" 
                       onClick={() => setPermissionDialogOpen('approvalRequired')}
+                      className="theme-text-primary border-current hover:berry-primary-50"
                     >
                       <Edit className="w-4 h-4 mr-1" />
                       Cập Nhật
@@ -584,6 +606,7 @@ export function VoucherSettings() {
                       variant="outline" 
                       size="sm" 
                       onClick={() => setPermissionDialogOpen('reissueVouchers')}
+                      className="theme-text-primary border-current hover:berry-primary-50"
                     >
                       <Edit className="w-4 h-4 mr-1" />
                       Cập Nhật
@@ -620,6 +643,7 @@ export function VoucherSettings() {
                       variant="outline" 
                       size="sm" 
                       onClick={() => setNotificationDialogOpen('newVoucher')}
+                      className="theme-text-primary border-current hover:berry-primary-50"
                     >
                       <Edit className="w-4 h-4 mr-1" />
                       Cập Nhật
@@ -646,6 +670,7 @@ export function VoucherSettings() {
                       variant="outline" 
                       size="sm" 
                       onClick={() => setNotificationDialogOpen('expiration')}
+                      className="theme-text-primary border-current hover:berry-primary-50"
                     >
                       <Edit className="w-4 h-4 mr-1" />
                       Cập Nhật
@@ -672,6 +697,7 @@ export function VoucherSettings() {
                       variant="outline" 
                       size="sm" 
                       onClick={() => setNotificationDialogOpen('dailyReport')}
+                      className="theme-text-primary border-current hover:berry-primary-50"
                     >
                       <Edit className="w-4 h-4 mr-1" />
                       Cập Nhật
@@ -688,19 +714,19 @@ export function VoucherSettings() {
       <Card>
         <CardContent className="p-4">
           <div className="flex items-start space-x-3">
-            <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
+            <CheckCircle className="w-5 h-5 theme-text-primary mt-0.5" />
             <div>
-              <h3 className="font-medium text-gray-900">Trạng Thái Cài Đặt</h3>
-              <p className="text-sm text-gray-600 mt-1">
+              <h3 className="font-medium theme-text">Trạng Thái Cài Đặt</h3>
+              <p className="text-sm theme-text-muted mt-1">
                 Hệ thống quản lý voucher với template điều kiện và tạo mã tự động đã được thiết lập. 
                 Các thay đổi sẽ được áp dụng ngay lập tức cho module voucher.
                 {voucherCodeConfig && (
-                  <span className="block mt-2 font-medium text-blue-600">
+                  <span className="block mt-2 font-medium theme-text-primary">
                     Cấu hình hiện tại: {voucherCodeConfig.selectedBatch}
                   </span>
                 )}
               </p>
-              <div className="mt-2 bg-green-100 text-green-800 px-2 py-1 rounded text-sm inline-flex items-center">
+              <div className="mt-2 berry-success-light px-2 py-1 rounded text-sm inline-flex items-center">
                 <CheckCircle className="w-3 h-3 mr-1" />
                 Cấu Hình Hoàn Tất
               </div>

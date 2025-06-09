@@ -204,31 +204,31 @@
     /* Already set as default above */
   }
 
-  /* Preset 2 - CORRECTED Teal Green from user's image */
+  /* Preset 2 - CORRECTED Teal Green based on user's palette */
   .preset2 {
-    /* Primary becomes Teal - CORRECTED colors based on user's palette */
-    --voucher-primary-50: 174 100% 96%;   /* #E0F7FA */
-    --voucher-primary-100: 174 84% 90%;   /* #B2EBF2 */
-    --voucher-primary-200: 174 60% 82%;   /* #80DEEA */
-    --voucher-primary-300: 174 58% 73%;   /* #4DD0E1 */
-    --voucher-primary-400: 174 68% 65%;   /* #26C6DA */
-    --voucher-primary-500: 174 68% 56%;   /* #00BCD4 - main teal */
-    --voucher-primary-600: 174 86% 49%;   /* #00ACC1 */
-    --voucher-primary-700: 174 86% 42%;   /* #0097A7 */
-    --voucher-primary-800: 174 86% 35%;   /* #00838F */
-    --voucher-primary-900: 175 86% 28%;   /* #006064 */
+    /* Primary becomes Teal - Based on actual user palette colors */
+    --voucher-primary-50: 174 44% 96%;   /* #F0FDFA - very light teal */
+    --voucher-primary-100: 166 76% 87%;  /* #CCFBF1 - light teal */
+    --voucher-primary-200: 166 72% 77%;  /* #99F6E4 - lighter teal */
+    --voucher-primary-300: 166 69% 65%;  /* #5EEAD4 - light teal */
+    --voucher-primary-400: 166 60% 51%;  /* #2DD4BF - medium teal */
+    --voucher-primary-500: 166 76% 42%;  /* #14B8A6 - main teal from palette */
+    --voucher-primary-600: 166 77% 36%;  /* #0D9488 - darker teal */
+    --voucher-primary-700: 167 85% 29%;  /* #0F766E - dark teal */
+    --voucher-primary-800: 168 84% 22%;  /* #115E59 - very dark teal */
+    --voucher-primary-900: 171 92% 17%;  /* #134E4A - darkest teal */
     
-    /* Secondary stays Deep Purple but updated */
-    --voucher-secondary-50: 261 32% 96%;  /* #EDE7F6 */
-    --voucher-secondary-100: 261 46% 87%; /* #D1C4E9 */
-    --voucher-secondary-200: 262 47% 78%; /* #B39DDB */
-    --voucher-secondary-300: 262 47% 64%; /* #9575CD */
-    --voucher-secondary-400: 262 52% 55%; /* #7E57C2 */
-    --voucher-secondary-500: 262 52% 47%; /* #673AB7 - main */
-    --voucher-secondary-600: 262 57% 42%; /* #5E35B1 */
-    --voucher-secondary-700: 262 57% 35%; /* #512DA8 */
-    --voucher-secondary-800: 262 57% 30%; /* #4527A0 */
-    --voucher-secondary-900: 262 69% 22%; /* #311B92 */
+    /* Secondary becomes Dark Grey - Based on user's palette */
+    --voucher-secondary-50: 210 20% 96%;  /* #F8FAFC - very light grey */
+    --voucher-secondary-100: 214 32% 91%; /* #E2E8F0 - light grey */
+    --voucher-secondary-200: 213 27% 84%; /* #CBD5E1 - lighter grey */
+    --voucher-secondary-300: 212 22% 73%; /* #94A3B8 - light grey */
+    --voucher-secondary-400: 215 20% 65%; /* #64748B - medium grey */
+    --voucher-secondary-500: 215 25% 27%; /* #374151 - main dark grey from palette */
+    --voucher-secondary-600: 215 28% 23%; /* #1F2937 - darker grey */
+    --voucher-secondary-700: 217 33% 17%; /* #111827 - dark grey */
+    --voucher-secondary-800: 220 39% 11%; /* #0F172A - very dark grey */
+    --voucher-secondary-900: 225 71% 8%;  /* #020617 - darkest grey */
     
     /* Update legacy variables */
     --voucher-primary: var(--voucher-primary-500);
@@ -409,16 +409,16 @@
     @apply theme-card rounded-lg transition-all duration-200 hover:shadow-md;
   }
 
-  /* Voucher Tab Active States - FIXED Text Visibility */
+  /* FIXED Voucher Tab Active States - High Contrast */
   .voucher-tab-active {
-    background-color: hsl(var(--voucher-primary-600)) !important;
+    background-color: hsl(var(--voucher-primary-500)) !important;
     color: white !important;
     font-weight: 600;
-    border-color: hsl(var(--voucher-primary-600)) !important;
+    border-color: hsl(var(--voucher-primary-500)) !important;
   }
 
   .voucher-tab-active:hover {
-    background-color: hsl(var(--voucher-primary-700)) !important;
+    background-color: hsl(var(--voucher-primary-600)) !important;
     color: white !important;
   }
 
@@ -555,37 +555,47 @@
 
   /* FIXED Button Variants with Enhanced Contrast */
   .voucher-button-primary {
-    background-color: hsl(var(--voucher-primary-600));
+    background-color: hsl(var(--voucher-primary-500));
     color: white;
     font-weight: 600;
+    border: none;
   }
 
   .voucher-button-primary:hover {
-    background-color: hsl(var(--voucher-primary-700));
+    background-color: hsl(var(--voucher-primary-600));
     color: white;
   }
 
   .voucher-button-secondary {
-    background-color: hsl(var(--voucher-secondary-600));
+    background-color: hsl(var(--voucher-secondary-500));
     color: white;
     font-weight: 600;
+    border: none;
   }
 
   .voucher-button-secondary:hover {
-    background-color: hsl(var(--voucher-secondary-700));
+    background-color: hsl(var(--voucher-secondary-600));
     color: white;
   }
 
-  /* Tab System Enhanced */
+  /* FIXED Tab System Enhanced - Better Contrast */
+  .voucher-tabs-trigger {
+    transition: all 0.2s ease-in-out;
+    font-weight: 500;
+    color: hsl(var(--theme-text-muted));
+    border: 2px solid transparent;
+  }
+
   .voucher-tabs-trigger[data-state="active"] {
-    background-color: hsl(var(--voucher-primary-600)) !important;
+    background-color: hsl(var(--voucher-primary-500)) !important;
     color: white !important;
     font-weight: 600 !important;
-    border-bottom-color: hsl(var(--voucher-primary-600)) !important;
+    border-color: hsl(var(--voucher-primary-500)) !important;
   }
 
   .voucher-tabs-trigger:hover:not([data-state="active"]) {
     background-color: hsl(var(--voucher-primary-50));
     color: hsl(var(--voucher-primary-700));
+    border-color: hsl(var(--voucher-primary-200));
   }
 }
