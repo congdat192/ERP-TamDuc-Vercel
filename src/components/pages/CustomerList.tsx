@@ -98,22 +98,22 @@ export function CustomerList() {
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'VIP':
-        return 'bg-purple-100 text-purple-800';
+        return 'theme-badge-secondary';
       case 'Premium':
-        return 'bg-blue-100 text-blue-800';
+        return 'theme-badge-primary';
       case 'Thường':
-        return 'bg-green-100 text-green-800';
+        return 'theme-badge-success';
       case 'Mới':
-        return 'bg-gray-100 text-gray-800';
+        return 'theme-border-primary/20 theme-text-muted';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'theme-border-primary/20 theme-text-muted';
     }
   };
 
   const getStatusColor = (status: string) => {
     return status === 'Hoạt động' 
-      ? 'bg-green-100 text-green-800' 
-      : 'bg-red-100 text-red-800';
+      ? 'theme-badge-success' 
+      : 'bg-red-100 text-red-800 border-red-200';
   };
 
   const filteredCustomers = customerData.filter(customer => {
@@ -138,15 +138,15 @@ export function CustomerList() {
       {/* Header and Actions */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Danh Sách Khách Hàng</h2>
-          <p className="text-gray-600">Quản lý thông tin và lịch sử khách hàng</p>
+          <h2 className="text-2xl font-bold theme-text">Danh Sách Khách Hàng</h2>
+          <p className="theme-text-muted">Quản lý thông tin và lịch sử khách hàng</p>
         </div>
         <div className="flex space-x-2">
-          <Button variant="outline">
-            <Download className="w-4 h-4 mr-2" />
+          <Button variant="outline" className="theme-border-primary hover:theme-bg-secondary/10 hover:theme-text-secondary">
+            <Download className="w-4 h-4 mr-2 theme-text-secondary" />
             Xuất File
           </Button>
-          <Button>
+          <Button className="voucher-button-primary">
             <UserPlus className="w-4 h-4 mr-2" />
             Thêm Khách Hàng
           </Button>
@@ -154,17 +154,17 @@ export function CustomerList() {
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="theme-card">
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 theme-text-muted w-4 h-4" />
                 <Input
                   placeholder="Tìm kiếm theo tên, số điện thoại hoặc email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 voucher-input"
                 />
               </div>
             </div>
@@ -202,15 +202,15 @@ export function CustomerList() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
+        <Card className="voucher-card">
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="flex-1">
-                <p className="text-sm text-gray-600">Tổng Khách Hàng</p>
-                <p className="text-2xl font-bold text-gray-900">{customerData.length}</p>
+                <p className="text-sm theme-text-muted">Tổng Khách Hàng</p>
+                <p className="text-2xl font-bold theme-text">{customerData.length}</p>
               </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <UserPlus className="w-6 h-6 text-blue-600" />
+              <div className="w-12 h-12 theme-bg-primary rounded-lg flex items-center justify-center">
+                <UserPlus className="w-6 h-6 text-white" />
               </div>
             </div>
           </CardContent>
@@ -220,8 +220,8 @@ export function CustomerList() {
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="flex-1">
-                <p className="text-sm text-gray-600">Khách Hàng VIP</p>
-                <p className="text-2xl font-bold text-gray-900">{customerData.filter(c => c.type === 'VIP').length}</p>
+                <p className="text-sm theme-text-muted">Khách Hàng VIP</p>
+                <p className="text-2xl font-bold theme-text">{customerData.filter(c => c.type === 'VIP').length}</p>
               </div>
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                 <Receipt className="w-6 h-6 text-purple-600" />
@@ -234,8 +234,8 @@ export function CustomerList() {
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="flex-1">
-                <p className="text-sm text-gray-600">Hoạt Động</p>
-                <p className="text-2xl font-bold text-gray-900">{customerData.filter(c => c.status === 'Hoạt động').length}</p>
+                <p className="text-sm theme-text-muted">Hoạt Động</p>
+                <p className="text-2xl font-bold theme-text">{customerData.filter(c => c.status === 'Hoạt động').length}</p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                 <Eye className="w-6 h-6 text-green-600" />
@@ -248,8 +248,8 @@ export function CustomerList() {
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="flex-1">
-                <p className="text-sm text-gray-600">Khách Mới Tháng Này</p>
-                <p className="text-2xl font-bold text-gray-900">12</p>
+                <p className="text-sm theme-text-muted">Khách Mới Tháng Này</p>
+                <p className="text-2xl font-bold theme-text">12</p>
               </div>
               <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
                 <Calendar className="w-6 h-6 text-orange-600" />
@@ -260,51 +260,51 @@ export function CustomerList() {
       </div>
 
       {/* Customer Table */}
-      <Card>
+      <Card className="theme-card">
         <CardHeader>
-          <CardTitle>Danh Sách Khách Hàng ({filteredCustomers.length})</CardTitle>
+          <CardTitle className="theme-text">Danh Sách Khách Hàng ({filteredCustomers.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <ScrollArea className="w-full">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Khách Hàng</TableHead>
-                  <TableHead>Liên Hệ</TableHead>
-                  <TableHead>Loại</TableHead>
-                  <TableHead>Nguồn</TableHead>
-                  <TableHead>Voucher</TableHead>
-                  <TableHead>Tổng Giá Trị</TableHead>
-                  <TableHead>Voucher Cuối</TableHead>
-                  <TableHead>Trạng Thái</TableHead>
-                  <TableHead>Thao Tác</TableHead>
+                  <TableHead className="theme-text">Khách Hàng</TableHead>
+                  <TableHead className="theme-text">Liên Hệ</TableHead>
+                  <TableHead className="theme-text">Loại</TableHead>
+                  <TableHead className="theme-text">Nguồn</TableHead>
+                  <TableHead className="theme-text">Voucher</TableHead>
+                  <TableHead className="theme-text">Tổng Giá Trị</TableHead>
+                  <TableHead className="theme-text">Voucher Cuối</TableHead>
+                  <TableHead className="theme-text">Trạng Thái</TableHead>
+                  <TableHead className="theme-text">Thao Tác</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredCustomers.map((customer) => (
-                  <TableRow key={customer.id} className="hover:bg-gray-50">
+                  <TableRow key={customer.id} className="hover:theme-bg-primary/5">
                     <TableCell>
                       <div className="flex items-center space-x-3">
                         <Avatar className="w-10 h-10">
                           <AvatarImage src="/placeholder.svg" />
-                          <AvatarFallback className="bg-blue-100 text-blue-600">
+                          <AvatarFallback className="theme-bg-primary/10 theme-text-primary">
                             {customer.name.charAt(0)}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <div className="font-medium">{customer.name}</div>
-                          <div className="text-sm text-gray-500">Đăng ký: {customer.registrationDate}</div>
+                          <div className="font-medium theme-text">{customer.name}</div>
+                          <div className="text-sm theme-text-muted">Đăng ký: {customer.registrationDate}</div>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
                         <div className="flex items-center text-sm">
-                          <Phone className="w-4 h-4 mr-2 text-gray-400" />
-                          {customer.phone}
+                          <Phone className="w-4 h-4 mr-2 theme-text-muted" />
+                          <span className="theme-text">{customer.phone}</span>
                         </div>
-                        <div className="flex items-center text-sm text-gray-500">
-                          <Mail className="w-4 h-4 mr-2 text-gray-400" />
+                        <div className="flex items-center text-sm theme-text-muted">
+                          <Mail className="w-4 h-4 mr-2 theme-text-muted" />
                           {customer.email}
                         </div>
                       </div>
@@ -314,14 +314,14 @@ export function CustomerList() {
                         {customer.type}
                       </Badge>
                     </TableCell>
-                    <TableCell>{customer.source}</TableCell>
-                    <TableCell className="text-center font-medium">
+                    <TableCell className="theme-text">{customer.source}</TableCell>
+                    <TableCell className="text-center font-medium theme-text">
                       {customer.totalVouchers}
                     </TableCell>
-                    <TableCell className="font-semibold text-green-600">
+                    <TableCell className="font-semibold theme-text-primary">
                       {customer.totalValue}
                     </TableCell>
-                    <TableCell>{customer.lastVoucherDate}</TableCell>
+                    <TableCell className="theme-text">{customer.lastVoucherDate}</TableCell>
                     <TableCell>
                       <Badge className={getStatusColor(customer.status)}>
                         {customer.status}
@@ -333,11 +333,16 @@ export function CustomerList() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleViewDetails(customer)}
+                          className="hover:theme-bg-primary/10 hover:theme-text-primary"
                         >
-                          <Eye className="w-4 h-4" />
+                          <Eye className="w-4 h-4 theme-text-primary" />
                         </Button>
-                        <Button variant="ghost" size="sm">
-                          <Edit className="w-4 h-4" />
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          className="hover:theme-bg-secondary/10 hover:theme-text-secondary"
+                        >
+                          <Edit className="w-4 h-4 theme-text-secondary" />
                         </Button>
                       </div>
                     </TableCell>
@@ -351,9 +356,9 @@ export function CustomerList() {
 
       {/* Customer Details Modal */}
       <Dialog open={showDetails} onOpenChange={setShowDetails}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-3xl theme-card">
           <DialogHeader>
-            <DialogTitle>Chi Tiết Khách Hàng</DialogTitle>
+            <DialogTitle className="theme-text">Chi Tiết Khách Hàng</DialogTitle>
           </DialogHeader>
           
           {selectedCustomer && (
@@ -367,7 +372,7 @@ export function CustomerList() {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                  <h3 className="text-xl font-semibold text-gray-900">{selectedCustomer.name}</h3>
+                  <h3 className="text-xl font-semibold theme-text">{selectedCustomer.name}</h3>
                   <div className="flex items-center space-x-4 mt-2">
                     <Badge className={getTypeColor(selectedCustomer.type)}>
                       {selectedCustomer.type}
