@@ -57,8 +57,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     root.classList.remove('light', 'dark');
     root.classList.add(themeConfig.mode);
     
-    // Apply theme preset class
-    root.classList.remove('preset1', 'preset2', 'preset3', 'preset4', 'preset5', 'preset6', 'preset7', 'preset8');
+    // Apply theme preset class - only 2 presets now
+    root.classList.remove('preset1', 'preset2');
     root.classList.add(themeConfig.preset);
   };
 

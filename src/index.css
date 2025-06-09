@@ -49,6 +49,13 @@
     --theme-primary: 265 71% 76%;
     --theme-secondary: 195 100% 71%;
     --theme-gradient: linear-gradient(135deg, #A389F4, #70D8FF);
+    
+    /* Enhanced Theme Variables */
+    --theme-background: 0 0% 98%;
+    --theme-card: 0 0% 100%;
+    --theme-text: 222.2 84% 4.9%;
+    --theme-text-muted: 215.4 16.3% 46.9%;
+    --theme-border: 214.3 31.8% 91.4%;
   }
 
   .dark {
@@ -89,6 +96,13 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Enhanced Theme Variables - Dark Mode */
+    --theme-background: 222.2 84% 4.9%;
+    --theme-card: 217.2 32.6% 17.5%;
+    --theme-text: 210 40% 98%;
+    --theme-text-muted: 215 20.2% 65.1%;
+    --theme-border: 217.2 32.6% 17.5%;
   }
 
   /* Theme Preset Colors */
@@ -100,53 +114,11 @@
     --theme-gradient: linear-gradient(135deg, #A389F4, #70D8FF);
   }
 
-  /* Preset 2 - Green Slate */
+  /* Preset 2 - Teal Green */
   .preset2 {
     --theme-primary: 162 53% 54%;
     --theme-secondary: 210 17% 32%;
     --theme-gradient: linear-gradient(135deg, #4BCB9A, #455A64);
-  }
-
-  /* Preset 3 - Blue Pink */
-  .preset3 {
-    --theme-primary: 228 83% 41%;
-    --theme-secondary: 330 84% 66%;
-    --theme-gradient: linear-gradient(135deg, #2234AE, #F857A6);
-  }
-
-  /* Preset 4 - Teal Dark */
-  .preset4 {
-    --theme-primary: 173 84% 33%;
-    --theme-secondary: 187 21% 26%;
-    --theme-gradient: linear-gradient(135deg, #11998E, #40514E);
-  }
-
-  /* Preset 5 - Gold Teal */
-  .preset5 {
-    --theme-primary: 44 60% 66%;
-    --theme-secondary: 182 67% 29%;
-    --theme-gradient: linear-gradient(135deg, #E2B969, #167D7F);
-  }
-
-  /* Preset 6 - Navy Sky */
-  .preset6 {
-    --theme-primary: 223 77% 32%;
-    --theme-secondary: 199 95% 62%;
-    --theme-gradient: linear-gradient(135deg, #1E3A8A, #38BDF8);
-  }
-
-  /* Preset 7 - Dark Green */
-  .preset7 {
-    --theme-primary: 216 69% 18%;
-    --theme-secondary: 162 53% 54%;
-    --theme-gradient: linear-gradient(135deg, #142850, #4BCB9A);
-  }
-
-  /* Preset 8 - Indigo Blue */
-  .preset8 {
-    --theme-primary: 228 51% 47%;
-    --theme-secondary: 228 76% 63%;
-    --theme-gradient: linear-gradient(135deg, #3546AB, #556EE6);
   }
 }
 
@@ -235,6 +207,24 @@
     background: var(--theme-gradient);
   }
 
+  /* Enhanced Theme Classes */
+  .theme-background {
+    background-color: hsl(var(--theme-background));
+  }
+
+  .theme-card {
+    background-color: hsl(var(--theme-card));
+    border: 1px solid hsl(var(--theme-border));
+  }
+
+  .theme-text {
+    color: hsl(var(--theme-text));
+  }
+
+  .theme-text-muted {
+    color: hsl(var(--theme-text-muted));
+  }
+
   /* Theme background variants */
   .theme-bg-primary\/10 {
     background-color: hsl(var(--theme-primary) / 0.1);
@@ -242,6 +232,10 @@
 
   .theme-bg-secondary\/10 {
     background-color: hsl(var(--theme-secondary) / 0.1);
+  }
+
+  .theme-bg-primary\/5 {
+    background-color: hsl(var(--theme-primary) / 0.05);
   }
 
   .theme-border-primary\/20 {
@@ -261,5 +255,18 @@
   .sidebar-active {
     background-color: hsl(var(--theme-primary));
     color: white;
+  }
+
+  /* Stats Cards */
+  .theme-stats-card {
+    @apply theme-card rounded-lg p-4 transition-all duration-200 hover:shadow-md;
+  }
+
+  .theme-stats-primary {
+    @apply theme-bg-primary/10 theme-border-primary/20 border;
+  }
+
+  .theme-stats-secondary {
+    @apply theme-bg-secondary/10 theme-border-secondary/20 border;
   }
 }
