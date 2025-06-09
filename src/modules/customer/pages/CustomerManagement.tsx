@@ -112,19 +112,12 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
         />
       )}
 
-      {/* Header Section - Full Width */}
-      <div className="w-full p-6 pb-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0 mb-6">
-          <div>
-            <h1 className="text-3xl font-bold theme-text">Quản Lý Khách Hàng</h1>
-            <p className="theme-text-muted mt-1">Theo dõi và quản lý thông tin khách hàng</p>
-          </div>
-        </div>
-        
+      {/* Stats Section - Moved up, no title */}
+      <div className="w-full px-6 pt-4 pb-2">
         <ThemedCustomerStats />
       </div>
 
-      {/* Main Content Layout - Sidebar + Content */}
+      {/* Main Content Layout - Optimized spacing */}
       <div className="flex w-full">
         {/* Sidebar Filter - Fixed Width 255px */}
         <CustomerFilters 
@@ -132,8 +125,8 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
           setSidebarOpen={setSidebarOpen}
         />
         
-        {/* Main Content Area */}
-        <div className="flex-1 lg:ml-0 p-6 pt-0 space-y-4">
+        {/* Main Content Area - Optimized padding */}
+        <div className="flex-1 lg:ml-0 px-6 py-2 space-y-3">
           {/* Search & Actions Bar */}
           <CustomerSearchActions 
             searchTerm={searchTerm}

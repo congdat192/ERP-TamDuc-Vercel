@@ -1,15 +1,37 @@
+
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { ChevronLeft, ChevronRight, Eye, Edit, MoreHorizontal } from 'lucide-react';
 import { ColumnConfig } from './ColumnVisibilityFilter';
 
+interface Customer {
+  id: string;
+  name: string;
+  phone: string;
+  group: string;
+  birthday: string;
+  creator: string;
+  createdDate: string;
+  note: string;
+  email: string;
+  facebook: string;
+  company: string;
+  taxCode: string;
+  address: string;
+  deliveryArea: string;
+  points: number;
+  totalSpent: number;
+  totalDebt: number;
+  status: string;
+}
+
 interface CustomerTableProps {
-  customers: any[];
+  customers: Customer[];
   visibleColumns: ColumnConfig[];
   selectedCustomers: string[];
   handleSelectCustomer: (customerId: string, checked: boolean) => void;
@@ -17,7 +39,7 @@ interface CustomerTableProps {
   currentPage: number;
   setCurrentPage: (page: number) => void;
   itemsPerPage: number;
-  setItemsPerPage: (value: number) => void;
+  setItemsPerPage: (items: number) => void;
   totalCustomers: number;
   totalPages: number;
 }
@@ -35,62 +57,36 @@ export function CustomerTable({
   totalCustomers,
   totalPages
 }: CustomerTableProps) {
-  
-  // Định nghĩa width cho từng loại cột
-  const getColumnWidth = (columnKey: string): string => {
-    // Cột ngắn (100px)
-    const shortColumns = ['gender', 'currentDebt', 'debtDays', 'currentPoints', 'totalPoints', 'status'];
-    
-    // Cột trung bình (150px)
-    const mediumColumns = ['customerCode', 'customerName', 'customerType', 'phone', 'email', 'creator', 'createDate', 'lastTransactionDate', 'totalSales'];
-    
-    // Cột dài (200-250px)
-    const longColumns = ['customerGroup', 'birthDate', 'facebook', 'company', 'taxCode', 'idNumber', 'address', 'deliveryArea', 'ward', 'notes', 'createBranch', 'totalSalesMinusReturns'];
-    
-    if (shortColumns.includes(columnKey)) return '100px';
-    if (mediumColumns.includes(columnKey)) return '150px';
-    if (longColumns.includes(columnKey)) return '220px';
-    
-    return '150px'; // default
-  };
-
-  const getGroupBadgeColor = (group: string) => {
-    switch (group) {
-      case '1.Giới thiệu':
-        return 'theme-badge-primary';
-      case '2. Facebook':
-        return 'theme-badge-secondary';
-      case '3. Google':
-        return 'theme-badge-success';
-      case '4. Di dưỡng':
-        return 'bg-orange-100 text-orange-800 border-orange-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+  const getStatusBadge = (status: string) => {
+    if (status === 'Hoạt động') {
+      return <Badge className="theme-badge-success">Hoạt động</Badge>;
     }
+    return <Badge className="berry-error-light">Ngưng hoạt động</Badge>;
   };
 
-  const renderCellContent = (customer: any, columnKey: string) => {
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND'
+    }).format(amount);
+  };
+
+  const renderCellContent = (customer: Customer, columnKey: string) => {
     switch (columnKey) {
       case 'customerCode':
-        return <span className="font-medium theme-text-primary">{customer.id}</span>;
+        return customer.id;
       case 'customerName':
-        return <span className="font-medium theme-text">{customer.name}</span>;
+        return customer.name;
+      case 'customerType':
+        return 'Cá nhân';
       case 'phone':
         return customer.phone;
       case 'customerGroup':
-        return (
-          <Badge className={getGroupBadgeColor(customer.group)} variant="secondary">
-            {customer.group}
-          </Badge>
-        );
+        return customer.group;
+      case 'gender':
+        return 'Nam';
       case 'birthDate':
         return customer.birthday;
-      case 'creator':
-        return customer.creator;
-      case 'createDate':
-        return customer.createdDate;
-      case 'notes':
-        return customer.note;
       case 'email':
         return customer.email;
       case 'facebook':
@@ -99,167 +95,163 @@ export function CustomerTable({
         return customer.company;
       case 'taxCode':
         return customer.taxCode;
+      case 'idNumber':
+        return '123456789';
       case 'address':
         return customer.address;
       case 'deliveryArea':
         return customer.deliveryArea;
-      case 'currentPoints':
-        return customer.points?.toLocaleString();
-      case 'totalSales':
-        return <span className="theme-text-primary font-medium">{customer.totalSpent?.toLocaleString()}</span>;
-      case 'currentDebt':
-        return customer.totalDebt?.toLocaleString();
-      case 'status':
-        return (
-          <Badge className={customer.status === 'Hoạt động' ? 'theme-badge-success' : 'bg-red-100 text-red-800 border-red-200'}>
-            {customer.status}
-          </Badge>
-        );
-      case 'customerType':
-        return 'Cá nhân'; // mock data
-      case 'gender':
-        return 'Nam'; // mock data
-      case 'idNumber':
-        return '123456789012'; // mock data
       case 'ward':
-        return 'Phường 1'; // mock data
+        return 'Phường 1';
+      case 'creator':
+        return customer.creator;
+      case 'createDate':
+        return customer.createdDate;
+      case 'notes':
+        return customer.note;
       case 'lastTransactionDate':
-        return '20/01/2024'; // mock data
+        return '20/01/2024';
       case 'createBranch':
-        return 'Chi nhánh chính'; // mock data
+        return 'Chi nhánh HCM';
+      case 'currentDebt':
+        return formatCurrency(customer.totalDebt);
       case 'debtDays':
-        return '0'; // mock data
+        return '0';
+      case 'totalSales':
+        return formatCurrency(customer.totalSpent);
+      case 'currentPoints':
+        return customer.points.toString();
       case 'totalPoints':
-        return '2000'; // mock data
+        return (customer.points + 200).toString();
       case 'totalSalesMinusReturns':
-        return customer.totalSpent?.toLocaleString(); // mock data
+        return formatCurrency(customer.totalSpent - 50000);
+      case 'status':
+        return getStatusBadge(customer.status);
       default:
-        return '';
+        return '-';
     }
   };
 
-  // Calculate pagination info
   const startIndex = (currentPage - 1) * itemsPerPage;
-  
-  // Tính tổng width của table
-  const totalTableWidth = visibleColumns.reduce((total, col) => {
-    const width = parseInt(getColumnWidth(col.key));
-    return total + width;
-  }, 50); // 50px cho checkbox column
+  const endIndex = Math.min(startIndex + itemsPerPage, totalCustomers);
 
   return (
-    <div className="theme-card rounded-lg border theme-border-primary">
-      {/* Table container với horizontal scroll được tối ưu */}
-      <div className="overflow-x-auto">
-        <div style={{ minWidth: `${totalTableWidth}px` }}>
-          <table className="w-full">
-            <thead className="sticky top-0 bg-white z-10 border-b theme-border-primary">
-              <tr className="bg-gray-50">
-                <th className="w-[50px] px-4 py-3 text-left">
-                  <Checkbox 
-                    checked={selectedCustomers.length === customers.length && customers.length > 0}
+    <Card className="theme-card">
+      <CardContent className="p-0">
+        <ScrollArea className="w-full">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:theme-bg-primary/5">
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={selectedCustomers.length === customers.length}
                     onCheckedChange={handleSelectAll}
                     className="theme-border-primary data-[state=checked]:theme-bg-primary"
                   />
-                </th>
+                </TableHead>
                 {visibleColumns.map((column) => (
-                  <th 
-                    key={column.key} 
-                    style={{ width: getColumnWidth(column.key) }}
-                    className="px-4 py-3 text-left font-medium theme-text-muted"
-                  >
-                    <div className="whitespace-normal break-words">
-                      {column.label}
-                    </div>
-                  </th>
+                  <TableHead key={column.key} className="theme-text font-medium">
+                    {column.label}
+                  </TableHead>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
-              {customers.map((customer) => (
-                <tr key={customer.id} className="hover:theme-bg-primary/5 border-b theme-border-primary/30">
-                  <td className="px-4 py-3">
-                    <Checkbox 
+                <TableHead className="theme-text font-medium w-24">Thao tác</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {customers.slice(startIndex, startIndex + itemsPerPage).map((customer) => (
+                <TableRow key={customer.id} className="hover:theme-bg-primary/5">
+                  <TableCell>
+                    <Checkbox
                       checked={selectedCustomers.includes(customer.id)}
                       onCheckedChange={(checked) => handleSelectCustomer(customer.id, checked as boolean)}
                       className="theme-border-primary data-[state=checked]:theme-bg-primary"
                     />
-                  </td>
+                  </TableCell>
                   {visibleColumns.map((column) => (
-                    <td 
-                      key={column.key} 
-                      style={{ width: getColumnWidth(column.key) }}
-                      className="px-4 py-3"
-                    >
-                      <div className="whitespace-normal break-words text-sm theme-text">
-                        {renderCellContent(customer, column.key)}
-                      </div>
-                    </td>
+                    <TableCell key={column.key} className="theme-text">
+                      {renderCellContent(customer, column.key)}
+                    </TableCell>
                   ))}
-                </tr>
+                  <TableCell>
+                    <div className="flex items-center space-x-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 hover:theme-bg-primary/10 hover:theme-text-primary"
+                      >
+                        <Eye className="w-4 h-4 theme-text-primary" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 hover:theme-bg-secondary/10 hover:theme-text-secondary"
+                      >
+                        <Edit className="w-4 h-4 theme-text-secondary" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 hover:theme-bg-primary/10 hover:theme-text-primary"
+                      >
+                        <MoreHorizontal className="w-4 h-4 theme-text-primary" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            </TableBody>
+          </Table>
+        </ScrollArea>
 
-      {/* Pagination - outside table container but inside card */}
-      <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 border-t theme-border-primary space-y-3 sm:space-y-0">
-        <div className="flex items-center space-x-2">
-          <span className="text-sm theme-text-muted">Hiển thị</span>
-          <Select value={itemsPerPage.toString()} onValueChange={(value) => setItemsPerPage(Number(value))}>
-            <SelectTrigger className="w-20 h-8 theme-border-primary">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="15">15</SelectItem>
-              <SelectItem value="25">25</SelectItem>
-              <SelectItem value="50">50</SelectItem>
-              <SelectItem value="100">100</SelectItem>
-            </SelectContent>
-          </Select>
-          <span className="text-sm theme-text-muted">dòng</span>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4">
-          <span className="text-sm theme-text-muted">
-            {startIndex + 1} - {Math.min(startIndex + itemsPerPage, customers.length)} trong {totalCustomers.toLocaleString()} khách hàng
-          </span>
-          
+        {/* Pagination */}
+        <div className="flex items-center justify-between px-4 py-3 border-t theme-border-primary">
           <div className="flex items-center space-x-2">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              className="theme-border-primary hover:theme-bg-primary/10 hover:theme-text-primary disabled:opacity-50"
+            <span className="text-sm theme-text-muted">Hiển thị</span>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => setItemsPerPage(Number(e.target.value))}
+              className="px-2 py-1 text-sm border theme-border-primary rounded voucher-input theme-text"
             >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            
+              <option value={10}>10</option>
+              <option value={15}>15</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+            </select>
+            <span className="text-sm theme-text-muted">
+              trên {totalCustomers} khách hàng
+            </span>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <span className="text-sm theme-text-muted">
+              {startIndex + 1}-{endIndex} trên {totalCustomers}
+            </span>
             <div className="flex items-center space-x-1">
-              <Input
-                type="number"
-                min={1}
-                max={totalPages}
-                value={currentPage}
-                onChange={(e) => setCurrentPage(Number(e.target.value))}
-                className="w-16 h-8 text-center voucher-input"
-              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="h-8 w-8 p-0 theme-border-primary hover:theme-bg-primary/10 hover:theme-text-primary disabled:opacity-50"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <span className="px-3 py-1 text-sm theme-text">
+                {currentPage} / {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="h-8 w-8 p-0 theme-border-primary hover:theme-bg-primary/10 hover:theme-text-primary disabled:opacity-50"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
             </div>
-            
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-              disabled={currentPage === totalPages}
-              className="theme-border-primary hover:theme-bg-primary/10 hover:theme-text-primary disabled:opacity-50"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
           </div>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

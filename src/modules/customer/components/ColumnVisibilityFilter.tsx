@@ -61,12 +61,21 @@ export function ColumnVisibilityFilter({ columns, onColumnToggle }: ColumnVisibi
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="h-8 text-sm border-current theme-text theme-border-primary hover:theme-bg-primary/10 hover:theme-text-primary">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="h-8 text-sm border-current theme-text theme-border-primary hover:theme-bg-primary/10 hover:theme-text-primary"
+        >
           <Filter className="h-4 w-4 mr-2 theme-text-primary" />
           Hiển thị cột
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[600px] p-4 theme-card border theme-border-primary shadow-lg z-50" align="end" sideOffset={8}>
+      <PopoverContent 
+        className="w-[600px] p-4 theme-card border theme-border-primary shadow-lg z-[100]" 
+        align="end" 
+        sideOffset={8}
+        style={{ zIndex: 100 }}
+      >
         <div className="space-y-3">
           <ScrollArea className="h-auto max-h-[520px]">
             <div className="grid grid-cols-2 gap-6 pr-3">
@@ -78,7 +87,7 @@ export function ColumnVisibilityFilter({ columns, onColumnToggle }: ColumnVisibi
                       id={column.key}
                       checked={column.visible}
                       onCheckedChange={(checked) => onColumnToggle(column.key, checked as boolean)}
-                      className="h-4 w-4 flex-shrink-0"
+                      className="h-4 w-4 flex-shrink-0 theme-border-primary data-[state=checked]:theme-bg-primary"
                     />
                     <label
                       htmlFor={column.key}
@@ -98,7 +107,7 @@ export function ColumnVisibilityFilter({ columns, onColumnToggle }: ColumnVisibi
                       id={column.key}
                       checked={column.visible}
                       onCheckedChange={(checked) => onColumnToggle(column.key, checked as boolean)}
-                      className="h-4 w-4 flex-shrink-0"
+                      className="h-4 w-4 flex-shrink-0 theme-border-primary data-[state=checked]:theme-bg-primary"
                     />
                     <label
                       htmlFor={column.key}
