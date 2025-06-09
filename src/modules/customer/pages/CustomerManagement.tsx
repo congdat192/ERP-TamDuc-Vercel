@@ -103,41 +103,62 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
   const totalPages = Math.ceil(totalCustomers / itemsPerPage);
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-        <div>
-          <h1 className="text-3xl font-bold theme-text">Quản Lý Khách Hàng</h1>
-          <p className="theme-text-muted mt-1">Theo dõi và quản lý thông tin khách hàng</p>
+    <div className="min-h-screen theme-background">
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Header Section - Full Width */}
+      <div className="w-full p-6 pb-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0 mb-6">
+          <div>
+            <h1 className="text-3xl font-bold theme-text">Quản Lý Khách Hàng</h1>
+            <p className="theme-text-muted mt-1">Theo dõi và quản lý thông tin khách hàng</p>
+          </div>
         </div>
+        
+        <ThemedCustomerStats />
       </div>
 
-      <ThemedCustomerStats />
-      
-      <CustomerSearchActions 
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        columns={columns}
-        handleColumnToggle={handleColumnToggle}
-      />
-      
-      <CustomerFilters 
-        sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-      />
-      
-      <CustomerTable 
-        customers={customers}
-        visibleColumns={columns.filter(col => col.visible)}
-        selectedCustomers={selectedCustomers}
-        handleSelectCustomer={handleSelectCustomer}
-        handleSelectAll={handleSelectAll}
-        currentPage={currentPage}
-        setCurrentPage={setCurrentPage}
-        itemsPerPage={itemsPerPage}
-        setItemsPerPage={setItemsPerPage}
-        totalCustomers={totalCustomers}
-        totalPages={totalPages}
-      />
+      {/* Main Content Layout - Sidebar + Content */}
+      <div className="flex w-full">
+        {/* Sidebar Filter - Fixed Width 255px */}
+        <CustomerFilters 
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+        />
+        
+        {/* Main Content Area */}
+        <div className="flex-1 lg:ml-0 p-6 pt-0 space-y-4">
+          {/* Search & Actions Bar */}
+          <CustomerSearchActions 
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            columns={columns}
+            handleColumnToggle={handleColumnToggle}
+            onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+          />
+          
+          {/* Data Table */}
+          <CustomerTable 
+            customers={customers}
+            visibleColumns={columns.filter(col => col.visible)}
+            selectedCustomers={selectedCustomers}
+            handleSelectCustomer={handleSelectCustomer}
+            handleSelectAll={handleSelectAll}
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+            itemsPerPage={itemsPerPage}
+            setItemsPerPage={setItemsPerPage}
+            totalCustomers={totalCustomers}
+            totalPages={totalPages}
+          />
+        </div>
+      </div>
     </div>
   );
 }

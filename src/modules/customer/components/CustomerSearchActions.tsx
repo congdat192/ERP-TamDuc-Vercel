@@ -1,5 +1,5 @@
 
-import { Search, Upload, Download, Plus, MoreHorizontal } from 'lucide-react';
+import { Search, Upload, Download, Plus, MoreHorizontal, Filter } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ColumnVisibilityFilter } from './ColumnVisibilityFilter';
@@ -10,30 +10,47 @@ interface CustomerSearchActionsProps {
   setSearchTerm: (value: string) => void;
   columns: ColumnConfig[];
   handleColumnToggle: (columnKey: string, visible: boolean) => void;
+  onToggleSidebar?: () => void;
 }
 
 export function CustomerSearchActions({ 
   searchTerm, 
   setSearchTerm, 
   columns, 
-  handleColumnToggle 
+  handleColumnToggle,
+  onToggleSidebar 
 }: CustomerSearchActionsProps) {
   return (
-    <div className="theme-card rounded-lg border theme-border-primary mb-6">
+    <div className="theme-card rounded-lg border theme-border-primary">
       <div className="p-4">
         <div className="flex flex-col lg:flex-row items-center space-y-3 lg:space-y-0 lg:space-x-4">
-          {/* Search Input - Thu gọn chiều rộng */}
-          <div className="flex-1 lg:max-w-md relative w-full">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 theme-text-muted w-4 h-4" />
-            <Input
-              placeholder="Theo mã, tên, số điện thoại"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 voucher-input"
-            />
+          {/* Mobile Filter Toggle + Search */}
+          <div className="flex items-center space-x-3 w-full lg:flex-1 lg:max-w-md">
+            {/* Mobile Filter Toggle */}
+            {onToggleSidebar && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={onToggleSidebar}
+                className="lg:hidden theme-border-primary hover:theme-bg-primary/10 hover:theme-text-primary"
+              >
+                <Filter className="w-4 h-4 theme-text-primary" />
+              </Button>
+            )}
+            
+            {/* Search Input */}
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 theme-text-muted w-4 h-4" />
+              <Input
+                placeholder="Theo mã, tên, số điện thoại"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 voucher-input"
+              />
+            </div>
           </div>
           
-          {/* Action Buttons - Cùng hàng với search */}
+          {/* Action Buttons */}
           <div className="flex items-center space-x-2 w-full lg:w-auto">
             <div className="flex items-center space-x-2 flex-1 lg:flex-none">
               <Button variant="outline" size="sm" className="flex-1 lg:flex-none theme-border-primary hover:theme-bg-primary/10 hover:theme-text-primary">

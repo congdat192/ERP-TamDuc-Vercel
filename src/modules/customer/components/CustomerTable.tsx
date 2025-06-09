@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -58,24 +57,24 @@ export function CustomerTable({
   const getGroupBadgeColor = (group: string) => {
     switch (group) {
       case '1.Giới thiệu':
-        return 'bg-blue-100 text-blue-800';
+        return 'theme-badge-primary';
       case '2. Facebook':
-        return 'bg-purple-100 text-purple-800';
+        return 'theme-badge-secondary';
       case '3. Google':
-        return 'bg-green-100 text-green-800';
+        return 'theme-badge-success';
       case '4. Di dưỡng':
-        return 'bg-orange-100 text-orange-800';
+        return 'bg-orange-100 text-orange-800 border-orange-200';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
   const renderCellContent = (customer: any, columnKey: string) => {
     switch (columnKey) {
       case 'customerCode':
-        return <span className="font-medium text-blue-600">{customer.id}</span>;
+        return <span className="font-medium theme-text-primary">{customer.id}</span>;
       case 'customerName':
-        return <span className="font-medium">{customer.name}</span>;
+        return <span className="font-medium theme-text">{customer.name}</span>;
       case 'phone':
         return customer.phone;
       case 'customerGroup':
@@ -107,11 +106,15 @@ export function CustomerTable({
       case 'currentPoints':
         return customer.points?.toLocaleString();
       case 'totalSales':
-        return customer.totalSpent?.toLocaleString();
+        return <span className="theme-text-primary font-medium">{customer.totalSpent?.toLocaleString()}</span>;
       case 'currentDebt':
         return customer.totalDebt?.toLocaleString();
       case 'status':
-        return customer.status;
+        return (
+          <Badge className={customer.status === 'Hoạt động' ? 'theme-badge-success' : 'bg-red-100 text-red-800 border-red-200'}>
+            {customer.status}
+          </Badge>
+        );
       case 'customerType':
         return 'Cá nhân'; // mock data
       case 'gender':
@@ -145,24 +148,25 @@ export function CustomerTable({
   }, 50); // 50px cho checkbox column
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 mb-6">
+    <div className="theme-card rounded-lg border theme-border-primary">
       {/* Table container với horizontal scroll được tối ưu */}
       <div className="overflow-x-auto">
         <div style={{ minWidth: `${totalTableWidth}px` }}>
           <table className="w-full">
-            <thead className="sticky top-0 bg-white z-10 border-b">
+            <thead className="sticky top-0 bg-white z-10 border-b theme-border-primary">
               <tr className="bg-gray-50">
                 <th className="w-[50px] px-4 py-3 text-left">
                   <Checkbox 
                     checked={selectedCustomers.length === customers.length && customers.length > 0}
                     onCheckedChange={handleSelectAll}
+                    className="theme-border-primary data-[state=checked]:theme-bg-primary"
                   />
                 </th>
                 {visibleColumns.map((column) => (
                   <th 
                     key={column.key} 
                     style={{ width: getColumnWidth(column.key) }}
-                    className="px-4 py-3 text-left font-medium text-gray-500"
+                    className="px-4 py-3 text-left font-medium theme-text-muted"
                   >
                     <div className="whitespace-normal break-words">
                       {column.label}
@@ -173,11 +177,12 @@ export function CustomerTable({
             </thead>
             <tbody>
               {customers.map((customer) => (
-                <tr key={customer.id} className="hover:bg-gray-50 border-b">
+                <tr key={customer.id} className="hover:theme-bg-primary/5 border-b theme-border-primary/30">
                   <td className="px-4 py-3">
                     <Checkbox 
                       checked={selectedCustomers.includes(customer.id)}
                       onCheckedChange={(checked) => handleSelectCustomer(customer.id, checked as boolean)}
+                      className="theme-border-primary data-[state=checked]:theme-bg-primary"
                     />
                   </td>
                   {visibleColumns.map((column) => (
@@ -186,7 +191,7 @@ export function CustomerTable({
                       style={{ width: getColumnWidth(column.key) }}
                       className="px-4 py-3"
                     >
-                      <div className="whitespace-normal break-words text-sm">
+                      <div className="whitespace-normal break-words text-sm theme-text">
                         {renderCellContent(customer, column.key)}
                       </div>
                     </td>
@@ -199,11 +204,11 @@ export function CustomerTable({
       </div>
 
       {/* Pagination - outside table container but inside card */}
-      <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 border-t border-gray-200 space-y-3 sm:space-y-0">
+      <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 border-t theme-border-primary space-y-3 sm:space-y-0">
         <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-600">Hiển thị</span>
+          <span className="text-sm theme-text-muted">Hiển thị</span>
           <Select value={itemsPerPage.toString()} onValueChange={(value) => setItemsPerPage(Number(value))}>
-            <SelectTrigger className="w-20 h-8">
+            <SelectTrigger className="w-20 h-8 theme-border-primary">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -213,11 +218,11 @@ export function CustomerTable({
               <SelectItem value="100">100</SelectItem>
             </SelectContent>
           </Select>
-          <span className="text-sm text-gray-600">dòng</span>
+          <span className="text-sm theme-text-muted">dòng</span>
         </div>
 
         <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4">
-          <span className="text-sm text-gray-600">
+          <span className="text-sm theme-text-muted">
             {startIndex + 1} - {Math.min(startIndex + itemsPerPage, customers.length)} trong {totalCustomers.toLocaleString()} khách hàng
           </span>
           
@@ -227,6 +232,7 @@ export function CustomerTable({
               size="sm"
               onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
+              className="theme-border-primary hover:theme-bg-primary/10 hover:theme-text-primary disabled:opacity-50"
             >
               <ChevronLeft className="w-4 h-4" />
             </Button>
@@ -238,7 +244,7 @@ export function CustomerTable({
                 max={totalPages}
                 value={currentPage}
                 onChange={(e) => setCurrentPage(Number(e.target.value))}
-                className="w-16 h-8 text-center"
+                className="w-16 h-8 text-center voucher-input"
               />
             </div>
             
@@ -247,6 +253,7 @@ export function CustomerTable({
               size="sm"
               onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
               disabled={currentPage === totalPages}
+              className="theme-border-primary hover:theme-bg-primary/10 hover:theme-text-primary disabled:opacity-50"
             >
               <ChevronRight className="w-4 h-4" />
             </Button>
