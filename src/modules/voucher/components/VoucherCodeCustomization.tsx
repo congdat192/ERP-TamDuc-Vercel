@@ -134,19 +134,31 @@ export function VoucherCodeCustomization({
 
       <Tabs defaultValue="mapping" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="mapping" className="flex items-center space-x-2">
+          <TabsTrigger 
+            value="mapping" 
+            className="voucher-tabs-trigger flex items-center space-x-2"
+          >
             <MapPin className="w-4 h-4" />
             <span>Mapping Giá Trị</span>
           </TabsTrigger>
-          <TabsTrigger value="priority" className="flex items-center space-x-2">
+          <TabsTrigger 
+            value="priority" 
+            className="voucher-tabs-trigger flex items-center space-x-2"
+          >
             <ArrowUpDown className="w-4 h-4" />
             <span>Thứ Tự Ưu Tiên</span>
           </TabsTrigger>
-          <TabsTrigger value="condition-builder" className="flex items-center space-x-2">
+          <TabsTrigger 
+            value="condition-builder" 
+            className="voucher-tabs-trigger flex items-center space-x-2"
+          >
             <Settings className="w-4 h-4" />
             <span>Điều Kiện Chi Tiết</span>
           </TabsTrigger>
-          <TabsTrigger value="template-manager" className="flex items-center space-x-2">
+          <TabsTrigger 
+            value="template-manager" 
+            className="voucher-tabs-trigger flex items-center space-x-2"
+          >
             <FileText className="w-4 h-4" />
             <span>Quản Lý Template</span>
           </TabsTrigger>

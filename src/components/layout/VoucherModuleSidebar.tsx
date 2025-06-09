@@ -45,8 +45,8 @@ export function VoucherModuleSidebar({
       {/* Module Header */}
       <div className="p-4 border-b theme-border-primary/20">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 berry-primary-100 rounded-lg flex items-center justify-center">
-            <Ticket className="w-5 h-5 theme-text-primary" />
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center theme-bg-primary">
+            <Ticket className="w-5 h-5 text-white" />
           </div>
           <div>
             <h3 className="font-semibold theme-text">Module Voucher</h3>
@@ -60,21 +60,22 @@ export function VoucherModuleSidebar({
         <nav className="space-y-1 px-3">
           {allowedPages.map((page) => {
             const Icon = page.icon;
+            const isActive = currentPage === page.id;
             return (
               <Button
                 key={page.id}
                 variant="ghost"
                 className={cn(
                   "w-full justify-start text-left h-11 transition-all duration-200",
-                  currentPage === page.id 
-                    ? "voucher-sidebar-active font-medium shadow-sm" 
-                    : "theme-text hover:berry-primary-50 hover:theme-text-primary"
+                  isActive 
+                    ? "voucher-sidebar-active" 
+                    : "theme-text hover:theme-bg-primary/10 hover:theme-text-primary"
                 )}
                 onClick={() => onPageChange(page.id)}
               >
                 <Icon className={cn(
                   "w-4 h-4 mr-3",
-                  currentPage === page.id ? "theme-text-primary" : "theme-text-muted"
+                  isActive ? "theme-text-primary" : "theme-text-muted"
                 )} />
                 {page.label}
               </Button>

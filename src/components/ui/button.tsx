@@ -10,10 +10,10 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "berry-primary shadow-sm hover:shadow-md",
+        default: "voucher-button-primary shadow-sm hover:shadow-md",
         destructive: "berry-error shadow-sm hover:shadow-md",
         outline: "berry-primary-outline hover:berry-primary-50",
-        secondary: "berry-secondary shadow-sm hover:shadow-md",
+        secondary: "voucher-button-secondary shadow-sm hover:shadow-md",
         ghost: "hover:theme-bg-primary/10 hover:theme-text-primary",
         link: "theme-text-primary underline-offset-4 hover:underline",
         success: "berry-success shadow-sm hover:shadow-md",
