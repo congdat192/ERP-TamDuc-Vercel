@@ -36,6 +36,25 @@ export function CustomerTable({
   totalCustomers,
   totalPages
 }: CustomerTableProps) {
+  
+  // Định nghĩa width cho từng loại cột
+  const getColumnWidth = (columnKey: string): string => {
+    // Cột ngắn (100px)
+    const shortColumns = ['gender', 'currentDebt', 'debtDays', 'currentPoints', 'totalPoints', 'status'];
+    
+    // Cột trung bình (150px)
+    const mediumColumns = ['customerCode', 'customerName', 'customerType', 'phone', 'email', 'creator', 'createDate', 'lastTransactionDate', 'totalSales'];
+    
+    // Cột dài (200-250px)
+    const longColumns = ['customerGroup', 'birthDate', 'facebook', 'company', 'taxCode', 'idNumber', 'address', 'deliveryArea', 'ward', 'notes', 'createBranch', 'totalSalesMinusReturns'];
+    
+    if (shortColumns.includes(columnKey)) return '100px';
+    if (mediumColumns.includes(columnKey)) return '150px';
+    if (longColumns.includes(columnKey)) return '220px';
+    
+    return '150px'; // default
+  };
+
   const getGroupBadgeColor = (group: string) => {
     switch (group) {
       case '1.Giới thiệu':
@@ -53,25 +72,25 @@ export function CustomerTable({
 
   const renderCellContent = (customer: any, columnKey: string) => {
     switch (columnKey) {
-      case 'id':
+      case 'customerCode':
         return <span className="font-medium text-blue-600">{customer.id}</span>;
-      case 'name':
+      case 'customerName':
         return <span className="font-medium">{customer.name}</span>;
       case 'phone':
         return customer.phone;
-      case 'group':
+      case 'customerGroup':
         return (
           <Badge className={getGroupBadgeColor(customer.group)} variant="secondary">
             {customer.group}
           </Badge>
         );
-      case 'birthday':
+      case 'birthDate':
         return customer.birthday;
       case 'creator':
         return customer.creator;
-      case 'createdDate':
+      case 'createDate':
         return customer.createdDate;
-      case 'note':
+      case 'notes':
         return customer.note;
       case 'email':
         return customer.email;
@@ -85,14 +104,32 @@ export function CustomerTable({
         return customer.address;
       case 'deliveryArea':
         return customer.deliveryArea;
-      case 'points':
+      case 'currentPoints':
         return customer.points?.toLocaleString();
-      case 'totalSpent':
+      case 'totalSales':
         return customer.totalSpent?.toLocaleString();
-      case 'totalDebt':
+      case 'currentDebt':
         return customer.totalDebt?.toLocaleString();
       case 'status':
         return customer.status;
+      case 'customerType':
+        return 'Cá nhân'; // mock data
+      case 'gender':
+        return 'Nam'; // mock data
+      case 'idNumber':
+        return '123456789012'; // mock data
+      case 'ward':
+        return 'Phường 1'; // mock data
+      case 'lastTransactionDate':
+        return '20/01/2024'; // mock data
+      case 'createBranch':
+        return 'Chi nhánh chính'; // mock data
+      case 'debtDays':
+        return '0'; // mock data
+      case 'totalPoints':
+        return '2000'; // mock data
+      case 'totalSalesMinusReturns':
+        return customer.totalSpent?.toLocaleString(); // mock data
       default:
         return '';
     }
@@ -100,45 +137,65 @@ export function CustomerTable({
 
   // Calculate pagination info
   const startIndex = (currentPage - 1) * itemsPerPage;
+  
+  // Tính tổng width của table
+  const totalTableWidth = visibleColumns.reduce((total, col) => {
+    const width = parseInt(getColumnWidth(col.key));
+    return total + width;
+  }, 50); // 50px cho checkbox column
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 mb-6">
-      {/* Table container with proper horizontal scroll */}
-      <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-        <table className="w-full table-fixed" style={{ minWidth: `${visibleColumns.length * 150}px` }}>
-          <thead className="sticky top-0 bg-white z-10 border-b">
-            <tr className="bg-gray-50">
-              <th className="w-12 px-4 py-3 text-left">
-                <Checkbox 
-                  checked={selectedCustomers.length === customers.length && customers.length > 0}
-                  onCheckedChange={handleSelectAll}
-                />
-              </th>
-              {visibleColumns.map((column) => (
-                <th key={column.key} className="min-w-[150px] px-4 py-3 text-left font-medium text-gray-500 whitespace-nowrap">
-                  {column.label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {customers.map((customer) => (
-              <tr key={customer.id} className="hover:bg-gray-50 border-b">
-                <td className="px-4 py-3">
+      {/* Table container với horizontal scroll được tối ưu */}
+      <div className="overflow-x-auto">
+        <div style={{ minWidth: `${totalTableWidth}px` }}>
+          <table className="w-full">
+            <thead className="sticky top-0 bg-white z-10 border-b">
+              <tr className="bg-gray-50">
+                <th className="w-[50px] px-4 py-3 text-left">
                   <Checkbox 
-                    checked={selectedCustomers.includes(customer.id)}
-                    onCheckedChange={(checked) => handleSelectCustomer(customer.id, checked as boolean)}
+                    checked={selectedCustomers.length === customers.length && customers.length > 0}
+                    onCheckedChange={handleSelectAll}
                   />
-                </td>
+                </th>
                 {visibleColumns.map((column) => (
-                  <td key={column.key} className="min-w-[150px] px-4 py-3 whitespace-nowrap">
-                    {renderCellContent(customer, column.key)}
-                  </td>
+                  <th 
+                    key={column.key} 
+                    style={{ width: getColumnWidth(column.key) }}
+                    className="px-4 py-3 text-left font-medium text-gray-500"
+                  >
+                    <div className="whitespace-normal break-words">
+                      {column.label}
+                    </div>
+                  </th>
                 ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {customers.map((customer) => (
+                <tr key={customer.id} className="hover:bg-gray-50 border-b">
+                  <td className="px-4 py-3">
+                    <Checkbox 
+                      checked={selectedCustomers.includes(customer.id)}
+                      onCheckedChange={(checked) => handleSelectCustomer(customer.id, checked as boolean)}
+                    />
+                  </td>
+                  {visibleColumns.map((column) => (
+                    <td 
+                      key={column.key} 
+                      style={{ width: getColumnWidth(column.key) }}
+                      className="px-4 py-3"
+                    >
+                      <div className="whitespace-normal break-words text-sm">
+                        {renderCellContent(customer, column.key)}
+                      </div>
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Pagination - outside table container but inside card */}
