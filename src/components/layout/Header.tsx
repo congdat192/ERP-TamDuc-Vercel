@@ -62,7 +62,7 @@ export function Header({ onSidebarToggle, currentPage, onPageChange, onLogout, c
 
   return (
     <>
-      <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex items-center justify-between min-h-[73px]">
+      <header className="bg-background border-b border-border px-4 sm:px-6 py-3 flex items-center justify-between min-h-[73px] shadow-sm">
         <div className="flex items-center space-x-4">
           {/* Mobile menu button */}
           <Button
@@ -75,10 +75,10 @@ export function Header({ onSidebarToggle, currentPage, onPageChange, onLogout, c
           </Button>
           
           <div className="flex items-center space-x-3">
-            <h1 className="text-xl font-semibold text-gray-900">
+            <h1 className="text-xl font-semibold text-foreground">
               {currentPage}
             </h1>
-            <Badge variant="secondary" className="hidden sm:inline-flex">Trực Tuyến</Badge>
+            <Badge variant="secondary" className="hidden sm:inline-flex theme-bg-primary text-white">Trực Tuyến</Badge>
           </div>
         </div>
 
@@ -86,10 +86,10 @@ export function Header({ onSidebarToggle, currentPage, onPageChange, onLogout, c
           {/* Search - Desktop */}
           <div className="hidden md:block">
             <form onSubmit={handleSearch} className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
                 placeholder="Tìm kiếm trong hệ thống..."
-                className="pl-10 w-64 h-9"
+                className="pl-10 w-64 h-9 focus:ring-2 focus:ring-sidebar-primary"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -109,7 +109,7 @@ export function Header({ onSidebarToggle, currentPage, onPageChange, onLogout, c
           {/* Quick Voucher Button - only show if user has voucher access */}
           {currentUser.permissions.modules.includes('voucher') && (
             <Button 
-              className="bg-orange-600 hover:bg-orange-700 text-white shadow-lg hidden sm:flex"
+              className="theme-bg-secondary text-white shadow-lg hidden sm:flex hover:opacity-90"
               size="sm"
               onClick={() => setShowQuickVoucher(true)}
             >
@@ -120,16 +120,16 @@ export function Header({ onSidebarToggle, currentPage, onPageChange, onLogout, c
 
           {/* Notifications */}
           <div className="relative">
-            <Button variant="ghost" size="sm" className="p-2">
+            <Button variant="ghost" size="sm" className="p-2 hover:bg-sidebar-accent">
               <Bell className="w-4 h-4" />
-              <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              <span className="absolute -top-1 -right-1 w-2 h-2 theme-bg-primary rounded-full"></span>
             </Button>
           </div>
 
           {/* Language & Settings */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="p-2">
+              <Button variant="ghost" size="sm" className="p-2 hover:bg-sidebar-accent">
                 <Settings className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -151,7 +151,7 @@ export function Header({ onSidebarToggle, currentPage, onPageChange, onLogout, c
               <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0">
                 <Avatar className="h-9 w-9">
                   <AvatarImage src="/placeholder.svg" />
-                  <AvatarFallback className="bg-blue-100 text-blue-600 text-sm">
+                  <AvatarFallback className="theme-bg-secondary text-white text-sm">
                     {currentUser.fullName.charAt(0)}
                   </AvatarFallback>
                 </Avatar>

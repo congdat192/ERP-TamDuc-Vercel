@@ -45,8 +45,8 @@
     --sidebar-ring: 217.2 91.2% 59.8%;
 
     /* Theme Variables */
-    --theme-primary: 163 100% 35%;
-    --theme-secondary: 194 100% 71%;
+    --theme-primary: 265 71% 76%;
+    --theme-secondary: 195 100% 71%;
     --theme-gradient: linear-gradient(135deg, #A389F4, #70D8FF);
   }
 
@@ -93,6 +93,14 @@
     --theme-primary: 265 71% 76%;
     --theme-secondary: 195 100% 71%;
     --theme-gradient: linear-gradient(135deg, #A389F4, #70D8FF);
+    
+    /* Override sidebar colors with theme */
+    --sidebar-background: 265 71% 76%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 195 100% 71%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 265 71% 66%;
+    --sidebar-accent-foreground: 0 0% 100%;
   }
 
   /* Preset 2 - Green Slate */
@@ -100,6 +108,13 @@
     --theme-primary: 162 53% 54%;
     --theme-secondary: 210 17% 32%;
     --theme-gradient: linear-gradient(135deg, #4BCB9A, #455A64);
+    
+    --sidebar-background: 162 53% 54%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 210 17% 32%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 162 53% 44%;
+    --sidebar-accent-foreground: 0 0% 100%;
   }
 
   /* Preset 3 - Blue Pink */
@@ -107,6 +122,13 @@
     --theme-primary: 228 83% 41%;
     --theme-secondary: 330 84% 66%;
     --theme-gradient: linear-gradient(135deg, #2234AE, #F857A6);
+    
+    --sidebar-background: 228 83% 41%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 330 84% 66%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 228 83% 31%;
+    --sidebar-accent-foreground: 0 0% 100%;
   }
 
   /* Preset 4 - Teal Dark */
@@ -114,6 +136,13 @@
     --theme-primary: 173 84% 33%;
     --theme-secondary: 187 21% 26%;
     --theme-gradient: linear-gradient(135deg, #11998E, #40514E);
+    
+    --sidebar-background: 173 84% 33%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 187 21% 26%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 173 84% 23%;
+    --sidebar-accent-foreground: 0 0% 100%;
   }
 
   /* Preset 5 - Gold Teal */
@@ -121,6 +150,13 @@
     --theme-primary: 44 60% 66%;
     --theme-secondary: 182 67% 29%;
     --theme-gradient: linear-gradient(135deg, #E2B969, #167D7F);
+    
+    --sidebar-background: 44 60% 66%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 182 67% 29%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 44 60% 56%;
+    --sidebar-accent-foreground: 0 0% 100%;
   }
 
   /* Preset 6 - Navy Sky */
@@ -128,6 +164,13 @@
     --theme-primary: 223 77% 32%;
     --theme-secondary: 199 95% 62%;
     --theme-gradient: linear-gradient(135deg, #1E3A8A, #38BDF8);
+    
+    --sidebar-background: 223 77% 32%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 199 95% 62%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 223 77% 22%;
+    --sidebar-accent-foreground: 0 0% 100%;
   }
 
   /* Preset 7 - Dark Green */
@@ -135,6 +178,13 @@
     --theme-primary: 216 69% 18%;
     --theme-secondary: 162 53% 54%;
     --theme-gradient: linear-gradient(135deg, #142850, #4BCB9A);
+    
+    --sidebar-background: 216 69% 18%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 162 53% 54%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 216 69% 8%;
+    --sidebar-accent-foreground: 0 0% 100%;
   }
 
   /* Preset 8 - Indigo Blue */
@@ -142,6 +192,54 @@
     --theme-primary: 228 51% 47%;
     --theme-secondary: 228 76% 63%;
     --theme-gradient: linear-gradient(135deg, #3546AB, #556EE6);
+    
+    --sidebar-background: 228 51% 47%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 228 76% 63%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 228 51% 37%;
+    --sidebar-accent-foreground: 0 0% 100%;
+  }
+
+  /* Dark mode adjustments for all presets */
+  .dark.preset1 {
+    --sidebar-background: 265 71% 15%;
+    --sidebar-accent: 265 71% 25%;
+  }
+
+  .dark.preset2 {
+    --sidebar-background: 162 53% 15%;
+    --sidebar-accent: 162 53% 25%;
+  }
+
+  .dark.preset3 {
+    --sidebar-background: 228 83% 15%;
+    --sidebar-accent: 228 83% 25%;
+  }
+
+  .dark.preset4 {
+    --sidebar-background: 173 84% 15%;
+    --sidebar-accent: 173 84% 25%;
+  }
+
+  .dark.preset5 {
+    --sidebar-background: 44 60% 15%;
+    --sidebar-accent: 44 60% 25%;
+  }
+
+  .dark.preset6 {
+    --sidebar-background: 223 77% 15%;
+    --sidebar-accent: 223 77% 25%;
+  }
+
+  .dark.preset7 {
+    --sidebar-background: 216 69% 8%;
+    --sidebar-accent: 216 69% 18%;
+  }
+
+  .dark.preset8 {
+    --sidebar-background: 228 51% 15%;
+    --sidebar-accent: 228 51% 25%;
   }
 }
 

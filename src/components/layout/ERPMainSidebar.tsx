@@ -56,9 +56,9 @@ export function ERPMainSidebar({
         />
       )}
       
-      {/* Main ERP Sidebar */}
+      {/* Main ERP Sidebar - Now using CSS variables for theming */}
       <div className={cn(
-        "bg-slate-900 text-white transition-all duration-300 ease-in-out relative",
+        "bg-sidebar-background text-sidebar-foreground transition-all duration-300 ease-in-out relative",
         // Desktop behavior
         "hidden lg:flex lg:flex-col",
         isExpanded ? "lg:w-72" : "lg:w-16",
@@ -69,13 +69,13 @@ export function ERPMainSidebar({
       )}>
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-slate-700 min-h-[73px]">
+          <div className="flex items-center justify-between p-4 border-b border-sidebar-border min-h-[73px]">
             {(isExpanded || isMobileOpen) ? (
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 theme-bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
                   <Building2 className="w-5 h-5 text-white" />
                 </div>
-                <h1 className="text-xl font-bold text-white">ERP System</h1>
+                <h1 className="text-xl font-bold text-sidebar-foreground">ERP System</h1>
               </div>
             ) : (
               <div className="w-8 h-8 theme-bg-primary rounded-lg flex items-center justify-center mx-auto">
@@ -90,7 +90,7 @@ export function ERPMainSidebar({
                 variant="ghost"
                 size="sm"
                 onClick={onToggle}
-                className="hidden lg:flex text-white hover:bg-slate-700 p-1"
+                className="hidden lg:flex text-sidebar-foreground hover:bg-sidebar-accent p-1"
               >
                 {isExpanded ? (
                   <ChevronLeft className="w-4 h-4" />
@@ -104,7 +104,7 @@ export function ERPMainSidebar({
                 variant="ghost"
                 size="sm"
                 onClick={onMobileToggle}
-                className="lg:hidden text-white hover:bg-slate-700"
+                className="lg:hidden text-sidebar-foreground hover:bg-sidebar-accent"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -113,7 +113,7 @@ export function ERPMainSidebar({
 
           {/* User Profile */}
           {(isExpanded || isMobileOpen) && (
-            <div className="p-4 border-b border-slate-700">
+            <div className="p-4 border-b border-sidebar-border">
               <div className="flex items-center space-x-3">
                 <Avatar className="w-10 h-10 flex-shrink-0">
                   <AvatarImage src="/placeholder.svg" />
@@ -122,10 +122,10 @@ export function ERPMainSidebar({
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">
+                  <p className="text-sm font-medium text-sidebar-foreground truncate">
                     {currentUser.fullName}
                   </p>
-                  <p className="text-xs text-slate-400 truncate">
+                  <p className="text-xs text-sidebar-foreground/70 truncate">
                     {getRoleDisplayName(currentUser.role)}
                   </p>
                 </div>
@@ -138,7 +138,7 @@ export function ERPMainSidebar({
             <nav className="space-y-1 px-3">
               {(isExpanded || isMobileOpen) && (
                 <div className="px-3 py-2">
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <p className="text-xs font-semibold text-sidebar-foreground/70 uppercase tracking-wider">
                     Các Module
                   </p>
                 </div>
@@ -151,13 +151,13 @@ export function ERPMainSidebar({
                 const buttonContent = (
                   <Button
                     key={module.module}
-                    variant={isActive ? "secondary" : "ghost"}
+                    variant="ghost"
                     className={cn(
                       "w-full h-11 transition-all duration-200",
                       isExpanded || isMobileOpen ? "justify-start text-left" : "justify-center p-0",
                       isActive 
-                        ? "theme-bg-primary text-white hover:opacity-90" 
-                        : "text-slate-300 hover:bg-slate-700 hover:text-white"
+                        ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90" 
+                        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     )}
                     onClick={() => {
                       onModuleChange(module.module);
@@ -197,8 +197,8 @@ export function ERPMainSidebar({
 
           {/* Footer */}
           {(isExpanded || isMobileOpen) && (
-            <div className="p-4 border-t border-slate-700">
-              <div className="text-xs text-slate-400 text-center">
+            <div className="p-4 border-t border-sidebar-border">
+              <div className="text-xs text-sidebar-foreground/70 text-center">
                 ERP v1.0.0 • © 2024 Company
               </div>
             </div>
