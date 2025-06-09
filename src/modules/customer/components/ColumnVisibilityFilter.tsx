@@ -20,9 +20,40 @@ interface ColumnVisibilityFilterProps {
 export function ColumnVisibilityFilter({ columns, onColumnToggle }: ColumnVisibilityFilterProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  // Chia columns thành 2 cột
-  const leftColumns = columns.slice(0, Math.ceil(columns.length / 2));
-  const rightColumns = columns.slice(Math.ceil(columns.length / 2));
+  // Tạo danh sách đầy đủ columns theo hình 1
+  const allColumns = [
+    { key: 'ma_hoa_don', label: 'Mã hóa đơn', visible: true },
+    { key: 'thoi_gian', label: 'Thời gian', visible: true },
+    { key: 'thoi_gian_tao', label: 'Thời gian tạo', visible: false },
+    { key: 'ngay_cap_nhat', label: 'Ngày cập nhật', visible: false },
+    { key: 'ma_dat_hang', label: 'Mã đặt hàng', visible: false },
+    { key: 'ma_tra_hang', label: 'Mã trả hàng', visible: true },
+    { key: 'khach_hang', label: 'Khách hàng', visible: true },
+    { key: 'email', label: 'Email', visible: false },
+    { key: 'dien_thoai', label: 'Điện thoại', visible: false },
+    { key: 'dia_chi', label: 'Địa chỉ', visible: false },
+    { key: 'khu_vuc', label: 'Khu vực', visible: false },
+    { key: 'phuong_xa', label: 'Phường/Xã', visible: false },
+    { key: 'ngay_sinh', label: 'Ngày sinh', visible: false },
+    { key: 'chi_nhanh', label: 'Chi nhánh', visible: false },
+    { key: 'nguoi_ban', label: 'Người bán', visible: false },
+    { key: 'nguoi_tao', label: 'Người tạo', visible: false },
+    { key: 'kenh_ban', label: 'Kênh bán', visible: false },
+    { key: 'ghi_chu', label: 'Ghi chú', visible: false },
+    { key: 'tong_tien_hang', label: 'Tổng tiền hàng', visible: true },
+    { key: 'giam_gia', label: 'Giảm giá', visible: true },
+    { key: 'giam_thue', label: 'Giảm thuế', visible: false },
+    { key: 'khach_can_tra', label: 'Khách cần trả', visible: false },
+    { key: 'khach_da_tra', label: 'Khách đã trả', visible: true },
+    { key: 'chiet_khau_thanh_toan', label: 'Chiết khấu thanh toán', visible: false },
+    { key: 'thoi_gian_giao_hang', label: 'Thời gian giao hàng', visible: false },
+    { key: 'trang_thai', label: 'Trạng thái', visible: false },
+    { key: 'trang_thai_hddt', label: 'Trạng thái HĐDT', visible: true }
+  ];
+
+  // Chia columns thành 2 cột với spacing compact
+  const leftColumns = allColumns.slice(0, Math.ceil(allColumns.length / 2));
+  const rightColumns = allColumns.slice(Math.ceil(allColumns.length / 2));
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -32,24 +63,23 @@ export function ColumnVisibilityFilter({ columns, onColumnToggle }: ColumnVisibi
           Hiển thị cột
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[520px] p-6 theme-card border theme-border-primary shadow-lg z-50" align="end" sideOffset={8}>
-        <div className="space-y-4">
-          <h4 className="font-medium text-base theme-text border-b theme-border-primary/20 pb-3">Hiển thị cột</h4>
-          <ScrollArea className="h-auto max-h-[420px]">
-            <div className="grid grid-cols-2 gap-8 pr-4">
+      <PopoverContent className="w-[500px] p-4 theme-card border theme-border-primary shadow-lg z-50" align="end" sideOffset={8}>
+        <div className="space-y-3">
+          <ScrollArea className="h-auto max-h-[400px]">
+            <div className="grid grid-cols-2 gap-6 pr-3">
               {/* Cột trái */}
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {leftColumns.map((column) => (
-                  <div key={column.key} className="flex items-start space-x-4 min-h-[40px] py-1">
+                  <div key={column.key} className="flex items-center space-x-3 py-1">
                     <Checkbox
                       id={column.key}
                       checked={column.visible}
                       onCheckedChange={(checked) => onColumnToggle(column.key, checked as boolean)}
-                      className="h-4 w-4 mt-1 flex-shrink-0"
+                      className="h-4 w-4 flex-shrink-0"
                     />
                     <label
                       htmlFor={column.key}
-                      className="text-sm font-normal theme-text cursor-pointer select-none leading-relaxed flex-1 py-0.5"
+                      className="text-sm theme-text cursor-pointer select-none flex-1 leading-5"
                     >
                       {column.label}
                     </label>
@@ -58,18 +88,18 @@ export function ColumnVisibilityFilter({ columns, onColumnToggle }: ColumnVisibi
               </div>
               
               {/* Cột phải */}
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {rightColumns.map((column) => (
-                  <div key={column.key} className="flex items-start space-x-4 min-h-[40px] py-1">
+                  <div key={column.key} className="flex items-center space-x-3 py-1">
                     <Checkbox
                       id={column.key}
                       checked={column.visible}
                       onCheckedChange={(checked) => onColumnToggle(column.key, checked as boolean)}
-                      className="h-4 w-4 mt-1 flex-shrink-0"
+                      className="h-4 w-4 flex-shrink-0"
                     />
                     <label
                       htmlFor={column.key}
-                      className="text-sm font-normal theme-text cursor-pointer select-none leading-relaxed flex-1 py-0.5"
+                      className="text-sm theme-text cursor-pointer select-none flex-1 leading-5"
                     >
                       {column.label}
                     </label>
