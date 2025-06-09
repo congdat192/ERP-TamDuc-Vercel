@@ -180,78 +180,76 @@ export function CustomerTable({
   return (
     <Card className="theme-card">
       <CardContent className="p-0">
-        {/* Table with horizontal scroll - CONTAINED within this div */}
-        <div className="relative">
-          <div className="overflow-x-auto max-w-full">
-            <Table className="w-full">
-              <TableHeader>
-                <TableRow className="hover:theme-bg-primary/5">
-                  <TableHead className="w-12 sticky left-0 theme-card z-10 border-r theme-border-primary">
+        {/* Table with horizontal scroll */}
+        <div className="overflow-x-auto">
+          <Table className="w-full">
+            <TableHeader>
+              <TableRow className="hover:theme-bg-primary/5">
+                <TableHead className="w-12 sticky left-0 theme-card z-10">
+                  <Checkbox
+                    checked={selectedCustomers.length === customers.length}
+                    onCheckedChange={handleSelectAll}
+                    className="voucher-checkbox"
+                  />
+                </TableHead>
+                {visibleColumns.map((column) => (
+                  <TableHead 
+                    key={column.key} 
+                    className={`theme-text font-medium whitespace-nowrap ${getColumnWidth(column.key)}`}
+                  >
+                    {column.label}
+                  </TableHead>
+                ))}
+                <TableHead className="theme-text font-medium w-24 whitespace-nowrap">Thao tác</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {customers.slice(startIndex, startIndex + itemsPerPage).map((customer) => (
+                <TableRow key={customer.id} className="hover:theme-bg-primary/5">
+                  <TableCell className="sticky left-0 theme-card z-10">
                     <Checkbox
-                      checked={selectedCustomers.length === customers.length}
-                      onCheckedChange={handleSelectAll}
+                      checked={selectedCustomers.includes(customer.id)}
+                      onCheckedChange={(checked) => handleSelectCustomer(customer.id, checked as boolean)}
                       className="voucher-checkbox"
                     />
-                  </TableHead>
+                  </TableCell>
                   {visibleColumns.map((column) => (
-                    <TableHead 
+                    <TableCell 
                       key={column.key} 
-                      className={`theme-text font-medium whitespace-nowrap ${getColumnWidth(column.key)}`}
+                      className={`theme-text ${getColumnWidth(column.key)}`}
                     >
-                      {column.label}
-                    </TableHead>
+                      {renderCellContent(customer, column.key)}
+                    </TableCell>
                   ))}
-                  <TableHead className="theme-text font-medium w-24 whitespace-nowrap sticky right-0 theme-card z-10 border-l theme-border-primary">Thao tác</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {customers.slice(startIndex, startIndex + itemsPerPage).map((customer) => (
-                  <TableRow key={customer.id} className="hover:theme-bg-primary/5">
-                    <TableCell className="sticky left-0 theme-card z-10 border-r theme-border-primary">
-                      <Checkbox
-                        checked={selectedCustomers.includes(customer.id)}
-                        onCheckedChange={(checked) => handleSelectCustomer(customer.id, checked as boolean)}
-                        className="voucher-checkbox"
-                      />
-                    </TableCell>
-                    {visibleColumns.map((column) => (
-                      <TableCell 
-                        key={column.key} 
-                        className={`theme-text ${getColumnWidth(column.key)}`}
+                  <TableCell className="w-24">
+                    <div className="flex items-center space-x-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 hover:voucher-bg-primary/10 hover:voucher-text-primary"
                       >
-                        {renderCellContent(customer, column.key)}
-                      </TableCell>
-                    ))}
-                    <TableCell className="w-24 sticky right-0 theme-card z-10 border-l theme-border-primary">
-                      <div className="flex items-center space-x-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 hover:voucher-bg-primary/10 hover:voucher-text-primary"
-                        >
-                          <Eye className="w-4 h-4 voucher-text-primary" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 hover:theme-bg-secondary/10 hover:theme-text-secondary"
-                        >
-                          <Edit className="w-4 h-4 theme-text-secondary" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 hover:voucher-bg-primary/10 hover:voucher-text-primary"
-                        >
-                          <MoreHorizontal className="w-4 h-4 voucher-text-primary" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                        <Eye className="w-4 h-4 voucher-text-primary" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 hover:theme-bg-secondary/10 hover:theme-text-secondary"
+                      >
+                        <Edit className="w-4 h-4 theme-text-secondary" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 hover:voucher-bg-primary/10 hover:voucher-text-primary"
+                      >
+                        <MoreHorizontal className="w-4 h-4 voucher-text-primary" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
 
         {/* Pagination */}
