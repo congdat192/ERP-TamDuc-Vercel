@@ -56,6 +56,13 @@
     --theme-text: 222.2 84% 4.9%;
     --theme-text-muted: 215.4 16.3% 46.9%;
     --theme-border: 214.3 31.8% 91.4%;
+    
+    /* Voucher Module Specific Variables */
+    --voucher-header-gradient: linear-gradient(135deg, #A389F4, #70D8FF);
+    --voucher-stats-primary: 265 71% 76%;
+    --voucher-stats-secondary: 195 100% 71%;
+    --voucher-accent: 265 71% 85%;
+    --voucher-accent-text: 265 71% 40%;
   }
 
   .dark {
@@ -103,6 +110,13 @@
     --theme-text: 210 40% 98%;
     --theme-text-muted: 215 20.2% 65.1%;
     --theme-border: 217.2 32.6% 17.5%;
+    
+    /* Voucher Module Dark Mode */
+    --voucher-header-gradient: linear-gradient(135deg, #A389F4, #70D8FF);
+    --voucher-stats-primary: 265 71% 76%;
+    --voucher-stats-secondary: 195 100% 71%;
+    --voucher-accent: 265 71% 25%;
+    --voucher-accent-text: 265 71% 85%;
   }
 
   /* Theme Preset Colors */
@@ -112,6 +126,11 @@
     --theme-primary: 265 71% 76%;
     --theme-secondary: 195 100% 71%;
     --theme-gradient: linear-gradient(135deg, #A389F4, #70D8FF);
+    --voucher-header-gradient: linear-gradient(135deg, #A389F4, #70D8FF);
+    --voucher-stats-primary: 265 71% 76%;
+    --voucher-stats-secondary: 195 100% 71%;
+    --voucher-accent: 265 71% 85%;
+    --voucher-accent-text: 265 71% 40%;
   }
 
   /* Preset 2 - Teal Green */
@@ -119,6 +138,16 @@
     --theme-primary: 162 53% 54%;
     --theme-secondary: 210 17% 32%;
     --theme-gradient: linear-gradient(135deg, #4BCB9A, #455A64);
+    --voucher-header-gradient: linear-gradient(135deg, #4BCB9A, #455A64);
+    --voucher-stats-primary: 162 53% 54%;
+    --voucher-stats-secondary: 210 17% 32%;
+    --voucher-accent: 162 53% 85%;
+    --voucher-accent-text: 162 53% 25%;
+  }
+
+  .preset2.dark {
+    --voucher-accent: 162 53% 25%;
+    --voucher-accent-text: 162 53% 85%;
   }
 }
 
@@ -225,6 +254,50 @@
     color: hsl(var(--theme-text-muted));
   }
 
+  /* Voucher Module Specific Classes */
+  .voucher-header-gradient {
+    background: var(--voucher-header-gradient);
+  }
+
+  .voucher-stats-primary {
+    background-color: hsl(var(--voucher-stats-primary) / 0.1);
+    border-color: hsl(var(--voucher-stats-primary) / 0.2);
+    color: hsl(var(--voucher-stats-primary));
+  }
+
+  .voucher-stats-secondary {
+    background-color: hsl(var(--voucher-stats-secondary) / 0.1);
+    border-color: hsl(var(--voucher-stats-secondary) / 0.2);
+    color: hsl(var(--voucher-stats-secondary));
+  }
+
+  .voucher-accent-bg {
+    background-color: hsl(var(--voucher-accent));
+    color: hsl(var(--voucher-accent-text));
+  }
+
+  .voucher-card {
+    @apply theme-card rounded-lg transition-all duration-200 hover:shadow-md;
+  }
+
+  .voucher-button-primary {
+    background-color: hsl(var(--theme-primary));
+    color: white;
+  }
+
+  .voucher-button-primary:hover {
+    background-color: hsl(var(--theme-primary) / 0.9);
+  }
+
+  .voucher-button-secondary {
+    background-color: hsl(var(--theme-secondary));
+    color: white;
+  }
+
+  .voucher-button-secondary:hover {
+    background-color: hsl(var(--theme-secondary) / 0.9);
+  }
+
   /* Theme background variants */
   .theme-bg-primary\/10 {
     background-color: hsl(var(--theme-primary) / 0.1);
@@ -268,5 +341,29 @@
 
   .theme-stats-secondary {
     @apply theme-bg-secondary/10 theme-border-secondary/20 border;
+  }
+
+  /* Voucher Module Layout */
+  .voucher-module-background {
+    background-color: hsl(var(--theme-background));
+  }
+
+  /* Theme Badge Variants */
+  .theme-badge-primary {
+    background-color: hsl(var(--theme-primary) / 0.1);
+    color: hsl(var(--theme-primary));
+    border: 1px solid hsl(var(--theme-primary) / 0.2);
+  }
+
+  .theme-badge-secondary {
+    background-color: hsl(var(--theme-secondary) / 0.1);
+    color: hsl(var(--theme-secondary));
+    border: 1px solid hsl(var(--theme-secondary) / 0.2);
+  }
+
+  .theme-badge-success {
+    background-color: hsl(162 73% 46% / 0.1);
+    color: hsl(162 73% 46%);
+    border: 1px solid hsl(162 73% 46% / 0.2);
   }
 }

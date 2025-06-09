@@ -40,7 +40,7 @@ export function VoucherModule({ currentUser, onBackToModules }: VoucherModulePro
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen voucher-module-background">
       {/* Voucher Module Sidebar - Always visible */}
       <VoucherModuleSidebar
         currentPage={currentPage}
