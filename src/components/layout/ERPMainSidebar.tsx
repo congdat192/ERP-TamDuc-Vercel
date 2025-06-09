@@ -56,9 +56,9 @@ export function ERPMainSidebar({
         />
       )}
       
-      {/* Main ERP Sidebar - Now using CSS variables for theming */}
+      {/* Main ERP Sidebar - Neutral styling */}
       <div className={cn(
-        "bg-sidebar-background text-sidebar-foreground transition-all duration-300 ease-in-out relative",
+        "bg-sidebar-background text-sidebar-foreground transition-all duration-300 ease-in-out relative border-r border-sidebar-border",
         // Desktop behavior
         "hidden lg:flex lg:flex-col",
         isExpanded ? "lg:w-72" : "lg:w-16",
@@ -156,7 +156,7 @@ export function ERPMainSidebar({
                       "w-full h-11 transition-all duration-200",
                       isExpanded || isMobileOpen ? "justify-start text-left" : "justify-center p-0",
                       isActive 
-                        ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90" 
+                        ? "theme-bg-primary text-white hover:theme-bg-primary/90 shadow-md" 
                         : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     )}
                     onClick={() => {

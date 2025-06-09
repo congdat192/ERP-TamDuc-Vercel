@@ -11,6 +11,7 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+// Default theme: Light mode + Purple-Blue preset (preset1)
 const DEFAULT_THEME: ThemeConfig = {
   mode: 'light',
   preset: 'preset1'
@@ -30,6 +31,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         setTheme(parsedTheme);
         applyThemeToDOM(parsedTheme);
       } else {
+        // First time user - apply default theme
         applyThemeToDOM(DEFAULT_THEME);
       }
     } catch (error) {
