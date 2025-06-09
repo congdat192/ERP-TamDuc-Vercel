@@ -1,371 +1,783 @@
-
 import { useState } from 'react';
-import { X, Calendar, Filter, ChevronDown } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { X, Filter } from 'lucide-react';
 
 interface CustomerFiltersProps {
   sidebarOpen: boolean;
-  setSidebarOpen: (value: boolean) => void;
+  setSidebarOpen: (open: boolean) => void;
 }
 
 export function CustomerFilters({ sidebarOpen, setSidebarOpen }: CustomerFiltersProps) {
-  // Filter states
   const [customerGroup, setCustomerGroup] = useState('all');
   const [branch, setBranch] = useState('all');
-  const [createDate, setCreateDate] = useState('all');
   const [creator, setCreator] = useState('all');
   const [customerType, setCustomerType] = useState('all');
   const [gender, setGender] = useState('all');
-  const [birthday, setBirthday] = useState('all');
-  const [lastTransaction, setLastTransaction] = useState('all');
-  const [totalSales, setTotalSales] = useState('all');
-  const [currentDebt, setCurrentDebt] = useState({ from: '', to: '' });
-  const [debtDays, setDebtDays] = useState({ from: '', to: '' });
-  const [currentPoints, setCurrentPoints] = useState({ from: '', to: '' });
-  const [deliveryArea, setDeliveryArea] = useState('');
+  const [birthdayRange, setBirthdayRange] = useState('all');
+  const [lastTransactionRange, setLastTransactionRange] = useState('all');
+  const [totalSalesRange, setTotalSalesRange] = useState('all');
+  const [currentDebtFrom, setCurrentDebtFrom] = useState('');
+  const [currentDebtTo, setCurrentDebtTo] = useState('');
+  const [debtDaysFrom, setDebtDaysFrom] = useState('');
+  const [debtDaysTo, setDebtDaysTo] = useState('');
+  const [currentPointsFrom, setCurrentPointsFrom] = useState('');
+  const [currentPointsTo, setCurrentPointsTo] = useState('');
+  const [province, setProvince] = useState('all');
+  const [district, setDistrict] = useState('all');
   const [status, setStatus] = useState('all');
+
+  const resetFilters = () => {
+    setCustomerGroup('all');
+    setBranch('all');
+    setCreator('all');
+    setCustomerType('all');
+    setGender('all');
+    setBirthdayRange('all');
+    setLastTransactionRange('all');
+    setTotalSalesRange('all');
+    setCurrentDebtFrom('');
+    setCurrentDebtTo('');
+    setDebtDaysFrom('');
+    setDebtDaysTo('');
+    setCurrentPointsFrom('');
+    setCurrentPointsTo('');
+    setProvince('all');
+    setDistrict('all');
+    setStatus('all');
+  };
 
   return (
     <>
-      {/* Sidebar */}
-      <div className={`
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:translate-x-0 
-        fixed lg:relative 
-        z-50 lg:z-auto
-        w-[255px]
-        theme-card border-r theme-border-primary 
-        h-screen lg:min-h-[calc(100vh-120px)]
-        transition-transform duration-300 ease-in-out
-        overflow-y-auto
-      `}>
-        <div className="p-4">
-          {/* Mobile Header */}
-          <div className="flex justify-between items-center mb-4 lg:hidden">
-            <div className="flex items-center space-x-2">
-              <Filter className="w-5 h-5 theme-text-primary" />
-              <h3 className="font-semibold theme-text">Bộ lọc</h3>
-            </div>
-            <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(false)}>
-              <X className="w-4 h-4 theme-text-primary" />
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:block w-[260px] flex-shrink-0">
+        <Card className="theme-card h-full">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-semibold theme-text flex items-center">
+              <Filter className="w-5 h-5 mr-2 voucher-text-primary" />
+              Bộ lọc
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <ScrollArea className="h-[calc(100vh-200px)]">
+              <div className="px-4 pb-4 space-y-4">
+                {/* Nhóm khách hàng */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium theme-text">Nhóm khách hàng</Label>
+                  <Select value={customerGroup} onValueChange={setCustomerGroup}>
+                    <SelectTrigger className="voucher-input voucher-border-primary">
+                      <SelectValue placeholder="Chọn nhóm" />
+                    </SelectTrigger>
+                    <SelectContent className="theme-card voucher-border-primary">
+                      <SelectItem value="all">Tất cả</SelectItem>
+                      <SelectItem value="1">1.Giới thiệu</SelectItem>
+                      <SelectItem value="2">2.Khách VIP</SelectItem>
+                      <SelectItem value="3">3.Khách thường</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Separator className="theme-border-primary" />
+
+                {/* Chi nhánh tạo */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium theme-text">Chi nhánh tạo</Label>
+                  <Select value={branch} onValueChange={setBranch}>
+                    <SelectTrigger className="voucher-input voucher-border-primary">
+                      <SelectValue placeholder="Chọn chi nhánh" />
+                    </SelectTrigger>
+                    <SelectContent className="theme-card voucher-border-primary">
+                      <SelectItem value="all">Tất cả</SelectItem>
+                      <SelectItem value="hcm">Chi nhánh HCM</SelectItem>
+                      <SelectItem value="hanoi">Chi nhánh Hà Nội</SelectItem>
+                      <SelectItem value="danang">Chi nhánh Đà Nẵng</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Separator className="theme-border-primary" />
+
+                {/* Ngày tạo */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium theme-text">Ngày tạo</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      type="date"
+                      placeholder="Từ ngày"
+                      className="voucher-input voucher-border-primary"
+                    />
+                    <Input
+                      type="date"
+                      placeholder="Đến ngày"
+                      className="voucher-input voucher-border-primary"
+                    />
+                  </div>
+                </div>
+
+                <Separator className="theme-border-primary" />
+
+                {/* Người tạo */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium theme-text">Người tạo</Label>
+                  <Select value={creator} onValueChange={setCreator}>
+                    <SelectTrigger className="voucher-input voucher-border-primary">
+                      <SelectValue placeholder="Chọn người tạo" />
+                    </SelectTrigger>
+                    <SelectContent className="theme-card voucher-border-primary">
+                      <SelectItem value="all">Tất cả</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="user1">Người dùng 1</SelectItem>
+                      <SelectItem value="user2">Người dùng 2</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Separator className="theme-border-primary" />
+
+                {/* Loại khách hàng */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium theme-text">Loại khách hàng</Label>
+                  <RadioGroup value={customerType} onValueChange={setCustomerType} className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="all" id="type-all" className="voucher-radio" />
+                      <Label htmlFor="type-all" className="text-sm theme-text cursor-pointer">Tất cả</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="individual" id="type-individual" className="voucher-radio" />
+                      <Label htmlFor="type-individual" className="text-sm theme-text cursor-pointer">Cá nhân</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="company" id="type-company" className="voucher-radio" />
+                      <Label htmlFor="type-company" className="text-sm theme-text cursor-pointer">Công ty</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                <Separator className="theme-border-primary" />
+
+                {/* Giới tính */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium theme-text">Giới tính</Label>
+                  <RadioGroup value={gender} onValueChange={setGender} className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="all" id="gender-all" className="voucher-radio" />
+                      <Label htmlFor="gender-all" className="text-sm theme-text cursor-pointer">Tất cả</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="male" id="gender-male" className="voucher-radio" />
+                      <Label htmlFor="gender-male" className="text-sm theme-text cursor-pointer">Nam</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="female" id="gender-female" className="voucher-radio" />
+                      <Label htmlFor="gender-female" className="text-sm theme-text cursor-pointer">Nữ</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                <Separator className="theme-border-primary" />
+
+                {/* Sinh nhật */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium theme-text">Sinh nhật</Label>
+                  <Select value={birthdayRange} onValueChange={setBirthdayRange}>
+                    <SelectTrigger className="voucher-input voucher-border-primary">
+                      <SelectValue placeholder="Chọn khoảng thời gian" />
+                    </SelectTrigger>
+                    <SelectContent className="theme-card voucher-border-primary">
+                      <SelectItem value="all">Toàn thời gian</SelectItem>
+                      <SelectItem value="this-month">Tháng này</SelectItem>
+                      <SelectItem value="next-month">Tháng tới</SelectItem>
+                      <SelectItem value="custom">Tùy chỉnh</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {birthdayRange === 'custom' && (
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      <Input
+                        type="date"
+                        placeholder="Từ ngày"
+                        className="voucher-input voucher-border-primary"
+                      />
+                      <Input
+                        type="date"
+                        placeholder="Đến ngày"
+                        className="voucher-input voucher-border-primary"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <Separator className="theme-border-primary" />
+
+                {/* Ngày giao dịch cuối */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium theme-text">Ngày giao dịch cuối</Label>
+                  <Select value={lastTransactionRange} onValueChange={setLastTransactionRange}>
+                    <SelectTrigger className="voucher-input voucher-border-primary">
+                      <SelectValue placeholder="Chọn khoảng thời gian" />
+                    </SelectTrigger>
+                    <SelectContent className="theme-card voucher-border-primary">
+                      <SelectItem value="all">Toàn thời gian</SelectItem>
+                      <SelectItem value="today">Hôm nay</SelectItem>
+                      <SelectItem value="this-week">Tuần này</SelectItem>
+                      <SelectItem value="this-month">Tháng này</SelectItem>
+                      <SelectItem value="custom">Tùy chỉnh</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {lastTransactionRange === 'custom' && (
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      <Input
+                        type="date"
+                        placeholder="Từ ngày"
+                        className="voucher-input voucher-border-primary"
+                      />
+                      <Input
+                        type="date"
+                        placeholder="Đến ngày"
+                        className="voucher-input voucher-border-primary"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <Separator className="theme-border-primary" />
+
+                {/* Tổng bán */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium theme-text">Tổng bán</Label>
+                  <Select value={totalSalesRange} onValueChange={setTotalSalesRange}>
+                    <SelectTrigger className="voucher-input voucher-border-primary">
+                      <SelectValue placeholder="Chọn khoảng thời gian" />
+                    </SelectTrigger>
+                    <SelectContent className="theme-card voucher-border-primary">
+                      <SelectItem value="all">Toàn thời gian</SelectItem>
+                      <SelectItem value="this-month">Tháng này</SelectItem>
+                      <SelectItem value="this-year">Năm này</SelectItem>
+                      <SelectItem value="custom">Tùy chỉnh</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {totalSalesRange === 'custom' && (
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      <Input
+                        type="number"
+                        placeholder="Từ"
+                        className="voucher-input voucher-border-primary"
+                      />
+                      <Input
+                        type="number"
+                        placeholder="Đến"
+                        className="voucher-input voucher-border-primary"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <Separator className="theme-border-primary" />
+
+                {/* Nợ hiện tại */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium theme-text">Nợ hiện tại</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      type="number"
+                      placeholder="Từ"
+                      value={currentDebtFrom}
+                      onChange={(e) => setCurrentDebtFrom(e.target.value)}
+                      className="voucher-input voucher-border-primary"
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Đến"
+                      value={currentDebtTo}
+                      onChange={(e) => setCurrentDebtTo(e.target.value)}
+                      className="voucher-input voucher-border-primary"
+                    />
+                  </div>
+                </div>
+
+                <Separator className="theme-border-primary" />
+
+                {/* Số ngày nợ */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium theme-text">Số ngày nợ</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      type="number"
+                      placeholder="Từ"
+                      value={debtDaysFrom}
+                      onChange={(e) => setDebtDaysFrom(e.target.value)}
+                      className="voucher-input voucher-border-primary"
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Đến"
+                      value={debtDaysTo}
+                      onChange={(e) => setDebtDaysTo(e.target.value)}
+                      className="voucher-input voucher-border-primary"
+                    />
+                  </div>
+                </div>
+
+                <Separator className="theme-border-primary" />
+
+                {/* Điểm hiện tại */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium theme-text">Điểm hiện tại</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      type="number"
+                      placeholder="Từ"
+                      value={currentPointsFrom}
+                      onChange={(e) => setCurrentPointsFrom(e.target.value)}
+                      className="voucher-input voucher-border-primary"
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Đến"
+                      value={currentPointsTo}
+                      onChange={(e) => setCurrentPointsTo(e.target.value)}
+                      className="voucher-input voucher-border-primary"
+                    />
+                  </div>
+                </div>
+
+                <Separator className="theme-border-primary" />
+
+                {/* Khu vực giao hàng */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium theme-text">Khu vực giao hàng</Label>
+                  <Select value={province} onValueChange={setProvince}>
+                    <SelectTrigger className="voucher-input voucher-border-primary">
+                      <SelectValue placeholder="Chọn Tỉnh/TP" />
+                    </SelectTrigger>
+                    <SelectContent className="theme-card voucher-border-primary">
+                      <SelectItem value="all">Tất cả</SelectItem>
+                      <SelectItem value="hcm">TP. Hồ Chí Minh</SelectItem>
+                      <SelectItem value="hanoi">Hà Nội</SelectItem>
+                      <SelectItem value="danang">Đà Nẵng</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={district} onValueChange={setDistrict}>
+                    <SelectTrigger className="voucher-input voucher-border-primary">
+                      <SelectValue placeholder="Chọn Quận/Huyện" />
+                    </SelectTrigger>
+                    <SelectContent className="theme-card voucher-border-primary">
+                      <SelectItem value="all">Tất cả</SelectItem>
+                      <SelectItem value="q1">Quận 1</SelectItem>
+                      <SelectItem value="q2">Quận 2</SelectItem>
+                      <SelectItem value="q3">Quận 3</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Separator className="theme-border-primary" />
+
+                {/* Trạng thái */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium theme-text">Trạng thái</Label>
+                  <RadioGroup value={status} onValueChange={setStatus} className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="all" id="status-all" className="voucher-radio" />
+                      <Label htmlFor="status-all" className="text-sm theme-text cursor-pointer">Tất cả</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="active" id="status-active" className="voucher-radio" />
+                      <Label htmlFor="status-active" className="text-sm theme-text cursor-pointer">Đang hoạt động</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="inactive" id="status-inactive" className="voucher-radio" />
+                      <Label htmlFor="status-inactive" className="text-sm theme-text cursor-pointer">Ngừng hoạt động</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                {/* Reset button */}
+                <div className="pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={resetFilters}
+                    className="w-full voucher-border-primary hover:voucher-bg-primary/10 hover:voucher-text-primary"
+                  >
+                    Đặt lại bộ lọc
+                  </Button>
+                </div>
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Mobile Sidebar Overlay */}
+      <div className={`lg:hidden fixed inset-y-0 left-0 z-50 w-80 transform transition-transform duration-300 ease-in-out ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
+        <Card className="theme-card h-full">
+          <CardHeader className="pb-3 flex flex-row items-center justify-between">
+            <CardTitle className="text-lg font-semibold theme-text flex items-center">
+              <Filter className="w-5 h-5 mr-2 voucher-text-primary" />
+              Bộ lọc
+            </CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSidebarOpen(false)}
+              className="h-8 w-8 p-0 hover:voucher-bg-primary/10"
+            >
+              <X className="w-4 h-4 voucher-text-primary" />
             </Button>
-          </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <ScrollArea className="h-[calc(100vh-100px)]">
+              <div className="px-4 pb-4 space-y-4">
+                {/* Nhóm khách hàng */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium theme-text">Nhóm khách hàng</Label>
+                  <Select value={customerGroup} onValueChange={setCustomerGroup}>
+                    <SelectTrigger className="voucher-input voucher-border-primary">
+                      <SelectValue placeholder="Chọn nhóm" />
+                    </SelectTrigger>
+                    <SelectContent className="theme-card voucher-border-primary">
+                      <SelectItem value="all">Tất cả</SelectItem>
+                      <SelectItem value="1">1.Giới thiệu</SelectItem>
+                      <SelectItem value="2">2.Khách VIP</SelectItem>
+                      <SelectItem value="3">3.Khách thường</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-          {/* Desktop Header */}
-          <div className="hidden lg:flex items-center space-x-2 mb-4 pb-2 border-b theme-border-primary/20">
-            <Filter className="w-5 h-5 theme-text-primary" />
-            <h3 className="font-semibold theme-text">Bộ lọc khách hàng</h3>
-          </div>
+                <Separator className="theme-border-primary" />
 
-          <div className="space-y-4">
-            {/* Nhóm khách hàng */}
-            <div>
-              <h4 className="font-medium theme-text mb-2 text-sm">Nhóm khách hàng</h4>
-              <select 
-                value={customerGroup}
-                onChange={(e) => setCustomerGroup(e.target.value)}
-                className="w-full px-3 py-2 text-sm border theme-border-primary rounded-md voucher-input focus:theme-border-primary transition-colors theme-text"
-              >
-                <option value="all">Tất cả</option>
-                <option value="vip">VIP</option>
-                <option value="thuong">Thường</option>
-                <option value="gioi-thieu">Giới thiệu</option>
-              </select>
-            </div>
+                {/* Chi nhánh tạo */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium theme-text">Chi nhánh tạo</Label>
+                  <Select value={branch} onValueChange={setBranch}>
+                    <SelectTrigger className="voucher-input voucher-border-primary">
+                      <SelectValue placeholder="Chọn chi nhánh" />
+                    </SelectTrigger>
+                    <SelectContent className="theme-card voucher-border-primary">
+                      <SelectItem value="all">Tất cả</SelectItem>
+                      <SelectItem value="hcm">Chi nhánh HCM</SelectItem>
+                      <SelectItem value="hanoi">Chi nhánh Hà Nội</SelectItem>
+                      <SelectItem value="danang">Chi nhánh Đà Nẵng</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            {/* Chi nhánh tạo */}
-            <div>
-              <h4 className="font-medium theme-text mb-2 text-sm">Chi nhánh tạo</h4>
-              <select 
-                value={branch}
-                onChange={(e) => setBranch(e.target.value)}
-                className="w-full px-3 py-2 text-sm border theme-border-primary rounded-md voucher-input focus:theme-border-primary transition-colors theme-text"
-              >
-                <option value="all">Tất cả chi nhánh</option>
-                <option value="hanoi">Hà Nội</option>
-                <option value="hcm">TP. Hồ Chí Minh</option>
-                <option value="danang">Đà Nẵng</option>
-              </select>
-            </div>
+                <Separator className="theme-border-primary" />
 
-            {/* Ngày tạo */}
-            <div>
-              <h4 className="font-medium theme-text mb-2 text-sm">Ngày tạo</h4>
-              <RadioGroup value={createDate} onValueChange={setCreateDate}>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="all" id="create-all" className="theme-border-primary data-[state=checked]:theme-bg-primary data-[state=checked]:text-white" />
-                  <Label htmlFor="create-all" className="text-sm theme-text cursor-pointer">
-                    Toàn thời gian
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="custom" id="create-custom" className="theme-border-primary data-[state=checked]:theme-bg-primary data-[state=checked]:text-white" />
-                  <Label htmlFor="create-custom" className="text-sm theme-text cursor-pointer flex items-center">
-                    Tùy chỉnh
-                    <Calendar className="w-4 h-4 theme-text-muted ml-2" />
-                  </Label>
-                </div>
-              </RadioGroup>
-            </div>
-
-            {/* Người tạo */}
-            <div>
-              <h4 className="font-medium theme-text mb-2 text-sm">Người tạo</h4>
-              <select 
-                value={creator}
-                onChange={(e) => setCreator(e.target.value)}
-                className="w-full px-3 py-2 text-sm border theme-border-primary rounded-md voucher-input focus:theme-border-primary transition-colors theme-text"
-              >
-                <option value="all">Tất cả</option>
-                <option value="admin">Admin</option>
-                <option value="nhanvien1">Nhân viên 1</option>
-                <option value="nhanvien2">Nhân viên 2</option>
-              </select>
-            </div>
-
-            {/* Loại khách hàng */}
-            <div>
-              <h4 className="font-medium theme-text mb-2 text-sm">Loại khách hàng</h4>
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="type-all" 
-                    checked={customerType === 'all'} 
-                    onCheckedChange={() => setCustomerType('all')}
-                    className="theme-border-primary data-[state=checked]:theme-bg-primary"
-                  />
-                  <Label htmlFor="type-all" className="text-sm theme-text cursor-pointer">Tất cả</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="type-personal" 
-                    checked={customerType === 'personal'} 
-                    onCheckedChange={() => setCustomerType('personal')}
-                    className="theme-border-primary data-[state=checked]:theme-bg-primary"
-                  />
-                  <Label htmlFor="type-personal" className="text-sm theme-text cursor-pointer">Cá nhân</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="type-company" 
-                    checked={customerType === 'company'} 
-                    onCheckedChange={() => setCustomerType('company')}
-                    className="theme-border-primary data-[state=checked]:theme-bg-primary"
-                  />
-                  <Label htmlFor="type-company" className="text-sm theme-text cursor-pointer">Công ty</Label>
-                </div>
-              </div>
-            </div>
-
-            {/* Giới tính */}
-            <div>
-              <h4 className="font-medium theme-text mb-2 text-sm">Giới tính</h4>
-              <RadioGroup value={gender} onValueChange={setGender}>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="all" id="gender-all" className="theme-border-primary data-[state=checked]:theme-bg-primary data-[state=checked]:text-white" />
-                  <Label htmlFor="gender-all" className="text-sm theme-text cursor-pointer">Tất cả</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="male" id="gender-male" className="theme-border-primary data-[state=checked]:theme-bg-primary data-[state=checked]:text-white" />
-                  <Label htmlFor="gender-male" className="text-sm theme-text cursor-pointer">Nam</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="female" id="gender-female" className="theme-border-primary data-[state=checked]:theme-bg-primary data-[state=checked]:text-white" />
-                  <Label htmlFor="gender-female" className="text-sm theme-text cursor-pointer">Nữ</Label>
-                </div>
-              </RadioGroup>
-            </div>
-
-            {/* Sinh nhật */}
-            <div>
-              <h4 className="font-medium theme-text mb-2 text-sm">Sinh nhật</h4>
-              <RadioGroup value={birthday} onValueChange={setBirthday}>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="all" id="birthday-all" className="theme-border-primary data-[state=checked]:theme-bg-primary data-[state=checked]:text-white" />
-                  <Label htmlFor="birthday-all" className="text-sm theme-text cursor-pointer">Toàn thời gian</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="custom" id="birthday-custom" className="theme-border-primary data-[state=checked]:theme-bg-primary data-[state=checked]:text-white" />
-                  <Label htmlFor="birthday-custom" className="text-sm theme-text cursor-pointer flex items-center">
-                    Tùy chỉnh
-                    <Calendar className="w-4 h-4 theme-text-muted ml-2" />
-                  </Label>
-                </div>
-              </RadioGroup>
-            </div>
-
-            {/* Ngày giao dịch cuối */}
-            <div>
-              <h4 className="font-medium theme-text mb-2 text-sm">Ngày giao dịch cuối</h4>
-              <RadioGroup value={lastTransaction} onValueChange={setLastTransaction}>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="all" id="transaction-all" className="theme-border-primary data-[state=checked]:theme-bg-primary data-[state=checked]:text-white" />
-                  <Label htmlFor="transaction-all" className="text-sm theme-text cursor-pointer">Toàn thời gian</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="custom" id="transaction-custom" className="theme-border-primary data-[state=checked]:theme-bg-primary data-[state=checked]:text-white" />
-                  <Label htmlFor="transaction-custom" className="text-sm theme-text cursor-pointer flex items-center">
-                    Tùy chỉnh
-                    <Calendar className="w-4 h-4 theme-text-muted ml-2" />
-                  </Label>
-                </div>
-              </RadioGroup>
-            </div>
-
-            {/* Tổng bán */}
-            <div>
-              <h4 className="font-medium theme-text mb-2 text-sm">Tổng bán</h4>
-              <div className="space-y-2">
-                <RadioGroup value={totalSales} onValueChange={setTotalSales}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="all" id="sales-all" className="theme-border-primary data-[state=checked]:theme-bg-primary data-[state=checked]:text-white" />
-                    <Label htmlFor="sales-all" className="text-sm theme-text cursor-pointer">Toàn thời gian</Label>
+                {/* Ngày tạo */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium theme-text">Ngày tạo</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      type="date"
+                      placeholder="Từ ngày"
+                      className="voucher-input voucher-border-primary"
+                    />
+                    <Input
+                      type="date"
+                      placeholder="Đến ngày"
+                      className="voucher-input voucher-border-primary"
+                    />
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="custom" id="sales-custom" className="theme-border-primary data-[state=checked]:theme-bg-primary data-[state=checked]:text-white" />
-                    <Label htmlFor="sales-custom" className="text-sm theme-text cursor-pointer">Tùy chỉnh</Label>
+                </div>
+
+                <Separator className="theme-border-primary" />
+
+                {/* Người tạo */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium theme-text">Người tạo</Label>
+                  <Select value={creator} onValueChange={setCreator}>
+                    <SelectTrigger className="voucher-input voucher-border-primary">
+                      <SelectValue placeholder="Chọn người tạo" />
+                    </SelectTrigger>
+                    <SelectContent className="theme-card voucher-border-primary">
+                      <SelectItem value="all">Tất cả</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="user1">Người dùng 1</SelectItem>
+                      <SelectItem value="user2">Người dùng 2</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Separator className="theme-border-primary" />
+
+                {/* Loại khách hàng */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium theme-text">Loại khách hàng</Label>
+                  <RadioGroup value={customerType} onValueChange={setCustomerType} className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="all" id="type-all-mobile" className="voucher-radio" />
+                      <Label htmlFor="type-all-mobile" className="text-sm theme-text cursor-pointer">Tất cả</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="individual" id="type-individual-mobile" className="voucher-radio" />
+                      <Label htmlFor="type-individual-mobile" className="text-sm theme-text cursor-pointer">Cá nhân</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="company" id="type-company-mobile" className="voucher-radio" />
+                      <Label htmlFor="type-company-mobile" className="text-sm theme-text cursor-pointer">Công ty</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                <Separator className="theme-border-primary" />
+
+                {/* Giới tính */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium theme-text">Giới tính</Label>
+                  <RadioGroup value={gender} onValueChange={setGender} className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="all" id="gender-all-mobile" className="voucher-radio" />
+                      <Label htmlFor="gender-all-mobile" className="text-sm theme-text cursor-pointer">Tất cả</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="male" id="gender-male-mobile" className="voucher-radio" />
+                      <Label htmlFor="gender-male-mobile" className="text-sm theme-text cursor-pointer">Nam</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="female" id="gender-female-mobile" className="voucher-radio" />
+                      <Label htmlFor="gender-female-mobile" className="text-sm theme-text cursor-pointer">Nữ</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                <Separator className="theme-border-primary" />
+
+                {/* Sinh nhật */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium theme-text">Sinh nhật</Label>
+                  <Select value={birthdayRange} onValueChange={setBirthdayRange}>
+                    <SelectTrigger className="voucher-input voucher-border-primary">
+                      <SelectValue placeholder="Chọn khoảng thời gian" />
+                    </SelectTrigger>
+                    <SelectContent className="theme-card voucher-border-primary">
+                      <SelectItem value="all">Toàn thời gian</SelectItem>
+                      <SelectItem value="this-month">Tháng này</SelectItem>
+                      <SelectItem value="next-month">Tháng tới</SelectItem>
+                      <SelectItem value="custom">Tùy chỉnh</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {birthdayRange === 'custom' && (
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      <Input
+                        type="date"
+                        placeholder="Từ ngày"
+                        className="voucher-input voucher-border-primary"
+                      />
+                      <Input
+                        type="date"
+                        placeholder="Đến ngày"
+                        className="voucher-input voucher-border-primary"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <Separator className="theme-border-primary" />
+
+                {/* Ngày giao dịch cuối */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium theme-text">Ngày giao dịch cuối</Label>
+                  <Select value={lastTransactionRange} onValueChange={setLastTransactionRange}>
+                    <SelectTrigger className="voucher-input voucher-border-primary">
+                      <SelectValue placeholder="Chọn khoảng thời gian" />
+                    </SelectTrigger>
+                    <SelectContent className="theme-card voucher-border-primary">
+                      <SelectItem value="all">Toàn thời gian</SelectItem>
+                      <SelectItem value="today">Hôm nay</SelectItem>
+                      <SelectItem value="this-week">Tuần này</SelectItem>
+                      <SelectItem value="this-month">Tháng này</SelectItem>
+                      <SelectItem value="custom">Tùy chỉnh</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {lastTransactionRange === 'custom' && (
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      <Input
+                        type="date"
+                        placeholder="Từ ngày"
+                        className="voucher-input voucher-border-primary"
+                      />
+                      <Input
+                        type="date"
+                        placeholder="Đến ngày"
+                        className="voucher-input voucher-border-primary"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <Separator className="theme-border-primary" />
+
+                {/* Tổng bán */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium theme-text">Tổng bán</Label>
+                  <Select value={totalSalesRange} onValueChange={setTotalSalesRange}>
+                    <SelectTrigger className="voucher-input voucher-border-primary">
+                      <SelectValue placeholder="Chọn khoảng thời gian" />
+                    </SelectTrigger>
+                    <SelectContent className="theme-card voucher-border-primary">
+                      <SelectItem value="all">Toàn thời gian</SelectItem>
+                      <SelectItem value="this-month">Tháng này</SelectItem>
+                      <SelectItem value="this-year">Năm này</SelectItem>
+                      <SelectItem value="custom">Tùy chỉnh</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {totalSalesRange === 'custom' && (
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      <Input
+                        type="number"
+                        placeholder="Từ"
+                        className="voucher-input voucher-border-primary"
+                      />
+                      <Input
+                        type="number"
+                        placeholder="Đến"
+                        className="voucher-input voucher-border-primary"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <Separator className="theme-border-primary" />
+
+                {/* Nợ hiện tại */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium theme-text">Nợ hiện tại</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      type="number"
+                      placeholder="Từ"
+                      value={currentDebtFrom}
+                      onChange={(e) => setCurrentDebtFrom(e.target.value)}
+                      className="voucher-input voucher-border-primary"
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Đến"
+                      value={currentDebtTo}
+                      onChange={(e) => setCurrentDebtTo(e.target.value)}
+                      className="voucher-input voucher-border-primary"
+                    />
                   </div>
-                </RadioGroup>
-                <div className="grid grid-cols-2 gap-2">
-                  <input 
-                    type="text" 
-                    placeholder="Từ" 
-                    className="px-2 py-1.5 text-sm border theme-border-primary rounded voucher-input focus:theme-border-primary transition-colors theme-text" 
-                  />
-                  <input 
-                    type="text" 
-                    placeholder="Đến" 
-                    className="px-2 py-1.5 text-sm border theme-border-primary rounded voucher-input focus:theme-border-primary transition-colors theme-text" 
-                  />
+                </div>
+
+                <Separator className="theme-border-primary" />
+
+                {/* Số ngày nợ */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium theme-text">Số ngày nợ</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      type="number"
+                      placeholder="Từ"
+                      value={debtDaysFrom}
+                      onChange={(e) => setDebtDaysFrom(e.target.value)}
+                      className="voucher-input voucher-border-primary"
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Đến"
+                      value={debtDaysTo}
+                      onChange={(e) => setDebtDaysTo(e.target.value)}
+                      className="voucher-input voucher-border-primary"
+                    />
+                  </div>
+                </div>
+
+                <Separator className="theme-border-primary" />
+
+                {/* Điểm hiện tại */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium theme-text">Điểm hiện tại</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      type="number"
+                      placeholder="Từ"
+                      value={currentPointsFrom}
+                      onChange={(e) => setCurrentPointsFrom(e.target.value)}
+                      className="voucher-input voucher-border-primary"
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Đến"
+                      value={currentPointsTo}
+                      onChange={(e) => setCurrentPointsTo(e.target.value)}
+                      className="voucher-input voucher-border-primary"
+                    />
+                  </div>
+                </div>
+
+                <Separator className="theme-border-primary" />
+
+                {/* Khu vực giao hàng */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium theme-text">Khu vực giao hàng</Label>
+                  <Select value={province} onValueChange={setProvince}>
+                    <SelectTrigger className="voucher-input voucher-border-primary">
+                      <SelectValue placeholder="Chọn Tỉnh/TP" />
+                    </SelectTrigger>
+                    <SelectContent className="theme-card voucher-border-primary">
+                      <SelectItem value="all">Tất cả</SelectItem>
+                      <SelectItem value="hcm">TP. Hồ Chí Minh</SelectItem>
+                      <SelectItem value="hanoi">Hà Nội</SelectItem>
+                      <SelectItem value="danang">Đà Nẵng</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={district} onValueChange={setDistrict}>
+                    <SelectTrigger className="voucher-input voucher-border-primary">
+                      <SelectValue placeholder="Chọn Quận/Huyện" />
+                    </SelectTrigger>
+                    <SelectContent className="theme-card voucher-border-primary">
+                      <SelectItem value="all">Tất cả</SelectItem>
+                      <SelectItem value="q1">Quận 1</SelectItem>
+                      <SelectItem value="q2">Quận 2</SelectItem>
+                      <SelectItem value="q3">Quận 3</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Separator className="theme-border-primary" />
+
+                {/* Trạng thái */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium theme-text">Trạng thái</Label>
+                  <RadioGroup value={status} onValueChange={setStatus} className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="all" id="status-all-mobile" className="voucher-radio" />
+                      <Label htmlFor="status-all-mobile" className="text-sm theme-text cursor-pointer">Tất cả</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="active" id="status-active-mobile" className="voucher-radio" />
+                      <Label htmlFor="status-active-mobile" className="text-sm theme-text cursor-pointer">Đang hoạt động</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="inactive" id="status-inactive-mobile" className="voucher-radio" />
+                      <Label htmlFor="status-inactive-mobile" className="text-sm theme-text cursor-pointer">Ngừng hoạt động</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                {/* Reset button */}
+                <div className="pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={resetFilters}
+                    className="w-full voucher-border-primary hover:voucher-bg-primary/10 hover:voucher-text-primary"
+                  >
+                    Đặt lại bộ lọc
+                  </Button>
                 </div>
               </div>
-            </div>
-
-            {/* Nợ hiện tại */}
-            <div>
-              <h4 className="font-medium theme-text mb-2 text-sm">Nợ hiện tại</h4>
-              <div className="grid grid-cols-2 gap-2">
-                <input 
-                  type="text" 
-                  placeholder="Từ" 
-                  value={currentDebt.from}
-                  onChange={(e) => setCurrentDebt(prev => ({ ...prev, from: e.target.value }))}
-                  className="px-2 py-1.5 text-sm border theme-border-primary rounded voucher-input focus:theme-border-primary transition-colors theme-text" 
-                />
-                <input 
-                  type="text" 
-                  placeholder="Đến" 
-                  value={currentDebt.to}
-                  onChange={(e) => setCurrentDebt(prev => ({ ...prev, to: e.target.value }))}
-                  className="px-2 py-1.5 text-sm border theme-border-primary rounded voucher-input focus:theme-border-primary transition-colors theme-text" 
-                />
-              </div>
-            </div>
-
-            {/* Số ngày nợ */}
-            <div>
-              <h4 className="font-medium theme-text mb-2 text-sm">Số ngày nợ</h4>
-              <div className="grid grid-cols-2 gap-2">
-                <input 
-                  type="text" 
-                  placeholder="Từ" 
-                  value={debtDays.from}
-                  onChange={(e) => setDebtDays(prev => ({ ...prev, from: e.target.value }))}
-                  className="px-2 py-1.5 text-sm border theme-border-primary rounded voucher-input focus:theme-border-primary transition-colors theme-text" 
-                />
-                <input 
-                  type="text" 
-                  placeholder="Đến" 
-                  value={debtDays.to}
-                  onChange={(e) => setDebtDays(prev => ({ ...prev, to: e.target.value }))}
-                  className="px-2 py-1.5 text-sm border theme-border-primary rounded voucher-input focus:theme-border-primary transition-colors theme-text" 
-                />
-              </div>
-            </div>
-
-            {/* Điểm hiện tại */}
-            <div>
-              <h4 className="font-medium theme-text mb-2 text-sm">Điểm hiện tại</h4>
-              <div className="grid grid-cols-2 gap-2">
-                <input 
-                  type="text" 
-                  placeholder="Từ" 
-                  value={currentPoints.from}
-                  onChange={(e) => setCurrentPoints(prev => ({ ...prev, from: e.target.value }))}
-                  className="px-2 py-1.5 text-sm border theme-border-primary rounded voucher-input focus:theme-border-primary transition-colors theme-text" 
-                />
-                <input 
-                  type="text" 
-                  placeholder="Đến" 
-                  value={currentPoints.to}
-                  onChange={(e) => setCurrentPoints(prev => ({ ...prev, to: e.target.value }))}
-                  className="px-2 py-1.5 text-sm border theme-border-primary rounded voucher-input focus:theme-border-primary transition-colors theme-text" 
-                />
-              </div>
-            </div>
-
-            {/* Khu vực giao hàng */}
-            <div>
-              <h4 className="font-medium theme-text mb-2 text-sm">Khu vực giao hàng</h4>
-              <select 
-                value={deliveryArea}
-                onChange={(e) => setDeliveryArea(e.target.value)}
-                className="w-full px-3 py-2 text-sm border theme-border-primary rounded-md voucher-input focus:theme-border-primary transition-colors theme-text"
-              >
-                <option value="">Chọn Tỉnh/TP - Quận/Huyện</option>
-                <option value="hanoi-hoankiem">Hà Nội - Hoàn Kiếm</option>
-                <option value="hcm-quan1">TP.HCM - Quận 1</option>
-                <option value="hcm-quan3">TP.HCM - Quận 3</option>
-              </select>
-            </div>
-
-            {/* Trạng thái */}
-            <div>
-              <h4 className="font-medium theme-text mb-2 text-sm">Trạng thái</h4>
-              <div className="space-y-2">
-                <Button 
-                  variant={status === 'all' ? 'default' : 'outline'}
-                  size="sm" 
-                  onClick={() => setStatus('all')}
-                  className={`w-full justify-start text-sm ${
-                    status === 'all' 
-                      ? 'voucher-button-primary' 
-                      : 'theme-border-primary hover:theme-bg-primary/10 hover:theme-text-primary'
-                  }`}
-                >
-                  Tất cả
-                </Button>
-                <Button 
-                  variant={status === 'active' ? 'default' : 'outline'}
-                  size="sm" 
-                  onClick={() => setStatus('active')}
-                  className={`w-full justify-start text-sm ${
-                    status === 'active' 
-                      ? 'voucher-button-primary' 
-                      : 'theme-border-primary hover:theme-bg-primary/10 hover:theme-text-primary'
-                  }`}
-                >
-                  Đang hoạt động
-                </Button>
-                <Button 
-                  variant={status === 'inactive' ? 'default' : 'outline'}
-                  size="sm" 
-                  onClick={() => setStatus('inactive')}
-                  className={`w-full justify-start text-sm ${
-                    status === 'inactive' 
-                      ? 'voucher-button-primary' 
-                      : 'theme-border-primary hover:theme-bg-primary/10 hover:theme-text-primary'
-                  }`}
-                >
-                  Ngưng hoạt động
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
       </div>
     </>
   );

@@ -44,6 +44,48 @@ interface CustomerTableProps {
   totalPages: number;
 }
 
+// Column width configurations based on content type
+const getColumnWidth = (columnKey: string): string => {
+  const widthConfig: Record<string, string> = {
+    // Short columns
+    'customerCode': 'min-w-[100px]',
+    'gender': 'min-w-[80px]',
+    'status': 'min-w-[100px]',
+    'debtDays': 'min-w-[90px]',
+    'ward': 'min-w-[100px]',
+    
+    // Medium columns
+    'customerName': 'min-w-[150px]',
+    'phone': 'min-w-[130px]',
+    'customerType': 'min-w-[120px]',
+    'customerGroup': 'min-w-[140px]',
+    'birthDate': 'min-w-[110px]',
+    'email': 'min-w-[180px]',
+    'creator': 'min-w-[120px]',
+    'createDate': 'min-w-[110px]',
+    'lastTransactionDate': 'min-w-[140px]',
+    'createBranch': 'min-w-[130px]',
+    
+    // Currency/Number columns
+    'currentDebt': 'min-w-[120px]',
+    'totalSales': 'min-w-[120px]',
+    'currentPoints': 'min-w-[100px]',
+    'totalPoints': 'min-w-[100px]',
+    'totalSalesMinusReturns': 'min-w-[160px]',
+    
+    // Long content columns
+    'facebook': 'min-w-[200px]',
+    'company': 'min-w-[180px]',
+    'taxCode': 'min-w-[120px]',
+    'idNumber': 'min-w-[140px]',
+    'address': 'min-w-[250px]',
+    'deliveryArea': 'min-w-[140px]',
+    'notes': 'min-w-[200px]'
+  };
+  
+  return widthConfig[columnKey] || 'min-w-[120px]';
+};
+
 export function CustomerTable({
   customers,
   visibleColumns,
@@ -59,9 +101,9 @@ export function CustomerTable({
 }: CustomerTableProps) {
   const getStatusBadge = (status: string) => {
     if (status === 'Hoạt động') {
-      return <Badge className="theme-badge-success">Hoạt động</Badge>;
+      return <Badge className="theme-badge-success whitespace-nowrap">Hoạt động</Badge>;
     }
-    return <Badge className="berry-error-light">Ngưng hoạt động</Badge>;
+    return <Badge className="berry-error-light whitespace-nowrap">Ngưng hoạt động</Badge>;
   };
 
   const formatCurrency = (amount: number) => {
@@ -74,19 +116,19 @@ export function CustomerTable({
   const renderCellContent = (customer: Customer, columnKey: string) => {
     switch (columnKey) {
       case 'customerCode':
-        return customer.id;
+        return <span className="whitespace-nowrap">{customer.id}</span>;
       case 'customerName':
         return customer.name;
       case 'customerType':
-        return 'Cá nhân';
+        return <span className="whitespace-nowrap">Cá nhân</span>;
       case 'phone':
-        return customer.phone;
+        return <span className="whitespace-nowrap">{customer.phone}</span>;
       case 'customerGroup':
         return customer.group;
       case 'gender':
-        return 'Nam';
+        return <span className="whitespace-nowrap">Nam</span>;
       case 'birthDate':
-        return customer.birthday;
+        return <span className="whitespace-nowrap">{customer.birthday}</span>;
       case 'email':
         return customer.email;
       case 'facebook':
@@ -94,37 +136,37 @@ export function CustomerTable({
       case 'company':
         return customer.company;
       case 'taxCode':
-        return customer.taxCode;
+        return <span className="whitespace-nowrap">{customer.taxCode}</span>;
       case 'idNumber':
-        return '123456789';
+        return <span className="whitespace-nowrap">123456789</span>;
       case 'address':
         return customer.address;
       case 'deliveryArea':
         return customer.deliveryArea;
       case 'ward':
-        return 'Phường 1';
+        return <span className="whitespace-nowrap">Phường 1</span>;
       case 'creator':
-        return customer.creator;
+        return <span className="whitespace-nowrap">{customer.creator}</span>;
       case 'createDate':
-        return customer.createdDate;
+        return <span className="whitespace-nowrap">{customer.createdDate}</span>;
       case 'notes':
         return customer.note;
       case 'lastTransactionDate':
-        return '20/01/2024';
+        return <span className="whitespace-nowrap">20/01/2024</span>;
       case 'createBranch':
-        return 'Chi nhánh HCM';
+        return <span className="whitespace-nowrap">Chi nhánh HCM</span>;
       case 'currentDebt':
-        return formatCurrency(customer.totalDebt);
+        return <span className="whitespace-nowrap text-right block">{formatCurrency(customer.totalDebt)}</span>;
       case 'debtDays':
-        return '0';
+        return <span className="whitespace-nowrap text-center block">0</span>;
       case 'totalSales':
-        return formatCurrency(customer.totalSpent);
+        return <span className="whitespace-nowrap text-right block">{formatCurrency(customer.totalSpent)}</span>;
       case 'currentPoints':
-        return customer.points.toString();
+        return <span className="whitespace-nowrap text-center block">{customer.points.toString()}</span>;
       case 'totalPoints':
-        return (customer.points + 200).toString();
+        return <span className="whitespace-nowrap text-center block">{(customer.points + 200).toString()}</span>;
       case 'totalSalesMinusReturns':
-        return formatCurrency(customer.totalSpent - 50000);
+        return <span className="whitespace-nowrap text-right block">{formatCurrency(customer.totalSpent - 50000)}</span>;
       case 'status':
         return getStatusBadge(customer.status);
       default:
@@ -138,48 +180,55 @@ export function CustomerTable({
   return (
     <Card className="theme-card">
       <CardContent className="p-0">
-        <ScrollArea className="w-full">
-          <Table>
+        {/* Table with horizontal scroll */}
+        <div className="overflow-x-auto">
+          <Table className="w-full">
             <TableHeader>
               <TableRow className="hover:theme-bg-primary/5">
-                <TableHead className="w-12">
+                <TableHead className="w-12 sticky left-0 theme-card z-10">
                   <Checkbox
                     checked={selectedCustomers.length === customers.length}
                     onCheckedChange={handleSelectAll}
-                    className="theme-border-primary data-[state=checked]:theme-bg-primary"
+                    className="voucher-checkbox"
                   />
                 </TableHead>
                 {visibleColumns.map((column) => (
-                  <TableHead key={column.key} className="theme-text font-medium">
+                  <TableHead 
+                    key={column.key} 
+                    className={`theme-text font-medium whitespace-nowrap ${getColumnWidth(column.key)}`}
+                  >
                     {column.label}
                   </TableHead>
                 ))}
-                <TableHead className="theme-text font-medium w-24">Thao tác</TableHead>
+                <TableHead className="theme-text font-medium w-24 whitespace-nowrap">Thao tác</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {customers.slice(startIndex, startIndex + itemsPerPage).map((customer) => (
                 <TableRow key={customer.id} className="hover:theme-bg-primary/5">
-                  <TableCell>
+                  <TableCell className="sticky left-0 theme-card z-10">
                     <Checkbox
                       checked={selectedCustomers.includes(customer.id)}
                       onCheckedChange={(checked) => handleSelectCustomer(customer.id, checked as boolean)}
-                      className="theme-border-primary data-[state=checked]:theme-bg-primary"
+                      className="voucher-checkbox"
                     />
                   </TableCell>
                   {visibleColumns.map((column) => (
-                    <TableCell key={column.key} className="theme-text">
+                    <TableCell 
+                      key={column.key} 
+                      className={`theme-text ${getColumnWidth(column.key)}`}
+                    >
                       {renderCellContent(customer, column.key)}
                     </TableCell>
                   ))}
-                  <TableCell>
+                  <TableCell className="w-24">
                     <div className="flex items-center space-x-1">
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-8 w-8 p-0 hover:theme-bg-primary/10 hover:theme-text-primary"
+                        className="h-8 w-8 p-0 hover:voucher-bg-primary/10 hover:voucher-text-primary"
                       >
-                        <Eye className="w-4 h-4 theme-text-primary" />
+                        <Eye className="w-4 h-4 voucher-text-primary" />
                       </Button>
                       <Button
                         variant="ghost"
@@ -191,9 +240,9 @@ export function CustomerTable({
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-8 w-8 p-0 hover:theme-bg-primary/10 hover:theme-text-primary"
+                        className="h-8 w-8 p-0 hover:voucher-bg-primary/10 hover:voucher-text-primary"
                       >
-                        <MoreHorizontal className="w-4 h-4 theme-text-primary" />
+                        <MoreHorizontal className="w-4 h-4 voucher-text-primary" />
                       </Button>
                     </div>
                   </TableCell>
@@ -201,7 +250,7 @@ export function CustomerTable({
               ))}
             </TableBody>
           </Table>
-        </ScrollArea>
+        </div>
 
         {/* Pagination */}
         <div className="flex items-center justify-between px-4 py-3 border-t theme-border-primary">
@@ -232,7 +281,7 @@ export function CustomerTable({
                 size="sm"
                 onClick={() => setCurrentPage(currentPage - 1)}
                 disabled={currentPage === 1}
-                className="h-8 w-8 p-0 theme-border-primary hover:theme-bg-primary/10 hover:theme-text-primary disabled:opacity-50"
+                className="h-8 w-8 p-0 voucher-border-primary hover:voucher-bg-primary/10 hover:voucher-text-primary disabled:opacity-50"
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
@@ -244,7 +293,7 @@ export function CustomerTable({
                 size="sm"
                 onClick={() => setCurrentPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className="h-8 w-8 p-0 theme-border-primary hover:theme-bg-primary/10 hover:theme-text-primary disabled:opacity-50"
+                className="h-8 w-8 p-0 voucher-border-primary hover:voucher-bg-primary/10 hover:voucher-text-primary disabled:opacity-50"
               >
                 <ChevronRight className="w-4 h-4" />
               </Button>
