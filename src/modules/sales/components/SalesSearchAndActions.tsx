@@ -47,16 +47,16 @@ export function SalesSearchAndActions({
   const totalPaid = salesData.reduce((sum, item) => sum + item.paidAmount, 0);
 
   return (
-    <div className="bg-white rounded-lg border p-4 mb-6">
+    <div className="theme-card rounded-lg border p-4 mb-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-4 flex-1">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 theme-text-muted h-4 w-4" />
             <Input
               placeholder="Tìm kiếm theo mã hóa đơn..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 voucher-input"
             />
           </div>
           
@@ -89,29 +89,29 @@ export function SalesSearchAndActions({
             />
           )}
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700">
+        <Button className="sales-button-primary">
           <Plus className="h-4 w-4 mr-2" />
           Hóa đơn
         </Button>
       </div>
 
       {/* Summary Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 theme-bg-primary/5 rounded-lg">
         <div className="text-center">
-          <div className="text-sm text-gray-600">Tổng doanh thu</div>
-          <div className="font-semibold text-lg">{formatCurrency(totalSales)}</div>
+          <div className="text-sm theme-text-muted">Tổng doanh thu</div>
+          <div className="font-semibold text-lg theme-text">{formatCurrency(totalSales)}</div>
         </div>
         <div className="text-center">
-          <div className="text-sm text-gray-600">Tổng giảm giá</div>
-          <div className="font-semibold text-lg text-red-600">{formatCurrency(totalDiscount)}</div>
+          <div className="text-sm theme-text-muted">Tổng giảm giá</div>
+          <div className="font-semibold text-lg sales-amount-negative">{formatCurrency(totalDiscount)}</div>
         </div>
         <div className="text-center">
-          <div className="text-sm text-gray-600">Khách thanh toán</div>
-          <div className="font-semibold text-lg text-green-600">{formatCurrency(totalPaid)}</div>
+          <div className="text-sm theme-text-muted">Khách thanh toán</div>
+          <div className="font-semibold text-lg sales-amount-positive">{formatCurrency(totalPaid)}</div>
         </div>
         <div className="text-center">
-          <div className="text-sm text-gray-600">Số hóa đơn</div>
-          <div className="font-semibold text-lg">{salesData.length}</div>
+          <div className="text-sm theme-text-muted">Số hóa đơn</div>
+          <div className="font-semibold text-lg theme-text">{salesData.length}</div>
         </div>
       </div>
     </div>

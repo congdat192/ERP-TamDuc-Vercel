@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { SalesFilters } from '../components/SalesFilters';
@@ -101,12 +102,12 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen theme-background">
       <div className="flex">
         {/* Desktop Filter Sidebar */}
         {!isMobile && (
-          <div className="w-64 max-w-64 bg-white border-r p-4 space-y-4">
-            <h3 className="font-semibold text-gray-900 text-base">Bộ lọc</h3>
+          <div className="w-64 max-w-64 theme-card border-r theme-border-primary/20 p-4 space-y-4">
+            <h3 className="font-semibold theme-text text-base">Bộ lọc</h3>
             <ScrollArea className="h-[calc(100vh-200px)]">
               <div className="pr-4">
                 <SalesFilters

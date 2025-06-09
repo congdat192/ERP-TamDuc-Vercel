@@ -118,7 +118,7 @@
     --theme-text-muted: 215.4 16.3% 46.9%;
     --theme-border: 214.3 31.8% 91.4%;
     
-    /* Voucher Module Variables - Default to Preset 1 (Berry Blue) */
+    /* Voucher/Sales Module Variables - Default to Preset 1 (Berry Blue) */
     --voucher-primary-50: var(--berry-primary-50);
     --voucher-primary-100: var(--berry-primary-100);
     --voucher-primary-200: var(--berry-primary-200);
@@ -404,6 +404,47 @@
     border: 1px solid hsl(var(--berry-info-300));
   }
 
+  /* Sales Module - Use same voucher variables for consistency */
+  .sales-card {
+    @apply theme-card rounded-lg transition-all duration-200 hover:shadow-md;
+  }
+
+  .sales-tab-active {
+    background-color: hsl(var(--voucher-primary-500)) !important;
+    color: white !important;
+    font-weight: 600;
+    border-color: hsl(var(--voucher-primary-500)) !important;
+  }
+
+  .sales-tab-active:hover {
+    background-color: hsl(var(--voucher-primary-600)) !important;
+    color: white !important;
+  }
+
+  .sales-button-primary {
+    background-color: hsl(var(--voucher-primary-500));
+    color: white;
+    font-weight: 600;
+    border: none;
+  }
+
+  .sales-button-primary:hover {
+    background-color: hsl(var(--voucher-primary-600));
+    color: white;
+  }
+
+  .sales-button-secondary {
+    background-color: hsl(var(--voucher-secondary-500));
+    color: white;
+    font-weight: 600;
+    border: none;
+  }
+
+  .sales-button-secondary:hover {
+    background-color: hsl(var(--voucher-secondary-600));
+    color: white;
+  }
+
   /* Voucher Card Styling */
   .voucher-card {
     @apply theme-card rounded-lg transition-all duration-200 hover:shadow-md;
@@ -597,5 +638,30 @@
     background-color: hsl(var(--voucher-primary-50));
     color: hsl(var(--voucher-primary-700));
     border-color: hsl(var(--voucher-primary-200));
+  }
+
+  /* Sales Status Colors using Berry Semantic Colors */
+  .sales-status-completed {
+    background-color: hsl(var(--berry-success-100));
+    color: hsl(var(--berry-success-800));
+    border: 1px solid hsl(var(--berry-success-300));
+  }
+
+  .sales-status-cancelled {
+    background-color: hsl(var(--berry-error-100));
+    color: hsl(var(--berry-error-800));
+    border: 1px solid hsl(var(--berry-error-300));
+  }
+
+  .sales-amount-positive {
+    color: hsl(var(--berry-success-600));
+  }
+
+  .sales-amount-negative {
+    color: hsl(var(--berry-error-600));
+  }
+
+  .sales-amount-warning {
+    color: hsl(var(--berry-warning-600));
   }
 }

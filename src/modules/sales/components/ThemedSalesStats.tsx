@@ -41,18 +41,22 @@ export function ThemedSalesStats() {
         return (
           <Card 
             key={index} 
-            className={`theme-stats-card ${stat.variant === 'primary' ? 'theme-stats-primary' : 'theme-stats-secondary'}`}
+            className="sales-card hover:shadow-lg transition-all duration-200 border theme-border-primary/20"
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium theme-text-muted">
                 {stat.title}
               </CardTitle>
-              <Icon className={`h-4 w-4 ${stat.variant === 'primary' ? 'theme-text-primary' : 'theme-text-secondary'}`} />
+              <div className={`p-2 rounded-lg ${stat.variant === 'primary' ? 'theme-bg-primary' : 'theme-bg-secondary'}`}>
+                <Icon className="h-4 w-4 text-white" />
+              </div>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold theme-text">{stat.value}</div>
               <p className="text-xs theme-text-muted">
-                <span className="theme-text-primary">{stat.change}</span> so với tháng trước
+                <span className={`font-medium ${stat.variant === 'primary' ? 'theme-text-primary' : 'theme-text-secondary'}`}>
+                  {stat.change}
+                </span> so với tháng trước
               </p>
             </CardContent>
           </Card>
