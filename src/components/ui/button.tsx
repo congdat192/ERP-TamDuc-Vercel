@@ -10,15 +10,15 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "berry-primary shadow-sm",
-        destructive: "berry-error shadow-sm",
-        outline: "berry-primary-outline hover:berry-primary-light",
-        secondary: "berry-secondary shadow-sm",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
+        default: "berry-primary shadow-sm hover:shadow-md",
+        destructive: "berry-error shadow-sm hover:shadow-md",
+        outline: "berry-primary-outline hover:berry-primary-50",
+        secondary: "berry-secondary shadow-sm hover:shadow-md",
+        ghost: "hover:theme-bg-primary/10 hover:theme-text-primary",
         link: "theme-text-primary underline-offset-4 hover:underline",
-        success: "berry-success shadow-sm",
-        warning: "berry-warning shadow-sm",
-        info: "berry-info shadow-sm",
+        success: "berry-success shadow-sm hover:shadow-md",
+        warning: "berry-warning shadow-sm hover:shadow-md",
+        info: "berry-info shadow-sm hover:shadow-md",
       },
       size: {
         default: "h-10 px-4 py-2",

@@ -45,31 +45,71 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    /* Berry Palette - Default Blue Theme */
-    --berry-primary-main: 207 90% 54%;  /* #2196F3 Blue-500 */
-    --berry-primary-light: 207 90% 77%; /* #64B5F6 Blue-300 */
-    --berry-primary-dark: 210 79% 46%;  /* #1565C0 Blue-800 */
+    /* Berry Palette - Complete 5-level system */
+    /* Primary Colors - Blue Palette */
+    --berry-primary-50: 227 100% 96%;   /* #E3F2FD */
+    --berry-primary-100: 207 56% 81%;   /* #BBDEFB */
+    --berry-primary-200: 207 68% 69%;   /* #90CAF9 */
+    --berry-primary-300: 207 90% 77%;   /* #64B5F6 */
+    --berry-primary-400: 207 90% 61%;   /* #42A5F5 */
+    --berry-primary-500: 207 90% 54%;   /* #2196F3 - main */
+    --berry-primary-600: 210 83% 53%;   /* #1E88E5 */
+    --berry-primary-700: 210 79% 46%;   /* #1976D2 */
+    --berry-primary-800: 210 79% 46%;   /* #1565C0 - dark */
+    --berry-primary-900: 211 100% 26%;  /* #0D47A1 */
     
-    --berry-secondary-main: 262 52% 47%; /* #673AB7 DeepPurple-500 */
-    --berry-secondary-light: 262 47% 64%; /* #9575CD DeepPurple-300 */
-    --berry-secondary-dark: 262 57% 30%; /* #4527A0 DeepPurple-800 */
+    /* Secondary Colors - Deep Purple Palette */
+    --berry-secondary-50: 261 32% 96%;  /* #EDE7F6 */
+    --berry-secondary-100: 261 46% 87%; /* #D1C4E9 */
+    --berry-secondary-200: 262 47% 78%; /* #B39DDB */
+    --berry-secondary-300: 262 47% 64%; /* #9575CD */
+    --berry-secondary-400: 262 52% 55%; /* #7E57C2 */
+    --berry-secondary-500: 262 52% 47%; /* #673AB7 - main */
+    --berry-secondary-600: 262 57% 42%; /* #5E35B1 */
+    --berry-secondary-700: 262 57% 35%; /* #512DA8 */
+    --berry-secondary-800: 262 57% 30%; /* #4527A0 - dark */
+    --berry-secondary-900: 262 69% 22%; /* #311B92 */
     
-    /* Berry Semantic Colors */
-    --berry-success-main: 141 76% 56%;  /* #00E676 Green-A400 */
-    --berry-success-light: 141 46% 73%; /* #81C784 Green-300 */
-    --berry-success-dark: 141 75% 42%;  /* #00C853 Green-A700 */
+    /* Berry Semantic Colors - Fixed, don't change with presets */
+    --berry-success-50: 141 46% 92%;    /* #E8F5E8 */
+    --berry-success-100: 141 46% 83%;   /* #C8E6C8 */
+    --berry-success-200: 141 46% 73%;   /* #A5D6A7 */
+    --berry-success-300: 141 76% 84%;   /* #B9F6CA */
+    --berry-success-400: 141 76% 72%;   /* #69F0AE */
+    --berry-success-500: 141 76% 56%;   /* #00E676 - main */
+    --berry-success-600: 141 75% 48%;   /* #00C853 */
+    --berry-success-700: 122 39% 49%;   /* #388E3C */
+    --berry-success-800: 122 40% 40%;   /* #2E7D32 */
     
-    --berry-warning-main: 45 100% 51%;  /* #FFC107 Amber-500 */
-    --berry-warning-light: 45 100% 70%; /* #FFD54F Amber-300 */
-    --berry-warning-dark: 45 100% 40%;  /* #FF8F00 Amber-800 */
+    --berry-warning-50: 48 100% 96%;    /* #FFFDE7 */
+    --berry-warning-100: 45 100% 91%;   /* #FFF8E1 */
+    --berry-warning-200: 45 96% 79%;    /* #FFECB3 */
+    --berry-warning-300: 45 100% 77%;   /* #FFE082 */
+    --berry-warning-400: 45 100% 70%;   /* #FFD54F */
+    --berry-warning-500: 45 100% 51%;   /* #FFC107 - main */
+    --berry-warning-600: 43 100% 50%;   /* #FFB300 */
+    --berry-warning-700: 36 100% 50%;   /* #FFA000 */
+    --berry-warning-800: 35 100% 50%;   /* #FF8F00 */
     
-    --berry-error-main: 4 90% 58%;      /* #F44336 Red-500 */
-    --berry-error-light: 4 69% 67%;     /* #E57373 Red-300 */
-    --berry-error-dark: 4 90% 40%;      /* #C62828 Red-800 */
+    --berry-error-50: 0 86% 97%;        /* #FFEBEE */
+    --berry-error-100: 354 100% 93%;    /* #FFCDD2 */
+    --berry-error-200: 4 69% 83%;       /* #EF9A9A */
+    --berry-error-300: 4 69% 67%;       /* #E57373 */
+    --berry-error-400: 4 90% 70%;       /* #EF5350 */
+    --berry-error-500: 4 90% 58%;       /* #F44336 - main */
+    --berry-error-600: 4 90% 48%;       /* #E53935 */
+    --berry-error-700: 4 90% 40%;       /* #D32F2F */
+    --berry-error-800: 4 90% 40%;       /* #C62828 */
     
-    --berry-info-main: 199 98% 48%;     /* #00BCD4 Cyan-500 */
-    --berry-info-light: 199 76% 69%;    /* #4DD0E1 Cyan-300 */
-    --berry-info-dark: 199 100% 33%;    /* #0097A7 Cyan-800 */
+    --berry-info-50: 199 100% 95%;      /* #E0F2F1 */
+    --berry-info-100: 184 100% 88%;     /* #B2DFDB */
+    --berry-info-200: 199 76% 84%;      /* #80DEEA */
+    --berry-info-300: 199 76% 69%;      /* #4DD0E1 */
+    --berry-info-400: 199 98% 59%;      /* #26C6DA */
+    --berry-info-500: 199 98% 48%;      /* #00BCD4 - main */
+    --berry-info-600: 199 100% 40%;     /* #00ACC1 */
+    --berry-info-700: 199 100% 33%;     /* #0097A7 */
+    --berry-info-800: 199 100% 26%;     /* #00838F */
     
     /* Enhanced Theme Variables */
     --theme-background: 0 0% 98%;
@@ -78,17 +118,36 @@
     --theme-text-muted: 215.4 16.3% 46.9%;
     --theme-border: 214.3 31.8% 91.4%;
     
-    /* Voucher Module Variables - Berry Blue Theme */
-    --voucher-primary: var(--berry-primary-main);
-    --voucher-primary-light: var(--berry-primary-light);
-    --voucher-primary-dark: var(--berry-primary-dark);
-    --voucher-secondary: var(--berry-secondary-main);
-    --voucher-secondary-light: var(--berry-secondary-light);
-    --voucher-secondary-dark: var(--berry-secondary-dark);
-    --voucher-success: var(--berry-success-main);
-    --voucher-warning: var(--berry-warning-main);
-    --voucher-error: var(--berry-error-main);
-    --voucher-info: var(--berry-info-main);
+    /* Voucher Module Variables - Default to Preset 1 (Berry Blue) */
+    --voucher-primary-50: var(--berry-primary-50);
+    --voucher-primary-100: var(--berry-primary-100);
+    --voucher-primary-200: var(--berry-primary-200);
+    --voucher-primary-300: var(--berry-primary-300);
+    --voucher-primary-400: var(--berry-primary-400);
+    --voucher-primary-500: var(--berry-primary-500);
+    --voucher-primary-600: var(--berry-primary-600);
+    --voucher-primary-700: var(--berry-primary-700);
+    --voucher-primary-800: var(--berry-primary-800);
+    --voucher-primary-900: var(--berry-primary-900);
+    
+    --voucher-secondary-50: var(--berry-secondary-50);
+    --voucher-secondary-100: var(--berry-secondary-100);
+    --voucher-secondary-200: var(--berry-secondary-200);
+    --voucher-secondary-300: var(--berry-secondary-300);
+    --voucher-secondary-400: var(--berry-secondary-400);
+    --voucher-secondary-500: var(--berry-secondary-500);
+    --voucher-secondary-600: var(--berry-secondary-600);
+    --voucher-secondary-700: var(--berry-secondary-700);
+    --voucher-secondary-800: var(--berry-secondary-800);
+    --voucher-secondary-900: var(--berry-secondary-900);
+    
+    /* Legacy variables for backward compatibility */
+    --voucher-primary: var(--voucher-primary-500);
+    --voucher-primary-light: var(--voucher-primary-300);
+    --voucher-primary-dark: var(--voucher-primary-800);
+    --voucher-secondary: var(--voucher-secondary-500);
+    --voucher-secondary-light: var(--voucher-secondary-300);
+    --voucher-secondary-dark: var(--voucher-secondary-800);
   }
 
   .dark {
@@ -142,29 +201,42 @@
   
   /* Preset 1 - Berry Blue (Default) */
   .preset1 {
-    --voucher-primary: var(--berry-primary-main);
-    --voucher-primary-light: var(--berry-primary-light);
-    --voucher-primary-dark: var(--berry-primary-dark);
-    --voucher-secondary: var(--berry-secondary-main);
-    --voucher-secondary-light: var(--berry-secondary-light);
-    --voucher-secondary-dark: var(--berry-secondary-dark);
+    /* Already set as default above */
   }
 
   /* Preset 2 - Berry Teal Green */
   .preset2 {
-    --berry-primary-main: 174 62% 47%;  /* #26A69A Teal-500 */
-    --berry-primary-light: 174 42% 65%; /* #80CBC4 Teal-300 */
-    --berry-primary-dark: 174 87% 25%;  /* #00695C Teal-800 */
-    --berry-secondary-main: 262 52% 47%; /* Keep DeepPurple */
-    --berry-secondary-light: 262 47% 64%;
-    --berry-secondary-dark: 262 57% 30%;
+    /* Primary becomes Teal */
+    --voucher-primary-50: 174 100% 96%;   /* #E0F2F1 */
+    --voucher-primary-100: 174 84% 88%;   /* #B2DFDB */
+    --voucher-primary-200: 174 42% 78%;   /* #80CBC4 */
+    --voucher-primary-300: 174 42% 65%;   /* #4DB6AC */
+    --voucher-primary-400: 174 62% 56%;   /* #26A69A */
+    --voucher-primary-500: 174 62% 47%;   /* #009688 - main */
+    --voucher-primary-600: 174 87% 40%;   /* #00897B */
+    --voucher-primary-700: 174 87% 33%;   /* #00796B */
+    --voucher-primary-800: 174 87% 25%;   /* #00695C */
+    --voucher-primary-900: 175 86% 20%;   /* #004D40 */
     
-    --voucher-primary: var(--berry-primary-main);
-    --voucher-primary-light: var(--berry-primary-light);
-    --voucher-primary-dark: var(--berry-primary-dark);
-    --voucher-secondary: var(--berry-secondary-main);
-    --voucher-secondary-light: var(--berry-secondary-light);
-    --voucher-secondary-dark: var(--berry-secondary-dark);
+    /* Secondary stays Deep Purple */
+    --voucher-secondary-50: var(--berry-secondary-50);
+    --voucher-secondary-100: var(--berry-secondary-100);
+    --voucher-secondary-200: var(--berry-secondary-200);
+    --voucher-secondary-300: var(--berry-secondary-300);
+    --voucher-secondary-400: var(--berry-secondary-400);
+    --voucher-secondary-500: var(--berry-secondary-500);
+    --voucher-secondary-600: var(--berry-secondary-600);
+    --voucher-secondary-700: var(--berry-secondary-700);
+    --voucher-secondary-800: var(--berry-secondary-800);
+    --voucher-secondary-900: var(--berry-secondary-900);
+    
+    /* Update legacy variables */
+    --voucher-primary: var(--voucher-primary-500);
+    --voucher-primary-light: var(--voucher-primary-300);
+    --voucher-primary-dark: var(--voucher-primary-800);
+    --voucher-secondary: var(--voucher-secondary-500);
+    --voucher-secondary-light: var(--voucher-secondary-300);
+    --voucher-secondary-dark: var(--voucher-secondary-800);
   }
 }
 
@@ -214,89 +286,122 @@
     animation: slide-out-right 0.3s ease-out;
   }
 
-  /* Berry Voucher Theme Classes - Primary Colors */
+  /* Berry Voucher Theme Classes - Enhanced with full palette */
+  
+  /* Primary Colors - Full Range */
+  .berry-primary-50 {
+    background-color: hsl(var(--voucher-primary-50));
+    color: hsl(var(--voucher-primary-900));
+  }
+  
+  .berry-primary-100 {
+    background-color: hsl(var(--voucher-primary-100));
+    color: hsl(var(--voucher-primary-800));
+  }
+  
+  .berry-primary-200 {
+    background-color: hsl(var(--voucher-primary-200));
+    color: hsl(var(--voucher-primary-800));
+  }
+  
+  .berry-primary-300 {
+    background-color: hsl(var(--voucher-primary-300));
+    color: hsl(var(--voucher-primary-900));
+  }
+  
   .berry-primary {
-    background-color: hsl(var(--voucher-primary));
+    background-color: hsl(var(--voucher-primary-500));
     color: white;
   }
 
   .berry-primary:hover {
-    background-color: hsl(var(--voucher-primary-dark));
+    background-color: hsl(var(--voucher-primary-600));
   }
 
   .berry-primary-light {
-    background-color: hsl(var(--voucher-primary-light));
-    color: hsl(var(--voucher-primary-dark));
+    background-color: hsl(var(--voucher-primary-100));
+    color: hsl(var(--voucher-primary-800));
   }
 
   .berry-primary-outline {
     background-color: transparent;
-    color: hsl(var(--voucher-primary));
-    border: 1px solid hsl(var(--voucher-primary));
+    color: hsl(var(--voucher-primary-500));
+    border: 1px solid hsl(var(--voucher-primary-500));
   }
 
   .berry-primary-outline:hover {
-    background-color: hsl(var(--voucher-primary) / 0.1);
+    background-color: hsl(var(--voucher-primary-50));
+    color: hsl(var(--voucher-primary-600));
   }
 
-  /* Berry Secondary Colors */
+  /* Secondary Colors - Full Range */
+  .berry-secondary-50 {
+    background-color: hsl(var(--voucher-secondary-50));
+    color: hsl(var(--voucher-secondary-900));
+  }
+  
+  .berry-secondary-100 {
+    background-color: hsl(var(--voucher-secondary-100));
+    color: hsl(var(--voucher-secondary-800));
+  }
+  
   .berry-secondary {
-    background-color: hsl(var(--voucher-secondary));
+    background-color: hsl(var(--voucher-secondary-500));
     color: white;
   }
 
   .berry-secondary:hover {
-    background-color: hsl(var(--voucher-secondary-dark));
+    background-color: hsl(var(--voucher-secondary-600));
   }
 
   .berry-secondary-light {
-    background-color: hsl(var(--voucher-secondary-light));
-    color: hsl(var(--voucher-secondary-dark));
+    background-color: hsl(var(--voucher-secondary-100));
+    color: hsl(var(--voucher-secondary-800));
   }
 
-  /* Berry Semantic Colors */
+  /* Berry Semantic Colors - These DON'T change with presets */
   .berry-success {
-    background-color: hsl(var(--berry-success-main));
+    background-color: hsl(var(--berry-success-500));
     color: white;
   }
 
   .berry-success-light {
-    background-color: hsl(var(--berry-success-main) / 0.1);
-    color: hsl(var(--berry-success-dark));
-    border: 1px solid hsl(var(--berry-success-main) / 0.3);
+    background-color: hsl(var(--berry-success-100));
+    color: hsl(var(--berry-success-800));
+    border: 1px solid hsl(var(--berry-success-300));
   }
 
   .berry-warning {
-    background-color: hsl(var(--berry-warning-main));
+    background-color: hsl(var(--berry-warning-500));
     color: hsl(222.2 84% 4.9%);
   }
 
   .berry-warning-light {
-    background-color: hsl(var(--berry-warning-main) / 0.1);
-    color: hsl(var(--berry-warning-dark));
-    border: 1px solid hsl(var(--berry-warning-main) / 0.3);
+    background-color: hsl(var(--berry-warning-100));
+    color: hsl(var(--berry-warning-800));
+    border: 1px solid hsl(var(--berry-warning-300));
   }
 
   .berry-error {
-    background-color: hsl(var(--berry-error-main));
+    background-color: hsl(var(--berry-error-500));
     color: white;
   }
 
   .berry-error-light {
-    background-color: hsl(var(--berry-error-main) / 0.1);
-    color: hsl(var(--berry-error-dark));
-    border: 1px solid hsl(var(--berry-error-main) / 0.3);
+    background-color: hsl(var(--berry-error-100));
+    color: hsl(var(--berry-error-800));
+    border: 1px solid hsl(var(--berry-error-300));
   }
 
   .berry-info {
-    background-color: hsl(var(--berry-info-main));
+    background-color: hsl(var(--berry-info-500));
     color: white;
   }
 
   .berry-info-light {
-    background-color: hsl(var(--berry-info-main) / 0.1);
-    color: hsl(var(--berry-info-dark));
-    border: 1px solid hsl(var(--berry-info-main) / 0.3);
+    background-color: hsl(var(--berry-info-100));
+    color: hsl(var(--berry-info-800));
+    border: 1px solid hsl(var(--berry-info-300));
   }
 
   /* Voucher Card Styling */
@@ -306,51 +411,51 @@
 
   /* Voucher Tab Active States - Fixed Text Visibility */
   .voucher-tab-active {
-    background-color: hsl(var(--voucher-primary)) !important;
+    background-color: hsl(var(--voucher-primary-500)) !important;
     color: white !important;
     font-weight: 600;
   }
 
   .voucher-tab-active:hover {
-    background-color: hsl(var(--voucher-primary-dark)) !important;
+    background-color: hsl(var(--voucher-primary-600)) !important;
     color: white !important;
   }
 
   /* Voucher Sidebar Active */
   .voucher-sidebar-active {
-    background-color: hsl(var(--voucher-primary) / 0.1);
-    color: hsl(var(--voucher-primary));
-    border-right: 3px solid hsl(var(--voucher-primary));
+    background-color: hsl(var(--voucher-primary-50));
+    color: hsl(var(--voucher-primary-700));
+    border-right: 3px solid hsl(var(--voucher-primary-500));
     font-weight: 600;
   }
 
   /* Enhanced Theme Classes */
   .theme-bg-primary {
-    background-color: hsl(var(--voucher-primary));
+    background-color: hsl(var(--voucher-primary-500));
   }
 
   .theme-bg-secondary {
-    background-color: hsl(var(--voucher-secondary));
+    background-color: hsl(var(--voucher-secondary-500));
   }
 
   .theme-text-primary {
-    color: hsl(var(--voucher-primary));
+    color: hsl(var(--voucher-primary-500));
   }
 
   .theme-text-secondary {
-    color: hsl(var(--voucher-secondary));
+    color: hsl(var(--voucher-secondary-500));
   }
 
   .theme-border-primary {
-    border-color: hsl(var(--voucher-primary));
+    border-color: hsl(var(--voucher-primary-500));
   }
 
   .theme-border-secondary {
-    border-color: hsl(var(--voucher-secondary));
+    border-color: hsl(var(--voucher-secondary-500));
   }
 
   .theme-gradient {
-    background: linear-gradient(135deg, hsl(var(--voucher-primary)), hsl(var(--voucher-secondary)));
+    background: linear-gradient(135deg, hsl(var(--voucher-primary-500)), hsl(var(--voucher-secondary-500)));
   }
 
   /* Enhanced Theme Classes */
@@ -373,47 +478,47 @@
 
   /* Voucher Header Gradient */
   .voucher-header-gradient {
-    background: linear-gradient(135deg, hsl(var(--voucher-primary)), hsl(var(--voucher-secondary)));
+    background: linear-gradient(135deg, hsl(var(--voucher-primary-500)), hsl(var(--voucher-secondary-500)));
   }
 
   /* Theme background variants */
   .theme-bg-primary\/10 {
-    background-color: hsl(var(--voucher-primary) / 0.1);
+    background-color: hsl(var(--voucher-primary-50));
   }
 
   .theme-bg-secondary\/10 {
-    background-color: hsl(var(--voucher-secondary) / 0.1);
+    background-color: hsl(var(--voucher-secondary-50));
   }
 
   .theme-bg-primary\/5 {
-    background-color: hsl(var(--voucher-primary) / 0.05);
+    background-color: hsl(var(--voucher-primary-50) / 0.5);
   }
 
   .theme-border-primary\/20 {
-    border-color: hsl(var(--voucher-primary) / 0.2);
+    border-color: hsl(var(--voucher-primary-200));
   }
 
   .theme-border-secondary\/20 {
-    border-color: hsl(var(--voucher-secondary) / 0.2);
+    border-color: hsl(var(--voucher-secondary-200));
   }
 
   /* Theme Badge Variants */
   .theme-badge-primary {
-    background-color: hsl(var(--voucher-primary) / 0.1);
-    color: hsl(var(--voucher-primary));
-    border: 1px solid hsl(var(--voucher-primary) / 0.2);
+    background-color: hsl(var(--voucher-primary-100));
+    color: hsl(var(--voucher-primary-800));
+    border: 1px solid hsl(var(--voucher-primary-200));
   }
 
   .theme-badge-secondary {
-    background-color: hsl(var(--voucher-secondary) / 0.1);
-    color: hsl(var(--voucher-secondary));
-    border: 1px solid hsl(var(--voucher-secondary) / 0.2);
+    background-color: hsl(var(--voucher-secondary-100));
+    color: hsl(var(--voucher-secondary-800));
+    border: 1px solid hsl(var(--voucher-secondary-200));
   }
 
   .theme-badge-success {
-    background-color: hsl(var(--berry-success-main) / 0.1);
-    color: hsl(var(--berry-success-dark));
-    border: 1px solid hsl(var(--berry-success-main) / 0.2);
+    background-color: hsl(var(--berry-success-100));
+    color: hsl(var(--berry-success-800));
+    border: 1px solid hsl(var(--berry-success-200));
   }
 
   /* Voucher Input Styling */
@@ -424,8 +529,8 @@
   }
 
   .voucher-input:focus {
-    border-color: hsl(var(--voucher-primary));
-    box-shadow: 0 0 0 2px hsl(var(--voucher-primary) / 0.2);
+    border-color: hsl(var(--voucher-primary-500));
+    box-shadow: 0 0 0 2px hsl(var(--voucher-primary-100));
   }
 
   /* Voucher Alert Styles - Berry Semantic Colors */

@@ -41,7 +41,7 @@ export function ThemedVoucherStats() {
         return (
           <Card 
             key={index} 
-            className={`theme-stats-card ${stat.variant === 'primary' ? 'theme-stats-primary' : 'theme-stats-secondary'}`}
+            className="voucher-card hover:shadow-lg transition-all duration-200"
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium theme-text-muted">
@@ -52,7 +52,7 @@ export function ThemedVoucherStats() {
             <CardContent>
               <div className="text-2xl font-bold theme-text">{stat.value}</div>
               <p className="text-xs theme-text-muted">
-                <span className="theme-text-primary">{stat.change}</span> so với tháng trước
+                <span className="theme-text-primary font-medium">{stat.change}</span> so với tháng trước
               </p>
             </CardContent>
           </Card>

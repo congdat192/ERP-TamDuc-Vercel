@@ -119,12 +119,12 @@ export function VoucherCodeCustomization({
     <div className="space-y-6">
       {/* Batch Context Alert */}
       {selectedBatch && (
-        <Alert>
+        <Alert className="voucher-alert-info">
           <Info className="h-4 w-4" />
           <AlertDescription>
             <div className="flex items-center space-x-2">
               <span>Bạn đang cấu hình mã voucher cho đợt phát hành:</span>
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+              <Badge variant="secondary" className="theme-badge-secondary">
                 {selectedBatch}
               </Badge>
             </div>
@@ -184,27 +184,27 @@ export function VoucherCodeCustomization({
       </Tabs>
 
       {/* Configuration Summary */}
-      <Card>
+      <Card className="voucher-card">
         <CardHeader>
-          <CardTitle className="text-sm">Tóm Tắt Cấu Hình</CardTitle>
+          <CardTitle className="text-sm theme-text">Tóm Tắt Cấu Hình</CardTitle>
         </CardHeader>
         <CardContent className="text-sm space-y-2">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <span className="text-gray-600">Độ dài mã:</span>
-              <span className="ml-2 font-medium">{codeLength} ký tự</span>
+              <span className="theme-text-muted">Độ dài mã:</span>
+              <span className="ml-2 font-medium theme-text">{codeLength} ký tự</span>
             </div>
             <div>
-              <span className="text-gray-600">Số điều kiện:</span>
-              <span className="ml-2 font-medium">{conditions.length} điều kiện</span>
+              <span className="theme-text-muted">Số điều kiện:</span>
+              <span className="ml-2 font-medium theme-text">{conditions.length} điều kiện</span>
             </div>
             <div>
-              <span className="text-gray-600">Value mappings:</span>
-              <span className="ml-2 font-medium">{valueMappings.filter(m => m.active).length} active</span>
+              <span className="theme-text-muted">Value mappings:</span>
+              <span className="ml-2 font-medium theme-text">{valueMappings.filter(m => m.active).length} active</span>
             </div>
             <div>
-              <span className="text-gray-600">Priority groups:</span>
-              <span className="ml-2 font-medium">{groupPriorities.filter(p => p.active).length} active</span>
+              <span className="theme-text-muted">Priority groups:</span>
+              <span className="ml-2 font-medium theme-text">{groupPriorities.filter(p => p.active).length} active</span>
             </div>
           </div>
         </CardContent>

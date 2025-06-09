@@ -128,12 +128,12 @@ export function VoucherCodeGenerationForm({ onSettingsChange }: VoucherCodeGener
   };
 
   return (
-    <Card>
+    <Card className="voucher-card">
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Settings className="w-5 h-5" />
-            <span>Cấu Hình Tạo Mã Voucher</span>
+            <Settings className="w-5 h-5 theme-text-primary" />
+            <span className="theme-text">Cấu Hình Tạo Mã Voucher</span>
           </div>
           <Button
             variant="outline"
@@ -149,10 +149,10 @@ export function VoucherCodeGenerationForm({ onSettingsChange }: VoucherCodeGener
         {/* Bước 1: Chọn Đợt Phát Hành */}
         <div className="space-y-3">
           <div className="flex items-center space-x-2">
-            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+            <Badge variant="default" className="theme-badge-primary">
               Bước 1
             </Badge>
-            <h3 className="font-medium">Chọn Đợt Phát Hành</h3>
+            <h3 className="font-medium theme-text">Chọn Đợt Phát Hành</h3>
           </div>
           <VoucherBatchSelector
             selectedBatch={selectedBatch}
@@ -164,10 +164,10 @@ export function VoucherCodeGenerationForm({ onSettingsChange }: VoucherCodeGener
         {selectedBatch && (
           <div className="space-y-3">
             <div className="flex items-center space-x-2">
-              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+              <Badge variant="default" className="theme-badge-primary">
                 Bước 2
               </Badge>
-              <h3 className="font-medium">Cách Tạo Mã Voucher</h3>
+              <h3 className="font-medium theme-text">Cách Tạo Mã Voucher</h3>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -190,27 +190,27 @@ export function VoucherCodeGenerationForm({ onSettingsChange }: VoucherCodeGener
               ].map((method) => (
                 <Card 
                   key={method.value}
-                  className={`cursor-pointer transition-all ${
+                  className={`cursor-pointer transition-all voucher-card ${
                     generationMethod === method.value 
-                      ? 'border-blue-500 bg-blue-50' 
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? 'berry-primary-100 border-2 theme-border-primary' 
+                      : 'hover:berry-primary-50'
                   }`}
                   onClick={() => handleMethodChange(method.value)}
                 >
                   <CardContent className="p-3">
                     <div className="flex items-center space-x-2 mb-2">
-                      <div className={`w-4 h-4 rounded-full border-2 ${
+                      <div className={`w-4 h-4 rounded-full border-2 transition-colors ${
                         generationMethod === method.value 
-                          ? 'border-blue-500 bg-blue-500' 
+                          ? 'berry-primary border-transparent' 
                           : 'border-gray-300'
                       }`}>
                         {generationMethod === method.value && (
                           <div className="w-full h-full rounded-full bg-white scale-50"></div>
                         )}
                       </div>
-                      <h4 className="font-medium text-sm">{method.title}</h4>
+                      <h4 className="font-medium text-sm theme-text">{method.title}</h4>
                     </div>
-                    <p className="text-xs text-gray-600">{method.description}</p>
+                    <p className="text-xs theme-text-muted">{method.description}</p>
                   </CardContent>
                 </Card>
               ))}
@@ -222,16 +222,16 @@ export function VoucherCodeGenerationForm({ onSettingsChange }: VoucherCodeGener
         {selectedBatch && generationMethod && (
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
-              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+              <Badge variant="default" className="theme-badge-primary">
                 Bước 3
               </Badge>
-              <h3 className="font-medium">Cấu Hình Chi Tiết</h3>
+              <h3 className="font-medium theme-text">Cấu Hình Chi Tiết</h3>
             </div>
 
             {/* Độ dài mã */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div>
-                <Label htmlFor="code-length">Độ dài mã voucher</Label>
+                <Label htmlFor="code-length" className="theme-text">Độ dài mã voucher</Label>
                 <Input
                   id="code-length"
                   type="number"
@@ -239,18 +239,18 @@ export function VoucherCodeGenerationForm({ onSettingsChange }: VoucherCodeGener
                   max="20"
                   value={codeLength}
                   onChange={(e) => setCodeLength(Number(e.target.value))}
-                  className="mt-1"
+                  className="mt-1 voucher-input"
                 />
-                <p className="text-xs text-gray-500 mt-1">Từ 4-20 ký tự</p>
+                <p className="text-xs theme-text-muted mt-1">Từ 4-20 ký tự</p>
               </div>
             </div>
 
             {/* Tự động phát hành */}
-            <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+            <div className="p-3 berry-warning-light rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
-                  <Label htmlFor="auto-issue" className="font-medium">Tự động phát hành voucher khi khởi tạo</Label>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <Label htmlFor="auto-issue" className="font-medium theme-text">Tự động phát hành voucher khi khởi tạo</Label>
+                  <p className="text-sm theme-text-muted mt-1">
                     Tự động phát hành voucher ngay khi tạo mới, không cần duyệt thủ công.
                   </p>
                 </div>
@@ -264,30 +264,30 @@ export function VoucherCodeGenerationForm({ onSettingsChange }: VoucherCodeGener
 
             {/* Cấu hình thủ công */}
             {(generationMethod === 'manual' || generationMethod === 'hybrid') && (
-              <Card className="border-orange-200 bg-orange-50">
+              <Card className="berry-secondary-light">
                 <CardHeader className="pb-3">
-                  <h4 className="font-medium text-orange-800 text-sm">Cấu Hình Thủ Công</h4>
+                  <h4 className="font-medium theme-text text-sm">Cấu Hình Thủ Công</h4>
                 </CardHeader>
                 <CardContent className="space-y-3 pt-0">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
-                      <Label htmlFor="manual-prefix">Ký tự đầu (Prefix)</Label>
+                      <Label htmlFor="manual-prefix" className="theme-text">Ký tự đầu (Prefix)</Label>
                       <Input
                         id="manual-prefix"
                         value={manualPrefix}
                         onChange={(e) => setManualPrefix(e.target.value.toUpperCase())}
                         placeholder="VD: VCH, GIFT"
-                        className="mt-1"
+                        className="mt-1 voucher-input"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="manual-suffix">Ký tự cuối (Suffix)</Label>
+                      <Label htmlFor="manual-suffix" className="theme-text">Ký tự cuối (Suffix)</Label>
                       <Input
                         id="manual-suffix"
                         value={manualSuffix}
                         onChange={(e) => setManualSuffix(e.target.value.toUpperCase())}
                         placeholder="VD: X, END"
-                        className="mt-1"
+                        className="mt-1 voucher-input"
                       />
                     </div>
                   </div>
@@ -312,33 +312,33 @@ export function VoucherCodeGenerationForm({ onSettingsChange }: VoucherCodeGener
 
         {/* Xem trước */}
         {showPreview && selectedBatch && generationMethod && (
-          <Alert className="border-green-200 bg-green-50">
-            <CheckCircle className="h-4 w-4 text-green-600" />
+          <Alert className="voucher-alert-success">
+            <CheckCircle className="h-4 w-4" />
             <AlertDescription>
               <div className="space-y-2">
-                <h4 className="font-medium text-green-800">Xem Trước Mã Voucher</h4>
+                <h4 className="font-medium theme-text">Xem Trước Mã Voucher</h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-gray-600">Đợt phát hành:</span>
-                    <Badge variant="secondary" className="ml-2">{selectedBatch}</Badge>
+                    <span className="theme-text-muted">Đợt phát hành:</span>
+                    <Badge variant="secondary" className="ml-2 theme-badge-secondary">{selectedBatch}</Badge>
                   </div>
                   <div>
-                    <span className="text-gray-600">Phương thức:</span>
-                    <span className="ml-2 font-medium">
+                    <span className="theme-text-muted">Phương thức:</span>
+                    <span className="ml-2 font-medium theme-text">
                       {generationMethod === 'manual' && 'Thủ công'}
                       {generationMethod === 'mapping' && 'Theo Mapping'}
                       {generationMethod === 'hybrid' && 'Kết hợp'}
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-600">Mã voucher mẫu:</span>
-                    <code className="ml-2 bg-white px-2 py-1 rounded font-mono text-green-600 font-bold">
+                    <span className="theme-text-muted">Mã voucher mẫu:</span>
+                    <code className="ml-2 bg-white px-2 py-1 rounded font-mono theme-text-primary font-bold">
                       {generateCodePreview()}
                     </code>
                   </div>
                   <div>
-                    <span className="text-gray-600">Tự động phát hành:</span>
-                    <span className="ml-2 font-medium">
+                    <span className="theme-text-muted">Tự động phát hành:</span>
+                    <span className="ml-2 font-medium theme-text">
                       {autoIssue ? 'Có' : 'Không'}
                     </span>
                   </div>
@@ -349,11 +349,12 @@ export function VoucherCodeGenerationForm({ onSettingsChange }: VoucherCodeGener
         )}
 
         {/* Lưu cấu hình */}
-        <div className="flex justify-end pt-3 border-t">
+        <div className="flex justify-end pt-3 border-t theme-border-primary/20">
           <Button 
             onClick={handleSaveConfiguration}
             disabled={!isFormValid()}
             size="lg"
+            variant="default"
           >
             <Save className="w-4 h-4 mr-2" />
             Lưu Cấu Hình
@@ -362,9 +363,9 @@ export function VoucherCodeGenerationForm({ onSettingsChange }: VoucherCodeGener
 
         {/* Thông báo validation */}
         {!isFormValid() && selectedBatch && (
-          <Alert className="border-yellow-200 bg-yellow-50">
-            <Info className="h-4 w-4 text-yellow-600" />
-            <AlertDescription className="text-yellow-800">
+          <Alert className="voucher-alert-warning">
+            <Info className="h-4 w-4" />
+            <AlertDescription className="theme-text">
               <div className="text-sm">
                 <div className="font-medium mb-1">Vui lòng hoàn thành các thông tin bắt buộc:</div>
                 <ul className="list-disc list-inside space-y-1">
