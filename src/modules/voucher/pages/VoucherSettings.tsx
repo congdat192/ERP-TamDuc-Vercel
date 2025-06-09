@@ -495,8 +495,8 @@ export function VoucherSettings() {
 
         <TabsContent value="issue-rules" className="space-y-6">
           <VoucherIssueRulesConditions 
-            onSettingsChange={(settings) => {
-              console.log('Issue rules settings:', settings);
+            onRulesChange={(rules) => {
+              console.log('Issue rules settings:', rules);
             }}
           />
         </TabsContent>
