@@ -6,6 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "@/components/layout/ErrorBoundary";
 import { AuthProvider } from "@/components/auth/AuthContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
+import { ThemeSystem } from "@/components/theme/ThemeSystem";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { ForbiddenPage, ServerErrorPage, NetworkErrorPage } from "./pages/ErrorPages";
@@ -75,6 +77,7 @@ const ProtectedERPRoute = ({ children, module }: { children: React.ReactNode; mo
       onLogout={logout}
     >
       {children}
+      <ThemeSystem />
     </ERPLayout>
   );
 };
@@ -83,84 +86,86 @@ const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <AuthProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<LoginPage />} />
-              
-              {/* ERP Routes with explicit full paths */}
-              <Route 
-                path="/ERP/Dashboard" 
-                element={
-                  <ProtectedERPRoute module="dashboard">
-                    <ERPHome />
-                  </ProtectedERPRoute>
-                } 
-              />
-              <Route 
-                path="/ERP/Customers" 
-                element={
-                  <ProtectedERPRoute module="customers">
-                    <CustomerPage />
-                  </ProtectedERPRoute>
-                } 
-              />
-              <Route 
-                path="/ERP/Invoices" 
-                element={
-                  <ProtectedERPRoute module="sales">
-                    <SalesPage />
-                  </ProtectedERPRoute>
-                } 
-              />
-              <Route 
-                path="/ERP/Voucher" 
-                element={
-                  <ProtectedERPRoute module="voucher">
-                    <VoucherPage />
-                  </ProtectedERPRoute>
-                } 
-              />
-              <Route 
-                path="/ERP/Products" 
-                element={
-                  <ProtectedERPRoute module="inventory">
-                    <div className="p-6">
-                      <h1 className="text-2xl font-bold">Quản Lý Sản Phẩm</h1>
-                      <p>Module đang được phát triển...</p>
-                    </div>
-                  </ProtectedERPRoute>
-                } 
-              />
-              <Route 
-                path="/ERP/Setting" 
-                element={
-                  <ProtectedERPRoute module="system-settings">
-                    <div className="p-6">
-                      <h1 className="text-2xl font-bold">Cài Đặt Hệ Thống</h1>
-                      <p>Module đang được phát triển...</p>
-                    </div>
-                  </ProtectedERPRoute>
-                } 
-              />
-              
-              {/* Redirect /ERP to /ERP/Dashboard */}
-              <Route path="/ERP" element={<Navigate to="/ERP/Dashboard" replace />} />
-              
-              {/* Platform Admin */}
-              <Route path="/platformadmin" element={<PlatformAdmin />} />
-              
-              {/* Error Pages */}
-              <Route path="/403" element={<ForbiddenPage />} />
-              <Route path="/500" element={<ServerErrorPage />} />
-              <Route path="/network-error" element={<NetworkErrorPage />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/login" element={<LoginPage />} />
+                
+                {/* ERP Routes with explicit full paths */}
+                <Route 
+                  path="/ERP/Dashboard" 
+                  element={
+                    <ProtectedERPRoute module="dashboard">
+                      <ERPHome />
+                    </ProtectedERPRoute>
+                  } 
+                />
+                <Route 
+                  path="/ERP/Customers" 
+                  element={
+                    <ProtectedERPRoute module="customers">
+                      <CustomerPage />
+                    </ProtectedERPRoute>
+                  } 
+                />
+                <Route 
+                  path="/ERP/Invoices" 
+                  element={
+                    <ProtectedERPRoute module="sales">
+                      <SalesPage />
+                    </ProtectedERPRoute>
+                  } 
+                />
+                <Route 
+                  path="/ERP/Voucher" 
+                  element={
+                    <ProtectedERPRoute module="voucher">
+                      <VoucherPage />
+                    </ProtectedERPRoute>
+                  } 
+                />
+                <Route 
+                  path="/ERP/Products" 
+                  element={
+                    <ProtectedERPRoute module="inventory">
+                      <div className="p-6">
+                        <h1 className="text-2xl font-bold">Quản Lý Sản Phẩm</h1>
+                        <p>Module đang được phát triển...</p>
+                      </div>
+                    </ProtectedERPRoute>
+                  } 
+                />
+                <Route 
+                  path="/ERP/Setting" 
+                  element={
+                    <ProtectedERPRoute module="system-settings">
+                      <div className="p-6">
+                        <h1 className="text-2xl font-bold">Cài Đặt Hệ Thống</h1>
+                        <p>Module đang được phát triển...</p>
+                      </div>
+                    </ProtectedERPRoute>
+                  } 
+                />
+                
+                {/* Redirect /ERP to /ERP/Dashboard */}
+                <Route path="/ERP" element={<Navigate to="/ERP/Dashboard" replace />} />
+                
+                {/* Platform Admin */}
+                <Route path="/platformadmin" element={<PlatformAdmin />} />
+                
+                {/* Error Pages */}
+                <Route path="/403" element={<ForbiddenPage />} />
+                <Route path="/500" element={<ServerErrorPage />} />
+                <Route path="/network-error" element={<NetworkErrorPage />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </AuthProvider>
+        </ThemeProvider>
       </TooltipProvider>
     </QueryClientProvider>
   </ErrorBoundary>

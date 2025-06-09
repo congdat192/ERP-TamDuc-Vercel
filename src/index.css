@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -35,20 +36,18 @@
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Theme Variables */
+    --theme-primary: 163 100% 35%;
+    --theme-secondary: 194 100% 71%;
+    --theme-gradient: linear-gradient(135deg, #A389F4, #70D8FF);
   }
 
   .dark {
@@ -88,6 +87,62 @@
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
+  /* Preset 1 - Purple Blue */
+  .preset1 {
+    --theme-primary: 265 71% 76%;
+    --theme-secondary: 195 100% 71%;
+    --theme-gradient: linear-gradient(135deg, #A389F4, #70D8FF);
+  }
+
+  /* Preset 2 - Green Slate */
+  .preset2 {
+    --theme-primary: 162 53% 54%;
+    --theme-secondary: 210 17% 32%;
+    --theme-gradient: linear-gradient(135deg, #4BCB9A, #455A64);
+  }
+
+  /* Preset 3 - Blue Pink */
+  .preset3 {
+    --theme-primary: 228 83% 41%;
+    --theme-secondary: 330 84% 66%;
+    --theme-gradient: linear-gradient(135deg, #2234AE, #F857A6);
+  }
+
+  /* Preset 4 - Teal Dark */
+  .preset4 {
+    --theme-primary: 173 84% 33%;
+    --theme-secondary: 187 21% 26%;
+    --theme-gradient: linear-gradient(135deg, #11998E, #40514E);
+  }
+
+  /* Preset 5 - Gold Teal */
+  .preset5 {
+    --theme-primary: 44 60% 66%;
+    --theme-secondary: 182 67% 29%;
+    --theme-gradient: linear-gradient(135deg, #E2B969, #167D7F);
+  }
+
+  /* Preset 6 - Navy Sky */
+  .preset6 {
+    --theme-primary: 223 77% 32%;
+    --theme-secondary: 199 95% 62%;
+    --theme-gradient: linear-gradient(135deg, #1E3A8A, #38BDF8);
+  }
+
+  /* Preset 7 - Dark Green */
+  .preset7 {
+    --theme-primary: 216 69% 18%;
+    --theme-secondary: 162 53% 54%;
+    --theme-gradient: linear-gradient(135deg, #142850, #4BCB9A);
+  }
+
+  /* Preset 8 - Indigo Blue */
+  .preset8 {
+    --theme-primary: 228 51% 47%;
+    --theme-secondary: 228 76% 63%;
+    --theme-gradient: linear-gradient(135deg, #3546AB, #556EE6);
+  }
 }
 
 @layer base {
@@ -97,5 +152,77 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  /* Theme Button Animations */
+  @keyframes theme-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .theme-spin {
+    animation: theme-spin 0.8s ease-in-out;
+  }
+
+  .theme-spin-hover:hover {
+    animation: theme-spin 0.8s ease-in-out;
+  }
+
+  /* Panel Slide Animation */
+  @keyframes slide-in-right {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slide-out-right {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+  }
+
+  .animate-slide-in-right {
+    animation: slide-in-right 0.3s ease-out;
+  }
+
+  .animate-slide-out-right {
+    animation: slide-out-right 0.3s ease-out;
+  }
+
+  /* Theme specific classes */
+  .theme-bg-primary {
+    background-color: hsl(var(--theme-primary));
+  }
+
+  .theme-bg-secondary {
+    background-color: hsl(var(--theme-secondary));
+  }
+
+  .theme-text-primary {
+    color: hsl(var(--theme-primary));
+  }
+
+  .theme-text-secondary {
+    color: hsl(var(--theme-secondary));
+  }
+
+  .theme-border-primary {
+    border-color: hsl(var(--theme-primary));
+  }
+
+  .theme-gradient {
+    background: var(--theme-gradient);
   }
 }

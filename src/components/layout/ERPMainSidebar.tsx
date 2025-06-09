@@ -72,13 +72,13 @@ export function ERPMainSidebar({
           <div className="flex items-center justify-between p-4 border-b border-slate-700 min-h-[73px]">
             {(isExpanded || isMobileOpen) ? (
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 theme-bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
                   <Building2 className="w-5 h-5 text-white" />
                 </div>
                 <h1 className="text-xl font-bold text-white">ERP System</h1>
               </div>
             ) : (
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mx-auto">
+              <div className="w-8 h-8 theme-bg-primary rounded-lg flex items-center justify-center mx-auto">
                 <Building2 className="w-5 h-5 text-white" />
               </div>
             )}
@@ -117,7 +117,7 @@ export function ERPMainSidebar({
               <div className="flex items-center space-x-3">
                 <Avatar className="w-10 h-10 flex-shrink-0">
                   <AvatarImage src="/placeholder.svg" />
-                  <AvatarFallback className="bg-blue-100 text-blue-600">
+                  <AvatarFallback className="theme-bg-secondary text-white">
                     {currentUser.fullName.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
@@ -156,7 +156,7 @@ export function ERPMainSidebar({
                       "w-full h-11 transition-all duration-200",
                       isExpanded || isMobileOpen ? "justify-start text-left" : "justify-center p-0",
                       isActive 
-                        ? "bg-blue-600 text-white hover:bg-blue-700" 
+                        ? "theme-bg-primary text-white hover:opacity-90" 
                         : "text-slate-300 hover:bg-slate-700 hover:text-white"
                     )}
                     onClick={() => {
