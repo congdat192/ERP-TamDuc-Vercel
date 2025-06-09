@@ -112,8 +112,8 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
         />
       )}
 
-      {/* Stats Section - Moved up, no title */}
-      <div className="w-full px-6 pt-4 pb-2">
+      {/* Stats Section - Reduced spacing */}
+      <div className="w-full px-2 pt-1 pb-1">
         <ThemedCustomerStats />
       </div>
 
@@ -125,8 +125,8 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
           setSidebarOpen={setSidebarOpen}
         />
         
-        {/* Main Content Area - Optimized padding */}
-        <div className="flex-1 lg:ml-0 px-6 py-2 space-y-3">
+        {/* Main Content Area - Reduced padding */}
+        <div className="flex-1 lg:ml-0 px-2 py-1 space-y-1">
           {/* Search & Actions Bar */}
           <CustomerSearchActions 
             searchTerm={searchTerm}
