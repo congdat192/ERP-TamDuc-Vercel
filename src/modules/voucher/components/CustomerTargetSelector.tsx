@@ -21,15 +21,15 @@ export function CustomerTargetSelector({ value, onChange }: CustomerTargetSelect
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-900">Đối Tượng Khách Hàng</h3>
+      <h3 className="text-lg font-semibold theme-text">Đối Tượng Khách Hàng</h3>
       <div className="grid grid-cols-2 gap-3">
         {customerTargets.map((target) => (
           <Card 
             key={target}
             className={`cursor-pointer transition-all hover:shadow-md ${
               value.includes(target)
-                ? 'border-green-500 bg-green-50' 
-                : 'border-gray-200 hover:border-gray-300'
+                ? 'voucher-alert-success border-2' 
+                : 'voucher-card hover:theme-border-primary/30'
             }`}
             onClick={() => handleToggle(target)}
           >
@@ -38,8 +38,9 @@ export function CustomerTargetSelector({ value, onChange }: CustomerTargetSelect
                 <Checkbox 
                   checked={value.includes(target)}
                   onChange={() => handleToggle(target)}
+                  className="theme-border-primary"
                 />
-                <span className="text-sm font-medium text-gray-900">
+                <span className="text-sm font-medium theme-text">
                   {CUSTOMER_TARGET_LABELS[target]}
                 </span>
               </div>

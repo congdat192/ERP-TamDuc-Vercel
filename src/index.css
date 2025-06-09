@@ -63,6 +63,9 @@
     --voucher-stats-secondary: 195 100% 71%;
     --voucher-accent: 265 71% 85%;
     --voucher-accent-text: 265 71% 40%;
+    --voucher-sidebar-active: 265 71% 76%;
+    --voucher-button-primary: 265 71% 76%;
+    --voucher-button-secondary: 195 100% 71%;
   }
 
   .dark {
@@ -117,6 +120,9 @@
     --voucher-stats-secondary: 195 100% 71%;
     --voucher-accent: 265 71% 25%;
     --voucher-accent-text: 265 71% 85%;
+    --voucher-sidebar-active: 265 71% 76%;
+    --voucher-button-primary: 265 71% 76%;
+    --voucher-button-secondary: 195 100% 71%;
   }
 
   /* Theme Preset Colors */
@@ -131,6 +137,9 @@
     --voucher-stats-secondary: 195 100% 71%;
     --voucher-accent: 265 71% 85%;
     --voucher-accent-text: 265 71% 40%;
+    --voucher-sidebar-active: 265 71% 76%;
+    --voucher-button-primary: 265 71% 76%;
+    --voucher-button-secondary: 195 100% 71%;
   }
 
   /* Preset 2 - Teal Green */
@@ -143,11 +152,17 @@
     --voucher-stats-secondary: 210 17% 32%;
     --voucher-accent: 162 53% 85%;
     --voucher-accent-text: 162 53% 25%;
+    --voucher-sidebar-active: 162 53% 54%;
+    --voucher-button-primary: 162 53% 54%;
+    --voucher-button-secondary: 210 17% 32%;
   }
 
   .preset2.dark {
     --voucher-accent: 162 53% 25%;
     --voucher-accent-text: 162 53% 85%;
+    --voucher-sidebar-active: 162 53% 54%;
+    --voucher-button-primary: 162 53% 54%;
+    --voucher-button-secondary: 210 17% 32%;
   }
 }
 
@@ -281,21 +296,42 @@
   }
 
   .voucher-button-primary {
-    background-color: hsl(var(--theme-primary));
+    background-color: hsl(var(--voucher-button-primary));
     color: white;
+    border: 1px solid hsl(var(--voucher-button-primary));
   }
 
   .voucher-button-primary:hover {
-    background-color: hsl(var(--theme-primary) / 0.9);
+    background-color: hsl(var(--voucher-button-primary) / 0.9);
+    border-color: hsl(var(--voucher-button-primary) / 0.9);
   }
 
   .voucher-button-secondary {
-    background-color: hsl(var(--theme-secondary));
+    background-color: hsl(var(--voucher-button-secondary));
     color: white;
+    border: 1px solid hsl(var(--voucher-button-secondary));
   }
 
   .voucher-button-secondary:hover {
-    background-color: hsl(var(--theme-secondary) / 0.9);
+    background-color: hsl(var(--voucher-button-secondary) / 0.9);
+    border-color: hsl(var(--voucher-button-secondary) / 0.9);
+  }
+
+  .voucher-button-outline {
+    background-color: transparent;
+    color: hsl(var(--voucher-button-primary));
+    border: 1px solid hsl(var(--voucher-button-primary));
+  }
+
+  .voucher-button-outline:hover {
+    background-color: hsl(var(--voucher-button-primary) / 0.1);
+    border-color: hsl(var(--voucher-button-primary));
+  }
+
+  .voucher-sidebar-active {
+    background-color: hsl(var(--voucher-sidebar-active) / 0.1);
+    color: hsl(var(--voucher-sidebar-active));
+    border-right: 2px solid hsl(var(--voucher-sidebar-active));
   }
 
   /* Theme background variants */
@@ -365,5 +401,30 @@
     background-color: hsl(162 73% 46% / 0.1);
     color: hsl(162 73% 46%);
     border: 1px solid hsl(162 73% 46% / 0.2);
+  }
+
+  /* Voucher Input Styling */
+  .voucher-input {
+    border: 1px solid hsl(var(--theme-border));
+    background-color: hsl(var(--theme-card));
+    color: hsl(var(--theme-text));
+  }
+
+  .voucher-input:focus {
+    border-color: hsl(var(--voucher-button-primary));
+    box-shadow: 0 0 0 2px hsl(var(--voucher-button-primary) / 0.2);
+  }
+
+  /* Voucher Alert Styles */
+  .voucher-alert-info {
+    background-color: hsl(var(--voucher-button-primary) / 0.1);
+    border: 1px solid hsl(var(--voucher-button-primary) / 0.2);
+    color: hsl(var(--voucher-button-primary));
+  }
+
+  .voucher-alert-success {
+    background-color: hsl(162 73% 46% / 0.1);
+    border: 1px solid hsl(162 73% 46% / 0.2);
+    color: hsl(162 73% 46%);
   }
 }

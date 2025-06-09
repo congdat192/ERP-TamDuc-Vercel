@@ -41,16 +41,16 @@ export function VoucherModuleSidebar({
   );
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
+    <div className="w-64 theme-card border-r theme-border-primary/20 flex flex-col h-full">
       {/* Module Header */}
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-4 border-b theme-border-primary/20">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
-            <Ticket className="w-5 h-5 text-orange-600" />
+          <div className="w-8 h-8 theme-bg-primary/10 rounded-lg flex items-center justify-center">
+            <Ticket className="w-5 h-5 theme-text-primary" />
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900">Module Voucher</h3>
-            <p className="text-sm text-gray-500">Quản lý voucher và khuyến mãi</p>
+            <h3 className="font-semibold theme-text">Module Voucher</h3>
+            <p className="text-sm theme-text-muted">Quản lý voucher và khuyến mãi</p>
           </div>
         </div>
       </div>
@@ -63,16 +63,19 @@ export function VoucherModuleSidebar({
             return (
               <Button
                 key={page.id}
-                variant={currentPage === page.id ? "secondary" : "ghost"}
+                variant="ghost"
                 className={cn(
-                  "w-full justify-start text-left h-11",
+                  "w-full justify-start text-left h-11 transition-all duration-200",
                   currentPage === page.id 
-                    ? "bg-orange-50 text-orange-700 border-r-2 border-orange-600" 
-                    : "text-gray-700 hover:bg-gray-50"
+                    ? "voucher-sidebar-active font-medium" 
+                    : "theme-text hover:theme-bg-primary/5 hover:theme-text-primary"
                 )}
                 onClick={() => onPageChange(page.id)}
               >
-                <Icon className="w-4 h-4 mr-3" />
+                <Icon className={cn(
+                  "w-4 h-4 mr-3",
+                  currentPage === page.id ? "theme-text-primary" : "theme-text-muted"
+                )} />
                 {page.label}
               </Button>
             );
@@ -81,8 +84,8 @@ export function VoucherModuleSidebar({
       </div>
 
       {/* Footer */}
-      <div className="p-4 border-t border-gray-200">
-        <div className="text-xs text-gray-400 text-center">
+      <div className="p-4 border-t theme-border-primary/20">
+        <div className="text-xs theme-text-muted text-center">
           Voucher Module • v1.0.0
         </div>
       </div>
