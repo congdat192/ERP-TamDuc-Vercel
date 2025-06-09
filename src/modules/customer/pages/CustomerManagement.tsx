@@ -6,9 +6,44 @@ import { CustomerFilters } from '../components/CustomerFilters';
 import { CustomerTable } from '../components/CustomerTable';
 import { ColumnConfig } from '../components/ColumnVisibilityFilter';
 
-export function CustomerManagement() {
+interface CustomerManagementProps {
+  currentUser?: any;
+  onBackToModules?: () => void;
+}
+
+export function CustomerManagement({ currentUser, onBackToModules }: CustomerManagementProps) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   
+  // Mock data for the table
+  const [customers] = useState([
+    {
+      id: 'KH001',
+      name: 'Nguyễn Văn A',
+      phone: '0901234567',
+      group: '1.Giới thiệu',
+      birthday: '01/01/1990',
+      creator: 'Admin',
+      createdDate: '01/01/2024',
+      note: 'Khách hàng VIP',
+      email: 'nguyenvana@email.com',
+      facebook: 'facebook.com/nguyenvana',
+      company: 'Công ty ABC',
+      taxCode: '123456789',
+      address: '123 Đường ABC, Quận 1, TP.HCM',
+      deliveryArea: 'Quận 1',
+      points: 1000,
+      totalSpent: 5000000,
+      totalDebt: 0,
+      status: 'Hoạt động'
+    },
+    // Add more mock data as needed
+  ]);
+
+  const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(15);
+
   // Đầy đủ 27 cột khách hàng
   const [columns, setColumns] = useState<ColumnConfig[]>([
     { key: 'customerCode', label: 'Mã khách hàng', visible: true },
@@ -48,6 +83,25 @@ export function CustomerManagement() {
     );
   };
 
+  const handleSelectCustomer = (customerId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedCustomers(prev => [...prev, customerId]);
+    } else {
+      setSelectedCustomers(prev => prev.filter(id => id !== customerId));
+    }
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedCustomers(customers.map(customer => customer.id));
+    } else {
+      setSelectedCustomers([]);
+    }
+  };
+
+  const totalCustomers = customers.length;
+  const totalPages = Math.ceil(totalCustomers / itemsPerPage);
+
   return (
     <div className="space-y-6 p-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
@@ -66,11 +120,23 @@ export function CustomerManagement() {
         handleColumnToggle={handleColumnToggle}
       />
       
-      <CustomerFilters />
+      <CustomerFilters 
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+      />
       
       <CustomerTable 
-        searchTerm={searchTerm}
+        customers={customers}
         visibleColumns={columns.filter(col => col.visible)}
+        selectedCustomers={selectedCustomers}
+        handleSelectCustomer={handleSelectCustomer}
+        handleSelectAll={handleSelectAll}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        itemsPerPage={itemsPerPage}
+        setItemsPerPage={setItemsPerPage}
+        totalCustomers={totalCustomers}
+        totalPages={totalPages}
       />
     </div>
   );
