@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -273,7 +272,7 @@ export function VoucherSettings() {
             <Button variant="outline" onClick={() => setPermissionDialogOpen(null)}>
               Hủy
             </Button>
-            <Button onClick={() => handlePermissionUpdate(permissionDialogOpen, currentSettings)}>
+            <Button variant="default" onClick={() => handlePermissionUpdate(permissionDialogOpen, currentSettings)}>
               Lưu Thay Đổi
             </Button>
           </DialogFooter>
@@ -438,7 +437,7 @@ export function VoucherSettings() {
             <Button variant="outline" onClick={() => setNotificationDialogOpen(null)}>
               Hủy
             </Button>
-            <Button onClick={() => handleNotificationUpdate(notificationDialogOpen, currentSettings)}>
+            <Button variant="default" onClick={() => handleNotificationUpdate(notificationDialogOpen, currentSettings)}>
               Lưu Thay Đổi
             </Button>
           </DialogFooter>
@@ -452,22 +451,32 @@ export function VoucherSettings() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Cài Đặt Module Voucher</h2>
-          <p className="text-gray-600">Cấu hình và tùy chỉnh module voucher</p>
+          <h2 className="text-2xl font-bold theme-text">Cài Đặt Module Voucher</h2>
+          <p className="theme-text-muted">Cấu hình và tùy chỉnh module voucher</p>
         </div>
-        <Button onClick={handleSaveSettings}>
+        <Button onClick={handleSaveSettings} variant="default">
           <Save className="w-4 h-4 mr-2" />
           Lưu Cài Đặt
         </Button>
       </div>
 
       <Tabs defaultValue="template-management" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="template-management">Quản Lý Template</TabsTrigger>
-          <TabsTrigger value="issue-rules">Quy Tắc Phát Voucher</TabsTrigger>
-          <TabsTrigger value="system-config">Cấu Hình Hệ Thống</TabsTrigger>
-          <TabsTrigger value="permissions">Quyền Hạn & Thông Báo</TabsTrigger>
-        </TabsList>
+        <div className="flex justify-center">
+          <TabsList className="grid w-full max-w-md grid-cols-4">
+            <TabsTrigger value="template-management">
+              Quản Lý Template
+            </TabsTrigger>
+            <TabsTrigger value="issue-rules">
+              Quy Tắc Phát Voucher
+            </TabsTrigger>
+            <TabsTrigger value="system-config">
+              Cấu Hình Hệ Thống
+            </TabsTrigger>
+            <TabsTrigger value="permissions">
+              Quyền Hạn & Thông Báo
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="template-management" className="space-y-6">
           <ConditionTemplateManager
@@ -498,10 +507,10 @@ export function VoucherSettings() {
 
         <TabsContent value="permissions">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
+            <Card className="voucher-card">
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Shield className="w-5 h-5" />
+                <CardTitle className="flex items-center space-x-2 theme-text">
+                  <Shield className="w-5 h-5 theme-text-primary" />
                   <span>Cài Đặt Quyền Hạn</span>
                 </CardTitle>
               </CardHeader>
@@ -509,13 +518,13 @@ export function VoucherSettings() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <label className="font-medium">Telesales Có Thể Xem Tất Cả Voucher</label>
-                      <p className="text-sm text-gray-600">Cho phép xem voucher của người khác</p>
+                      <label className="font-medium theme-text">Telesales Có Thể Xem Tất Cả Voucher</label>
+                      <p className="text-sm theme-text-muted">Cho phép xem voucher của người khác</p>
                       <div className="mt-1">
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                           permissionSettings.viewAllVouchers.enabled 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
+                            ? 'berry-success-light' 
+                            : 'berry-error-light'
                         }`}>
                           {permissionSettings.viewAllVouchers.enabled ? 'Đã kích hoạt' : 'Đã tắt'}
                         </span>
@@ -533,15 +542,15 @@ export function VoucherSettings() {
                   
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <label className="font-medium">Yêu Cầu Phê Duyệt Voucher Cao Giá Trị</label>
-                      <p className="text-sm text-gray-600">
+                      <label className="font-medium theme-text">Yêu Cầu Phê Duyệt Voucher Cao Giá Trị</label>
+                      <p className="text-sm theme-text-muted">
                         Voucher trên {permissionSettings.approvalRequired.threshold.toLocaleString()}đ cần phê duyệt
                       </p>
                       <div className="mt-1">
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                           permissionSettings.approvalRequired.enabled 
-                            ? 'bg-orange-100 text-orange-800' 
-                            : 'bg-gray-100 text-gray-800'
+                            ? 'berry-warning-light' 
+                            : 'berry-info-light'
                         }`}>
                           {permissionSettings.approvalRequired.enabled ? 'Yêu cầu phê duyệt' : 'Không yêu cầu'}
                         </span>
@@ -559,13 +568,13 @@ export function VoucherSettings() {
                   
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <label className="font-medium">Cho Phép Cấp Lại Voucher</label>
-                      <p className="text-sm text-gray-600">Nhân viên có thể cấp lại voucher</p>
+                      <label className="font-medium theme-text">Cho Phép Cấp Lại Voucher</label>
+                      <p className="text-sm theme-text-muted">Nhân viên có thể cấp lại voucher</p>
                       <div className="mt-1">
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                           permissionSettings.reissueVouchers.enabled 
-                            ? 'bg-blue-100 text-blue-800' 
-                            : 'bg-gray-100 text-gray-800'
+                            ? 'berry-info-light' 
+                            : 'berry-error-light'
                         }`}>
                           {permissionSettings.reissueVouchers.enabled ? 'Cho phép' : 'Không cho phép'}
                         </span>
@@ -584,10 +593,10 @@ export function VoucherSettings() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="voucher-card">
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Bell className="w-5 h-5" />
+                <CardTitle className="flex items-center space-x-2 theme-text">
+                  <Bell className="w-5 h-5 theme-text-primary" />
                   <span>Cài Đặt Thông Báo</span>
                 </CardTitle>
               </CardHeader>
@@ -595,13 +604,13 @@ export function VoucherSettings() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <label className="font-medium">Thông Báo Voucher Mới</label>
-                      <p className="text-sm text-gray-600">Thông báo khi có voucher được phát hành</p>
+                      <label className="font-medium theme-text">Thông Báo Voucher Mới</label>
+                      <p className="text-sm theme-text-muted">Thông báo khi có voucher được phát hành</p>
                       <div className="mt-1">
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                           notificationSettings.newVoucher.enabled 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-gray-100 text-gray-800'
+                            ? 'berry-success-light' 
+                            : 'berry-error-light'
                         }`}>
                           {notificationSettings.newVoucher.enabled ? 'Đã bật' : 'Đã tắt'}
                         </span>
@@ -619,15 +628,15 @@ export function VoucherSettings() {
                   
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <label className="font-medium">Cảnh Báo Voucher Hết Hạn</label>
-                      <p className="text-sm text-gray-600">
+                      <label className="font-medium theme-text">Cảnh Báo Voucher Hết Hạn</label>
+                      <p className="text-sm theme-text-muted">
                         Thông báo trước {notificationSettings.expiration.days} ngày khi voucher hết hạn
                       </p>
                       <div className="mt-1">
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                           notificationSettings.expiration.enabled 
-                            ? 'bg-yellow-100 text-yellow-800' 
-                            : 'bg-gray-100 text-gray-800'
+                            ? 'berry-warning-light' 
+                            : 'berry-error-light'
                         }`}>
                           {notificationSettings.expiration.enabled ? 'Đã bật cảnh báo' : 'Đã tắt'}
                         </span>
@@ -645,17 +654,17 @@ export function VoucherSettings() {
                   
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <label className="font-medium">Báo Cáo Hiệu Suất Hàng Ngày</label>
-                      <p className="text-sm text-gray-600">
-                        Gửi báo cáo hiệu suất lúc {notificationSettings.dailyReport.time}
+                      <label className="font-medium theme-text">Báo Cáo Hàng Ngày</label>
+                      <p className="text-sm theme-text-muted">
+                        Gửi báo cáo tự động lúc {notificationSettings.dailyReport.time}
                       </p>
                       <div className="mt-1">
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                           notificationSettings.dailyReport.enabled 
-                            ? 'bg-blue-100 text-blue-800' 
-                            : 'bg-gray-100 text-gray-800'
+                            ? 'berry-info-light' 
+                            : 'berry-error-light'
                         }`}>
-                          {notificationSettings.dailyReport.enabled ? 'Đã lên lịch' : 'Đã tắt'}
+                          {notificationSettings.dailyReport.enabled ? 'Đã bật' : 'Đã tắt'}
                         </span>
                       </div>
                     </div>

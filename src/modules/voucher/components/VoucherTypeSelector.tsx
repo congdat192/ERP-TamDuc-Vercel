@@ -15,23 +15,23 @@ export function VoucherTypeSelector({ value, onChange }: VoucherTypeSelectorProp
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-gray-900">Loại Voucher/Coupon</h3>
+      <h3 className="text-lg font-semibold theme-text">Loại Voucher/Coupon</h3>
       <div className="grid grid-cols-2 gap-4">
         {voucherTypes.map((type) => (
           <Card 
             key={type}
             className={`cursor-pointer transition-all hover:shadow-md ${
               value === type 
-                ? 'border-orange-500 bg-orange-50' 
-                : 'border-gray-200 hover:border-gray-300'
+                ? 'berry-primary-light border-2 theme-border-primary' 
+                : 'voucher-card hover:theme-border-primary/30'
             }`}
             onClick={() => onChange(type)}
           >
             <CardContent className="p-6 text-center">
               <div className="space-y-2">
-                <h4 className="font-medium text-gray-900">{VOUCHER_TYPE_LABELS[type]}</h4>
+                <h4 className="font-medium theme-text">{VOUCHER_TYPE_LABELS[type]}</h4>
                 {value === type && (
-                  <Badge variant="secondary" className="bg-orange-100 text-orange-700">
+                  <Badge variant="secondary" className="theme-badge-primary">
                     Đã chọn
                   </Badge>
                 )}

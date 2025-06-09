@@ -14,11 +14,11 @@ interface VoucherCardProps {
 export function VoucherCard({ voucher, onView, onCopy }: VoucherCardProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'used': return 'bg-blue-100 text-blue-800';
-      case 'expired': return 'bg-red-100 text-red-800';
-      case 'cancelled': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'active': return 'berry-success-light';
+      case 'used': return 'berry-info-light';
+      case 'expired': return 'berry-error-light';
+      case 'cancelled': return 'berry-warning-light';
+      default: return 'berry-info-light';
     }
   };
 
@@ -33,26 +33,26 @@ export function VoucherCard({ voucher, onView, onCopy }: VoucherCardProps) {
   };
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="voucher-card hover:shadow-md transition-shadow">
       <CardContent className="p-4">
         <div className="flex justify-between items-start mb-3">
           <div>
-            <h3 className="font-mono font-bold text-lg">{voucher.code}</h3>
-            <p className="text-2xl font-bold text-green-600">{voucher.value}</p>
+            <h3 className="font-mono font-bold text-lg theme-text">{voucher.code}</h3>
+            <p className="text-2xl font-bold theme-text-primary">{voucher.value}</p>
           </div>
           <Badge className={getStatusColor(voucher.status)}>
             {getStatusText(voucher.status)}
           </Badge>
         </div>
         
-        <div className="space-y-2 text-sm text-gray-600">
+        <div className="space-y-2 text-sm theme-text-muted">
           <div className="flex justify-between">
             <span>Khách hàng:</span>
-            <span className="font-medium">{voucher.customerName}</span>
+            <span className="font-medium theme-text">{voucher.customerName}</span>
           </div>
           <div className="flex justify-between">
             <span>Điện thoại:</span>
-            <span className="font-medium">{voucher.customerPhone}</span>
+            <span className="font-medium theme-text">{voucher.customerPhone}</span>
           </div>
           <div className="flex justify-between">
             <span>Ngày phát hành:</span>
@@ -64,8 +64,8 @@ export function VoucherCard({ voucher, onView, onCopy }: VoucherCardProps) {
           </div>
         </div>
         
-        <div className="flex justify-between items-center mt-4 pt-3 border-t">
-          <span className="text-xs text-gray-500">
+        <div className="flex justify-between items-center mt-4 pt-3 border-t theme-border-primary/20">
+          <span className="text-xs theme-text-muted">
             Bởi: {voucher.issuedBy}
           </span>
           <div className="flex space-x-1">
@@ -73,15 +73,17 @@ export function VoucherCard({ voucher, onView, onCopy }: VoucherCardProps) {
               variant="ghost"
               size="sm"
               onClick={() => onCopy?.(voucher.code)}
+              className="hover:theme-bg-primary/5"
             >
-              <Copy className="w-4 h-4" />
+              <Copy className="w-4 h-4 theme-text-primary" />
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => onView?.(voucher)}
+              className="hover:theme-bg-primary/5"
             >
-              <Eye className="w-4 h-4" />
+              <Eye className="w-4 h-4 theme-text-primary" />
             </Button>
           </div>
         </div>

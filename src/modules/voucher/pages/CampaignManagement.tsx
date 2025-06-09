@@ -144,34 +144,34 @@ export function CampaignManagement() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Quản Lý Chiến Dịch</h2>
-          <p className="text-gray-600">Cấu hình và quản lý các chiến dịch phát hành voucher</p>
+          <h2 className="text-2xl font-bold theme-text">Quản Lý Chiến Dịch</h2>
+          <p className="theme-text-muted">Cấu hình và quản lý các chiến dịch phát hành voucher</p>
         </div>
-        <Button onClick={() => setIsWizardOpen(true)}>
+        <Button onClick={() => setIsWizardOpen(true)} variant="default">
           <Plus className="w-4 h-4 mr-2" />
           Tạo Chiến Dịch Mới
         </Button>
       </div>
 
       {/* Filters and Search */}
-      <Card>
+      <Card className="voucher-card">
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 theme-text-muted w-4 h-4" />
                 <Input
                   placeholder="Tìm kiếm chiến dịch..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9"
+                  className="pl-9 voucher-input"
                 />
               </div>
             </div>
             
             <div className="flex gap-2">
               <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-40 voucher-input">
                   <SelectValue placeholder="Trạng thái" />
                 </SelectTrigger>
                 <SelectContent>
@@ -184,7 +184,7 @@ export function CampaignManagement() {
               </Select>
 
               <Select value={typeFilter} onValueChange={(value: any) => setTypeFilter(value)}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-40 voucher-input">
                   <SelectValue placeholder="Loại chiến dịch" />
                 </SelectTrigger>
                 <SelectContent>
@@ -204,19 +204,19 @@ export function CampaignManagement() {
 
           {/* Bulk Actions */}
           {selectedCampaigns.length > 0 && (
-            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="mt-4 p-3 berry-info-light rounded-lg">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary">
+                  <Badge variant="secondary" className="theme-badge-secondary">
                     {selectedCampaigns.length} chiến dịch được chọn
                   </Badge>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" onClick={handleBulkActivate}>
+                  <Button size="sm" variant="success" onClick={handleBulkActivate}>
                     <Power className="w-4 h-4 mr-1" />
                     Kích hoạt
                   </Button>
-                  <Button size="sm" variant="outline" onClick={handleBulkDeactivate}>
+                  <Button size="sm" variant="warning" onClick={handleBulkDeactivate}>
                     <PowerOff className="w-4 h-4 mr-1" />
                     Tạm dừng
                   </Button>
