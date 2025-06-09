@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Calendar, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -121,25 +120,26 @@ export function SalesFilters({ onClearFilters, onApplyFilters, isMobile }: Sales
     <div className="space-y-6">
       {/* Branch Selection */}
       <div className="space-y-3">
-        <label className="text-sm font-medium text-gray-700">Chi nhánh</label>
+        <label className="text-sm font-medium theme-text">Chi nhánh</label>
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="outline" className="w-full justify-start text-sm">
-              <span className="text-gray-500">Chọn chi nhánh</span>
-              <ChevronDown className="ml-auto h-4 w-4" />
+            <Button variant="outline" className="w-full justify-start text-sm theme-border-primary">
+              <span className="theme-text-muted">Chọn chi nhánh</span>
+              <ChevronDown className="ml-auto h-4 w-4 theme-text-primary" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-80 p-3">
+          <PopoverContent className="w-80 p-3 theme-card border theme-border-primary">
             <ScrollArea className="h-auto max-h-64">
-              <div className="space-y-2 pr-4">
+              <div className="space-y-3 pr-4">
                 {branchOptions.map((branch) => (
-                  <div key={branch.value} className="flex items-center space-x-2">
+                  <div key={branch.value} className="flex items-center space-x-3 min-h-[36px]">
                     <Checkbox 
                       id={branch.value}
                       checked={selectedBranches.includes(branch.value)}
                       onCheckedChange={() => handleBranchSelect(branch.value)}
+                      className="flex-shrink-0"
                     />
-                    <label htmlFor={branch.value} className="text-sm cursor-pointer">
+                    <label htmlFor={branch.value} className="text-sm cursor-pointer theme-text leading-relaxed flex-1">
                       {branch.label}
                     </label>
                   </div>
@@ -154,11 +154,11 @@ export function SalesFilters({ onClearFilters, onApplyFilters, isMobile }: Sales
           <ScrollArea className="w-full">
             <div className="flex space-x-1 pb-2 min-w-max">
               {getBranchDisplayTags().map((tag) => (
-                <Badge key={tag.value} variant="secondary" className="text-xs whitespace-nowrap flex-shrink-0">
+                <Badge key={tag.value} variant="secondary" className="text-xs whitespace-nowrap flex-shrink-0 theme-badge-primary">
                   {tag.label}
                   {tag.value !== 'more' && (
                     <X 
-                      className="ml-1 h-3 w-3 cursor-pointer" 
+                      className="ml-1 h-3 w-3 cursor-pointer hover:theme-text-primary transition-colors" 
                       onClick={() => removeBranch(tag.value)}
                     />
                   )}
@@ -171,120 +171,118 @@ export function SalesFilters({ onClearFilters, onApplyFilters, isMobile }: Sales
 
       {/* Time Period */}
       <div className="space-y-3">
-        <label className="text-sm font-medium text-gray-700">Thời gian</label>
-        <RadioGroup value={timeFilterType} onValueChange={(value: 'quick' | 'custom') => setTimeFilterType(value)}>
-          <div className="space-y-3">
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="quick" id="quick" />
-              <label htmlFor="quick" className="text-sm">Chọn nhanh</label>
-            </div>
-            
-            {timeFilterType === 'quick' && (
-              <div className="ml-6">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" className="w-full justify-start text-xs">
-                      <span>
-                        {quickTimeOptions.month.find(opt => opt.value === selectedQuickTime)?.label || 'Tháng này'}
-                      </span>
-                      <ChevronDown className="ml-auto h-3 w-3" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-64 p-0">
-                    <Tabs defaultValue="month" className="w-full">
-                      <TabsList className="grid w-full grid-cols-5 text-xs h-8">
-                        <TabsTrigger value="day" className="text-xs">Ngày</TabsTrigger>
-                        <TabsTrigger value="week" className="text-xs">Tuần</TabsTrigger>
-                        <TabsTrigger value="month" className="text-xs">Tháng</TabsTrigger>
-                        <TabsTrigger value="quarter" className="text-xs">Quý</TabsTrigger>
-                        <TabsTrigger value="year" className="text-xs">Năm</TabsTrigger>
-                      </TabsList>
-                      
-                      {Object.entries(quickTimeOptions).map(([key, options]) => (
-                        <TabsContent key={key} value={key} className="p-2 space-y-1">
-                          <ScrollArea className="h-auto max-h-40">
-                            <div className="space-y-1 pr-4">
-                              {options.map((option) => (
-                                <Button
-                                  key={option.value}
-                                  variant={selectedQuickTime === option.value ? "default" : "ghost"}
-                                  size="sm"
-                                  className="w-full justify-start text-xs h-8"
-                                  onClick={() => setSelectedQuickTime(option.value)}
-                                >
-                                  {option.label}
-                                </Button>
-                              ))}
-                            </div>
-                          </ScrollArea>
-                        </TabsContent>
-                      ))}
-                    </Tabs>
-                  </PopoverContent>
-                </Popover>
-              </div>
-            )}
-            
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="custom" id="custom" />
-              <label htmlFor="custom" className="text-sm">Tùy chỉnh</label>
-            </div>
-            
-            {timeFilterType === 'custom' && (
-              <div className="ml-6 space-y-2">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" className="w-full justify-start text-xs">
-                      <Calendar className="mr-2 h-3 w-3" />
-                      <span>
-                        {dateRange.from && dateRange.to 
-                          ? `${dateRange.from.toLocaleDateString('vi-VN')} - ${dateRange.to.toLocaleDateString('vi-VN')}`
-                          : 'Chọn khoảng thời gian'
-                        }
-                      </span>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <div className="p-3 space-y-3">
-                      <div className="flex space-x-2">
-                        <CalendarComponent
-                          mode="single"
-                          selected={dateRange.from}
-                          onSelect={(date) => setDateRange(prev => ({ ...prev, from: date }))}
-                          className="rounded-md border"
-                        />
-                        <CalendarComponent
-                          mode="single"
-                          selected={dateRange.to}
-                          onSelect={(date) => setDateRange(prev => ({ ...prev, to: date }))}
-                          className="rounded-md border"
-                        />
-                      </div>
-                      <div className="flex space-x-2">
-                        <Button size="sm" onClick={() => setDateRange({ from: new Date(), to: new Date() })}>
-                          Hôm nay
-                        </Button>
-                        <Button size="sm" variant="outline">
-                          Áp dụng
-                        </Button>
-                        <Button size="sm" variant="ghost">
-                          Hủy
-                        </Button>
-                      </div>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              </div>
-            )}
+        <label className="text-sm font-medium theme-text">Thời gian</label>
+        <RadioGroup value={timeFilterType} onValueChange={(value: 'quick' | 'custom') => setTimeFilterType(value)} className="space-y-4">
+          <div className="flex items-center space-x-3 min-h-[36px]">
+            <RadioGroupItem value="quick" id="quick" />
+            <label htmlFor="quick" className="text-sm theme-text cursor-pointer">Chọn nhanh</label>
           </div>
+          
+          {timeFilterType === 'quick' && (
+            <div className="ml-6">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="w-full justify-start text-xs min-h-[36px] theme-border-primary">
+                    <span className="theme-text">
+                      {quickTimeOptions.month.find(opt => opt.value === selectedQuickTime)?.label || 'Tháng này'}
+                    </span>
+                    <ChevronDown className="ml-auto h-3 w-3 theme-text-primary" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64 p-0 theme-card border theme-border-primary">
+                  <Tabs defaultValue="month" className="w-full">
+                    <TabsList className="grid w-full grid-cols-5 text-xs h-10">
+                      <TabsTrigger value="day" className="text-xs">Ngày</TabsTrigger>
+                      <TabsTrigger value="week" className="text-xs">Tuần</TabsTrigger>
+                      <TabsTrigger value="month" className="text-xs">Tháng</TabsTrigger>
+                      <TabsTrigger value="quarter" className="text-xs">Quý</TabsTrigger>
+                      <TabsTrigger value="year" className="text-xs">Năm</TabsTrigger>
+                    </TabsList>
+                    
+                    {Object.entries(quickTimeOptions).map(([key, options]) => (
+                      <TabsContent key={key} value={key} className="p-2 space-y-1">
+                        <ScrollArea className="h-auto max-h-40">
+                          <div className="space-y-1 pr-4">
+                            {options.map((option) => (
+                              <Button
+                                key={option.value}
+                                variant={selectedQuickTime === option.value ? "default" : "ghost"}
+                                size="sm"
+                                className="w-full justify-start text-xs min-h-[36px]"
+                                onClick={() => setSelectedQuickTime(option.value)}
+                              >
+                                {option.label}
+                              </Button>
+                            ))}
+                          </div>
+                        </ScrollArea>
+                      </TabsContent>
+                    ))}
+                  </Tabs>
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
+          
+          <div className="flex items-center space-x-3 min-h-[36px]">
+            <RadioGroupItem value="custom" id="custom" />
+            <label htmlFor="custom" className="text-sm theme-text cursor-pointer">Tùy chỉnh</label>
+          </div>
+          
+          {timeFilterType === 'custom' && (
+            <div className="ml-6 space-y-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="w-full justify-start text-xs min-h-[36px] theme-border-primary">
+                    <Calendar className="mr-2 h-3 w-3 theme-text-primary" />
+                    <span className="theme-text">
+                      {dateRange.from && dateRange.to 
+                        ? `${dateRange.from.toLocaleDateString('vi-VN')} - ${dateRange.to.toLocaleDateString('vi-VN')}`
+                        : 'Chọn khoảng thời gian'
+                      }
+                    </span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 theme-card border theme-border-primary" align="start">
+                  <div className="p-3 space-y-3">
+                    <div className="flex space-x-2">
+                      <CalendarComponent
+                        mode="single"
+                        selected={dateRange.from}
+                        onSelect={(date) => setDateRange(prev => ({ ...prev, from: date }))}
+                        className="rounded-md border theme-border-primary"
+                      />
+                      <CalendarComponent
+                        mode="single"
+                        selected={dateRange.to}
+                        onSelect={(date) => setDateRange(prev => ({ ...prev, to: date }))}
+                        className="rounded-md border theme-border-primary"
+                      />
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button size="sm" onClick={() => setDateRange({ from: new Date(), to: new Date() })}>
+                        Hôm nay
+                      </Button>
+                      <Button size="sm" variant="outline">
+                        Áp dụng
+                      </Button>
+                      <Button size="sm" variant="ghost">
+                        Hủy
+                      </Button>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
         </RadioGroup>
       </div>
 
       {/* Status */}
       <div className="space-y-3">
-        <label className="text-sm font-medium text-gray-700">Trạng thái</label>
+        <label className="text-sm font-medium theme-text">Trạng thái</label>
         <div className="space-y-3">
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3 min-h-[36px]">
             <Checkbox 
               id="completed"
               checked={statusFilters.completed}
@@ -292,9 +290,9 @@ export function SalesFilters({ onClearFilters, onApplyFilters, isMobile }: Sales
                 setStatusFilters(prev => ({ ...prev, completed: checked as boolean }))
               }
             />
-            <label htmlFor="completed" className="text-sm">Hoàn thành</label>
+            <label htmlFor="completed" className="text-sm theme-text cursor-pointer">Hoàn thành</label>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3 min-h-[36px]">
             <Checkbox 
               id="canceled"
               checked={statusFilters.canceled}
@@ -302,16 +300,16 @@ export function SalesFilters({ onClearFilters, onApplyFilters, isMobile }: Sales
                 setStatusFilters(prev => ({ ...prev, canceled: checked as boolean }))
               }
             />
-            <label htmlFor="canceled" className="text-sm">Đã hủy</label>
+            <label htmlFor="canceled" className="text-sm theme-text cursor-pointer">Đã hủy</label>
           </div>
         </div>
       </div>
 
       {/* Payment Method */}
       <div className="space-y-3">
-        <label className="text-sm font-medium text-gray-700">Phương thức thanh toán</label>
+        <label className="text-sm font-medium theme-text">Phương thức thanh toán</label>
         <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-          <SelectTrigger className="text-sm">
+          <SelectTrigger className="text-sm min-h-[36px]">
             <SelectValue placeholder="Chọn phương thức thanh toán" />
           </SelectTrigger>
           <SelectContent>
@@ -326,9 +324,9 @@ export function SalesFilters({ onClearFilters, onApplyFilters, isMobile }: Sales
 
       {/* Creator */}
       <div className="space-y-3">
-        <label className="text-sm font-medium text-gray-700">Người tạo</label>
+        <label className="text-sm font-medium theme-text">Người tạo</label>
         <Select value={creator} onValueChange={setCreator}>
-          <SelectTrigger className="text-sm">
+          <SelectTrigger className="text-sm min-h-[36px]">
             <SelectValue placeholder="Chọn người tạo" />
           </SelectTrigger>
           <SelectContent>
@@ -342,9 +340,9 @@ export function SalesFilters({ onClearFilters, onApplyFilters, isMobile }: Sales
 
       {/* Seller */}
       <div className="space-y-3">
-        <label className="text-sm font-medium text-gray-700">Người bán</label>
+        <label className="text-sm font-medium theme-text">Người bán</label>
         <Select value={seller} onValueChange={setSeller}>
-          <SelectTrigger className="text-sm">
+          <SelectTrigger className="text-sm min-h-[36px]">
             <SelectValue placeholder="Chọn người bán" />
           </SelectTrigger>
           <SelectContent>
@@ -358,9 +356,9 @@ export function SalesFilters({ onClearFilters, onApplyFilters, isMobile }: Sales
 
       {/* Price List */}
       <div className="space-y-3">
-        <label className="text-sm font-medium text-gray-700">Bảng giá</label>
+        <label className="text-sm font-medium theme-text">Bảng giá</label>
         <Select value={priceList} onValueChange={setPriceList}>
-          <SelectTrigger className="text-sm">
+          <SelectTrigger className="text-sm min-h-[36px]">
             <SelectValue placeholder="Chọn bảng giá" />
           </SelectTrigger>
           <SelectContent>
@@ -374,10 +372,10 @@ export function SalesFilters({ onClearFilters, onApplyFilters, isMobile }: Sales
 
       {/* Sales Channel */}
       <div className="space-y-3">
-        <label className="text-sm font-medium text-gray-700">Kênh bán</label>
+        <label className="text-sm font-medium theme-text">Kênh bán</label>
         <div className="space-y-2">
           <Select value={salesChannel} onValueChange={setSalesChannel}>
-            <SelectTrigger className="text-sm">
+            <SelectTrigger className="text-sm min-h-[36px]">
               <SelectValue placeholder="Chọn kênh bán" />
             </SelectTrigger>
             <SelectContent>
@@ -387,7 +385,7 @@ export function SalesFilters({ onClearFilters, onApplyFilters, isMobile }: Sales
               <SelectItem value="social">Mạng xã hội</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="link" className="text-sm p-0 h-auto text-blue-600 hover:text-blue-800">
+          <Button variant="link" className="text-sm p-0 h-auto theme-text-primary hover:theme-text-primary/80">
             Tạo mới
           </Button>
         </div>
@@ -395,11 +393,11 @@ export function SalesFilters({ onClearFilters, onApplyFilters, isMobile }: Sales
 
       {/* Mobile Action Buttons */}
       {isMobile && (
-        <div className="flex space-x-3 pt-4 border-t">
+        <div className="flex space-x-3 pt-4 border-t theme-border-primary/20">
           <Button variant="outline" className="flex-1" onClick={onClearFilters}>
             Xóa tất cả
           </Button>
-          <Button className="flex-1 bg-blue-600 hover:bg-blue-700" onClick={onApplyFilters}>
+          <Button className="flex-1" onClick={onApplyFilters}>
             Áp dụng
           </Button>
         </div>
