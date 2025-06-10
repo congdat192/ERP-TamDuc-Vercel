@@ -180,8 +180,8 @@ export function CustomerTable({
   return (
     <Card className="theme-card">
       <CardContent className="p-0">
-        {/* Table with horizontal scroll */}
-        <div className="overflow-x-auto">
+        {/* Table Container with Horizontal Scroll - Separated from Pagination */}
+        <div className="overflow-x-auto border-b theme-border-primary">
           <Table className="w-full">
             <TableHeader>
               <TableRow className="hover:theme-bg-primary/5">
@@ -252,8 +252,8 @@ export function CustomerTable({
           </Table>
         </div>
 
-        {/* Pagination */}
-        <div className="flex items-center justify-between px-4 py-3 border-t theme-border-primary">
+        {/* Pagination - Fixed Outside Scroll Container */}
+        <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center space-x-2">
             <span className="text-sm theme-text-muted">Hiển thị</span>
             <select
