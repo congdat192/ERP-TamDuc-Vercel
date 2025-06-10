@@ -17,7 +17,7 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
   const [searchTerm, setSearchTerm] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  // Column visibility state - All 27 required columns
+  // Column visibility state - All 27 required columns exactly as requested
   const [columns, setColumns] = useState<ColumnConfig[]>([
     { key: 'invoiceCode', label: 'Mã hóa đơn', visible: true },
     { key: 'datetime', label: 'Thời gian', visible: true },
@@ -165,16 +165,16 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
         />
       )}
 
-      {/* Stats Section */}
-      <div className="w-full px-6 pt-4 pb-1">
+      {/* Stats Section with 5px spacing */}
+      <div className="w-full px-6 pt-4" style={{ paddingBottom: '5px' }}>
         <ThemedSalesStats />
       </div>
 
-      {/* Main Content Layout with 3px spacing */}
-      <div className="flex w-full gap-[3px]">
-        {/* Desktop Filter Sidebar - Styled like Customer module */}
+      {/* Main Content Layout with 5px spacing */}
+      <div className="flex w-full" style={{ gap: '5px' }}>
+        {/* Desktop Filter Sidebar - Styled like Customer module with 5px margin from ERP sidebar */}
         {!isMobile && (
-          <div className="w-64 max-w-64 ml-6 theme-card rounded-lg border theme-border-primary p-4 space-y-4">
+          <div className="w-64 max-w-64 theme-card rounded-lg border theme-border-primary p-4 space-y-4" style={{ marginLeft: '24px' }}>
             <h3 className="font-semibold theme-text text-base">Bộ lọc</h3>
             <ScrollArea className="h-[calc(100vh-200px)]">
               <div className="pr-4">
@@ -208,8 +208,8 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
           </div>
         )}
 
-        {/* Main Content Area with 3px spacing */}
-        <div className="flex-1 pr-6 space-y-[3px]">
+        {/* Main Content Area with 5px spacing and proper margins */}
+        <div className="flex-1" style={{ paddingRight: '24px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
           {/* Search & Actions Bar */}
           <SalesSearchAndActions
             searchTerm={searchTerm}

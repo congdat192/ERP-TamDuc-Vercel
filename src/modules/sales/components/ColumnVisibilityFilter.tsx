@@ -20,9 +20,9 @@ interface ColumnVisibilityFilterProps {
 export function ColumnVisibilityFilter({ columns, onColumnToggle }: ColumnVisibilityFilterProps) {
   const [open, setOpen] = useState(false);
 
-  // Chia columns thành 2 cột
-  const leftColumns = columns.slice(0, Math.ceil(columns.length / 2));
-  const rightColumns = columns.slice(Math.ceil(columns.length / 2));
+  // Chia columns thành 2 cột để hiển thị đẹp hơn (27 cột chia 2)
+  const leftColumns = columns.slice(0, Math.ceil(columns.length / 2)); // 14 cột
+  const rightColumns = columns.slice(Math.ceil(columns.length / 2)); // 13 cột
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -32,24 +32,24 @@ export function ColumnVisibilityFilter({ columns, onColumnToggle }: ColumnVisibi
           Hiển thị cột
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[520px] p-6 theme-card border theme-border-primary shadow-lg z-50" align="end" sideOffset={8}>
+      <PopoverContent className="w-[560px] p-6 theme-card border theme-border-primary shadow-lg z-50" align="end" sideOffset={8}>
         <div className="space-y-4">
           <h4 className="font-medium text-base theme-text border-b theme-border-primary/20 pb-3">Hiển thị cột</h4>
-          <ScrollArea className="h-auto max-h-[420px]">
-            <div className="grid grid-cols-2 gap-8 pr-4">
+          <ScrollArea className="h-auto max-h-[450px]">
+            <div className="grid grid-cols-2 gap-6 pr-4">
               {/* Cột trái */}
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {leftColumns.map((column) => (
-                  <div key={column.key} className="flex items-start space-x-4 min-h-[40px] py-1">
+                  <div key={column.key} className="flex items-start space-x-3 min-h-[32px] py-1">
                     <Checkbox
                       id={column.key}
                       checked={column.visible}
                       onCheckedChange={() => onColumnToggle(column.key)}
-                      className="h-4 w-4 mt-1 flex-shrink-0"
+                      className="h-4 w-4 mt-0.5 flex-shrink-0"
                     />
                     <label
                       htmlFor={column.key}
-                      className="text-sm font-normal theme-text cursor-pointer select-none leading-relaxed flex-1 py-0.5"
+                      className="text-sm font-normal theme-text cursor-pointer select-none leading-5 flex-1"
                     >
                       {column.label}
                     </label>
@@ -58,18 +58,18 @@ export function ColumnVisibilityFilter({ columns, onColumnToggle }: ColumnVisibi
               </div>
               
               {/* Cột phải */}
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {rightColumns.map((column) => (
-                  <div key={column.key} className="flex items-start space-x-4 min-h-[40px] py-1">
+                  <div key={column.key} className="flex items-start space-x-3 min-h-[32px] py-1">
                     <Checkbox
                       id={column.key}
                       checked={column.visible}
                       onCheckedChange={() => onColumnToggle(column.key)}
-                      className="h-4 w-4 mt-1 flex-shrink-0"
+                      className="h-4 w-4 mt-0.5 flex-shrink-0"
                     />
                     <label
                       htmlFor={column.key}
-                      className="text-sm font-normal theme-text cursor-pointer select-none leading-relaxed flex-1 py-0.5"
+                      className="text-sm font-normal theme-text cursor-pointer select-none leading-5 flex-1"
                     >
                       {column.label}
                     </label>
