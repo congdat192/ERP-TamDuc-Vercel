@@ -17,7 +17,7 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
   const [searchTerm, setSearchTerm] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  // Column visibility state
+  // Column visibility state - All required columns
   const [columns, setColumns] = useState<ColumnConfig[]>([
     { key: 'invoiceCode', label: 'Mã hóa đơn', visible: true },
     { key: 'datetime', label: 'Thời gian', visible: true },
@@ -30,7 +30,7 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
     { key: 'phone', label: 'Điện thoại', visible: false },
     { key: 'address', label: 'Địa chỉ', visible: false },
     { key: 'area', label: 'Khu vực', visible: false },
-    { key: 'method', label: 'Phương/Xá', visible: false },
+    { key: 'ward', label: 'Phường/Xã', visible: false },
     { key: 'birthdate', label: 'Ngày sinh', visible: false },
     { key: 'branch', label: 'Chi nhánh', visible: false },
     { key: 'seller', label: 'Người bán', visible: false },
@@ -42,10 +42,10 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
     { key: 'tax', label: 'Giảm thuế', visible: false },
     { key: 'needToPay', label: 'Khách cần trả', visible: false },
     { key: 'paidAmount', label: 'Khách đã trả', visible: true },
-    { key: 'totalDiscount', label: 'Chiết khấu thanh toán', visible: false },
+    { key: 'paymentDiscount', label: 'Chiết khấu thanh toán', visible: false },
     { key: 'deliveryTime', label: 'Thời gian giao hàng', visible: false },
     { key: 'status', label: 'Trạng thái', visible: true },
-    { key: 'invoiceStatus', label: 'Trạng thái HĐDT', visible: true }
+    { key: 'invoiceStatus', label: 'Trạng thái HĐĐT', visible: true }
   ]);
 
   const isMobile = useIsMobile();
@@ -53,36 +53,90 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
   // Get visible columns
   const visibleColumns = columns.filter(col => col.visible);
 
-  // Mock data for sales
+  // Mock data for sales with additional fields
   const salesData = [
     {
       id: 'HD001',
       date: '10/06/2024 14:30',
+      createdTime: '10/06/2024 14:25',
+      lastUpdated: '10/06/2024 14:35',
+      orderCode: 'DH001',
       returnCode: '',
       customer: 'Nguyễn Văn A',
+      email: 'nguyen.van.a@email.com',
+      phone: '0901234567',
+      address: '123 Đường ABC, Quận 1',
+      area: 'TP.HCM',
+      ward: 'Phường Bến Nghé',
+      birthdate: '15/05/1990',
+      branch: 'Chi nhánh Quận 1',
+      seller: 'Trần Thị B',
+      creator: 'Lê Văn C',
+      channel: 'Website',
+      note: 'Khách VIP',
       totalAmount: 1500000,
       discount: 50000,
+      tax: 0,
+      needToPay: 1450000,
       paidAmount: 1450000,
+      paymentDiscount: 0,
+      deliveryTime: '11/06/2024 09:00',
       status: 'Hoàn thành'
     },
     {
       id: 'HD002', 
       date: '10/06/2024 15:45',
+      createdTime: '10/06/2024 15:40',
+      lastUpdated: '10/06/2024 15:50',
+      orderCode: 'DH002',
       returnCode: 'TH001',
       customer: 'Trần Thị B',
+      email: 'tran.thi.b@email.com',
+      phone: '0907654321',
+      address: '456 Đường DEF, Quận 3',
+      area: 'TP.HCM',
+      ward: 'Phường Võ Thị Sáu',
+      birthdate: '20/08/1985',
+      branch: 'Chi nhánh Quận 3',
+      seller: 'Nguyễn Văn D',
+      creator: 'Phạm Thị E',
+      channel: 'Cửa hàng',
+      note: 'Trả hàng một phần',
       totalAmount: 2200000,
       discount: 100000,
+      tax: 0,
+      needToPay: 2100000,
       paidAmount: 2100000,
+      paymentDiscount: 0,
+      deliveryTime: '11/06/2024 14:00',
       status: 'Hoàn thành'
     },
     {
       id: 'HD003',
       date: '09/06/2024 09:15',
+      createdTime: '09/06/2024 09:10',
+      lastUpdated: '09/06/2024 10:00',
+      orderCode: 'DH003',
       returnCode: '',
       customer: 'Lê Văn C',
+      email: 'le.van.c@email.com',
+      phone: '0909876543',
+      address: '789 Đường GHI, Quận 5',
+      area: 'TP.HCM',
+      ward: 'Phường 1',
+      birthdate: '10/12/1992',
+      branch: 'Chi nhánh Quận 5',
+      seller: 'Võ Thị F',
+      creator: 'Hoàng Văn G',
+      channel: 'Điện thoại',
+      note: 'Hủy do khách không nhận',
       totalAmount: 800000,
       discount: 0,
-      paidAmount: 800000,
+      tax: 0,
+      needToPay: 800000,
+      paidAmount: 0,
+      paymentDiscount: 0,
+      deliveryTime: '',
       status: 'Đã hủy'
     }
   ];
@@ -94,7 +148,6 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
   };
 
   const clearAllFilters = () => {
-    // Reset filter logic
     setIsFilterOpen(false);
   };
 
@@ -112,16 +165,16 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
         />
       )}
 
-      {/* Stats Section - Moved up, no title */}
-      <div className="w-full px-6 pt-4 pb-2">
+      {/* Stats Section */}
+      <div className="w-full px-6 pt-4 pb-1">
         <ThemedSalesStats />
       </div>
 
-      {/* Main Content Layout - Optimized spacing */}
-      <div className="flex w-full">
-        {/* Desktop Filter Sidebar - Fixed Width 255px */}
+      {/* Main Content Layout with 3px spacing */}
+      <div className="flex w-full" style={{ gap: '3px' }}>
+        {/* Desktop Filter Sidebar - Styled like Customer module */}
         {!isMobile && (
-          <div className="w-64 max-w-64 theme-card border-r theme-border-primary/20 p-4 space-y-4">
+          <div className="w-64 max-w-64 ml-6 theme-card rounded-lg border theme-border-primary p-4 space-y-4">
             <h3 className="font-semibold theme-text text-base">Bộ lọc</h3>
             <ScrollArea className="h-[calc(100vh-200px)]">
               <div className="pr-4">
@@ -137,7 +190,7 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
 
         {/* Mobile Filter Sidebar - Drawer Style */}
         {isMobile && (
-          <div className={`fixed left-0 top-0 h-full w-64 theme-card z-50 transform transition-transform duration-300 ${
+          <div className={`fixed left-0 top-0 h-full w-64 theme-card rounded-lg z-50 transform transition-transform duration-300 ${
             isFilterOpen ? 'translate-x-0' : '-translate-x-full'
           }`}>
             <div className="p-4 space-y-4">
@@ -155,8 +208,8 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
           </div>
         )}
 
-        {/* Main Content Area - Optimized padding */}
-        <div className="flex-1 lg:ml-0 px-6 py-2 space-y-3">
+        {/* Main Content Area with 3px spacing */}
+        <div className="flex-1 px-3 py-1 space-y-1" style={{ gap: '3px' }}>
           {/* Search & Actions Bar */}
           <SalesSearchAndActions
             searchTerm={searchTerm}
