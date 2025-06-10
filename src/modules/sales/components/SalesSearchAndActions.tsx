@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Search, Plus } from 'lucide-react';
+import { Search, Plus, Upload, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ColumnVisibilityFilter } from '../components/ColumnVisibilityFilter';
@@ -33,24 +33,12 @@ export function SalesSearchAndActions({
   isMobile,
   salesData
 }: SalesSearchAndActionsProps) {
-  // Format currency helper
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN', { 
-      style: 'currency', 
-      currency: 'VND' 
-    }).format(amount);
-  };
-
-  // Calculate summary values
-  const totalSales = salesData.reduce((sum, item) => sum + item.totalAmount, 0);
-  const totalDiscount = salesData.reduce((sum, item) => sum + item.discount, 0);
-  const totalPaid = salesData.reduce((sum, item) => sum + item.paidAmount, 0);
-
   return (
-    <div className="theme-card rounded-lg border p-4 mb-6">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-4 flex-1">
-          <div className="relative flex-1 max-w-md">
+    <div className="theme-card rounded-lg border theme-border-primary">
+      <div className="p-4">
+        <div className="flex flex-col lg:flex-row items-center space-y-3 lg:space-y-0 lg:space-x-4">
+          {/* Search Input */}
+          <div className="flex-1 relative max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 theme-text-muted h-4 w-4" />
             <Input
               placeholder="Tìm kiếm theo mã hóa đơn..."
@@ -60,58 +48,57 @@ export function SalesSearchAndActions({
             />
           </div>
           
-          {/* Column visibility filter */}
-          {isMobile ? (
-            <Drawer open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-              <DrawerTrigger asChild>
+          {/* Action Buttons */}
+          <div className="flex items-center space-x-2 w-full lg:w-auto">
+            <div className="flex items-center space-x-2 flex-1 lg:flex-none">
+              <Button variant="outline" size="sm" className="flex-1 lg:flex-none theme-border-primary hover:theme-bg-primary/10 hover:theme-text-primary">
+                <Upload className="w-4 h-4 mr-2 theme-text-primary" />
+                <span className="hidden sm:inline">Import file</span>
+                <span className="sm:hidden">Import</span>
+              </Button>
+              <Button variant="outline" size="sm" className="flex-1 lg:flex-none theme-border-primary hover:theme-bg-secondary/10 hover:theme-text-secondary">
+                <Download className="w-4 h-4 mr-2 theme-text-secondary" />
+                <span className="hidden sm:inline">Export file</span>
+                <span className="sm:hidden">Export</span>
+              </Button>
+              <Button size="sm" className="flex-1 lg:flex-none voucher-button-primary">
+                <Plus className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Hóa đơn</span>
+                <span className="sm:hidden">Thêm</span>
+              </Button>
+            </div>
+            
+            {/* Column Filter */}
+            <div className="flex items-center space-x-2">
+              {isMobile ? (
+                <Drawer open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                  <DrawerTrigger asChild>
+                    <ColumnVisibilityFilter 
+                      columns={columns} 
+                      onColumnToggle={handleColumnToggle} 
+                    />
+                  </DrawerTrigger>
+                  <DrawerContent className="h-[85vh]">
+                    <DrawerHeader>
+                      <DrawerTitle>Bộ lọc</DrawerTitle>
+                    </DrawerHeader>
+                    <div className="px-4 pb-4 overflow-auto">
+                      <SalesFilters 
+                        onClearFilters={clearAllFilters}
+                        onApplyFilters={applyFilters}
+                        isMobile={isMobile}
+                      />
+                    </div>
+                  </DrawerContent>
+                </Drawer>
+              ) : (
                 <ColumnVisibilityFilter 
                   columns={columns} 
                   onColumnToggle={handleColumnToggle} 
                 />
-              </DrawerTrigger>
-              <DrawerContent className="h-[85vh]">
-                <DrawerHeader>
-                  <DrawerTitle>Bộ lọc</DrawerTitle>
-                </DrawerHeader>
-                <div className="px-4 pb-4 overflow-auto">
-                  <SalesFilters 
-                    onClearFilters={clearAllFilters}
-                    onApplyFilters={applyFilters}
-                    isMobile={isMobile}
-                  />
-                </div>
-              </DrawerContent>
-            </Drawer>
-          ) : (
-            <ColumnVisibilityFilter 
-              columns={columns} 
-              onColumnToggle={handleColumnToggle} 
-            />
-          )}
-        </div>
-        <Button className="sales-button-primary">
-          <Plus className="h-4 w-4 mr-2" />
-          Hóa đơn
-        </Button>
-      </div>
-
-      {/* Summary Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 theme-bg-primary/5 rounded-lg">
-        <div className="text-center">
-          <div className="text-sm theme-text-muted">Tổng doanh thu</div>
-          <div className="font-semibold text-lg theme-text">{formatCurrency(totalSales)}</div>
-        </div>
-        <div className="text-center">
-          <div className="text-sm theme-text-muted">Tổng giảm giá</div>
-          <div className="font-semibold text-lg sales-amount-negative">{formatCurrency(totalDiscount)}</div>
-        </div>
-        <div className="text-center">
-          <div className="text-sm theme-text-muted">Khách thanh toán</div>
-          <div className="font-semibold text-lg sales-amount-positive">{formatCurrency(totalPaid)}</div>
-        </div>
-        <div className="text-center">
-          <div className="text-sm theme-text-muted">Số hóa đơn</div>
-          <div className="font-semibold text-lg theme-text">{salesData.length}</div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

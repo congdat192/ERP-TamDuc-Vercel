@@ -1,11 +1,9 @@
 
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ColumnConfig } from './ColumnVisibilityFilter';
 
 interface SalesTableProps {
   salesData: any[];
-  visibleColumns: ColumnConfig[];
+  visibleColumns: any[];
 }
 
 export function SalesTable({ salesData, visibleColumns }: SalesTableProps) {
@@ -18,14 +16,17 @@ export function SalesTable({ salesData, visibleColumns }: SalesTableProps) {
   };
 
   return (
-    <div className="theme-card rounded-lg border mb-6">
-      {/* Table container with proper horizontal scroll */}
-      <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-        <table className="w-full table-fixed" style={{ minWidth: `${visibleColumns.length * 150}px` }}>
+    <div className="theme-card rounded-lg border theme-border-primary">
+      {/* Table container with proper horizontal scroll constraint */}
+      <div 
+        className="overflow-x-auto"
+        style={{ maxWidth: 'calc(100vw - 310px)' }}
+      >
+        <table className="w-full" style={{ minWidth: `${visibleColumns.length * 150}px` }}>
           <thead className="sticky top-0 bg-white z-10 border-b theme-border-primary/20">
             <tr>
               {visibleColumns.map((column) => (
-                <th key={column.key} className="min-w-[150px] px-4 py-3 text-left font-medium theme-text-muted whitespace-nowrap">
+                <th key={column.key} className="min-w-[150px] px-4 py-3 text-left text-sm font-medium theme-text-muted whitespace-nowrap">
                   {column.label}
                 </th>
               ))}
@@ -35,7 +36,7 @@ export function SalesTable({ salesData, visibleColumns }: SalesTableProps) {
             {salesData.map((sale) => (
               <tr key={sale.id} className="hover:theme-bg-primary/5 border-b theme-border-primary/10">
                 {visibleColumns.map((column) => (
-                  <td key={column.key} className="min-w-[150px] px-4 py-3 whitespace-nowrap">
+                  <td key={column.key} className="min-w-[150px] px-4 py-3 text-sm whitespace-nowrap">
                     {column.key === 'invoiceCode' && (
                       <span className="theme-text font-medium">{sale.id}</span>
                     )}
