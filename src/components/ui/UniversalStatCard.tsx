@@ -10,38 +10,38 @@ interface UniversalStatCardProps {
   colorIndex: number; // 0: primary, 1: secondary, 2: info, 3: success
 }
 
-const getColorVariant = (index: number) => {
-  const variants = ['primary', 'secondary', 'info', 'success'];
-  return variants[index % variants.length];
-};
-
-const getIconBgClass = (variant: string) => {
-  switch (variant) {
-    case 'primary':
-      return 'bg-blue-500 hover:bg-blue-600';
-    case 'secondary':
-      return 'bg-purple-500 hover:bg-purple-600';
-    case 'info':
-      return 'bg-cyan-500 hover:bg-cyan-600';
-    case 'success':
-      return 'bg-green-500 hover:bg-green-600';
+const getCardStyles = (index: number) => {
+  switch (index % 4) {
+    case 0: // Primary color from preset
+      return {
+        iconBg: 'hsl(var(--voucher-primary-500))',
+        iconHover: 'hsl(var(--voucher-primary-600))',
+        changeText: 'hsl(var(--voucher-primary-600))'
+      };
+    case 1: // Secondary color from preset
+      return {
+        iconBg: 'hsl(var(--voucher-secondary-500))',
+        iconHover: 'hsl(var(--voucher-secondary-600))',
+        changeText: 'hsl(var(--voucher-secondary-600))'
+      };
+    case 2: // Info color (fixed semantic color)
+      return {
+        iconBg: 'hsl(var(--berry-info-500))',
+        iconHover: 'hsl(var(--berry-info-600))',
+        changeText: 'hsl(var(--berry-info-600))'
+      };
+    case 3: // Success color (fixed semantic color)
+      return {
+        iconBg: 'hsl(var(--berry-success-500))',
+        iconHover: 'hsl(var(--berry-success-600))',
+        changeText: 'hsl(var(--berry-success-600))'
+      };
     default:
-      return 'bg-blue-500 hover:bg-blue-600';
-  }
-};
-
-const getChangeTextClass = (variant: string) => {
-  switch (variant) {
-    case 'primary':
-      return 'text-blue-600 font-medium';
-    case 'secondary':
-      return 'text-purple-600 font-medium';
-    case 'info':
-      return 'text-cyan-600 font-medium';
-    case 'success':
-      return 'text-green-600 font-medium';
-    default:
-      return 'text-blue-600 font-medium';
+      return {
+        iconBg: 'hsl(var(--voucher-primary-500))',
+        iconHover: 'hsl(var(--voucher-primary-600))',
+        changeText: 'hsl(var(--voucher-primary-600))'
+      };
   }
 };
 
@@ -52,9 +52,7 @@ export function UniversalStatCard({
   icon: Icon, 
   colorIndex 
 }: UniversalStatCardProps) {
-  const variant = getColorVariant(colorIndex);
-  const iconBgClass = getIconBgClass(variant);
-  const changeTextClass = getChangeTextClass(variant);
+  const styles = getCardStyles(colorIndex);
   
   return (
     <Card className="theme-card hover:shadow-lg transition-all duration-200 border border-gray-200">
@@ -62,14 +60,28 @@ export function UniversalStatCard({
         <CardTitle className="text-sm font-medium text-gray-600">
           {title}
         </CardTitle>
-        <div className={`p-2 rounded-lg ${iconBgClass} transition-colors duration-200`}>
+        <div 
+          className="p-2 rounded-lg transition-colors duration-200 group cursor-pointer"
+          style={{ 
+            backgroundColor: styles.iconBg,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = styles.iconHover;
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = styles.iconBg;
+          }}
+        >
           <Icon className="h-4 w-4 text-white" />
         </div>
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold text-gray-900">{value}</div>
         <p className="text-xs text-gray-600">
-          <span className={changeTextClass}>
+          <span 
+            className="font-medium"
+            style={{ color: styles.changeText }}
+          >
             {change}
           </span> so với tháng trước
         </p>
