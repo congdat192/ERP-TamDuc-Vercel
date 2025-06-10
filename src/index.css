@@ -471,7 +471,7 @@
     font-weight: 600;
   }
 
-  /* Enhanced Theme Classes - FIXED */
+  /* Enhanced Theme Classes - FIXED AND EXPANDED FOR STAT CARDS */
   .theme-bg-primary {
     background-color: hsl(var(--voucher-primary-500));
     color: white;
@@ -482,12 +482,30 @@
     color: white;
   }
 
+  .theme-bg-info {
+    background-color: hsl(var(--berry-info-500));
+    color: white;
+  }
+
+  .theme-bg-success {
+    background-color: hsl(var(--berry-success-500));
+    color: white;
+  }
+
   .theme-text-primary {
     color: hsl(var(--voucher-primary-600));
   }
 
   .theme-text-secondary {
     color: hsl(var(--voucher-secondary-600));
+  }
+
+  .theme-text-info {
+    color: hsl(var(--berry-info-600));
+  }
+
+  .theme-text-success {
+    color: hsl(var(--berry-success-600));
   }
 
   .theme-border-primary {
