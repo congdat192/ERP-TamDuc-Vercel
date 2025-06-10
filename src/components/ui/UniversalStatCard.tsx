@@ -22,15 +22,15 @@ const getCardStyles = (index: number) => {
         backgroundColor: 'hsl(var(--voucher-secondary-500))',
         hoverColor: 'hsl(var(--voucher-secondary-600))',
       };
-    case 2: // Success color (fixed semantic color)
+    case 2: // Success color (fixed semantic color - darkest)
       return {
-        backgroundColor: 'hsl(var(--berry-success-500))', // #00E676
-        hoverColor: 'hsl(var(--berry-success-600))',
+        backgroundColor: '#00C853', // Green-A700 (darkest success)
+        hoverColor: '#00A547', // Slightly darker for hover
       };
-    case 3: // Orange color (fixed semantic color)
+    case 3: // Orange color (fixed semantic color - darkest)
       return {
-        backgroundColor: '#FFAB91', // Orange main from user's palette
-        hoverColor: '#FF8A65', // Slightly darker orange for hover
+        backgroundColor: '#D84315', // DeepOrange-800 (darkest orange)
+        hoverColor: '#BF360C', // Slightly darker for hover
       };
     default:
       return {
