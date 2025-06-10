@@ -17,7 +17,7 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
   const [searchTerm, setSearchTerm] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  // Column visibility state - All required columns
+  // Column visibility state - All 27 required columns
   const [columns, setColumns] = useState<ColumnConfig[]>([
     { key: 'invoiceCode', label: 'Mã hóa đơn', visible: true },
     { key: 'datetime', label: 'Thời gian', visible: true },
@@ -171,7 +171,7 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
       </div>
 
       {/* Main Content Layout with 3px spacing */}
-      <div className="flex w-full" style={{ gap: '3px' }}>
+      <div className="flex w-full gap-[3px]">
         {/* Desktop Filter Sidebar - Styled like Customer module */}
         {!isMobile && (
           <div className="w-64 max-w-64 ml-6 theme-card rounded-lg border theme-border-primary p-4 space-y-4">
@@ -209,7 +209,7 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
         )}
 
         {/* Main Content Area with 3px spacing */}
-        <div className="flex-1 px-3 py-1 space-y-1" style={{ gap: '3px' }}>
+        <div className="flex-1 pr-6 space-y-[3px]">
           {/* Search & Actions Bar */}
           <SalesSearchAndActions
             searchTerm={searchTerm}
