@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { ThemedSalesStats } from '../components/ThemedSalesStats';
 import { SalesFilters } from '../components/SalesFilters';
 import { SalesSearchAndActions } from '../components/SalesSearchAndActions';
 import { SalesTable } from '../components/SalesTable';
@@ -103,8 +104,22 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
 
   return (
     <div className="min-h-screen theme-background">
-      <div className="flex">
-        {/* Desktop Filter Sidebar */}
+      {/* Mobile overlay */}
+      {isFilterOpen && isMobile && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={() => setIsFilterOpen(false)}
+        />
+      )}
+
+      {/* Stats Section - Moved up, no title */}
+      <div className="w-full px-6 pt-4 pb-2">
+        <ThemedSalesStats />
+      </div>
+
+      {/* Main Content Layout - Optimized spacing */}
+      <div className="flex w-full">
+        {/* Desktop Filter Sidebar - Fixed Width 255px */}
         {!isMobile && (
           <div className="w-64 max-w-64 theme-card border-r theme-border-primary/20 p-4 space-y-4">
             <h3 className="font-semibold theme-text text-base">Bộ lọc</h3>
@@ -120,9 +135,29 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
           </div>
         )}
 
-        {/* Main Content */}
-        <div className="flex-1 p-6">
-          {/* Search and Actions */}
+        {/* Mobile Filter Sidebar - Drawer Style */}
+        {isMobile && (
+          <div className={`fixed left-0 top-0 h-full w-64 theme-card z-50 transform transition-transform duration-300 ${
+            isFilterOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}>
+            <div className="p-4 space-y-4">
+              <h3 className="font-semibold theme-text text-base">Bộ lọc</h3>
+              <ScrollArea className="h-[calc(100vh-200px)]">
+                <div className="pr-4">
+                  <SalesFilters
+                    onClearFilters={clearAllFilters}
+                    onApplyFilters={applyFilters}
+                    isMobile={isMobile}
+                  />
+                </div>
+              </ScrollArea>
+            </div>
+          </div>
+        )}
+
+        {/* Main Content Area - Optimized padding */}
+        <div className="flex-1 lg:ml-0 px-6 py-2 space-y-3">
+          {/* Search & Actions Bar */}
           <SalesSearchAndActions
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
