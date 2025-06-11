@@ -26,14 +26,14 @@ export function AttributeExpandableFilter({
     <div key={attribute.key} className="space-y-2">
       <label className="text-sm font-medium theme-text">{attribute.label}</label>
       <Select 
-        value={selectedAttributes[attribute.key] || ''} 
+        value={selectedAttributes[attribute.key] || 'all'} 
         onValueChange={(value) => onAttributeChange(attribute.key, value)}
       >
         <SelectTrigger className="voucher-input h-10 rounded-md">
           <SelectValue placeholder={`Chọn ${attribute.label.toLowerCase()}`} />
         </SelectTrigger>
         <SelectContent className="theme-card border theme-border-primary rounded-lg z-50">
-          <SelectItem value="">Tất cả</SelectItem>
+          <SelectItem value="all">Tất cả</SelectItem>
           {attribute.options.map(option => (
             <SelectItem key={option.value} value={option.value}>
               {option.label}

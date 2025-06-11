@@ -32,9 +32,9 @@ export function InventoryFilters({ onClearFilters, onApplyFilters, isMobile }: I
   const [createdTime, setCreatedTime] = useState('all');
   const [createdCustomRange, setCreatedCustomRange] = useState<[Date?, Date?]>([undefined, undefined]);
   const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({});
-  const [selectedBrand, setSelectedBrand] = useState('');
-  const [selectedLocation, setSelectedLocation] = useState('');
-  const [selectedProductType, setSelectedProductType] = useState('');
+  const [selectedBrand, setSelectedBrand] = useState('all');
+  const [selectedLocation, setSelectedLocation] = useState('all');
+  const [selectedProductType, setSelectedProductType] = useState('all');
   const [pointsEarning, setPointsEarning] = useState<'all' | 'yes' | 'no'>('all');
   const [directSales, setDirectSales] = useState<'all' | 'yes' | 'no'>('all');
   const [channelLinked, setChannelLinked] = useState<'all' | 'yes' | 'no'>('all');
@@ -56,9 +56,9 @@ export function InventoryFilters({ onClearFilters, onApplyFilters, isMobile }: I
     setCreatedTime('all');
     setCreatedCustomRange([undefined, undefined]);
     setSelectedAttributes({});
-    setSelectedBrand('');
-    setSelectedLocation('');
-    setSelectedProductType('');
+    setSelectedBrand('all');
+    setSelectedLocation('all');
+    setSelectedProductType('all');
     setPointsEarning('all');
     setDirectSales('all');
     setChannelLinked('all');
@@ -120,7 +120,7 @@ export function InventoryFilters({ onClearFilters, onApplyFilters, isMobile }: I
                 <SelectValue placeholder="Chọn thương hiệu" />
               </SelectTrigger>
               <SelectContent className="theme-card border theme-border-primary rounded-lg z-50">
-                <SelectItem value="">Tất cả</SelectItem>
+                <SelectItem value="all">Tất cả</SelectItem>
                 {brandOptions.map(brand => (
                   <SelectItem key={brand} value={brand.toLowerCase()}>
                     {brand}
@@ -138,7 +138,7 @@ export function InventoryFilters({ onClearFilters, onApplyFilters, isMobile }: I
                 <SelectValue placeholder="Chọn vị trí" />
               </SelectTrigger>
               <SelectContent className="theme-card border theme-border-primary rounded-lg z-50">
-                <SelectItem value="">Tất cả</SelectItem>
+                <SelectItem value="all">Tất cả</SelectItem>
                 {locationOptions.map(location => (
                   <SelectItem key={location} value={location.toLowerCase()}>
                     {location}
@@ -156,7 +156,7 @@ export function InventoryFilters({ onClearFilters, onApplyFilters, isMobile }: I
                 <SelectValue placeholder="Chọn loại hàng" />
               </SelectTrigger>
               <SelectContent className="theme-card border theme-border-primary rounded-lg z-50">
-                <SelectItem value="">Tất cả</SelectItem>
+                <SelectItem value="all">Tất cả</SelectItem>
                 {productTypeOptions.map(type => (
                   <SelectItem key={type.value} value={type.value}>
                     {type.label}
