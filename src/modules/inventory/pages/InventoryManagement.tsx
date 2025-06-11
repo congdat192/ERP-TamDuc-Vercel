@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ThemedInventoryStats } from '../components/ThemedInventoryStats';
@@ -239,7 +240,7 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
   };
 
   return (
-    <div className="min-h-screen theme-background">
+    <div className="flex flex-col h-screen overflow-hidden theme-background">
       {/* Mobile overlay */}
       {isFilterOpen && isMobile && (
         <div 
@@ -248,18 +249,18 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
         />
       )}
 
-      {/* Stats Section with proper spacing */}
-      <div className="w-full px-6 pt-4 pb-1">
+      {/* Stats Section - Fixed height */}
+      <div className="flex-shrink-0 px-6 pt-4 pb-1">
         <ThemedInventoryStats />
       </div>
 
-      {/* Main Content Layout */}
-      <div className="flex w-full px-6 space-x-3">
-        {/* Desktop Filter Sidebar - Fixed width 255px like Customer module */}
+      {/* Main Content Layout - Takes remaining height */}
+      <div className="flex flex-1 min-h-0 px-6 pb-6 space-x-3">
+        {/* Desktop Filter Sidebar - Fixed width */}
         {!isMobile && (
-          <div className="w-64 max-w-64 shrink-0 theme-card rounded-lg border theme-border-primary p-4 space-y-4">
+          <div className="w-64 flex-shrink-0 theme-card rounded-lg border theme-border-primary p-4 space-y-4">
             <h3 className="font-semibold theme-text text-base">Bộ lọc</h3>
-            <ScrollArea className="h-[calc(100vh-200px)]">
+            <ScrollArea className="flex-1">
               <div className="pr-4">
                 <InventoryFilters
                   onClearFilters={clearAllFilters}
@@ -276,9 +277,9 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
           <div className={`fixed left-0 top-0 h-full w-64 theme-card rounded-lg z-50 transform transition-transform duration-300 ${
             isFilterOpen ? 'translate-x-0' : '-translate-x-full'
           }`}>
-            <div className="p-4 space-y-4">
+            <div className="p-4 space-y-4 h-full flex flex-col">
               <h3 className="font-semibold theme-text text-base">Bộ lọc</h3>
-              <ScrollArea className="h-[calc(100vh-200px)]">
+              <ScrollArea className="flex-1">
                 <div className="pr-4">
                   <InventoryFilters
                     onClearFilters={clearAllFilters}
@@ -291,30 +292,34 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
           </div>
         )}
 
-        {/* Main Content Area - Takes remaining space */}
-        <div className="flex-1 min-w-0 space-y-3">
-          {/* Search & Actions Bar */}
-          <InventorySearchActions
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            columns={columns}
-            handleColumnToggle={handleColumnToggle}
-            isFilterOpen={isFilterOpen}
-            setIsFilterOpen={setIsFilterOpen}
-            clearAllFilters={clearAllFilters}
-            applyFilters={applyFilters}
-            isMobile={isMobile}
-            inventoryData={inventoryData}
-          />
+        {/* Main Content Area - Flexible width, takes remaining space */}
+        <div className="flex-1 min-w-0 flex flex-col space-y-3">
+          {/* Search & Actions Bar - Fixed height */}
+          <div className="flex-shrink-0">
+            <InventorySearchActions
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              columns={columns}
+              handleColumnToggle={handleColumnToggle}
+              isFilterOpen={isFilterOpen}
+              setIsFilterOpen={setIsFilterOpen}
+              clearAllFilters={clearAllFilters}
+              applyFilters={applyFilters}
+              isMobile={isMobile}
+              inventoryData={inventoryData}
+            />
+          </div>
 
-          {/* Inventory Table */}
-          <InventoryTable
-            inventoryData={inventoryData}
-            visibleColumns={visibleColumns}
-            selectedItems={selectedItems}
-            onSelectItem={handleSelectItem}
-            onSelectAll={handleSelectAll}
-          />
+          {/* Inventory Table - Takes remaining height and width */}
+          <div className="flex-1 min-h-0">
+            <InventoryTable
+              inventoryData={inventoryData}
+              visibleColumns={visibleColumns}
+              selectedItems={selectedItems}
+              onSelectItem={handleSelectItem}
+              onSelectAll={handleSelectAll}
+            />
+          </div>
         </div>
       </div>
     </div>

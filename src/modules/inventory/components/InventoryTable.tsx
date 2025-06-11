@@ -34,9 +34,9 @@ export function InventoryTable({
   const allSelected = inventoryData.length > 0 && selectedItems.length === inventoryData.length;
 
   return (
-    <div className="theme-card rounded-lg border theme-border-primary">
-      {/* Table container with controlled horizontal scroll */}
-      <div className="overflow-x-auto w-full">
+    <div className="h-full flex flex-col theme-card rounded-lg border theme-border-primary overflow-hidden">
+      {/* Table container with horizontal scroll only */}
+      <div className="flex-1 overflow-auto">
         <table className="w-full" style={{ minWidth: `${(visibleColumns.length * 150) + 50}px` }}>
           <thead className="sticky top-0 bg-white z-10 border-b theme-border-primary/20">
             <tr>
