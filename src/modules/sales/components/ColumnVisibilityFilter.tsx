@@ -33,7 +33,7 @@ export function ColumnVisibilityFilter({ columns, onColumnToggle }: ColumnVisibi
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[520px] p-4 theme-card border theme-border-primary shadow-lg z-50" align="end" sideOffset={8}>
-        <ScrollArea className="h-auto max-h-[400px]">
+        <ScrollArea className="h-[500px]">
           <div className="grid grid-cols-2 gap-4 pr-3">
             {/* Cột trái */}
             <div className="space-y-2">
@@ -47,7 +47,7 @@ export function ColumnVisibilityFilter({ columns, onColumnToggle }: ColumnVisibi
                   />
                   <label
                     htmlFor={column.key}
-                    className="text-sm theme-text cursor-pointer select-none leading-4 flex-1"
+                    className="text-sm theme-text cursor-pointer select-none leading-4 flex-1 break-words"
                   >
                     {column.label}
                   </label>
@@ -67,7 +67,7 @@ export function ColumnVisibilityFilter({ columns, onColumnToggle }: ColumnVisibi
                   />
                   <label
                     htmlFor={column.key}
-                    className="text-sm theme-text cursor-pointer select-none leading-4 flex-1"
+                    className="text-sm theme-text cursor-pointer select-none leading-4 flex-1 break-words"
                   >
                     {column.label}
                   </label>
