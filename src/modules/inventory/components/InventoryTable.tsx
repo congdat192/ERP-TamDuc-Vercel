@@ -48,7 +48,6 @@ export function InventoryTable({
               <th className="sticky left-0 bg-white z-20 w-12 px-4 py-3 border-r theme-border-primary/10">
                 <Checkbox
                   checked={allSelected}
-                  indeterminate={someSelected}
                   onCheckedChange={onSelectAll}
                   className="theme-border-primary"
                 />
