@@ -61,8 +61,9 @@ export function TimePresetSelector({
     </Button>
   );
 
-  // Get the first category based on type
-  const firstCategoryData = type === 'outOfStock' ? presetData.daily : presetData.recent;
+  // Get the first category based on type with proper type checking
+  const firstCategoryData = type === 'outOfStock' && 'daily' in presetData ? presetData.daily : 
+                            type === 'created' && 'recent' in presetData ? presetData.recent : [];
   const firstCategoryLabel = type === 'outOfStock' ? 'Theo ngày' : 'Gần đây';
 
   return (
