@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ThemedInventoryStats } from '../components/ThemedInventoryStats';
@@ -249,16 +248,16 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
         />
       )}
 
-      {/* Stats Section with 5px spacing */}
-      <div className="w-full px-6 pt-4" style={{ paddingBottom: '5px' }}>
+      {/* Stats Section with proper spacing */}
+      <div className="w-full px-6 pt-4 pb-1">
         <ThemedInventoryStats />
       </div>
 
-      {/* Main Content Layout with 5px spacing */}
-      <div className="flex w-full" style={{ gap: '5px' }}>
-        {/* Desktop Filter Sidebar - Styled like Customer module with 5px margin from ERP sidebar */}
+      {/* Main Content Layout */}
+      <div className="flex w-full px-6 space-x-3">
+        {/* Desktop Filter Sidebar - Fixed width 255px like Customer module */}
         {!isMobile && (
-          <div className="w-64 max-w-64 theme-card rounded-lg border theme-border-primary p-4 space-y-4" style={{ marginLeft: '24px' }}>
+          <div className="w-64 max-w-64 shrink-0 theme-card rounded-lg border theme-border-primary p-4 space-y-4">
             <h3 className="font-semibold theme-text text-base">Bộ lọc</h3>
             <ScrollArea className="h-[calc(100vh-200px)]">
               <div className="pr-4">
@@ -292,8 +291,8 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
           </div>
         )}
 
-        {/* Main Content Area with 5px spacing and proper margins */}
-        <div className="flex-1" style={{ paddingRight: '24px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+        {/* Main Content Area - Takes remaining space */}
+        <div className="flex-1 min-w-0 space-y-3">
           {/* Search & Actions Bar */}
           <InventorySearchActions
             searchTerm={searchTerm}

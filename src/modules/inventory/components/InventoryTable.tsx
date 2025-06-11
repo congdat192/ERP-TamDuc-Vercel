@@ -32,16 +32,12 @@ export function InventoryTable({
   };
 
   const allSelected = inventoryData.length > 0 && selectedItems.length === inventoryData.length;
-  const someSelected = selectedItems.length > 0 && selectedItems.length < inventoryData.length;
 
   return (
     <div className="theme-card rounded-lg border theme-border-primary">
-      {/* Table container with proper horizontal scroll constraint */}
-      <div 
-        className="overflow-x-auto"
-        style={{ maxWidth: 'calc(100vw - 310px)' }}
-      >
-        <table className="w-full" style={{ minWidth: `${visibleColumns.length * 150 + 50}px` }}>
+      {/* Table container with controlled horizontal scroll */}
+      <div className="overflow-x-auto w-full">
+        <table className="w-full" style={{ minWidth: `${(visibleColumns.length * 150) + 50}px` }}>
           <thead className="sticky top-0 bg-white z-10 border-b theme-border-primary/20">
             <tr>
               {/* Sticky checkbox column */}
