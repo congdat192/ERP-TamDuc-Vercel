@@ -16,6 +16,7 @@ import { ERPHome } from "./pages/ERPHome";
 import { CustomerPage } from "./pages/CustomerPage";
 import { SalesPage } from "./pages/SalesPage";
 import { VoucherPage } from "./pages/VoucherPage";
+import { InventoryPage } from "./pages/InventoryPage";
 import { PlatformAdmin } from "./modules/platform-admin";
 import { ERPLayout } from "@/components/layout/ERPLayout";
 import { useAuth } from "@/components/auth/AuthContext";
@@ -132,10 +133,7 @@ const App = () => (
                   path="/ERP/Products" 
                   element={
                     <ProtectedERPRoute module="inventory">
-                      <div className="p-6">
-                        <h1 className="text-2xl font-bold">Quản Lý Sản Phẩm</h1>
-                        <p>Module đang được phát triển...</p>
-                      </div>
+                      <InventoryPage />
                     </ProtectedERPRoute>
                   } 
                 />
