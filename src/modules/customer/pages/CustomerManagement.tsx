@@ -7,6 +7,7 @@ import { CustomerFilters } from '../components/CustomerFilters';
 import { CustomerTable } from '../components/CustomerTable';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ColumnConfig } from '../components/ColumnVisibilityFilter';
+import { mockCustomers } from '@/data/mockData';
 
 interface CustomerManagementProps {
   currentUser?: any;
@@ -16,35 +17,12 @@ interface CustomerManagementProps {
 export function CustomerManagement({ currentUser, onBackToModules }: CustomerManagementProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  
-  // Mock data for the table
-  const [customers] = useState([
-    {
-      id: 'KH001',
-      name: 'Nguyễn Văn A',
-      phone: '0901234567',
-      group: '1.Giới thiệu',
-      birthday: '01/01/1990',
-      creator: 'Admin',
-      createdDate: '01/01/2024',
-      note: 'Khách hàng VIP',
-      email: 'nguyenvana@email.com',
-      facebook: 'facebook.com/nguyenvana',
-      company: 'Công ty ABC',
-      taxCode: '123456789',
-      address: '123 Đường ABC, Quận 1, TP.HCM',
-      deliveryArea: 'Quận 1',
-      points: 1000,
-      totalSpent: 5000000,
-      totalDebt: 0,
-      status: 'Hoạt động'
-    },
-    // Add more mock data as needed
-  ]);
-
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(15);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+
+  // Use mock data
+  const customers = mockCustomers;
 
   // Đầy đủ 27 cột khách hàng
   const [columns, setColumns] = useState<ColumnConfig[]>([
@@ -100,7 +78,8 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedCustomers(customers.map(customer => customer.id));
+      const currentPageData = customers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+      setSelectedCustomers(currentPageData.map(customer => customer.id));
     } else {
       setSelectedCustomers([]);
     }

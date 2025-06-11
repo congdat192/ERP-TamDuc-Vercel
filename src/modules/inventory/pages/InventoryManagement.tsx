@@ -7,6 +7,7 @@ import { InventorySearchActions } from '../components/InventorySearchActions';
 import { InventoryTable } from '../components/InventoryTable';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ColumnConfig } from '../components/ColumnVisibilityFilter';
+import { mockInventory } from '@/data/mockData';
 
 interface InventoryManagementProps {
   currentUser: any;
@@ -17,6 +18,8 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
   const [searchTerm, setSearchTerm] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
 
   // Column visibility state - All 27 required columns
   const [columns, setColumns] = useState<ColumnConfig[]>([
@@ -54,159 +57,8 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
   // Get visible columns
   const visibleColumns = columns.filter(col => col.visible);
 
-  // Mock inventory data
-  const inventoryData = [
-    {
-      id: 'SP001',
-      productCode: 'IP14PM256',
-      barcode: '8935244123456',
-      name: 'iPhone 14 Pro Max 256GB',
-      category: 'Điện thoại',
-      productType: 'Hàng mới',
-      channelLinked: true,
-      price: 32900000,
-      brand: 'Apple',
-      stock: 25,
-      location: 'Kho A1',
-      reservedCustomers: 3,
-      createdDate: '15/05/2024 09:30',
-      expectedOutOfStock: '20/07/2024',
-      minStock: 10,
-      status: 'Đang bán',
-      pointsEarning: true,
-      directSales: true,
-      costPrice: 28500000,
-      importPrice: 29000000,
-      unit: 'Chiếc',
-      weight: '240g',
-      dimensions: '160.7 x 77.6 x 7.85 mm',
-      description: 'iPhone 14 Pro Max màu Deep Purple',
-      notes: 'Hàng chính hãng VN/A',
-      creator: 'Nguyễn Văn A',
-      lastUpdated: '20/06/2024 14:22',
-      image: 'https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=80&h=80&fit=crop&crop=center'
-    },
-    {
-      id: 'SP002',
-      productCode: 'SS23U256',
-      barcode: '8935244987654',
-      name: 'Samsung Galaxy S23 Ultra 256GB',
-      category: 'Điện thoại',
-      productType: 'Hàng mới',
-      channelLinked: true,
-      price: 28900000,
-      brand: 'Samsung',
-      stock: 18,
-      location: 'Kho A2',
-      reservedCustomers: 2,
-      createdDate: '12/05/2024 11:15',
-      expectedOutOfStock: '25/07/2024',
-      minStock: 8,
-      status: 'Đang bán',
-      pointsEarning: true,
-      directSales: true,
-      costPrice: 25200000,
-      importPrice: 25800000,
-      unit: 'Chiếc',
-      weight: '234g',
-      dimensions: '163.4 x 78.1 x 8.9 mm',
-      description: 'Galaxy S23 Ultra màu Phantom Black',
-      notes: 'Có S Pen đi kèm',
-      creator: 'Trần Thị B',
-      lastUpdated: '19/06/2024 16:45',
-      image: 'https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=80&h=80&fit=crop&crop=center'
-    },
-    {
-      id: 'SP003',
-      productCode: 'XM13256',
-      barcode: '8935244555666',
-      name: 'Xiaomi 13 256GB',
-      category: 'Điện thoại',
-      productType: 'Hàng mới',
-      channelLinked: false,
-      price: 16900000,
-      brand: 'Xiaomi',
-      stock: 5,
-      location: 'Kho B1',
-      reservedCustomers: 1,
-      createdDate: '08/05/2024 14:20',
-      expectedOutOfStock: '15/07/2024',
-      minStock: 15,
-      status: 'Đang bán',
-      pointsEarning: true,
-      directSales: false,
-      costPrice: 14500000,
-      importPrice: 15200000,
-      unit: 'Chiếc',
-      weight: '185g',
-      dimensions: '152.8 x 71.5 x 8.1 mm',
-      description: 'Xiaomi 13 màu Trắng',
-      notes: 'Sắp hết hàng',
-      creator: 'Lê Văn C',
-      lastUpdated: '18/06/2024 10:30',
-      image: 'https://images.unsplash.com/photo-1535268647677-300dbf3d78d1?w=80&h=80&fit=crop&crop=center'
-    },
-    {
-      id: 'SP004',
-      productCode: 'MBA15M2',
-      barcode: '8935244777888',
-      name: 'MacBook Air 15" M2 256GB',
-      category: 'Laptop',
-      productType: 'Hàng mới',
-      channelLinked: true,
-      price: 32900000,
-      brand: 'Apple',
-      stock: 12,
-      location: 'Kho C1',
-      reservedCustomers: 0,
-      createdDate: '10/05/2024 08:45',
-      expectedOutOfStock: '30/08/2024',
-      minStock: 5,
-      status: 'Đang bán',
-      pointsEarning: true,
-      directSales: true,
-      costPrice: 28900000,
-      importPrice: 29500000,
-      unit: 'Chiếc',
-      weight: '1.51kg',
-      dimensions: '340.4 x 237.6 x 11.5 mm',
-      description: 'MacBook Air 15 inch với chip M2',
-      notes: 'Bàn phím backlit',
-      creator: 'Phạm Thị D',
-      lastUpdated: '21/06/2024 09:15',
-      image: 'https://images.unsplash.com/photo-1493962853295-0fd70327578a?w=80&h=80&fit=crop&crop=center'
-    },
-    {
-      id: 'SP005',
-      productCode: 'AIRPODS3',
-      barcode: '8935244999000',
-      name: 'AirPods 3rd Generation',
-      category: 'Phụ kiện',
-      productType: 'Hàng mới',
-      channelLinked: true,
-      price: 4790000,
-      brand: 'Apple',
-      stock: 45,
-      location: 'Showroom 1',
-      reservedCustomers: 5,
-      createdDate: '05/05/2024 16:30',
-      expectedOutOfStock: '15/09/2024',
-      minStock: 20,
-      status: 'Đang bán',
-      pointsEarning: true,
-      directSales: true,
-      costPrice: 4200000,
-      importPrice: 4350000,
-      unit: 'Bộ',
-      weight: '4.28g',
-      dimensions: '30.79 x 18.26 x 19.21 mm',
-      description: 'AirPods thế hệ 3 với Spatial Audio',
-      notes: 'Kháng nước IPX4',
-      creator: 'Võ Văn E',
-      lastUpdated: '22/06/2024 11:20',
-      image: 'https://images.unsplash.com/photo-1466721591366-2d5fba72006d?w=80&h=80&fit=crop&crop=center'
-    }
-  ];
+  // Use mock data
+  const inventoryData = mockInventory;
 
   const handleColumnToggle = (columnKey: string) => {
     setColumns(prev => prev.map(col => 
@@ -224,7 +76,8 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedItems(inventoryData.map(item => item.id));
+      const currentPageData = inventoryData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+      setSelectedItems(currentPageData.map(item => item.id));
     } else {
       setSelectedItems([]);
     }
@@ -238,6 +91,9 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
   const applyFilters = () => {
     setIsFilterOpen(false);
   };
+
+  const totalItems = inventoryData.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
 
   return (
     <div className="flex flex-col h-screen overflow-hidden theme-background">
@@ -320,6 +176,12 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
               selectedItems={selectedItems}
               onSelectItem={handleSelectItem}
               onSelectAll={handleSelectAll}
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
+              itemsPerPage={itemsPerPage}
+              setItemsPerPage={setItemsPerPage}
+              totalItems={totalItems}
+              totalPages={totalPages}
             />
           </div>
         </div>

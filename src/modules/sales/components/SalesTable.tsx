@@ -1,12 +1,36 @@
 
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 
 interface SalesTableProps {
   salesData: any[];
   visibleColumns: any[];
+  selectedSales?: string[];
+  onSelectSale?: (saleId: string) => void;
+  onSelectAll?: (checked: boolean) => void;
+  currentPage: number;
+  setCurrentPage: (page: number) => void;
+  itemsPerPage: number;
+  setItemsPerPage: (items: number) => void;
+  totalSales: number;
+  totalPages: number;
 }
 
-export function SalesTable({ salesData, visibleColumns }: SalesTableProps) {
+export function SalesTable({ 
+  salesData, 
+  visibleColumns,
+  selectedSales = [],
+  onSelectSale,
+  onSelectAll,
+  currentPage,
+  setCurrentPage,
+  itemsPerPage,
+  setItemsPerPage,
+  totalSales,
+  totalPages
+}: SalesTableProps) {
   // Format currency helper
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('vi-VN', { 
@@ -21,16 +45,28 @@ export function SalesTable({ salesData, visibleColumns }: SalesTableProps) {
     return dateStr;
   };
 
+  // Calculate pagination display
+  const startIndex = (currentPage - 1) * itemsPerPage + 1;
+  const endIndex = Math.min(currentPage * itemsPerPage, totalSales);
+  const paginatedData = salesData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const allSelected = paginatedData.length > 0 && selectedSales.length === paginatedData.length;
+
   return (
-    <div className="theme-card rounded-lg border theme-border-primary">
-      {/* Table container with proper horizontal scroll constraint */}
-      <div 
-        className="overflow-x-auto"
-        style={{ maxWidth: 'calc(100vw - 310px)' }}
-      >
-        <table className="w-full" style={{ minWidth: `${visibleColumns.length * 150}px` }}>
+    <div className="h-full flex flex-col theme-card rounded-lg border theme-border-primary overflow-hidden">
+      {/* Table container with horizontal scroll only */}
+      <div className="flex-1 overflow-auto">
+        <table className="w-full" style={{ minWidth: `${(visibleColumns.length * 150) + 50}px` }}>
           <thead className="sticky top-0 bg-white z-10 border-b theme-border-primary/20">
             <tr>
+              {/* Sticky checkbox column */}
+              <th className="sticky left-0 bg-white z-20 w-12 px-4 py-3 border-r theme-border-primary/10">
+                <Checkbox
+                  checked={allSelected}
+                  onCheckedChange={onSelectAll}
+                  className="theme-border-primary"
+                />
+              </th>
               {visibleColumns.map((column) => (
                 <th key={column.key} className="min-w-[150px] px-4 py-3 text-left text-sm font-medium theme-text-muted whitespace-nowrap">
                   {column.label}
@@ -39,8 +75,16 @@ export function SalesTable({ salesData, visibleColumns }: SalesTableProps) {
             </tr>
           </thead>
           <tbody>
-            {salesData.map((sale) => (
+            {paginatedData.map((sale) => (
               <tr key={sale.id} className="hover:theme-bg-primary/5 border-b theme-border-primary/10">
+                {/* Sticky checkbox */}
+                <td className="sticky left-0 bg-white z-10 w-12 px-4 py-3 border-r theme-border-primary/10">
+                  <Checkbox
+                    checked={selectedSales.includes(sale.id)}
+                    onCheckedChange={() => onSelectSale?.(sale.id)}
+                    className="theme-border-primary"
+                  />
+                </td>
                 {visibleColumns.map((column) => (
                   <td key={column.key} className="min-w-[150px] px-4 py-3 text-sm whitespace-nowrap">
                     {/* Invoice Code */}
@@ -178,6 +222,70 @@ export function SalesTable({ salesData, visibleColumns }: SalesTableProps) {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination - Fixed Outside Scroll Container */}
+      <div className="flex items-center justify-between px-4 py-3 border-t theme-border-primary/20">
+        <div className="flex items-center space-x-3">
+          <span className="text-sm theme-text-muted">Hiển thị</span>
+          <select
+            value={itemsPerPage}
+            onChange={(e) => setItemsPerPage(Number(e.target.value))}
+            className="px-2 py-1 text-sm border theme-border-primary rounded theme-card theme-text"
+          >
+            <option value={5}>5</option>
+            <option value={15}>15</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+          </select>
+          <span className="text-sm theme-text-muted">
+            {startIndex} – {endIndex} trong {totalSales.toLocaleString('vi-VN')} giao dịch
+          </span>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+              className="h-8 w-8 p-0 theme-border-primary hover:theme-bg-primary/10 hover:theme-text-primary disabled:opacity-50"
+            >
+              <ChevronsLeft className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="h-8 w-8 p-0 theme-border-primary hover:theme-bg-primary/10 hover:theme-text-primary disabled:opacity-50"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <span className="px-3 py-1 text-sm theme-text min-w-[80px] text-center">
+              Trang {currentPage} / {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="h-8 w-8 p-0 theme-border-primary hover:theme-bg-primary/10 hover:theme-text-primary disabled:opacity-50"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages}
+              className="h-8 w-8 p-0 theme-border-primary hover:theme-bg-primary/10 hover:theme-text-primary disabled:opacity-50"
+            >
+              <ChevronsRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

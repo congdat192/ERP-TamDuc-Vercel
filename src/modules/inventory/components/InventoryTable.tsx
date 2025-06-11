@@ -1,6 +1,7 @@
-
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 
 interface InventoryTableProps {
   inventoryData: any[];
@@ -8,6 +9,12 @@ interface InventoryTableProps {
   selectedItems: string[];
   onSelectItem: (itemId: string) => void;
   onSelectAll: (checked: boolean) => void;
+  currentPage: number;
+  setCurrentPage: (page: number) => void;
+  itemsPerPage: number;
+  setItemsPerPage: (items: number) => void;
+  totalItems: number;
+  totalPages: number;
 }
 
 export function InventoryTable({ 
@@ -15,7 +22,13 @@ export function InventoryTable({
   visibleColumns, 
   selectedItems, 
   onSelectItem, 
-  onSelectAll 
+  onSelectAll,
+  currentPage,
+  setCurrentPage,
+  itemsPerPage,
+  setItemsPerPage,
+  totalItems,
+  totalPages
 }: InventoryTableProps) {
   // Format currency helper
   const formatCurrency = (amount: number) => {
@@ -31,7 +44,12 @@ export function InventoryTable({
     return dateStr;
   };
 
-  const allSelected = inventoryData.length > 0 && selectedItems.length === inventoryData.length;
+  // Calculate pagination display
+  const startIndex = (currentPage - 1) * itemsPerPage + 1;
+  const endIndex = Math.min(currentPage * itemsPerPage, totalItems);
+  const paginatedData = inventoryData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const allSelected = paginatedData.length > 0 && selectedItems.length === paginatedData.length;
 
   return (
     <div className="h-full flex flex-col theme-card rounded-lg border theme-border-primary overflow-hidden">
@@ -56,7 +74,7 @@ export function InventoryTable({
             </tr>
           </thead>
           <tbody>
-            {inventoryData.map((item) => (
+            {paginatedData.map((item) => (
               <tr key={item.id} className="hover:theme-bg-primary/5 border-b theme-border-primary/10">
                 {/* Sticky checkbox */}
                 <td className="sticky left-0 bg-white z-10 w-12 px-4 py-3 border-r theme-border-primary/10">
@@ -221,6 +239,70 @@ export function InventoryTable({
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination - Fixed Outside Scroll Container */}
+      <div className="flex items-center justify-between px-4 py-3 border-t theme-border-primary/20">
+        <div className="flex items-center space-x-3">
+          <span className="text-sm theme-text-muted">Hiển thị</span>
+          <select
+            value={itemsPerPage}
+            onChange={(e) => setItemsPerPage(Number(e.target.value))}
+            className="px-2 py-1 text-sm border theme-border-primary rounded theme-card theme-text"
+          >
+            <option value={5}>5</option>
+            <option value={15}>15</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+          </select>
+          <span className="text-sm theme-text-muted">
+            {startIndex} – {endIndex} trong {totalItems.toLocaleString('vi-VN')} hàng hóa
+          </span>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+              className="h-8 w-8 p-0 theme-border-primary hover:theme-bg-primary/10 hover:theme-text-primary disabled:opacity-50"
+            >
+              <ChevronsLeft className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="h-8 w-8 p-0 theme-border-primary hover:theme-bg-primary/10 hover:theme-text-primary disabled:opacity-50"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <span className="px-3 py-1 text-sm theme-text min-w-[80px] text-center">
+              Trang {currentPage} / {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="h-8 w-8 p-0 theme-border-primary hover:theme-bg-primary/10 hover:theme-text-primary disabled:opacity-50"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages}
+              className="h-8 w-8 p-0 theme-border-primary hover:theme-bg-primary/10 hover:theme-text-primary disabled:opacity-50"
+            >
+              <ChevronsRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

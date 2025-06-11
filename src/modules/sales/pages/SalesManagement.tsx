@@ -7,6 +7,7 @@ import { SalesSearchAndActions } from '../components/SalesSearchAndActions';
 import { SalesTable } from '../components/SalesTable';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ColumnConfig } from '../components/ColumnVisibilityFilter';
+import { mockSales } from '@/data/mockData';
 
 interface SalesManagementProps {
   currentUser: any;
@@ -16,6 +17,9 @@ interface SalesManagementProps {
 export function SalesManagement({ currentUser, onBackToModules }: SalesManagementProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [selectedSales, setSelectedSales] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
 
   // Column visibility state - All 27 required columns exactly as requested
   const [columns, setColumns] = useState<ColumnConfig[]>([
@@ -53,98 +57,30 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
   // Get visible columns
   const visibleColumns = columns.filter(col => col.visible);
 
-  // Mock data for sales with additional fields
-  const salesData = [
-    {
-      id: 'HD001',
-      date: '10/06/2024 14:30',
-      createdTime: '10/06/2024 14:25',
-      lastUpdated: '10/06/2024 14:35',
-      orderCode: 'DH001',
-      returnCode: '',
-      customer: 'Nguyễn Văn A',
-      email: 'nguyen.van.a@email.com',
-      phone: '0901234567',
-      address: '123 Đường ABC, Quận 1',
-      area: 'TP.HCM',
-      ward: 'Phường Bến Nghé',
-      birthdate: '15/05/1990',
-      branch: 'Chi nhánh Quận 1',
-      seller: 'Trần Thị B',
-      creator: 'Lê Văn C',
-      channel: 'Website',
-      note: 'Khách VIP',
-      totalAmount: 1500000,
-      discount: 50000,
-      tax: 0,
-      needToPay: 1450000,
-      paidAmount: 1450000,
-      paymentDiscount: 0,
-      deliveryTime: '11/06/2024 09:00',
-      status: 'Hoàn thành'
-    },
-    {
-      id: 'HD002', 
-      date: '10/06/2024 15:45',
-      createdTime: '10/06/2024 15:40',
-      lastUpdated: '10/06/2024 15:50',
-      orderCode: 'DH002',
-      returnCode: 'TH001',
-      customer: 'Trần Thị B',
-      email: 'tran.thi.b@email.com',
-      phone: '0907654321',
-      address: '456 Đường DEF, Quận 3',
-      area: 'TP.HCM',
-      ward: 'Phường Võ Thị Sáu',
-      birthdate: '20/08/1985',
-      branch: 'Chi nhánh Quận 3',
-      seller: 'Nguyễn Văn D',
-      creator: 'Phạm Thị E',
-      channel: 'Cửa hàng',
-      note: 'Trả hàng một phần',
-      totalAmount: 2200000,
-      discount: 100000,
-      tax: 0,
-      needToPay: 2100000,
-      paidAmount: 2100000,
-      paymentDiscount: 0,
-      deliveryTime: '11/06/2024 14:00',
-      status: 'Hoàn thành'
-    },
-    {
-      id: 'HD003',
-      date: '09/06/2024 09:15',
-      createdTime: '09/06/2024 09:10',
-      lastUpdated: '09/06/2024 10:00',
-      orderCode: 'DH003',
-      returnCode: '',
-      customer: 'Lê Văn C',
-      email: 'le.van.c@email.com',
-      phone: '0909876543',
-      address: '789 Đường GHI, Quận 5',
-      area: 'TP.HCM',
-      ward: 'Phường 1',
-      birthdate: '10/12/1992',
-      branch: 'Chi nhánh Quận 5',
-      seller: 'Võ Thị F',
-      creator: 'Hoàng Văn G',
-      channel: 'Điện thoại',
-      note: 'Hủy do khách không nhận',
-      totalAmount: 800000,
-      discount: 0,
-      tax: 0,
-      needToPay: 800000,
-      paidAmount: 0,
-      paymentDiscount: 0,
-      deliveryTime: '',
-      status: 'Đã hủy'
-    }
-  ];
+  // Use mock data
+  const salesData = mockSales;
 
   const handleColumnToggle = (columnKey: string) => {
     setColumns(prev => prev.map(col => 
       col.key === columnKey ? { ...col, visible: !col.visible } : col
     ));
+  };
+
+  const handleSelectSale = (saleId: string) => {
+    setSelectedSales(prev => 
+      prev.includes(saleId) 
+        ? prev.filter(id => id !== saleId)
+        : [...prev, saleId]
+    );
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const currentPageData = salesData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+      setSelectedSales(currentPageData.map(sale => sale.id));
+    } else {
+      setSelectedSales([]);
+    }
   };
 
   const clearAllFilters = () => {
@@ -154,6 +90,9 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
   const applyFilters = () => {
     setIsFilterOpen(false);
   };
+
+  const totalSales = salesData.length;
+  const totalPages = Math.ceil(totalSales / itemsPerPage);
 
   return (
     <div className="flex flex-col h-screen overflow-hidden theme-background">
@@ -233,6 +172,15 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
             <SalesTable
               salesData={salesData}
               visibleColumns={visibleColumns}
+              selectedSales={selectedSales}
+              onSelectSale={handleSelectSale}
+              onSelectAll={handleSelectAll}
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
+              itemsPerPage={itemsPerPage}
+              setItemsPerPage={setItemsPerPage}
+              totalSales={totalSales}
+              totalPages={totalPages}
             />
           </div>
         </div>

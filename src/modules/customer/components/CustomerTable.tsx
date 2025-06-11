@@ -1,12 +1,8 @@
-
 import { useState } from 'react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { ChevronLeft, ChevronRight, Eye, Edit, MoreHorizontal } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Eye, Edit, MoreHorizontal } from 'lucide-react';
 import { ColumnConfig } from './ColumnVisibilityFilter';
 
 interface Customer {
@@ -174,135 +170,150 @@ export function CustomerTable({
     }
   };
 
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, totalCustomers);
+  // Calculate pagination display
+  const startIndex = (currentPage - 1) * itemsPerPage + 1;
+  const endIndex = Math.min(currentPage * itemsPerPage, totalCustomers);
+  const paginatedData = customers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const allSelected = paginatedData.length > 0 && selectedCustomers.length === paginatedData.length;
 
   return (
-    <Card className="theme-card">
-      <CardContent className="p-0">
-        {/* Table Container with constrained width for proper horizontal scroll */}
-        <div className="w-full max-w-full">
-          <div className="overflow-x-auto border-b theme-border-primary" style={{ maxWidth: 'calc(100vw - 310px)' }}>
-            <Table className="w-full">
-              <TableHeader>
-                <TableRow className="hover:theme-bg-primary/5">
-                  <TableHead className="w-12 sticky left-0 theme-card z-10">
-                    <Checkbox
-                      checked={selectedCustomers.length === customers.length}
-                      onCheckedChange={handleSelectAll}
-                      className="voucher-checkbox"
-                    />
-                  </TableHead>
-                  {visibleColumns.map((column) => (
-                    <TableHead 
-                      key={column.key} 
-                      className={`theme-text font-medium whitespace-nowrap ${getColumnWidth(column.key)}`}
-                    >
-                      {column.label}
-                    </TableHead>
-                  ))}
-                  <TableHead className="theme-text font-medium w-24 whitespace-nowrap">Thao tác</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {customers.slice(startIndex, startIndex + itemsPerPage).map((customer) => (
-                  <TableRow key={customer.id} className="hover:theme-bg-primary/5">
-                    <TableCell className="sticky left-0 theme-card z-10">
-                      <Checkbox
-                        checked={selectedCustomers.includes(customer.id)}
-                        onCheckedChange={(checked) => handleSelectCustomer(customer.id, checked as boolean)}
-                        className="voucher-checkbox"
-                      />
-                    </TableCell>
-                    {visibleColumns.map((column) => (
-                      <TableCell 
-                        key={column.key} 
-                        className={`theme-text ${getColumnWidth(column.key)}`}
-                      >
-                        {renderCellContent(customer, column.key)}
-                      </TableCell>
-                    ))}
-                    <TableCell className="w-24">
-                      <div className="flex items-center space-x-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 hover:voucher-bg-primary/10 hover:voucher-text-primary"
-                        >
-                          <Eye className="w-4 h-4 voucher-text-primary" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 hover:theme-bg-secondary/10 hover:theme-text-secondary"
-                        >
-                          <Edit className="w-4 h-4 theme-text-secondary" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 hover:voucher-bg-primary/10 hover:voucher-text-primary"
-                        >
-                          <MoreHorizontal className="w-4 h-4 voucher-text-primary" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+    <div className="h-full flex flex-col theme-card rounded-lg border theme-border-primary overflow-hidden">
+      {/* Table Container with constrained width for proper horizontal scroll */}
+      <div className="flex-1 overflow-auto">
+        <table className="w-full" style={{ minWidth: `${(visibleColumns.length * 150) + 120}px` }}>
+          <thead className="sticky top-0 bg-white z-10 border-b theme-border-primary/20">
+            <tr>
+              <th className="sticky left-0 bg-white z-20 w-12 px-4 py-3 border-r theme-border-primary/10">
+                <Checkbox
+                  checked={allSelected}
+                  onCheckedChange={handleSelectAll}
+                  className="voucher-checkbox"
+                />
+              </th>
+              {visibleColumns.map((column) => (
+                <th 
+                  key={column.key} 
+                  className={`theme-text font-medium whitespace-nowrap px-4 py-3 text-left text-sm ${getColumnWidth(column.key)}`}
+                >
+                  {column.label}
+                </th>
+              ))}
+              <th className="theme-text font-medium w-24 whitespace-nowrap px-4 py-3 text-left text-sm">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            {paginatedData.map((customer) => (
+              <tr key={customer.id} className="hover:theme-bg-primary/5 border-b theme-border-primary/10">
+                <td className="sticky left-0 bg-white z-10 w-12 px-4 py-3 border-r theme-border-primary/10">
+                  <Checkbox
+                    checked={selectedCustomers.includes(customer.id)}
+                    onCheckedChange={(checked) => handleSelectCustomer(customer.id, checked as boolean)}
+                    className="voucher-checkbox"
+                  />
+                </td>
+                {visibleColumns.map((column) => (
+                  <td 
+                    key={column.key} 
+                    className={`theme-text px-4 py-3 text-sm ${getColumnWidth(column.key)}`}
+                  >
+                    {renderCellContent(customer, column.key)}
+                  </td>
                 ))}
-              </TableBody>
-            </Table>
-          </div>
+                <td className="w-24 px-4 py-3">
+                  <div className="flex items-center space-x-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 hover:voucher-bg-primary/10 hover:voucher-text-primary"
+                    >
+                      <Eye className="w-4 h-4 voucher-text-primary" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 hover:theme-bg-secondary/10 hover:theme-text-secondary"
+                    >
+                      <Edit className="w-4 h-4 theme-text-secondary" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 hover:voucher-bg-primary/10 hover:voucher-text-primary"
+                    >
+                      <MoreHorizontal className="w-4 h-4 voucher-text-primary" />
+                    </Button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination - Fixed Outside Scroll Container */}
+      <div className="flex items-center justify-between px-4 py-3 border-t theme-border-primary/20">
+        <div className="flex items-center space-x-3">
+          <span className="text-sm theme-text-muted">Hiển thị</span>
+          <select
+            value={itemsPerPage}
+            onChange={(e) => setItemsPerPage(Number(e.target.value))}
+            className="px-2 py-1 text-sm border theme-border-primary rounded theme-card theme-text"
+          >
+            <option value={5}>5</option>
+            <option value={15}>15</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+          </select>
+          <span className="text-sm theme-text-muted">
+            {startIndex} – {endIndex} trong {totalCustomers.toLocaleString('vi-VN')} khách hàng
+          </span>
         </div>
 
-        {/* Pagination - Fixed Outside Scroll Container */}
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center space-x-2">
-            <span className="text-sm theme-text-muted">Hiển thị</span>
-            <select
-              value={itemsPerPage}
-              onChange={(e) => setItemsPerPage(Number(e.target.value))}
-              className="px-2 py-1 text-sm border theme-border-primary rounded voucher-input theme-text"
+        <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+              className="h-8 w-8 p-0 voucher-border-primary hover:voucher-bg-primary/10 hover:voucher-text-primary disabled:opacity-50"
             >
-              <option value={10}>10</option>
-              <option value={15}>15</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-            </select>
-            <span className="text-sm theme-text-muted">
-              trên {totalCustomers} khách hàng
+              <ChevronsLeft className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="h-8 w-8 p-0 voucher-border-primary hover:voucher-bg-primary/10 hover:voucher-text-primary disabled:opacity-50"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <span className="px-3 py-1 text-sm theme-text min-w-[80px] text-center">
+              Trang {currentPage} / {totalPages}
             </span>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <span className="text-sm theme-text-muted">
-              {startIndex + 1}-{endIndex} trên {totalCustomers}
-            </span>
-            <div className="flex items-center space-x-1">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="h-8 w-8 p-0 voucher-border-primary hover:voucher-bg-primary/10 hover:voucher-text-primary disabled:opacity-50"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <span className="px-3 py-1 text-sm theme-text">
-                {currentPage} / {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="h-8 w-8 p-0 voucher-border-primary hover:voucher-bg-primary/10 hover:voucher-text-primary disabled:opacity-50"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="h-8 w-8 p-0 voucher-border-primary hover:voucher-bg-primary/10 hover:voucher-text-primary disabled:opacity-50"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages}
+              className="h-8 w-8 p-0 voucher-border-primary hover:voucher-bg-primary/10 hover:voucher-text-primary disabled:opacity-50"
+            >
+              <ChevronsRight className="w-4 h-4" />
+            </Button>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
