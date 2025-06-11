@@ -255,13 +255,15 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
       </div>
 
       {/* Main Content Layout - Takes remaining height */}
-      <div className="flex flex-1 min-h-0 px-6 pb-6 space-x-3">
-        {/* Desktop Filter Sidebar - Fixed width */}
+      <div className="flex flex-1 min-h-0 px-6 pb-6 gap-3">
+        {/* Desktop Filter Sidebar - Fixed width with proper scroll */}
         {!isMobile && (
-          <div className="w-64 flex-shrink-0 theme-card rounded-lg border theme-border-primary p-4 space-y-4">
-            <h3 className="font-semibold theme-text text-base">Bộ lọc</h3>
-            <ScrollArea className="flex-1">
-              <div className="pr-4">
+          <div className="w-64 flex-shrink-0 theme-card rounded-lg border theme-border-primary overflow-hidden">
+            <div className="p-4 border-b theme-border-primary/20">
+              <h3 className="font-semibold theme-text text-base">Bộ lọc</h3>
+            </div>
+            <ScrollArea className="h-[calc(100vh-280px)]">
+              <div className="p-4">
                 <InventoryFilters
                   onClearFilters={clearAllFilters}
                   onApplyFilters={applyFilters}
@@ -277,23 +279,23 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
           <div className={`fixed left-0 top-0 h-full w-64 theme-card rounded-lg z-50 transform transition-transform duration-300 ${
             isFilterOpen ? 'translate-x-0' : '-translate-x-full'
           }`}>
-            <div className="p-4 space-y-4 h-full flex flex-col">
+            <div className="p-4 border-b theme-border-primary/20">
               <h3 className="font-semibold theme-text text-base">Bộ lọc</h3>
-              <ScrollArea className="flex-1">
-                <div className="pr-4">
-                  <InventoryFilters
-                    onClearFilters={clearAllFilters}
-                    onApplyFilters={applyFilters}
-                    isMobile={isMobile}
-                  />
-                </div>
-              </ScrollArea>
             </div>
+            <ScrollArea className="h-[calc(100vh-100px)]">
+              <div className="p-4">
+                <InventoryFilters
+                  onClearFilters={clearAllFilters}
+                  onApplyFilters={applyFilters}
+                  isMobile={isMobile}
+                />
+              </div>
+            </ScrollArea>
           </div>
         )}
 
         {/* Main Content Area - Flexible width, takes remaining space */}
-        <div className="flex-1 min-w-0 flex flex-col space-y-3">
+        <div className="flex-1 min-w-0 flex flex-col gap-3">
           {/* Search & Actions Bar - Fixed height */}
           <div className="flex-shrink-0">
             <InventorySearchActions
