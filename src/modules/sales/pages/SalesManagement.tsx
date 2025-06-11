@@ -156,7 +156,7 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
   };
 
   return (
-    <div className="min-h-screen theme-background">
+    <div className="flex flex-col h-screen overflow-hidden theme-background">
       {/* Mobile overlay */}
       {isFilterOpen && isMobile && (
         <div 
@@ -165,19 +165,21 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
         />
       )}
 
-      {/* Stats Section with 5px spacing */}
-      <div className="w-full px-6 pt-4" style={{ paddingBottom: '5px' }}>
+      {/* Stats Section - Fixed height */}
+      <div className="flex-shrink-0 px-6 pt-4 pb-1">
         <ThemedSalesStats />
       </div>
 
-      {/* Main Content Layout with 5px spacing */}
-      <div className="flex w-full" style={{ gap: '5px' }}>
-        {/* Desktop Filter Sidebar - Styled like Customer module with 5px margin from ERP sidebar */}
+      {/* Main Content Layout - Takes remaining height */}
+      <div className="flex flex-1 min-h-0 px-6 pb-6 gap-3">
+        {/* Desktop Filter Sidebar - Fixed width with proper scroll */}
         {!isMobile && (
-          <div className="w-64 max-w-64 theme-card rounded-lg border theme-border-primary p-4 space-y-4" style={{ marginLeft: '24px' }}>
-            <h3 className="font-semibold theme-text text-base">Bộ lọc</h3>
-            <ScrollArea className="h-[calc(100vh-200px)]">
-              <div className="pr-4">
+          <div className="w-64 flex-shrink-0 theme-card rounded-lg border theme-border-primary overflow-hidden">
+            <div className="p-4 border-b theme-border-primary/20">
+              <h3 className="font-semibold theme-text text-base">Bộ lọc</h3>
+            </div>
+            <ScrollArea className="h-[calc(100vh-280px)]">
+              <div className="p-4">
                 <SalesFilters
                   onClearFilters={clearAllFilters}
                   onApplyFilters={applyFilters}
@@ -193,42 +195,46 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
           <div className={`fixed left-0 top-0 h-full w-64 theme-card rounded-lg z-50 transform transition-transform duration-300 ${
             isFilterOpen ? 'translate-x-0' : '-translate-x-full'
           }`}>
-            <div className="p-4 space-y-4">
+            <div className="p-4 border-b theme-border-primary/20">
               <h3 className="font-semibold theme-text text-base">Bộ lọc</h3>
-              <ScrollArea className="h-[calc(100vh-200px)]">
-                <div className="pr-4">
-                  <SalesFilters
-                    onClearFilters={clearAllFilters}
-                    onApplyFilters={applyFilters}
-                    isMobile={isMobile}
-                  />
-                </div>
-              </ScrollArea>
             </div>
+            <ScrollArea className="h-[calc(100vh-100px)]">
+              <div className="p-4">
+                <SalesFilters
+                  onClearFilters={clearAllFilters}
+                  onApplyFilters={applyFilters}
+                  isMobile={isMobile}
+                />
+              </div>
+            </ScrollArea>
           </div>
         )}
 
-        {/* Main Content Area with 5px spacing and proper margins */}
-        <div className="flex-1" style={{ paddingRight: '24px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
-          {/* Search & Actions Bar */}
-          <SalesSearchAndActions
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            columns={columns}
-            handleColumnToggle={handleColumnToggle}
-            isFilterOpen={isFilterOpen}
-            setIsFilterOpen={setIsFilterOpen}
-            clearAllFilters={clearAllFilters}
-            applyFilters={applyFilters}
-            isMobile={isMobile}
-            salesData={salesData}
-          />
+        {/* Main Content Area - Flexible width, takes remaining space */}
+        <div className="flex-1 min-w-0 flex flex-col gap-3">
+          {/* Search & Actions Bar - Fixed height */}
+          <div className="flex-shrink-0">
+            <SalesSearchAndActions
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              columns={columns}
+              handleColumnToggle={handleColumnToggle}
+              isFilterOpen={isFilterOpen}
+              setIsFilterOpen={setIsFilterOpen}
+              clearAllFilters={clearAllFilters}
+              applyFilters={applyFilters}
+              isMobile={isMobile}
+              salesData={salesData}
+            />
+          </div>
 
-          {/* Sales Table */}
-          <SalesTable
-            salesData={salesData}
-            visibleColumns={visibleColumns}
-          />
+          {/* Sales Table - Takes remaining height and width */}
+          <div className="flex-1 min-h-0">
+            <SalesTable
+              salesData={salesData}
+              visibleColumns={visibleColumns}
+            />
+          </div>
         </div>
       </div>
     </div>

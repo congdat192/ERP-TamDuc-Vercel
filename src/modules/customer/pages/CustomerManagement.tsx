@@ -1,9 +1,11 @@
 
 import { useState } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { ThemedCustomerStats } from '../components/ThemedCustomerStats';
 import { CustomerSearchActions } from '../components/CustomerSearchActions';
 import { CustomerFilters } from '../components/CustomerFilters';
 import { CustomerTable } from '../components/CustomerTable';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { ColumnConfig } from '../components/ColumnVisibilityFilter';
 
 interface CustomerManagementProps {
@@ -13,7 +15,7 @@ interface CustomerManagementProps {
 
 export function CustomerManagement({ currentUser, onBackToModules }: CustomerManagementProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   
   // Mock data for the table
   const [customers] = useState([
@@ -75,6 +77,11 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
     { key: 'status', label: 'Trạng thái', visible: true }
   ]);
 
+  const isMobile = useIsMobile();
+
+  // Get visible columns
+  const visibleColumns = columns.filter(col => col.visible);
+
   const handleColumnToggle = (columnKey: string, visible: boolean) => {
     setColumns(prev => 
       prev.map(col => 
@@ -99,57 +106,99 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
     }
   };
 
+  const clearAllFilters = () => {
+    setIsFilterOpen(false);
+  };
+
+  const applyFilters = () => {
+    setIsFilterOpen(false);
+  };
+
   const totalCustomers = customers.length;
   const totalPages = Math.ceil(totalCustomers / itemsPerPage);
 
   return (
-    <div className="min-h-screen theme-background">
+    <div className="flex flex-col h-screen overflow-hidden theme-background">
       {/* Mobile overlay */}
-      {sidebarOpen && (
+      {isFilterOpen && isMobile && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
+          onClick={() => setIsFilterOpen(false)}
         />
       )}
 
-      {/* Stats Section - Moved up, no title */}
-      <div className="w-full px-6 pt-4 pb-2">
+      {/* Stats Section - Fixed height */}
+      <div className="flex-shrink-0 px-6 pt-4 pb-1">
         <ThemedCustomerStats />
       </div>
 
-      {/* Main Content Layout - Optimized spacing */}
-      <div className="flex w-full">
-        {/* Sidebar Filter - Fixed Width 255px */}
-        <CustomerFilters 
-          sidebarOpen={sidebarOpen}
-          setSidebarOpen={setSidebarOpen}
-        />
-        
-        {/* Main Content Area - Optimized padding */}
-        <div className="flex-1 lg:ml-0 px-6 py-2 space-y-3">
-          {/* Search & Actions Bar */}
-          <CustomerSearchActions 
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            columns={columns}
-            handleColumnToggle={handleColumnToggle}
-            onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-          />
-          
-          {/* Data Table */}
-          <CustomerTable 
-            customers={customers}
-            visibleColumns={columns.filter(col => col.visible)}
-            selectedCustomers={selectedCustomers}
-            handleSelectCustomer={handleSelectCustomer}
-            handleSelectAll={handleSelectAll}
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            itemsPerPage={itemsPerPage}
-            setItemsPerPage={setItemsPerPage}
-            totalCustomers={totalCustomers}
-            totalPages={totalPages}
-          />
+      {/* Main Content Layout - Takes remaining height */}
+      <div className="flex flex-1 min-h-0 px-6 pb-6 gap-3">
+        {/* Desktop Filter Sidebar - Fixed width with proper scroll */}
+        {!isMobile && (
+          <div className="w-64 flex-shrink-0 theme-card rounded-lg border theme-border-primary overflow-hidden">
+            <div className="p-4 border-b theme-border-primary/20">
+              <h3 className="font-semibold theme-text text-base">Bộ lọc</h3>
+            </div>
+            <ScrollArea className="h-[calc(100vh-280px)]">
+              <div className="p-4">
+                <CustomerFilters 
+                  sidebarOpen={false}
+                  setSidebarOpen={() => {}}
+                />
+              </div>
+            </ScrollArea>
+          </div>
+        )}
+
+        {/* Mobile Filter Sidebar - Drawer Style */}
+        {isMobile && (
+          <div className={`fixed left-0 top-0 h-full w-64 theme-card rounded-lg z-50 transform transition-transform duration-300 ${
+            isFilterOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}>
+            <div className="p-4 border-b theme-border-primary/20">
+              <h3 className="font-semibold theme-text text-base">Bộ lọc</h3>
+            </div>
+            <ScrollArea className="h-[calc(100vh-100px)]">
+              <div className="p-4">
+                <CustomerFilters 
+                  sidebarOpen={true}
+                  setSidebarOpen={setIsFilterOpen}
+                />
+              </div>
+            </ScrollArea>
+          </div>
+        )}
+
+        {/* Main Content Area - Flexible width, takes remaining space */}
+        <div className="flex-1 min-w-0 flex flex-col gap-3">
+          {/* Search & Actions Bar - Fixed height */}
+          <div className="flex-shrink-0">
+            <CustomerSearchActions 
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              columns={columns}
+              handleColumnToggle={handleColumnToggle}
+              onToggleSidebar={() => setIsFilterOpen(!isFilterOpen)}
+            />
+          </div>
+
+          {/* Customer Table - Takes remaining height and width */}
+          <div className="flex-1 min-h-0">
+            <CustomerTable 
+              customers={customers}
+              visibleColumns={visibleColumns}
+              selectedCustomers={selectedCustomers}
+              handleSelectCustomer={handleSelectCustomer}
+              handleSelectAll={handleSelectAll}
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
+              itemsPerPage={itemsPerPage}
+              setItemsPerPage={setItemsPerPage}
+              totalCustomers={totalCustomers}
+              totalPages={totalPages}
+            />
+          </div>
         </div>
       </div>
     </div>
