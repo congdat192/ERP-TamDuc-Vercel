@@ -47,7 +47,7 @@ export function ColumnVisibilityFilter({ columns, onColumnToggle }: ColumnVisibi
                   />
                   <label
                     htmlFor={column.key}
-                    className="text-sm theme-text cursor-pointer select-none leading-4 flex-1"
+                    className="text-sm theme-text cursor-pointer select-none leading-4 flex-1 break-words"
                   >
                     {column.label}
                   </label>
@@ -67,7 +67,7 @@ export function ColumnVisibilityFilter({ columns, onColumnToggle }: ColumnVisibi
                   />
                   <label
                     htmlFor={column.key}
-                    className="text-sm theme-text cursor-pointer select-none leading-4 flex-1"
+                    className="text-sm theme-text cursor-pointer select-none leading-4 flex-1 break-words"
                   >
                     {column.label}
                   </label>
