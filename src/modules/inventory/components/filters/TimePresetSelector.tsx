@@ -26,7 +26,6 @@ export function TimePresetSelector({
 }: TimePresetSelectorProps) {
   const [showCustom, setShowCustom] = useState(value === 'custom');
   const [showPresets, setShowPresets] = useState(false);
-  const [customOpen, setCustomOpen] = useState(false);
 
   const presetData = timePresets[type];
 
@@ -61,6 +60,10 @@ export function TimePresetSelector({
       {preset.label}
     </Button>
   );
+
+  // Get the first category based on type
+  const firstCategoryData = type === 'outOfStock' ? presetData.daily : presetData.recent;
+  const firstCategoryLabel = type === 'outOfStock' ? 'Theo ngày' : 'Gần đây';
 
   return (
     <div className="space-y-2">
@@ -105,10 +108,10 @@ export function TimePresetSelector({
             <div className="space-y-3">
               <div>
                 <h4 className="text-sm font-medium theme-text mb-2">
-                  {type === 'outOfStock' ? 'Theo ngày' : 'Gần đây'}
+                  {firstCategoryLabel}
                 </h4>
                 <div className="grid grid-cols-2 gap-2">
-                  {(type === 'outOfStock' ? presetData.daily : presetData.recent).map(renderPresetButton)}
+                  {firstCategoryData.map(renderPresetButton)}
                 </div>
               </div>
               
