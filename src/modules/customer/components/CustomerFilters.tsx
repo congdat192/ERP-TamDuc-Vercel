@@ -22,9 +22,9 @@ export function CustomerFilters() {
   const [lastTransactionRange, setLastTransactionRange] = useState<[Date?, Date?]>([undefined, undefined]);
 
   // Button group states
-  const [customerType, setCustomerType] = useState<'all' | 'individual' | 'company'>('all');
-  const [gender, setGender] = useState<'all' | 'male' | 'female'>('all');
-  const [status, setStatus] = useState<'all' | 'active' | 'inactive'>('all');
+  const [customerType, setCustomerType] = useState<'all' | 'yes' | 'no'>('all');
+  const [gender, setGender] = useState<'all' | 'yes' | 'no'>('all');
+  const [status, setStatus] = useState<'all' | 'yes' | 'no'>('all');
 
   // Number range states
   const [totalSalesFrom, setTotalSalesFrom] = useState('');
@@ -134,24 +134,90 @@ export function CustomerFilters() {
       />
 
       {/* 5. Loại khách hàng */}
-      <ThreeStateButtonGroup
-        label="Loại khách hàng"
-        value={customerType}
-        onChange={(value: 'all' | 'yes' | 'no') => {
-          const mapping = { 'all': 'all', 'yes': 'individual', 'no': 'company' } as const;
-          setCustomerType(mapping[value] as 'all' | 'individual' | 'company');
-        }}
-      />
+      <div className="space-y-2">
+        <label className="text-sm font-medium theme-text">Loại khách hàng</label>
+        <div className="grid grid-cols-3 gap-1">
+          <Button
+            variant={customerType === 'all' ? "default" : "outline"}
+            size="sm"
+            onClick={() => setCustomerType('all')}
+            className={`text-xs h-8 rounded-md ${
+              customerType === 'all'
+                ? "voucher-button-primary" 
+                : "theme-border-primary hover:theme-bg-primary/10"
+            }`}
+          >
+            Tất cả
+          </Button>
+          <Button
+            variant={customerType === 'yes' ? "default" : "outline"}
+            size="sm"
+            onClick={() => setCustomerType('yes')}
+            className={`text-xs h-8 rounded-md ${
+              customerType === 'yes'
+                ? "voucher-button-primary" 
+                : "theme-border-primary hover:theme-bg-primary/10"
+            }`}
+          >
+            Cá nhân
+          </Button>
+          <Button
+            variant={customerType === 'no' ? "default" : "outline"}
+            size="sm"
+            onClick={() => setCustomerType('no')}
+            className={`text-xs h-8 rounded-md ${
+              customerType === 'no'
+                ? "voucher-button-primary" 
+                : "theme-border-primary hover:theme-bg-primary/10"
+            }`}
+          >
+            Công ty
+          </Button>
+        </div>
+      </div>
 
       {/* 6. Giới tính */}
-      <ThreeStateButtonGroup
-        label="Giới tính"
-        value={gender === 'all' ? 'all' : gender === 'male' ? 'yes' : 'no'}
-        onChange={(value: 'all' | 'yes' | 'no') => {
-          const mapping = { 'all': 'all', 'yes': 'male', 'no': 'female' } as const;
-          setGender(mapping[value] as 'all' | 'male' | 'female');
-        }}
-      />
+      <div className="space-y-2">
+        <label className="text-sm font-medium theme-text">Giới tính</label>
+        <div className="grid grid-cols-3 gap-1">
+          <Button
+            variant={gender === 'all' ? "default" : "outline"}
+            size="sm"
+            onClick={() => setGender('all')}
+            className={`text-xs h-8 rounded-md ${
+              gender === 'all'
+                ? "voucher-button-primary" 
+                : "theme-border-primary hover:theme-bg-primary/10"
+            }`}
+          >
+            Tất cả
+          </Button>
+          <Button
+            variant={gender === 'yes' ? "default" : "outline"}
+            size="sm"
+            onClick={() => setGender('yes')}
+            className={`text-xs h-8 rounded-md ${
+              gender === 'yes'
+                ? "voucher-button-primary" 
+                : "theme-border-primary hover:theme-bg-primary/10"
+            }`}
+          >
+            Nam
+          </Button>
+          <Button
+            variant={gender === 'no' ? "default" : "outline"}
+            size="sm"
+            onClick={() => setGender('no')}
+            className={`text-xs h-8 rounded-md ${
+              gender === 'no'
+                ? "voucher-button-primary" 
+                : "theme-border-primary hover:theme-bg-primary/10"
+            }`}
+          >
+            Nữ
+          </Button>
+        </div>
+      </div>
 
       {/* 7. Sinh nhật */}
       <TimePresetSelector
@@ -267,14 +333,47 @@ export function CustomerFilters() {
       />
 
       {/* 14. Trạng thái */}
-      <ThreeStateButtonGroup
-        label="Trạng thái"
-        value={status === 'all' ? 'all' : status === 'active' ? 'yes' : 'no'}
-        onChange={(value: 'all' | 'yes' | 'no') => {
-          const mapping = { 'all': 'all', 'yes': 'active', 'no': 'inactive' } as const;
-          setStatus(mapping[value] as 'all' | 'active' | 'inactive');
-        }}
-      />
+      <div className="space-y-2">
+        <label className="text-sm font-medium theme-text">Trạng thái</label>
+        <div className="grid grid-cols-3 gap-1">
+          <Button
+            variant={status === 'all' ? "default" : "outline"}
+            size="sm"
+            onClick={() => setStatus('all')}
+            className={`text-xs h-8 rounded-md ${
+              status === 'all'
+                ? "voucher-button-primary" 
+                : "theme-border-primary hover:theme-bg-primary/10"
+            }`}
+          >
+            Tất cả
+          </Button>
+          <Button
+            variant={status === 'yes' ? "default" : "outline"}
+            size="sm"
+            onClick={() => setStatus('yes')}
+            className={`text-xs h-8 rounded-md ${
+              status === 'yes'
+                ? "voucher-button-primary" 
+                : "theme-border-primary hover:theme-bg-primary/10"
+            }`}
+          >
+            Đang hoạt động
+          </Button>
+          <Button
+            variant={status === 'no' ? "default" : "outline"}
+            size="sm"
+            onClick={() => setStatus('no')}
+            className={`text-xs h-8 rounded-md ${
+              status === 'no'
+                ? "voucher-button-primary" 
+                : "theme-border-primary hover:theme-bg-primary/10"
+            }`}
+          >
+            Ngừng hoạt động
+          </Button>
+        </div>
+      </div>
 
       {/* Clear filters button */}
       <div className="pt-[10px] border-t border-border">
