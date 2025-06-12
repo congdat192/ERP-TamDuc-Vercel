@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Calendar, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +9,7 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChevronDown } from 'lucide-react';
+import { SingleSelectFilter } from './filters/SingleSelectFilter';
 
 interface SalesFiltersProps {
   onClearFilters: () => void;
@@ -42,6 +42,48 @@ export function SalesFilters({ onClearFilters, onApplyFilters, isMobile }: Sales
     { value: 'binh-thanh', label: 'Bình Thạnh' },
     { value: 'district-1', label: 'Quận 1' },
     { value: 'district-3', label: 'Quận 3' }
+  ];
+
+  // Options for dropdown filters
+  const paymentMethodOptions = [
+    { value: '', label: 'Tất cả' },
+    { value: 'cash', label: 'Tiền mặt' },
+    { value: 'card', label: 'Thẻ' },
+    { value: 'transfer', label: 'Chuyển khoản' },
+    { value: 'points', label: 'Điểm' },
+    { value: 'voucher', label: 'Voucher' }
+  ];
+
+  const creatorOptions = [
+    { value: '', label: 'Tất cả' },
+    { value: 'user1', label: 'Nguyễn Văn A' },
+    { value: 'user2', label: 'Trần Thị B' },
+    { value: 'user3', label: 'Lê Văn C' },
+    { value: 'user4', label: 'Phạm Thị D' }
+  ];
+
+  const sellerOptions = [
+    { value: '', label: 'Tất cả' },
+    { value: 'seller1', label: 'Lê Văn C' },
+    { value: 'seller2', label: 'Phạm Thị D' },
+    { value: 'seller3', label: 'Hoàng Văn E' },
+    { value: 'seller4', label: 'Ngô Thị F' }
+  ];
+
+  const priceListOptions = [
+    { value: '', label: 'Tất cả' },
+    { value: 'standard', label: 'Bảng giá chuẩn' },
+    { value: 'vip', label: 'Bảng giá VIP' },
+    { value: 'wholesale', label: 'Bảng giá sỉ' },
+    { value: 'retail', label: 'Bảng giá lẻ' }
+  ];
+
+  const salesChannelOptions = [
+    { value: '', label: 'Tất cả' },
+    { value: 'store', label: 'Cửa hàng' },
+    { value: 'online', label: 'Online' },
+    { value: 'phone', label: 'Điện thoại' },
+    { value: 'social', label: 'Mạng xã hội' }
   ];
 
   // Quick time options organized by tabs
@@ -118,61 +160,20 @@ export function SalesFilters({ onClearFilters, onApplyFilters, isMobile }: Sales
 
   return (
     <div className="space-y-6">
-      {/* Branch Selection */}
-      <div className="space-y-3">
-        <label className="text-sm font-medium theme-text">Chi nhánh</label>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" className="w-full justify-start text-sm theme-border-primary">
-              <span className="theme-text-muted">Chọn chi nhánh</span>
-              <ChevronDown className="ml-auto h-4 w-4 theme-text-primary" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-80 p-3 theme-card border theme-border-primary">
-            <ScrollArea className="h-auto max-h-64">
-              <div className="space-y-3 pr-4">
-                {branchOptions.map((branch) => (
-                  <div key={branch.value} className="flex items-center space-x-3 min-h-[36px]">
-                    <Checkbox 
-                      id={branch.value}
-                      checked={selectedBranches.includes(branch.value)}
-                      onCheckedChange={() => handleBranchSelect(branch.value)}
-                      className="flex-shrink-0"
-                    />
-                    <label htmlFor={branch.value} className="text-sm cursor-pointer theme-text leading-relaxed flex-1">
-                      {branch.label}
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </PopoverContent>
-        </Popover>
-        
-        {/* Selected branch tags with horizontal scroll */}
-        {selectedBranches.length > 0 && (
-          <ScrollArea className="w-full">
-            <div className="flex space-x-1 pb-2 min-w-max">
-              {getBranchDisplayTags().map((tag) => (
-                <Badge key={tag.value} variant="secondary" className="text-xs whitespace-nowrap flex-shrink-0 theme-badge-primary">
-                  {tag.label}
-                  {tag.value !== 'more' && (
-                    <X 
-                      className="ml-1 h-3 w-3 cursor-pointer hover:theme-text-primary transition-colors" 
-                      onClick={() => removeBranch(tag.value)}
-                    />
-                  )}
-                </Badge>
-              ))}
-            </div>
-          </ScrollArea>
-        )}
-      </div>
+      {/* Chi nhánh - Updated with SingleSelectFilter */}
+      <SingleSelectFilter
+        label="Chi nhánh"
+        placeholder="Chọn chi nhánh"
+        options={branchOptions}
+        selectedValue={selectedBranches.length === 1 ? selectedBranches[0] : ''}
+        onSelectionChange={(value) => setSelectedBranches(value ? [value] : [])}
+      />
 
-      {/* Time Period */}
+      {/* Time Period - keep existing implementation */}
       <div className="space-y-3">
         <label className="text-sm font-medium theme-text">Thời gian</label>
         <RadioGroup value={timeFilterType} onValueChange={(value: 'quick' | 'custom') => setTimeFilterType(value)} className="space-y-4">
+          {/* ... keep existing code (time period implementation) */}
           <div className="flex items-center space-x-3 min-h-[36px]">
             <RadioGroupItem value="quick" id="quick" />
             <label htmlFor="quick" className="text-sm theme-text cursor-pointer">Chọn nhanh</label>
@@ -278,7 +279,7 @@ export function SalesFilters({ onClearFilters, onApplyFilters, isMobile }: Sales
         </RadioGroup>
       </div>
 
-      {/* Status */}
+      {/* Status - keep existing implementation */}
       <div className="space-y-3">
         <label className="text-sm font-medium theme-text">Trạng thái</label>
         <div className="space-y-3">
@@ -305,90 +306,54 @@ export function SalesFilters({ onClearFilters, onApplyFilters, isMobile }: Sales
         </div>
       </div>
 
-      {/* Payment Method */}
-      <div className="space-y-3">
-        <label className="text-sm font-medium theme-text">Phương thức thanh toán</label>
-        <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-          <SelectTrigger className="text-sm min-h-[36px]">
-            <SelectValue placeholder="Chọn phương thức thanh toán" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="cash">Tiền mặt</SelectItem>
-            <SelectItem value="card">Thẻ</SelectItem>
-            <SelectItem value="transfer">Chuyển khoản</SelectItem>
-            <SelectItem value="points">Điểm</SelectItem>
-            <SelectItem value="voucher">Voucher</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Payment Method - Updated with SingleSelectFilter */}
+      <SingleSelectFilter
+        label="Phương thức thanh toán"
+        placeholder="Chọn phương thức thanh toán"
+        options={paymentMethodOptions}
+        selectedValue={paymentMethod}
+        onSelectionChange={setPaymentMethod}
+      />
 
-      {/* Creator */}
-      <div className="space-y-3">
-        <label className="text-sm font-medium theme-text">Người tạo</label>
-        <Select value={creator} onValueChange={setCreator}>
-          <SelectTrigger className="text-sm min-h-[36px]">
-            <SelectValue placeholder="Chọn người tạo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="user1">Nguyễn Văn A</SelectItem>
-            <SelectItem value="user2">Trần Thị B</SelectItem>
-            <SelectItem value="user3">Lê Văn C</SelectItem>
-            <SelectItem value="user4">Phạm Thị D</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Creator - Updated with SingleSelectFilter */}
+      <SingleSelectFilter
+        label="Người tạo"
+        placeholder="Chọn người tạo"
+        options={creatorOptions}
+        selectedValue={creator}
+        onSelectionChange={setCreator}
+      />
 
-      {/* Seller */}
-      <div className="space-y-3">
-        <label className="text-sm font-medium theme-text">Người bán</label>
-        <Select value={seller} onValueChange={setSeller}>
-          <SelectTrigger className="text-sm min-h-[36px]">
-            <SelectValue placeholder="Chọn người bán" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="seller1">Lê Văn C</SelectItem>
-            <SelectItem value="seller2">Phạm Thị D</SelectItem>
-            <SelectItem value="seller3">Hoàng Văn E</SelectItem>
-            <SelectItem value="seller4">Ngô Thị F</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Seller - Updated with SingleSelectFilter */}
+      <SingleSelectFilter
+        label="Người bán"
+        placeholder="Chọn người bán"
+        options={sellerOptions}
+        selectedValue={seller}
+        onSelectionChange={setSeller}
+      />
 
-      {/* Price List */}
-      <div className="space-y-3">
-        <label className="text-sm font-medium theme-text">Bảng giá</label>
-        <Select value={priceList} onValueChange={setPriceList}>
-          <SelectTrigger className="text-sm min-h-[36px]">
-            <SelectValue placeholder="Chọn bảng giá" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="standard">Bảng giá chuẩn</SelectItem>
-            <SelectItem value="vip">Bảng giá VIP</SelectItem>
-            <SelectItem value="wholesale">Bảng giá sỉ</SelectItem>
-            <SelectItem value="retail">Bảng giá lẻ</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Price List - Updated with SingleSelectFilter */}
+      <SingleSelectFilter
+        label="Bảng giá"
+        placeholder="Chọn bảng giá"
+        options={priceListOptions}
+        selectedValue={priceList}
+        onSelectionChange={setPriceList}
+      />
 
-      {/* Sales Channel */}
+      {/* Sales Channel - Updated with SingleSelectFilter */}
       <div className="space-y-3">
-        <label className="text-sm font-medium theme-text">Kênh bán</label>
-        <div className="space-y-2">
-          <Select value={salesChannel} onValueChange={setSalesChannel}>
-            <SelectTrigger className="text-sm min-h-[36px]">
-              <SelectValue placeholder="Chọn kênh bán" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="store">Cửa hàng</SelectItem>
-              <SelectItem value="online">Online</SelectItem>
-              <SelectItem value="phone">Điện thoại</SelectItem>
-              <SelectItem value="social">Mạng xã hội</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button variant="link" className="text-sm p-0 h-auto theme-text-primary hover:theme-text-primary/80">
-            Tạo mới
-          </Button>
-        </div>
+        <SingleSelectFilter
+          label="Kênh bán"
+          placeholder="Chọn kênh bán"
+          options={salesChannelOptions}
+          selectedValue={salesChannel}
+          onSelectionChange={setSalesChannel}
+        />
+        <Button variant="link" className="text-sm p-0 h-auto theme-text-primary hover:theme-text-primary/80">
+          Tạo mới
+        </Button>
       </div>
 
       {/* Mobile Action Buttons */}
