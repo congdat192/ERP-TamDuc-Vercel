@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ThemedInventoryStats } from '../components/ThemedInventoryStats';
@@ -20,6 +19,7 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [expandedRowId, setExpandedRowId] = useState<string | undefined>(undefined);
 
   // Column visibility state - All 27 required columns
   const [columns, setColumns] = useState<ColumnConfig[]>([
@@ -83,9 +83,20 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
     }
   };
 
+  const handleRowClick = (itemId: string) => {
+    if (expandedRowId === itemId) {
+      // If clicking on the same row, close it (toggle)
+      setExpandedRowId(undefined);
+    } else {
+      // If clicking on a different row, open it
+      setExpandedRowId(itemId);
+    }
+  };
+
   const clearAllFilters = () => {
     setIsFilterOpen(false);
     setSelectedItems([]);
+    setExpandedRowId(undefined);
   };
 
   const applyFilters = () => {
@@ -182,6 +193,8 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
               setItemsPerPage={setItemsPerPage}
               totalItems={totalItems}
               totalPages={totalPages}
+              expandedRowId={expandedRowId}
+              onRowClick={handleRowClick}
             />
           </div>
         </div>
