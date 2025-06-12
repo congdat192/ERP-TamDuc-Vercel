@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,14 +28,58 @@ export function InventoryFilters({ onClearFilters, onApplyFilters, isMobile }: I
   const [barcode, setBarcode] = useState('');
   const [stockStatus, setStockStatus] = useState<'in_stock' | 'out_of_stock' | 'all'>('all');
   const [timePreset, setTimePreset] = useState('');
-  const [customTimeRange, setCustomTimeRange] = useState<{ from: Date | null; to: Date | null }>({ from: null, to: null });
+  const [customTimeRange, setCustomTimeRange] = useState<[Date?, Date?]>([undefined, undefined]);
   const [attributeFilters, setAttributeFilters] = useState<{ [key: string]: string[] }>({});
 
-  // Mock data for attributes
+  // Mock data for attributes and categories
   const mockAttributes = [
-    { id: 'color', name: 'Color', values: ['Red', 'Blue', 'Green'] },
-    { id: 'size', name: 'Size', values: ['S', 'M', 'L'] },
-    { id: 'material', name: 'Material', values: ['Cotton', 'Polyester'] },
+    { 
+      key: 'color', 
+      label: 'Màu sắc', 
+      options: [
+        { value: 'red', label: 'Đỏ' },
+        { value: 'blue', label: 'Xanh dương' },
+        { value: 'green', label: 'Xanh lá' }
+      ]
+    },
+    { 
+      key: 'size', 
+      label: 'Kích thước', 
+      options: [
+        { value: 's', label: 'S' },
+        { value: 'm', label: 'M' },
+        { value: 'l', label: 'L' }
+      ]
+    },
+    { 
+      key: 'material', 
+      label: 'Chất liệu', 
+      options: [
+        { value: 'cotton', label: 'Cotton' },
+        { value: 'polyester', label: 'Polyester' }
+      ]
+    },
+  ];
+
+  const mockCategories = [
+    {
+      id: '1',
+      name: 'Thời trang',
+      productCount: 150,
+      children: [
+        { id: '1-1', name: 'Áo', productCount: 50 },
+        { id: '1-2', name: 'Quần', productCount: 40 }
+      ]
+    },
+    {
+      id: '2',
+      name: 'Điện tử',
+      productCount: 85,
+      children: [
+        { id: '2-1', name: 'Điện thoại', productCount: 25 },
+        { id: '2-2', name: 'Laptop', productCount: 20 }
+      ]
+    }
   ];
 
   // Options for time presets
@@ -44,15 +89,19 @@ export function InventoryFilters({ onClearFilters, onApplyFilters, isMobile }: I
     { value: 'last_month', label: 'Last Month' },
   ];
 
-  const handleAttributeChange = (attributeId: string, values: string[]) => {
-    setAttributeFilters(prev => ({ ...prev, [attributeId]: values }));
+  const handleAttributeChange = (attributeKey: string, values: string[]) => {
+    setAttributeFilters(prev => ({ ...prev, [attributeKey]: values }));
+  };
+
+  const handleStockStatusChange = (status: 'all' | 'in_stock' | 'out_of_stock') => {
+    setStockStatus(status);
   };
 
   return (
     <div className="space-y-4">
       {/* Danh mục */}
       <CategoryTreeSelector 
-        label="Danh mục"
+        categories={mockCategories}
         selectedCategories={selectedCategories}
         onSelectionChange={setSelectedCategories}
       />
@@ -93,30 +142,25 @@ export function InventoryFilters({ onClearFilters, onApplyFilters, isMobile }: I
       {/* Trạng thái kho */}
       <StockStatusFilter
         value={stockStatus}
-        onChange={setStatus => setStockStatus(setStatus)}
+        onChange={handleStockStatusChange}
       />
 
       {/* Thời gian */}
       <TimePresetSelector
+        label="Thời gian"
+        type="created"
         value={timePreset}
         onChange={setTimePreset}
-        customTimeRange={customTimeRange}
-        onCustomTimeRangeChange={setCustomTimeRange}
-        options={timePresetOptions}
+        customRange={customTimeRange}
+        onCustomRangeChange={setCustomTimeRange}
       />
 
       {/* Thuộc tính */}
-      <div className="space-y-3">
-        <label className="text-sm font-medium theme-text">Thuộc tính</label>
-        {mockAttributes.map(attribute => (
-          <AttributeExpandableFilter
-            key={attribute.id}
-            attribute={attribute}
-            selectedValues={attributeFilters[attribute.id] || []}
-            onSelectionChange={(values) => handleAttributeChange(attribute.id, values)}
-          />
-        ))}
-      </div>
+      <AttributeExpandableFilter
+        attributes={mockAttributes}
+        selectedAttributes={attributeFilters}
+        onAttributeChange={handleAttributeChange}
+      />
 
       {/* Mobile Action Buttons */}
       {isMobile && (

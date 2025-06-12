@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Calendar, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,7 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChevronDown } from 'lucide-react';
-import { MultiSelectFilter } from '../../../inventory/components/filters/MultiSelectFilter';
+import { MultiSelectFilter } from '../../inventory/components/filters/MultiSelectFilter';
 
 interface SalesFiltersProps {
   onClearFilters: () => void;
@@ -80,7 +81,6 @@ export function SalesFilters({ onClearFilters, onApplyFilters, isMobile }: Sales
     { value: 'social', label: 'Mạng xã hội' }
   ];
 
-  // Quick time options organized by tabs
   const quickTimeOptions = {
     day: [
       { value: 'today', label: 'Hôm nay' },

@@ -5,7 +5,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { CheckedState } from '@radix-ui/react-checkbox';
 
-export function CustomerFilters() {
+interface CustomerFiltersProps {
+  sidebarOpen?: boolean;
+  setSidebarOpen?: (open: boolean) => void;
+}
+
+export function CustomerFilters({ sidebarOpen, setSidebarOpen }: CustomerFiltersProps) {
   // Filter states
   const [customerGroup, setCustomerGroup] = useState('');
   const [customerType, setCustomerType] = useState('');
