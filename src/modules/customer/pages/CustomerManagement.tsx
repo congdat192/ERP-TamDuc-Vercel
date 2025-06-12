@@ -116,9 +116,6 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
         {/* Desktop Filter Sidebar - Fixed width with proper scroll */}
         {!isMobile && (
           <div className="w-64 flex-shrink-0 theme-card rounded-lg border theme-border-primary overflow-hidden">
-            <div className="p-4 border-b theme-border-primary/20">
-              <h3 className="font-semibold theme-text text-base">Bộ lọc</h3>
-            </div>
             <ScrollArea className="h-[calc(100vh-280px)]">
               <div className="p-4">
                 <CustomerFilters 
@@ -135,9 +132,6 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
           <div className={`fixed left-0 top-0 h-full w-64 theme-card rounded-lg z-50 transform transition-transform duration-300 ${
             isFilterOpen ? 'translate-x-0' : '-translate-x-full'
           }`}>
-            <div className="p-4 border-b theme-border-primary/20">
-              <h3 className="font-semibold theme-text text-base">Bộ lọc</h3>
-            </div>
             <ScrollArea className="h-[calc(100vh-100px)]">
               <div className="p-4">
                 <CustomerFilters 
