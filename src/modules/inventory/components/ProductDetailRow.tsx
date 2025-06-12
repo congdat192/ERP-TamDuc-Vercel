@@ -15,7 +15,7 @@ export function ProductDetailRow({ product, visibleColumnsCount }: ProductDetail
   return (
     <tr className="bg-gray-50/50">
       <td colSpan={visibleColumnsCount + 1} className="p-0">
-        <div className="p-6 border-l-4 border-l-blue-500 bg-white/80">
+        <div className="p-6 border-2 border-solid theme-border-primary bg-white/80 rounded-lg mx-2 my-1 shadow-sm">
           <Tabs defaultValue="info" className="w-full">
             <TabsList className="grid grid-cols-5 w-full max-w-2xl mb-6">
               <TabsTrigger value="info" className="text-sm">Thông tin</TabsTrigger>
