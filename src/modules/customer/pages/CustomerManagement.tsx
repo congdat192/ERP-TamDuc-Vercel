@@ -118,10 +118,7 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
           <div className="w-64 flex-shrink-0 theme-card rounded-lg border theme-border-primary overflow-hidden">
             <ScrollArea className="h-[calc(100vh-280px)]">
               <div className="p-4">
-                <CustomerFilters 
-                  sidebarOpen={false}
-                  setSidebarOpen={() => {}}
-                />
+                <CustomerFilters />
               </div>
             </ScrollArea>
           </div>
@@ -134,10 +131,7 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
           }`}>
             <ScrollArea className="h-[calc(100vh-100px)]">
               <div className="p-4">
-                <CustomerFilters 
-                  sidebarOpen={true}
-                  setSidebarOpen={setIsFilterOpen}
-                />
+                <CustomerFilters />
               </div>
             </ScrollArea>
           </div>

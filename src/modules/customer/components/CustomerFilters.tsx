@@ -1,221 +1,200 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { CheckedState } from '@radix-ui/react-checkbox';
+import { MultiSelectFilter } from '../../inventory/components/filters/MultiSelectFilter';
+import { TimePresetSelector } from '../../inventory/components/filters/TimePresetSelector';
+import { ThreeStateButtonGroup } from '../../inventory/components/filters/ThreeStateButtonGroup';
 
-interface CustomerFiltersProps {
-  sidebarOpen?: boolean;
-  setSidebarOpen?: (open: boolean) => void;
-}
+export function CustomerFilters() {
+  // Multi-select states
+  const [selectedCustomerGroups, setSelectedCustomerGroups] = useState<string[]>([]);
+  const [selectedBranches, setSelectedBranches] = useState<string[]>([]);
+  const [selectedCreators, setSelectedCreators] = useState<string[]>([]);
+  const [selectedDeliveryAreas, setSelectedDeliveryAreas] = useState<string[]>([]);
 
-export function CustomerFilters({ sidebarOpen, setSidebarOpen }: CustomerFiltersProps) {
-  // Filter states
-  const [customerGroup, setCustomerGroup] = useState('');
-  const [customerType, setCustomerType] = useState('');
-  const [gender, setGender] = useState('');
-  const [address, setAddress] = useState('');
-  const [branch, setBranch] = useState('');
-  const [creator, setCreator] = useState('');
-  const [createDateFrom, setCreateDateFrom] = useState('');
-  const [createDateTo, setCreateDateTo] = useState('');
-  const [lastTransactionFrom, setLastTransactionFrom] = useState('');
-  const [lastTransactionTo, setLastTransactionTo] = useState('');
-  const [birthMonth, setBirthMonth] = useState('');
+  // Time filter states
+  const [createDatePreset, setCreateDatePreset] = useState('');
+  const [createDateRange, setCreateDateRange] = useState<[Date?, Date?]>([undefined, undefined]);
+  const [birthdayPreset, setBirthdayPreset] = useState('');
+  const [birthdayRange, setBirthdayRange] = useState<[Date?, Date?]>([undefined, undefined]);
+  const [lastTransactionPreset, setLastTransactionPreset] = useState('');
+  const [lastTransactionRange, setLastTransactionRange] = useState<[Date?, Date?]>([undefined, undefined]);
+
+  // Button group states
+  const [customerType, setCustomerType] = useState<'all' | 'individual' | 'company'>('all');
+  const [gender, setGender] = useState<'all' | 'male' | 'female'>('all');
+  const [status, setStatus] = useState<'all' | 'active' | 'inactive'>('all');
+
+  // Number range states
+  const [totalSalesFrom, setTotalSalesFrom] = useState('');
+  const [totalSalesTo, setTotalSalesTo] = useState('');
   const [debtFrom, setDebtFrom] = useState('');
   const [debtTo, setDebtTo] = useState('');
-  const [totalSpentFrom, setTotalSpentFrom] = useState('');
-  const [totalSpentTo, setTotalSpentTo] = useState('');
+  const [debtDaysFrom, setDebtDaysFrom] = useState('');
+  const [debtDaysTo, setDebtDaysTo] = useState('');
   const [pointsFrom, setPointsFrom] = useState('');
   const [pointsTo, setPointsTo] = useState('');
-  const [status, setStatus] = useState('');
-  const [hasEmail, setHasEmail] = useState(false);
-  const [hasBirthday, setHasBirthday] = useState(false);
 
-  const handleHasEmailChange = (checked: CheckedState) => {
-    setHasEmail(checked === true);
-  };
+  // Options for multi-select filters
+  const customerGroupOptions = [
+    { value: 'vip', label: 'VIP' },
+    { value: 'regular', label: 'Thường' },
+    { value: 'wholesale', label: 'Bán sỉ' },
+    { value: 'retail', label: 'Khách lẻ' }
+  ];
 
-  const handleHasBirthdayChange = (checked: CheckedState) => {
-    setHasBirthday(checked === true);
-  };
+  const branchOptions = [
+    { value: 'hcm', label: 'Chi nhánh HCM' },
+    { value: 'hanoi', label: 'Chi nhánh Hà Nội' },
+    { value: 'danang', label: 'Chi nhánh Đà Nẵng' },
+    { value: 'cantho', label: 'Chi nhánh Cần Thơ' }
+  ];
+
+  const creatorOptions = [
+    { value: 'admin', label: 'Admin' },
+    { value: 'staff-a', label: 'Nhân viên A' },
+    { value: 'staff-b', label: 'Nhân viên B' },
+    { value: 'staff-c', label: 'Nhân viên C' },
+    { value: 'manager', label: 'Manager' }
+  ];
+
+  const deliveryAreaOptions = [
+    { value: 'hanoi', label: 'Hà Nội' },
+    { value: 'hcm', label: 'TP. Hồ Chí Minh' },
+    { value: 'danang', label: 'Đà Nẵng' },
+    { value: 'haiphong', label: 'Hải Phòng' },
+    { value: 'cantho', label: 'Cần Thơ' },
+    { value: 'vungtau', label: 'Vũng Tàu' },
+    { value: 'nhatrang', label: 'Nha Trang' },
+    { value: 'hue', label: 'Huế' }
+  ];
 
   const clearAllFilters = () => {
-    setCustomerGroup('');
-    setCustomerType('');
-    setGender('');
-    setAddress('');
-    setBranch('');
-    setCreator('');
-    setCreateDateFrom('');
-    setCreateDateTo('');
-    setLastTransactionFrom('');
-    setLastTransactionTo('');
-    setBirthMonth('');
+    setSelectedCustomerGroups([]);
+    setSelectedBranches([]);
+    setSelectedCreators([]);
+    setSelectedDeliveryAreas([]);
+    setCreateDatePreset('');
+    setCreateDateRange([undefined, undefined]);
+    setBirthdayPreset('');
+    setBirthdayRange([undefined, undefined]);
+    setLastTransactionPreset('');
+    setLastTransactionRange([undefined, undefined]);
+    setCustomerType('all');
+    setGender('all');
+    setStatus('all');
+    setTotalSalesFrom('');
+    setTotalSalesTo('');
     setDebtFrom('');
     setDebtTo('');
-    setTotalSpentFrom('');
-    setTotalSpentTo('');
+    setDebtDaysFrom('');
+    setDebtDaysTo('');
     setPointsFrom('');
     setPointsTo('');
-    setStatus('');
-    setHasEmail(false);
-    setHasBirthday(false);
   };
 
   return (
     <div className="space-y-[10px]">
-      {/* Nhóm khách hàng */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium theme-text">Nhóm khách hàng</label>
-        <Select value={customerGroup} onValueChange={setCustomerGroup}>
-          <SelectTrigger className="voucher-input h-10 rounded-md">
-            <SelectValue placeholder="Tất cả" />
-          </SelectTrigger>
-          <SelectContent className="theme-card border theme-border-primary rounded-lg z-50">
-            <SelectItem value="all">Tất cả</SelectItem>
-            <SelectItem value="vip">VIP</SelectItem>
-            <SelectItem value="regular">Thường</SelectItem>
-            <SelectItem value="wholesale">Bán sỉ</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      {/* 1. Nhóm khách hàng */}
+      <MultiSelectFilter
+        label="Nhóm khách hàng"
+        placeholder="Chọn nhóm khách hàng"
+        options={customerGroupOptions}
+        selectedValues={selectedCustomerGroups}
+        onSelectionChange={setSelectedCustomerGroups}
+      />
 
-      {/* Loại khách hàng */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium theme-text">Loại khách hàng</label>
-        <Select value={customerType} onValueChange={setCustomerType}>
-          <SelectTrigger className="voucher-input h-10 rounded-md">
-            <SelectValue placeholder="Tất cả" />
-          </SelectTrigger>
-          <SelectContent className="theme-card border theme-border-primary rounded-lg z-50">
-            <SelectItem value="all">Tất cả</SelectItem>
-            <SelectItem value="individual">Cá nhân</SelectItem>
-            <SelectItem value="company">Công ty</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      {/* 2. Chi nhánh tạo */}
+      <MultiSelectFilter
+        label="Chi nhánh tạo"
+        placeholder="Chọn chi nhánh"
+        options={branchOptions}
+        selectedValues={selectedBranches}
+        onSelectionChange={setSelectedBranches}
+      />
 
-      {/* Giới tính */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium theme-text">Giới tính</label>
-        <Select value={gender} onValueChange={setGender}>
-          <SelectTrigger className="voucher-input h-10 rounded-md">
-            <SelectValue placeholder="Tất cả" />
-          </SelectTrigger>
-          <SelectContent className="theme-card border theme-border-primary rounded-lg z-50">
-            <SelectItem value="all">Tất cả</SelectItem>
-            <SelectItem value="male">Nam</SelectItem>
-            <SelectItem value="female">Nữ</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      {/* 3. Ngày tạo */}
+      <TimePresetSelector
+        label="Ngày tạo"
+        type="created"
+        value={createDatePreset}
+        onChange={setCreateDatePreset}
+        customRange={createDateRange}
+        onCustomRangeChange={setCreateDateRange}
+      />
 
-      {/* Địa chỉ */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium theme-text">Địa chỉ</label>
-        <Input
-          placeholder="Nhập địa chỉ"
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-          className="voucher-input h-10 rounded-md"
-        />
-      </div>
+      {/* 4. Người tạo */}
+      <MultiSelectFilter
+        label="Người tạo"
+        placeholder="Chọn người tạo"
+        options={creatorOptions}
+        selectedValues={selectedCreators}
+        onSelectionChange={setSelectedCreators}
+      />
 
-      {/* Chi nhánh */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium theme-text">Chi nhánh</label>
-        <Select value={branch} onValueChange={setBranch}>
-          <SelectTrigger className="voucher-input h-10 rounded-md">
-            <SelectValue placeholder="Tất cả" />
-          </SelectTrigger>
-          <SelectContent className="theme-card border theme-border-primary rounded-lg z-50">
-            <SelectItem value="all">Tất cả</SelectItem>
-            <SelectItem value="hcm">Chi nhánh HCM</SelectItem>
-            <SelectItem value="hanoi">Chi nhánh Hà Nội</SelectItem>
-            <SelectItem value="danang">Chi nhánh Đà Nẵng</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      {/* 5. Loại khách hàng */}
+      <ThreeStateButtonGroup
+        label="Loại khách hàng"
+        value={customerType}
+        onChange={(value: 'all' | 'yes' | 'no') => {
+          const mapping = { 'all': 'all', 'yes': 'individual', 'no': 'company' } as const;
+          setCustomerType(mapping[value] as 'all' | 'individual' | 'company');
+        }}
+      />
 
-      {/* Người tạo */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium theme-text">Người tạo</label>
-        <Select value={creator} onValueChange={setCreator}>
-          <SelectTrigger className="voucher-input h-10 rounded-md">
-            <SelectValue placeholder="Tất cả" />
-          </SelectTrigger>
-          <SelectContent className="theme-card border theme-border-primary rounded-lg z-50">
-            <SelectItem value="all">Tất cả</SelectItem>
-            <SelectItem value="admin">Admin</SelectItem>
-            <SelectItem value="staff1">Nhân viên A</SelectItem>
-            <SelectItem value="staff2">Nhân viên B</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      {/* 6. Giới tính */}
+      <ThreeStateButtonGroup
+        label="Giới tính"
+        value={gender === 'all' ? 'all' : gender === 'male' ? 'yes' : 'no'}
+        onChange={(value: 'all' | 'yes' | 'no') => {
+          const mapping = { 'all': 'all', 'yes': 'male', 'no': 'female' } as const;
+          setGender(mapping[value] as 'all' | 'male' | 'female');
+        }}
+      />
 
-      {/* Ngày tạo */}
+      {/* 7. Sinh nhật */}
+      <TimePresetSelector
+        label="Sinh nhật"
+        type="created"
+        value={birthdayPreset}
+        onChange={setBirthdayPreset}
+        customRange={birthdayRange}
+        onCustomRangeChange={setBirthdayRange}
+      />
+
+      {/* 8. Ngày giao dịch cuối */}
+      <TimePresetSelector
+        label="Ngày giao dịch cuối"
+        type="created"
+        value={lastTransactionPreset}
+        onChange={setLastTransactionPreset}
+        customRange={lastTransactionRange}
+        onCustomRangeChange={setLastTransactionRange}
+      />
+
+      {/* 9. Tổng bán */}
       <div className="space-y-2">
-        <label className="text-sm font-medium theme-text">Ngày tạo</label>
+        <label className="text-sm font-medium theme-text">Tổng bán</label>
         <div className="grid grid-cols-2 gap-2">
           <Input
-            type="date"
-            placeholder="Từ ngày"
-            value={createDateFrom}
-            onChange={(e) => setCreateDateFrom(e.target.value)}
+            type="number"
+            placeholder="Từ"
+            value={totalSalesFrom}
+            onChange={(e) => setTotalSalesFrom(e.target.value)}
             className="voucher-input h-10 rounded-md text-sm"
           />
           <Input
-            type="date"
-            placeholder="Đến ngày"
-            value={createDateTo}
-            onChange={(e) => setCreateDateTo(e.target.value)}
+            type="number"
+            placeholder="Đến"
+            value={totalSalesTo}
+            onChange={(e) => setTotalSalesTo(e.target.value)}
             className="voucher-input h-10 rounded-md text-sm"
           />
         </div>
       </div>
 
-      {/* Ngày giao dịch cuối */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium theme-text">Ngày giao dịch cuối</label>
-        <div className="grid grid-cols-2 gap-2">
-          <Input
-            type="date"
-            placeholder="Từ ngày"
-            value={lastTransactionFrom}
-            onChange={(e) => setLastTransactionFrom(e.target.value)}
-            className="voucher-input h-10 rounded-md text-sm"
-          />
-          <Input
-            type="date"
-            placeholder="Đến ngày"
-            value={lastTransactionTo}
-            onChange={(e) => setLastTransactionTo(e.target.value)}
-            className="voucher-input h-10 rounded-md text-sm"
-          />
-        </div>
-      </div>
-
-      {/* Tháng sinh */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium theme-text">Tháng sinh</label>
-        <Select value={birthMonth} onValueChange={setBirthMonth}>
-          <SelectTrigger className="voucher-input h-10 rounded-md">
-            <SelectValue placeholder="Tất cả" />
-          </SelectTrigger>
-          <SelectContent className="theme-card border theme-border-primary rounded-lg z-50">
-            <SelectItem value="all">Tất cả</SelectItem>
-            {Array.from({ length: 12 }, (_, i) => (
-              <SelectItem key={i + 1} value={(i + 1).toString()}>
-                Tháng {i + 1}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Nợ hiện tại */}
+      {/* 10. Nợ hiện tại */}
       <div className="space-y-2">
         <label className="text-sm font-medium theme-text">Nợ hiện tại</label>
         <div className="grid grid-cols-2 gap-2">
@@ -236,30 +215,30 @@ export function CustomerFilters({ sidebarOpen, setSidebarOpen }: CustomerFilters
         </div>
       </div>
 
-      {/* Tổng bán */}
+      {/* 11. Số ngày nợ */}
       <div className="space-y-2">
-        <label className="text-sm font-medium theme-text">Tổng bán</label>
+        <label className="text-sm font-medium theme-text">Số ngày nợ</label>
         <div className="grid grid-cols-2 gap-2">
           <Input
             type="number"
             placeholder="Từ"
-            value={totalSpentFrom}
-            onChange={(e) => setTotalSpentFrom(e.target.value)}
+            value={debtDaysFrom}
+            onChange={(e) => setDebtDaysFrom(e.target.value)}
             className="voucher-input h-10 rounded-md text-sm"
           />
           <Input
             type="number"
             placeholder="Đến"
-            value={totalSpentTo}
-            onChange={(e) => setTotalSpentTo(e.target.value)}
+            value={debtDaysTo}
+            onChange={(e) => setDebtDaysTo(e.target.value)}
             className="voucher-input h-10 rounded-md text-sm"
           />
         </div>
       </div>
 
-      {/* Điểm tích lũy */}
+      {/* 12. Điểm hiện tại */}
       <div className="space-y-2">
-        <label className="text-sm font-medium theme-text">Điểm tích lũy</label>
+        <label className="text-sm font-medium theme-text">Điểm hiện tại</label>
         <div className="grid grid-cols-2 gap-2">
           <Input
             type="number"
@@ -278,46 +257,24 @@ export function CustomerFilters({ sidebarOpen, setSidebarOpen }: CustomerFilters
         </div>
       </div>
 
-      {/* Trạng thái */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium theme-text">Trạng thái</label>
-        <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="voucher-input h-10 rounded-md">
-            <SelectValue placeholder="Tất cả" />
-          </SelectTrigger>
-          <SelectContent className="theme-card border theme-border-primary rounded-lg z-50">
-            <SelectItem value="all">Tất cả</SelectItem>
-            <SelectItem value="active">Hoạt động</SelectItem>
-            <SelectItem value="inactive">Ngưng hoạt động</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      {/* 13. Khu vực giao hàng */}
+      <MultiSelectFilter
+        label="Khu vực giao hàng"
+        placeholder="Chọn khu vực"
+        options={deliveryAreaOptions}
+        selectedValues={selectedDeliveryAreas}
+        onSelectionChange={setSelectedDeliveryAreas}
+      />
 
-      {/* Có email */}
-      <div className="flex items-center space-x-2">
-        <Checkbox
-          id="hasEmail"
-          checked={hasEmail}
-          onCheckedChange={handleHasEmailChange}
-          className="voucher-checkbox"
-        />
-        <label htmlFor="hasEmail" className="text-sm theme-text cursor-pointer">
-          Có email
-        </label>
-      </div>
-
-      {/* Có ngày sinh */}
-      <div className="flex items-center space-x-2">
-        <Checkbox
-          id="hasBirthday"
-          checked={hasBirthday}
-          onCheckedChange={handleHasBirthdayChange}
-          className="voucher-checkbox"
-        />
-        <label htmlFor="hasBirthday" className="text-sm theme-text cursor-pointer">
-          Có ngày sinh
-        </label>
-      </div>
+      {/* 14. Trạng thái */}
+      <ThreeStateButtonGroup
+        label="Trạng thái"
+        value={status === 'all' ? 'all' : status === 'active' ? 'yes' : 'no'}
+        onChange={(value: 'all' | 'yes' | 'no') => {
+          const mapping = { 'all': 'all', 'yes': 'active', 'no': 'inactive' } as const;
+          setStatus(mapping[value] as 'all' | 'active' | 'inactive');
+        }}
+      />
 
       {/* Clear filters button */}
       <div className="pt-[10px] border-t border-border">
