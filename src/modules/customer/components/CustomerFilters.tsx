@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,12 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { CheckedState } from '@radix-ui/react-checkbox';
 
-interface CustomerFiltersProps {
-  sidebarOpen: boolean;
-  setSidebarOpen: (open: boolean) => void;
-}
-
-export function CustomerFilters({ sidebarOpen, setSidebarOpen }: CustomerFiltersProps) {
+export function CustomerFilters() {
   // Filter states
   const [customerGroup, setCustomerGroup] = useState('');
   const [customerType, setCustomerType] = useState('');

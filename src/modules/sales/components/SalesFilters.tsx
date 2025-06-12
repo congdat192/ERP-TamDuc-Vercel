@@ -9,7 +9,7 @@ import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChevronDown } from 'lucide-react';
-import { SingleSelectFilter } from './filters/SingleSelectFilter';
+import { MultiSelectFilter } from '../../../inventory/components/filters/MultiSelectFilter';
 
 interface SalesFiltersProps {
   onClearFilters: () => void;
@@ -18,8 +18,14 @@ interface SalesFiltersProps {
 }
 
 export function SalesFilters({ onClearFilters, onApplyFilters, isMobile }: SalesFiltersProps) {
-  // Branch state
+  // Multi-select states
   const [selectedBranches, setSelectedBranches] = useState<string[]>([]);
+  const [selectedPaymentMethods, setSelectedPaymentMethods] = useState<string[]>([]);
+  const [selectedCreators, setSelectedCreators] = useState<string[]>([]);
+  const [selectedSellers, setSelectedSellers] = useState<string[]>([]);
+  const [selectedPriceLists, setSelectedPriceLists] = useState<string[]>([]);
+  const [selectedSalesChannels, setSelectedSalesChannels] = useState<string[]>([]);
+  
   const [timeFilterType, setTimeFilterType] = useState<'quick' | 'custom'>('quick');
   const [selectedQuickTime, setSelectedQuickTime] = useState('this-month');
   const [dateRange, setDateRange] = useState<{from?: Date; to?: Date}>({});
@@ -27,15 +33,9 @@ export function SalesFilters({ onClearFilters, onApplyFilters, isMobile }: Sales
     completed: true,
     canceled: false
   });
-  const [paymentMethod, setPaymentMethod] = useState('');
-  const [creator, setCreator] = useState('');
-  const [seller, setSeller] = useState('');
-  const [priceList, setPriceList] = useState('');
-  const [salesChannel, setSalesChannel] = useState('');
 
-  // Branch options
+  // Options for dropdown filters
   const branchOptions = [
-    { value: 'all', label: 'Tất cả' },
     { value: 'tan-binh', label: '01. Tân Bình' },
     { value: 'q11', label: 'Chi nhánh Q11' },
     { value: 'thu-duc', label: 'Thủ Đức' },
@@ -44,9 +44,7 @@ export function SalesFilters({ onClearFilters, onApplyFilters, isMobile }: Sales
     { value: 'district-3', label: 'Quận 3' }
   ];
 
-  // Options for dropdown filters
   const paymentMethodOptions = [
-    { value: '', label: 'Tất cả' },
     { value: 'cash', label: 'Tiền mặt' },
     { value: 'card', label: 'Thẻ' },
     { value: 'transfer', label: 'Chuyển khoản' },
@@ -55,7 +53,6 @@ export function SalesFilters({ onClearFilters, onApplyFilters, isMobile }: Sales
   ];
 
   const creatorOptions = [
-    { value: '', label: 'Tất cả' },
     { value: 'user1', label: 'Nguyễn Văn A' },
     { value: 'user2', label: 'Trần Thị B' },
     { value: 'user3', label: 'Lê Văn C' },
@@ -63,7 +60,6 @@ export function SalesFilters({ onClearFilters, onApplyFilters, isMobile }: Sales
   ];
 
   const sellerOptions = [
-    { value: '', label: 'Tất cả' },
     { value: 'seller1', label: 'Lê Văn C' },
     { value: 'seller2', label: 'Phạm Thị D' },
     { value: 'seller3', label: 'Hoàng Văn E' },
@@ -71,7 +67,6 @@ export function SalesFilters({ onClearFilters, onApplyFilters, isMobile }: Sales
   ];
 
   const priceListOptions = [
-    { value: '', label: 'Tất cả' },
     { value: 'standard', label: 'Bảng giá chuẩn' },
     { value: 'vip', label: 'Bảng giá VIP' },
     { value: 'wholesale', label: 'Bảng giá sỉ' },
@@ -79,7 +74,6 @@ export function SalesFilters({ onClearFilters, onApplyFilters, isMobile }: Sales
   ];
 
   const salesChannelOptions = [
-    { value: '', label: 'Tất cả' },
     { value: 'store', label: 'Cửa hàng' },
     { value: 'online', label: 'Online' },
     { value: 'phone', label: 'Điện thoại' },
@@ -116,64 +110,21 @@ export function SalesFilters({ onClearFilters, onApplyFilters, isMobile }: Sales
     ]
   };
 
-  const handleBranchSelect = (branchValue: string) => {
-    if (branchValue === 'all') {
-      if (selectedBranches.includes('all')) {
-        setSelectedBranches([]);
-      } else {
-        setSelectedBranches(['all', ...branchOptions.slice(1).map(b => b.value)]);
-      }
-    } else {
-      const newSelection = selectedBranches.includes(branchValue)
-        ? selectedBranches.filter(b => b !== branchValue && b !== 'all')
-        : [...selectedBranches.filter(b => b !== 'all'), branchValue];
-      
-      if (newSelection.length === branchOptions.length - 1) {
-        setSelectedBranches(['all', ...newSelection]);
-      } else {
-        setSelectedBranches(newSelection);
-      }
-    }
-  };
-
-  const removeBranch = (branchValue: string) => {
-    if (branchValue === 'all') {
-      setSelectedBranches([]);
-    } else {
-      setSelectedBranches(selectedBranches.filter(b => b !== branchValue && b !== 'all'));
-    }
-  };
-
-  const getBranchDisplayTags = () => {
-    const nonAllBranches = selectedBranches.filter(b => b !== 'all');
-    if (selectedBranches.includes('all')) {
-      return [{ value: 'all', label: 'Tất cả' }];
-    }
-    if (nonAllBranches.length <= 2) {
-      return nonAllBranches.map(b => branchOptions.find(opt => opt.value === b)!);
-    }
-    return [
-      ...nonAllBranches.slice(0, 2).map(b => branchOptions.find(opt => opt.value === b)!),
-      { value: 'more', label: `+${nonAllBranches.length - 2} khác` }
-    ];
-  };
-
   return (
     <div className="space-y-6">
-      {/* Chi nhánh - Updated with SingleSelectFilter */}
-      <SingleSelectFilter
+      {/* Chi nhánh */}
+      <MultiSelectFilter
         label="Chi nhánh"
         placeholder="Chọn chi nhánh"
         options={branchOptions}
-        selectedValue={selectedBranches.length === 1 ? selectedBranches[0] : ''}
-        onSelectionChange={(value) => setSelectedBranches(value ? [value] : [])}
+        selectedValues={selectedBranches}
+        onSelectionChange={setSelectedBranches}
       />
 
       {/* Time Period - keep existing implementation */}
       <div className="space-y-3">
         <label className="text-sm font-medium theme-text">Thời gian</label>
         <RadioGroup value={timeFilterType} onValueChange={(value: 'quick' | 'custom') => setTimeFilterType(value)} className="space-y-4">
-          {/* ... keep existing code (time period implementation) */}
           <div className="flex items-center space-x-3 min-h-[36px]">
             <RadioGroupItem value="quick" id="quick" />
             <label htmlFor="quick" className="text-sm theme-text cursor-pointer">Chọn nhanh</label>
@@ -279,7 +230,7 @@ export function SalesFilters({ onClearFilters, onApplyFilters, isMobile }: Sales
         </RadioGroup>
       </div>
 
-      {/* Status - keep existing implementation */}
+      {/* Status */}
       <div className="space-y-3">
         <label className="text-sm font-medium theme-text">Trạng thái</label>
         <div className="space-y-3">
@@ -306,50 +257,50 @@ export function SalesFilters({ onClearFilters, onApplyFilters, isMobile }: Sales
         </div>
       </div>
 
-      {/* Payment Method - Updated with SingleSelectFilter */}
-      <SingleSelectFilter
+      {/* Payment Method */}
+      <MultiSelectFilter
         label="Phương thức thanh toán"
         placeholder="Chọn phương thức thanh toán"
         options={paymentMethodOptions}
-        selectedValue={paymentMethod}
-        onSelectionChange={setPaymentMethod}
+        selectedValues={selectedPaymentMethods}
+        onSelectionChange={setSelectedPaymentMethods}
       />
 
-      {/* Creator - Updated with SingleSelectFilter */}
-      <SingleSelectFilter
+      {/* Creator */}
+      <MultiSelectFilter
         label="Người tạo"
         placeholder="Chọn người tạo"
         options={creatorOptions}
-        selectedValue={creator}
-        onSelectionChange={setCreator}
+        selectedValues={selectedCreators}
+        onSelectionChange={setSelectedCreators}
       />
 
-      {/* Seller - Updated with SingleSelectFilter */}
-      <SingleSelectFilter
+      {/* Seller */}
+      <MultiSelectFilter
         label="Người bán"
         placeholder="Chọn người bán"
         options={sellerOptions}
-        selectedValue={seller}
-        onSelectionChange={setSeller}
+        selectedValues={selectedSellers}
+        onSelectionChange={setSelectedSellers}
       />
 
-      {/* Price List - Updated with SingleSelectFilter */}
-      <SingleSelectFilter
+      {/* Price List */}
+      <MultiSelectFilter
         label="Bảng giá"
         placeholder="Chọn bảng giá"
         options={priceListOptions}
-        selectedValue={priceList}
-        onSelectionChange={setPriceList}
+        selectedValues={selectedPriceLists}
+        onSelectionChange={setSelectedPriceLists}
       />
 
-      {/* Sales Channel - Updated with SingleSelectFilter */}
+      {/* Sales Channel */}
       <div className="space-y-3">
-        <SingleSelectFilter
+        <MultiSelectFilter
           label="Kênh bán"
           placeholder="Chọn kênh bán"
           options={salesChannelOptions}
-          selectedValue={salesChannel}
-          onSelectionChange={setSalesChannel}
+          selectedValues={selectedSalesChannels}
+          onSelectionChange={setSelectedSalesChannels}
         />
         <Button variant="link" className="text-sm p-0 h-auto theme-text-primary hover:theme-text-primary/80">
           Tạo mới
