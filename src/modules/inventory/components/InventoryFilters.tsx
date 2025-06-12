@@ -8,6 +8,7 @@ import { StockStatusFilter } from './filters/StockStatusFilter';
 import { TimePresetSelector } from './filters/TimePresetSelector';
 import { AttributeExpandableFilter } from './filters/AttributeExpandableFilter';
 import { ThreeStateButtonGroup } from './filters/ThreeStateButtonGroup';
+import { MultiSelectFilter } from './filters/MultiSelectFilter';
 import { 
   categoryTree, 
   productAttributes, 
@@ -31,19 +32,19 @@ export function InventoryFilters({ onClearFilters, onApplyFilters, isMobile }: I
   const [outOfStockCustomRange, setOutOfStockCustomRange] = useState<[Date?, Date?]>([undefined, undefined]);
   const [createdTime, setCreatedTime] = useState('all');
   const [createdCustomRange, setCreatedCustomRange] = useState<[Date?, Date?]>([undefined, undefined]);
-  const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string>>({});
-  const [selectedBrand, setSelectedBrand] = useState('all');
-  const [selectedLocation, setSelectedLocation] = useState('all');
-  const [selectedProductType, setSelectedProductType] = useState('all');
+  const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string[]>>({});
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
+  const [selectedProductTypes, setSelectedProductTypes] = useState<string[]>([]);
   const [pointsEarning, setPointsEarning] = useState<'all' | 'yes' | 'no'>('all');
   const [directSales, setDirectSales] = useState<'all' | 'yes' | 'no'>('all');
   const [channelLinked, setChannelLinked] = useState<'all' | 'yes' | 'no'>('all');
   const [productStatus, setProductStatus] = useState('all');
 
-  const handleAttributeChange = (key: string, value: string) => {
+  const handleAttributeChange = (key: string, values: string[]) => {
     setSelectedAttributes(prev => ({
       ...prev,
-      [key]: value
+      [key]: values
     }));
   };
 
@@ -56,15 +57,31 @@ export function InventoryFilters({ onClearFilters, onApplyFilters, isMobile }: I
     setCreatedTime('all');
     setCreatedCustomRange([undefined, undefined]);
     setSelectedAttributes({});
-    setSelectedBrand('all');
-    setSelectedLocation('all');
-    setSelectedProductType('all');
+    setSelectedBrands([]);
+    setSelectedLocations([]);
+    setSelectedProductTypes([]);
     setPointsEarning('all');
     setDirectSales('all');
     setChannelLinked('all');
     setProductStatus('all');
     onClearFilters();
   };
+
+  // Convert brand options to the format expected by MultiSelectFilter
+  const brandMultiSelectOptions = brandOptions.map(brand => ({
+    value: brand.toLowerCase(),
+    label: brand
+  }));
+
+  const locationMultiSelectOptions = locationOptions.map(location => ({
+    value: location.toLowerCase(),
+    label: location
+  }));
+
+  const productTypeMultiSelectOptions = productTypeOptions.map(type => ({
+    value: type.value,
+    label: type.label
+  }));
 
   return (
     <div className="w-full h-full flex flex-col">
@@ -112,59 +129,32 @@ export function InventoryFilters({ onClearFilters, onApplyFilters, isMobile }: I
             onAttributeChange={handleAttributeChange}
           />
 
-          {/* F. Thương hiệu */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium theme-text">Thương hiệu</label>
-            <Select value={selectedBrand} onValueChange={setSelectedBrand}>
-              <SelectTrigger className="voucher-input h-10 rounded-md">
-                <SelectValue placeholder="Chọn thương hiệu" />
-              </SelectTrigger>
-              <SelectContent className="theme-card border theme-border-primary rounded-lg z-50">
-                <SelectItem value="all">Tất cả</SelectItem>
-                {brandOptions.map(brand => (
-                  <SelectItem key={brand} value={brand.toLowerCase()}>
-                    {brand}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* F. Thương hiệu - Multi-select */}
+          <MultiSelectFilter
+            label="Thương hiệu"
+            placeholder="Chọn thương hiệu"
+            options={brandMultiSelectOptions}
+            selectedValues={selectedBrands}
+            onSelectionChange={setSelectedBrands}
+          />
 
-          {/* G. Vị trí */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium theme-text">Vị trí</label>
-            <Select value={selectedLocation} onValueChange={setSelectedLocation}>
-              <SelectTrigger className="voucher-input h-10 rounded-md">
-                <SelectValue placeholder="Chọn vị trí" />
-              </SelectTrigger>
-              <SelectContent className="theme-card border theme-border-primary rounded-lg z-50">
-                <SelectItem value="all">Tất cả</SelectItem>
-                {locationOptions.map(location => (
-                  <SelectItem key={location} value={location.toLowerCase()}>
-                    {location}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* G. Vị trí - Multi-select */}
+          <MultiSelectFilter
+            label="Vị trí"
+            placeholder="Chọn vị trí"
+            options={locationMultiSelectOptions}
+            selectedValues={selectedLocations}
+            onSelectionChange={setSelectedLocations}
+          />
 
-          {/* H. Loại hàng */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium theme-text">Loại hàng</label>
-            <Select value={selectedProductType} onValueChange={setSelectedProductType}>
-              <SelectTrigger className="voucher-input h-10 rounded-md">
-                <SelectValue placeholder="Chọn loại hàng" />
-              </SelectTrigger>
-              <SelectContent className="theme-card border theme-border-primary rounded-lg z-50">
-                <SelectItem value="all">Tất cả</SelectItem>
-                {productTypeOptions.map(type => (
-                  <SelectItem key={type.value} value={type.value}>
-                    {type.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* H. Loại hàng - Multi-select */}
+          <MultiSelectFilter
+            label="Loại hàng"
+            placeholder="Chọn loại hàng"
+            options={productTypeMultiSelectOptions}
+            selectedValues={selectedProductTypes}
+            onSelectionChange={setSelectedProductTypes}
+          />
 
           {/* I. Các trường dạng chọn 3 trạng thái */}
           <ThreeStateButtonGroup

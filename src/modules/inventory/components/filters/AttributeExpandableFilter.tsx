@@ -1,14 +1,14 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { ProductAttribute } from '@/data/inventoryMockData';
+import { MultiSelectFilter } from './MultiSelectFilter';
 
 interface AttributeExpandableFilterProps {
   attributes: ProductAttribute[];
-  selectedAttributes: Record<string, string>;
-  onAttributeChange: (key: string, value: string) => void;
+  selectedAttributes: Record<string, string[]>;
+  onAttributeChange: (key: string, values: string[]) => void;
 }
 
 export function AttributeExpandableFilter({ 
@@ -23,25 +23,14 @@ export function AttributeExpandableFilter({
   const extendedAttributes = attributes.slice(3);
 
   const renderAttributeSelect = (attribute: ProductAttribute) => (
-    <div key={attribute.key} className="space-y-2">
-      <label className="text-sm font-medium theme-text">{attribute.label}</label>
-      <Select 
-        value={selectedAttributes[attribute.key] || 'all'} 
-        onValueChange={(value) => onAttributeChange(attribute.key, value)}
-      >
-        <SelectTrigger className="voucher-input h-10 rounded-md">
-          <SelectValue placeholder={`Chọn ${attribute.label.toLowerCase()}`} />
-        </SelectTrigger>
-        <SelectContent className="theme-card border theme-border-primary rounded-lg z-50">
-          <SelectItem value="all">Tất cả</SelectItem>
-          {attribute.options.map(option => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+    <MultiSelectFilter
+      key={attribute.key}
+      label={attribute.label}
+      placeholder={`Chọn ${attribute.label.toLowerCase()}`}
+      options={attribute.options}
+      selectedValues={selectedAttributes[attribute.key] || []}
+      onSelectionChange={(values) => onAttributeChange(attribute.key, values)}
+    />
   );
 
   return (
