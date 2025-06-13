@@ -21,7 +21,7 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
 
-  // Column visibility state - All 28 required columns (added products column)
+  // Column visibility state - All 27 required columns exactly as requested
   const [columns, setColumns] = useState<ColumnConfig[]>([
     { key: 'invoiceCode', label: 'Mã hóa đơn', visible: true },
     { key: 'datetime', label: 'Thời gian', visible: true },
@@ -41,7 +41,6 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
     { key: 'creator', label: 'Người tạo', visible: false },
     { key: 'channel', label: 'Kênh bán', visible: false },
     { key: 'note', label: 'Ghi chú', visible: false },
-    { key: 'products', label: 'Sản phẩm', visible: true },
     { key: 'totalAmount', label: 'Tổng tiền hàng', visible: true },
     { key: 'discount', label: 'Giảm giá', visible: true },
     { key: 'tax', label: 'Giảm thuế', visible: false },
