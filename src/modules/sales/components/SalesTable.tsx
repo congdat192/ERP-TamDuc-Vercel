@@ -3,6 +3,8 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { ProductCodeLink } from '@/components/shared/ProductCodeLink';
+import { getProductByCode } from '@/data/mockData';
 
 interface SalesTableProps {
   salesData: any[];
@@ -72,6 +74,12 @@ export function SalesTable({
                   {column.label}
                 </th>
               ))}
+              {/* Add Products column if not already visible */}
+              {!visibleColumns.find(col => col.key === 'products') && (
+                <th className="min-w-[200px] px-4 py-3 text-left text-sm font-medium theme-text-muted whitespace-nowrap">
+                  Sản phẩm
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -218,6 +226,33 @@ export function SalesTable({
                     )}
                   </td>
                 ))}
+                {/* Products column - Always show clickable product codes */}
+                {!visibleColumns.find(col => col.key === 'products') && (
+                  <td className="min-w-[200px] px-4 py-3 text-sm">
+                    <div className="flex flex-wrap gap-1">
+                      {sale.items && sale.items.length > 0 ? (
+                        sale.items.map((productCode: string, index: number) => {
+                          const product = getProductByCode(productCode);
+                          return (
+                            <div key={index} className="flex flex-col gap-1">
+                              <ProductCodeLink 
+                                productCode={productCode}
+                                className="text-xs"
+                              />
+                              {product && (
+                                <span className="text-xs theme-text-muted truncate max-w-[120px]">
+                                  {product.name}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <span className="theme-text-muted text-xs">-</span>
+                      )}
+                    </div>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
