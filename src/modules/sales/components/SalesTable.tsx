@@ -1,8 +1,8 @@
-
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { InvoiceDetailRow } from './InvoiceDetailRow';
 
 interface SalesTableProps {
   salesData: any[];
@@ -16,6 +16,8 @@ interface SalesTableProps {
   setItemsPerPage: (items: number) => void;
   totalSales: number;
   totalPages: number;
+  expandedRowId?: string | null;
+  onRowClick?: (saleId: string) => void;
 }
 
 export function SalesTable({ 
@@ -29,7 +31,9 @@ export function SalesTable({
   itemsPerPage,
   setItemsPerPage,
   totalSales,
-  totalPages
+  totalPages,
+  expandedRowId,
+  onRowClick
 }: SalesTableProps) {
   // Format currency helper
   const formatCurrency = (amount: number) => {
@@ -51,6 +55,14 @@ export function SalesTable({
   const paginatedData = salesData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const allSelected = paginatedData.length > 0 && selectedSales.length === paginatedData.length;
+
+  const handleRowClick = (saleId: string, event: React.MouseEvent) => {
+    // Prevent row click when clicking on checkbox
+    if ((event.target as HTMLElement).closest('input[type="checkbox"]')) {
+      return;
+    }
+    onRowClick?.(saleId);
+  };
 
   return (
     <div className="h-full flex flex-col theme-card rounded-lg border theme-border-primary overflow-hidden">
@@ -76,149 +88,166 @@ export function SalesTable({
           </thead>
           <tbody>
             {paginatedData.map((sale) => (
-              <tr key={sale.id} className="hover:theme-bg-primary/5 border-b theme-border-primary/10">
-                {/* Sticky checkbox */}
-                <td className="sticky left-0 bg-white z-10 w-12 px-4 py-3 border-r theme-border-primary/10">
-                  <Checkbox
-                    checked={selectedSales.includes(sale.id)}
-                    onCheckedChange={() => onSelectSale?.(sale.id)}
-                    className="theme-border-primary"
-                  />
-                </td>
-                {visibleColumns.map((column) => (
-                  <td key={column.key} className="min-w-[150px] px-4 py-3 text-sm whitespace-nowrap">
-                    {/* Invoice Code */}
-                    {column.key === 'invoiceCode' && (
-                      <span className="theme-text font-medium">{sale.id}</span>
-                    )}
-                    {/* Datetime */}
-                    {column.key === 'datetime' && (
-                      <span className="theme-text">{sale.date}</span>
-                    )}
-                    {/* Created Time */}
-                    {column.key === 'createdTime' && (
-                      <span className="theme-text">{formatDate(sale.createdTime)}</span>
-                    )}
-                    {/* Last Updated */}
-                    {column.key === 'lastUpdated' && (
-                      <span className="theme-text">{formatDate(sale.lastUpdated)}</span>
-                    )}
-                    {/* Order Code */}
-                    {column.key === 'orderCode' && (
-                      <span className="theme-text">{sale.orderCode || '-'}</span>
-                    )}
-                    {/* Return Code */}
-                    {column.key === 'returnCode' && (
-                      sale.returnCode ? (
-                        <Badge variant="outline" className="berry-warning-light">
-                          {sale.returnCode}
-                        </Badge>
-                      ) : <span className="theme-text-muted">-</span>
-                    )}
-                    {/* Customer */}
-                    {column.key === 'customer' && (
-                      <span className="theme-text font-medium">{sale.customer}</span>
-                    )}
-                    {/* Email */}
-                    {column.key === 'email' && (
-                      <span className="theme-text">{sale.email || '-'}</span>
-                    )}
-                    {/* Phone */}
-                    {column.key === 'phone' && (
-                      <span className="theme-text">{sale.phone || '-'}</span>
-                    )}
-                    {/* Address */}
-                    {column.key === 'address' && (
-                      <span className="theme-text">{sale.address || '-'}</span>
-                    )}
-                    {/* Area */}
-                    {column.key === 'area' && (
-                      <span className="theme-text">{sale.area || '-'}</span>
-                    )}
-                    {/* Ward */}
-                    {column.key === 'ward' && (
-                      <span className="theme-text">{sale.ward || '-'}</span>
-                    )}
-                    {/* Birthdate */}
-                    {column.key === 'birthdate' && (
-                      <span className="theme-text">{sale.birthdate || '-'}</span>
-                    )}
-                    {/* Branch */}
-                    {column.key === 'branch' && (
-                      <span className="theme-text">{sale.branch || '-'}</span>
-                    )}
-                    {/* Seller */}
-                    {column.key === 'seller' && (
-                      <span className="theme-text">{sale.seller || '-'}</span>
-                    )}
-                    {/* Creator */}
-                    {column.key === 'creator' && (
-                      <span className="theme-text">{sale.creator || '-'}</span>
-                    )}
-                    {/* Channel */}
-                    {column.key === 'channel' && (
-                      <span className="theme-text">{sale.channel || '-'}</span>
-                    )}
-                    {/* Note */}
-                    {column.key === 'note' && (
-                      <span className="theme-text-muted text-xs">{sale.note || '-'}</span>
-                    )}
-                    {/* Total Amount */}
-                    {column.key === 'totalAmount' && (
-                      <span className="font-semibold theme-text">{formatCurrency(sale.totalAmount)}</span>
-                    )}
-                    {/* Discount */}
-                    {column.key === 'discount' && (
-                      <span className="sales-amount-negative font-medium">
-                        {sale.discount > 0 ? formatCurrency(sale.discount) : '-'}
-                      </span>
-                    )}
-                    {/* Tax */}
-                    {column.key === 'tax' && (
-                      <span className="theme-text">
-                        {sale.tax > 0 ? formatCurrency(sale.tax) : '-'}
-                      </span>
-                    )}
-                    {/* Need to Pay */}
-                    {column.key === 'needToPay' && (
-                      <span className="font-semibold theme-text-primary">
-                        {formatCurrency(sale.needToPay)}
-                      </span>
-                    )}
-                    {/* Paid Amount */}
-                    {column.key === 'paidAmount' && (
-                      <span className="sales-amount-positive font-medium">
-                        {formatCurrency(sale.paidAmount)}
-                      </span>
-                    )}
-                    {/* Payment Discount */}
-                    {column.key === 'paymentDiscount' && (
-                      <span className="theme-text">
-                        {sale.paymentDiscount > 0 ? formatCurrency(sale.paymentDiscount) : '-'}
-                      </span>
-                    )}
-                    {/* Delivery Time */}
-                    {column.key === 'deliveryTime' && (
-                      <span className="theme-text">{sale.deliveryTime || '-'}</span>
-                    )}
-                    {/* Status */}
-                    {column.key === 'status' && (
-                      <Badge 
-                        variant={sale.status === 'Hoàn thành' ? 'success' : 'destructive'}
-                        className={sale.status === 'Hoàn thành' ? 'sales-status-completed' : 'sales-status-cancelled'}
-                      >
-                        {sale.status}
-                      </Badge>
-                    )}
-                    {/* Invoice Status */}
-                    {column.key === 'invoiceStatus' && (
-                      <Badge variant="outline" className="theme-badge-secondary">
-                        Chưa có
-                      </Badge>
-                    )}
+              <>
+                <tr 
+                  key={sale.id} 
+                  className={`cursor-pointer transition-colors ${
+                    expandedRowId === sale.id 
+                      ? 'bg-blue-50/50 hover:bg-blue-50/70' 
+                      : 'hover:theme-bg-primary/5'
+                  } border-b theme-border-primary/10`}
+                  onClick={(event) => handleRowClick(sale.id, event)}
+                >
+                  {/* Sticky checkbox */}
+                  <td className="sticky left-0 bg-white z-10 w-12 px-4 py-3 border-r theme-border-primary/10">
+                    <Checkbox
+                      checked={selectedSales.includes(sale.id)}
+                      onCheckedChange={() => onSelectSale?.(sale.id)}
+                      className="theme-border-primary"
+                    />
                   </td>
-                ))}
-              </tr>
+                  {visibleColumns.map((column) => (
+                    <td key={column.key} className="min-w-[150px] px-4 py-3 text-sm whitespace-nowrap">
+                      {/* Invoice Code */}
+                      {column.key === 'invoiceCode' && (
+                        <span className="theme-text font-medium">{sale.id}</span>
+                      )}
+                      {/* Datetime */}
+                      {column.key === 'datetime' && (
+                        <span className="theme-text">{sale.date}</span>
+                      )}
+                      {/* Created Time */}
+                      {column.key === 'createdTime' && (
+                        <span className="theme-text">{formatDate(sale.createdTime)}</span>
+                      )}
+                      {/* Last Updated */}
+                      {column.key === 'lastUpdated' && (
+                        <span className="theme-text">{formatDate(sale.lastUpdated)}</span>
+                      )}
+                      {/* Order Code */}
+                      {column.key === 'orderCode' && (
+                        <span className="theme-text">{sale.orderCode || '-'}</span>
+                      )}
+                      {/* Return Code */}
+                      {column.key === 'returnCode' && (
+                        sale.returnCode ? (
+                          <Badge variant="outline" className="berry-warning-light">
+                            {sale.returnCode}
+                          </Badge>
+                        ) : <span className="theme-text-muted">-</span>
+                      )}
+                      {/* Customer */}
+                      {column.key === 'customer' && (
+                        <span className="theme-text font-medium">{sale.customer}</span>
+                      )}
+                      {/* Email */}
+                      {column.key === 'email' && (
+                        <span className="theme-text">{sale.email || '-'}</span>
+                      )}
+                      {/* Phone */}
+                      {column.key === 'phone' && (
+                        <span className="theme-text">{sale.phone || '-'}</span>
+                      )}
+                      {/* Address */}
+                      {column.key === 'address' && (
+                        <span className="theme-text">{sale.address || '-'}</span>
+                      )}
+                      {/* Area */}
+                      {column.key === 'area' && (
+                        <span className="theme-text">{sale.area || '-'}</span>
+                      )}
+                      {/* Ward */}
+                      {column.key === 'ward' && (
+                        <span className="theme-text">{sale.ward || '-'}</span>
+                      )}
+                      {/* Birthdate */}
+                      {column.key === 'birthdate' && (
+                        <span className="theme-text">{sale.birthdate || '-'}</span>
+                      )}
+                      {/* Branch */}
+                      {column.key === 'branch' && (
+                        <span className="theme-text">{sale.branch || '-'}</span>
+                      )}
+                      {/* Seller */}
+                      {column.key === 'seller' && (
+                        <span className="theme-text">{sale.seller || '-'}</span>
+                      )}
+                      {/* Creator */}
+                      {column.key === 'creator' && (
+                        <span className="theme-text">{sale.creator || '-'}</span>
+                      )}
+                      {/* Channel */}
+                      {column.key === 'channel' && (
+                        <span className="theme-text">{sale.channel || '-'}</span>
+                      )}
+                      {/* Note */}
+                      {column.key === 'note' && (
+                        <span className="theme-text-muted text-xs">{sale.note || '-'}</span>
+                      )}
+                      {/* Total Amount */}
+                      {column.key === 'totalAmount' && (
+                        <span className="font-semibold theme-text">{formatCurrency(sale.totalAmount)}</span>
+                      )}
+                      {/* Discount */}
+                      {column.key === 'discount' && (
+                        <span className="sales-amount-negative font-medium">
+                          {sale.discount > 0 ? formatCurrency(sale.discount) : '-'}
+                        </span>
+                      )}
+                      {/* Tax */}
+                      {column.key === 'tax' && (
+                        <span className="theme-text">
+                          {sale.tax > 0 ? formatCurrency(sale.tax) : '-'}
+                        </span>
+                      )}
+                      {/* Need to Pay */}
+                      {column.key === 'needToPay' && (
+                        <span className="font-semibold theme-text-primary">
+                          {formatCurrency(sale.needToPay)}
+                        </span>
+                      )}
+                      {/* Paid Amount */}
+                      {column.key === 'paidAmount' && (
+                        <span className="sales-amount-positive font-medium">
+                          {formatCurrency(sale.paidAmount)}
+                        </span>
+                      )}
+                      {/* Payment Discount */}
+                      {column.key === 'paymentDiscount' && (
+                        <span className="theme-text">
+                          {sale.paymentDiscount > 0 ? formatCurrency(sale.paymentDiscount) : '-'}
+                        </span>
+                      )}
+                      {/* Delivery Time */}
+                      {column.key === 'deliveryTime' && (
+                        <span className="theme-text">{sale.deliveryTime || '-'}</span>
+                      )}
+                      {/* Status */}
+                      {column.key === 'status' && (
+                        <Badge 
+                          variant={sale.status === 'Hoàn thành' ? 'success' : 'destructive'}
+                          className={sale.status === 'Hoàn thành' ? 'sales-status-completed' : 'sales-status-cancelled'}
+                        >
+                          {sale.status}
+                        </Badge>
+                      )}
+                      {/* Invoice Status */}
+                      {column.key === 'invoiceStatus' && (
+                        <Badge variant="outline" className="theme-badge-secondary">
+                          Chưa có
+                        </Badge>
+                      )}
+                    </td>
+                  ))}
+                </tr>
+                {/* Render expanded detail row */}
+                {expandedRowId === sale.id && (
+                  <InvoiceDetailRow 
+                    invoice={sale} 
+                    visibleColumnsCount={visibleColumns.length}
+                  />
+                )}
+              </>
             ))}
           </tbody>
         </table>

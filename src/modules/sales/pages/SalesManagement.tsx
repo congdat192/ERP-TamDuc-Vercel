@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ThemedSalesStats } from '../components/ThemedSalesStats';
@@ -20,6 +19,7 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
   const [selectedSales, setSelectedSales] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
 
   // Column visibility state - All 27 required columns exactly as requested
   const [columns, setColumns] = useState<ColumnConfig[]>([
@@ -81,6 +81,11 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
     } else {
       setSelectedSales([]);
     }
+  };
+
+  // New handler for row click toggle
+  const handleRowClick = (saleId: string) => {
+    setExpandedRowId(prev => prev === saleId ? null : saleId);
   };
 
   const clearAllFilters = () => {
@@ -181,6 +186,8 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
               setItemsPerPage={setItemsPerPage}
               totalSales={totalSales}
               totalPages={totalPages}
+              expandedRowId={expandedRowId}
+              onRowClick={handleRowClick}
             />
           </div>
         </div>
