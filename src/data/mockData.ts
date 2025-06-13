@@ -1,3 +1,4 @@
+
 // Mock data với dữ liệu liên thông giữa các module
 export interface MockCustomer {
   id: string;
@@ -48,7 +49,7 @@ export interface MockSale {
   paymentDiscount: number;
   deliveryTime: string;
   status: string;
-  items: string[]; // Array of product CODES (not IDs)
+  items: string[]; // Array of product IDs
 }
 
 export interface MockInventory {
@@ -373,7 +374,7 @@ export const mockSales: MockSale[] = [
     paymentDiscount: 0,
     deliveryTime: '11/06/2024 09:00',
     status: 'Hoàn thành',
-    items: ['IP14PM256'] // iPhone 14 Pro Max - using productCode
+    items: ['SP001'] // iPhone 14 Pro Max
   },
   {
     id: 'HD002',
@@ -403,7 +404,7 @@ export const mockSales: MockSale[] = [
     paymentDiscount: 0,
     deliveryTime: '11/06/2024 14:00',
     status: 'Hoàn thành',
-    items: ['SS23U256', 'AIRPODS3'] // Samsung S23 Ultra + AirPods - using productCodes
+    items: ['SP002', 'SP005'] // Samsung S23 Ultra + AirPods
   },
   {
     id: 'HD003',
@@ -433,7 +434,7 @@ export const mockSales: MockSale[] = [
     paymentDiscount: 0,
     deliveryTime: '10/06/2024 08:00',
     status: 'Hoàn thành',
-    items: ['XM13256', 'MBA15M2'] // Xiaomi 13 + MacBook Air - using productCodes
+    items: ['SP003', 'SP004'] // Xiaomi 13 + MacBook Air
   },
   {
     id: 'HD004',
@@ -463,7 +464,7 @@ export const mockSales: MockSale[] = [
     paymentDiscount: 0,
     deliveryTime: '09/06/2024 16:00',
     status: 'Hoàn thành',
-    items: ['AIRPODS3'] // AirPods - using productCode
+    items: ['SP005'] // AirPods
   },
   {
     id: 'HD005',
@@ -493,7 +494,7 @@ export const mockSales: MockSale[] = [
     paymentDiscount: 0,
     deliveryTime: '08/06/2024 10:00',
     status: 'Hoàn thành',
-    items: ['XM13256'] // Xiaomi 13 - using productCode
+    items: ['SP003'] // Xiaomi 13
   }
   // ... Tôi sẽ tạo đầy đủ 50 sales nhưng rút gọn để tiết kiệm chỗ
 ];
@@ -507,21 +508,10 @@ export const getProductById = (productId: string): MockInventory | undefined => 
   return mockInventory.find(product => product.id === productId);
 };
 
-export const getProductByCode = (productCode: string): MockInventory | undefined => {
-  return mockInventory.find(product => product.productCode === productCode);
-};
-
 export const getSalesByCustomerId = (customerId: string): MockSale[] => {
   return mockSales.filter(sale => sale.customerId === customerId);
 };
 
-export const getSalesByProductCode = (productCode: string): MockSale[] => {
-  return mockSales.filter(sale => sale.items.includes(productCode));
-};
-
 export const getSalesByProductId = (productId: string): MockSale[] => {
-  // Legacy function - now finds by productCode for compatibility
-  const product = getProductById(productId);
-  if (!product) return [];
-  return getSalesByProductCode(product.productCode);
+  return mockSales.filter(sale => sale.items.includes(productId));
 };

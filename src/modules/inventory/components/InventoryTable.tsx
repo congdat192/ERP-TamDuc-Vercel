@@ -3,7 +3,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { ProductDetailRow } from './ProductDetailRow';
-import { ProductCodeLink } from '@/components/shared/ProductCodeLink';
 
 interface InventoryTableProps {
   inventoryData: any[];
@@ -120,9 +119,9 @@ export function InventoryTable({
                           />
                         </div>
                       )}
-                      {/* Mã hàng - NOW CLICKABLE */}
+                      {/* Mã hàng */}
                       {column.key === 'productCode' && (
-                        <ProductCodeLink productCode={item.productCode} />
+                        <span className="theme-text font-medium">{item.productCode}</span>
                       )}
                       {/* Mã vạch */}
                       {column.key === 'barcode' && (
