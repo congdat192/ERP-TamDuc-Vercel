@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { ProductCodeLink } from '@/components/shared/ProductCodeLink';
 
 interface SalesTableProps {
   salesData: any[];
@@ -215,6 +216,22 @@ export function SalesTable({
                       <Badge variant="outline" className="theme-badge-secondary">
                         Chưa có
                       </Badge>
+                    )}
+                    {/* Products - NEW COLUMN */}
+                    {column.key === 'products' && (
+                      <div className="flex flex-wrap gap-1">
+                        {sale.items && sale.items.length > 0 ? (
+                          sale.items.map((productCode: string, index: number) => (
+                            <ProductCodeLink
+                              key={`${sale.id}-${productCode}-${index}`}
+                              productCode={productCode}
+                              className="text-xs px-2 py-1 rounded theme-bg-primary/10 hover:theme-bg-primary/20"
+                            />
+                          ))
+                        ) : (
+                          <span className="theme-text-muted">-</span>
+                        )}
+                      </div>
                     )}
                   </td>
                 ))}
