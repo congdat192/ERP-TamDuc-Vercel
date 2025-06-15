@@ -3,8 +3,7 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { X, Menu, ChevronDown, ChevronRight } from 'lucide-react';
+import { X, Menu } from 'lucide-react';
 
 interface SettingsLayoutProps {
   children: React.ReactNode;
@@ -87,18 +86,18 @@ export function SettingsLayout({ children }: SettingsLayoutProps) {
       
       {/* Settings Sidebar */}
       <div className={cn(
-        "fixed inset-y-0 left-0 z-50 w-80 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0",
+        "fixed inset-y-0 left-0 z-50 w-80 theme-card border-r transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Cài Đặt Hệ Thống</h2>
+          <div className="flex items-center justify-between p-4 border-b theme-border">
+            <h2 className="text-lg font-semibold theme-text">Cài Đặt Hệ Thống</h2>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden"
+              className="lg:hidden theme-text hover:theme-bg-primary/10"
             >
               <X className="w-5 h-5" />
             </Button>
@@ -112,10 +111,10 @@ export function SettingsLayout({ children }: SettingsLayoutProps) {
                   key={item.id}
                   variant={currentPage === item.id ? "secondary" : "ghost"}
                   className={cn(
-                    "w-full justify-start text-left h-11",
+                    "w-full justify-start text-left h-11 transition-all duration-200",
                     currentPage === item.id 
-                      ? "bg-blue-50 text-blue-700 border-r-2 border-blue-600" 
-                      : "text-gray-700 hover:bg-gray-50"
+                      ? "theme-bg-primary text-white border-r-2 theme-border-primary font-medium" 
+                      : "theme-text hover:theme-bg-primary/10 hover:theme-text-primary"
                   )}
                   onClick={() => handleMenuItemClick(item.url)}
                 >
@@ -126,8 +125,8 @@ export function SettingsLayout({ children }: SettingsLayoutProps) {
           </div>
 
           {/* Sidebar Footer */}
-          <div className="p-4 border-t border-gray-200">
-            <p className="text-xs text-gray-500">
+          <div className="p-4 border-t theme-border">
+            <p className="text-xs theme-text-muted">
               Hướng dẫn cài đặt hệ thống và tài liệu hỗ trợ
             </p>
           </div>
@@ -137,31 +136,32 @@ export function SettingsLayout({ children }: SettingsLayoutProps) {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile Header with Breadcrumb */}
-        <div className="lg:hidden flex items-center p-4 border-b border-gray-200 bg-white">
+        <div className="lg:hidden flex items-center p-4 border-b theme-border theme-card">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setSidebarOpen(true)}
+            className="theme-text"
           >
             <Menu className="w-5 h-5" />
           </Button>
           <div className="ml-2">
-            <h1 className="text-lg font-semibold text-gray-900">Cài Đặt</h1>
-            <p className="text-sm text-gray-600">{getCurrentPageLabel()}</p>
+            <h1 className="text-lg font-semibold theme-text">Cài Đặt</h1>
+            <p className="text-sm theme-text-muted">{getCurrentPageLabel()}</p>
           </div>
         </div>
 
         {/* Desktop Breadcrumb */}
-        <div className="hidden lg:block p-6 border-b border-gray-200 bg-white">
-          <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+        <div className="hidden lg:block p-6 border-b theme-border theme-card">
+          <div className="flex items-center space-x-2 text-sm theme-text-muted mb-2">
             <span>Cài Đặt Hệ Thống</span>
             <span>/</span>
-            <span className="text-gray-900 font-medium">{getCurrentPageLabel()}</span>
+            <span className="theme-text font-medium">{getCurrentPageLabel()}</span>
           </div>
         </div>
 
         {/* Settings Content */}
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-auto theme-background">
           <div className="p-6">
             {children}
           </div>
