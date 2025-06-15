@@ -1,3 +1,4 @@
+
 export type SettingsCategory = 
   | 'general-info'
   | 'email'
@@ -83,6 +84,29 @@ export interface ApiIntegration {
   features: string[];
 }
 
+export interface SyncLimitOption {
+  value: number | 'all';
+  label: string;
+}
+
+export interface DateRange {
+  from: Date | null;
+  to: Date | null;
+}
+
+export interface ApiGroupSyncConfig {
+  enabled: boolean;
+  syncLimit: number | 'all';
+  dateRange: DateRange;
+  useGlobalConfig: boolean;
+}
+
+export interface InitialSyncConfig {
+  globalSyncLimit: number | 'all';
+  globalDateRange: DateRange;
+  apiGroupConfigs: Record<string, ApiGroupSyncConfig>;
+}
+
 export interface KiotVietIntegration {
   id: string;
   retailerName: string;
@@ -92,6 +116,7 @@ export interface KiotVietIntegration {
   connectedApiGroups: string[];
   connectionStatus: 'connected' | 'disconnected' | 'testing' | 'error';
   errorMessage?: string;
+  initialSyncConfig?: InitialSyncConfig;
 }
 
 export interface KiotVietApiGroup {

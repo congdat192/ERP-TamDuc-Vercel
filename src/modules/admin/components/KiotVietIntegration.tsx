@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,9 +7,14 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { LoadingSpinner } from '@/components/ui/loading';
 import { FormError, FormSuccess } from '@/components/ui/form-errors';
 import { toast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
+import { vi } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 import { 
   CheckCircle2, 
   AlertCircle, 
@@ -18,9 +24,21 @@ import {
   Clock,
   Users,
   FileText,
-  Package
+  Package,
+  CalendarIcon,
+  ChevronDown,
+  ChevronUp,
+  Settings2
 } from 'lucide-react';
-import type { KiotVietIntegration as KiotVietIntegrationType, KiotVietApiGroup, ConnectionTestResult } from '../types/settings';
+import type { 
+  KiotVietIntegration as KiotVietIntegrationType, 
+  KiotVietApiGroup, 
+  ConnectionTestResult, 
+  SyncLimitOption,
+  DateRange,
+  ApiGroupSyncConfig,
+  InitialSyncConfig
+} from '../types/settings';
 
 const availableApiGroups: KiotVietApiGroup[] = [
   {
@@ -49,6 +67,15 @@ const apiGroupIcons = {
   products: Package
 };
 
+const syncLimitOptions: SyncLimitOption[] = [
+  { value: 50, label: '50 bản ghi' },
+  { value: 100, label: '100 bản ghi' },
+  { value: 200, label: '200 bản ghi' },
+  { value: 500, label: '500 bản ghi' },
+  { value: 1000, label: '1000 bản ghi' },
+  { value: 'all', label: 'Tất cả dữ liệu' }
+];
+
 const syncTimeOptions = [
   { value: 'realtime', label: 'Theo thời gian thực' },
   { value: 'hourly', label: 'Mỗi giờ' },
@@ -60,6 +87,42 @@ interface KiotVietIntegrationProps {
   integration?: KiotVietIntegrationType;
   onSave: (config: Partial<KiotVietIntegrationType>) => void;
   onDisconnect?: () => void;
+}
+
+interface DatePickerProps {
+  date: Date | null;
+  onSelect: (date: Date | undefined) => void;
+  placeholder: string;
+  disabled?: boolean;
+}
+
+function DatePicker({ date, onSelect, placeholder, disabled }: DatePickerProps) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          className={cn(
+            "voucher-input justify-start text-left font-normal",
+            !date && "text-muted-foreground"
+          )}
+          disabled={disabled}
+        >
+          <CalendarIcon className="mr-2 h-4 w-4" />
+          {date ? format(date, "dd/MM/yyyy", { locale: vi }) : <span>{placeholder}</span>}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar
+          mode="single"
+          selected={date || undefined}
+          onSelect={onSelect}
+          initialFocus
+          className="p-3 pointer-events-auto"
+        />
+      </PopoverContent>
+    </Popover>
+  );
 }
 
 export function KiotVietIntegration({ integration, onSave, onDisconnect }: KiotVietIntegrationProps) {
@@ -75,6 +138,16 @@ export function KiotVietIntegration({ integration, onSave, onDisconnect }: KiotV
 
   const [syncFrequency, setSyncFrequency] = useState<string>('daily');
   const [customSyncInterval, setCustomSyncInterval] = useState<number>(24);
+  
+  // Initial sync configuration state
+  const [globalSyncLimit, setGlobalSyncLimit] = useState<number | 'all'>(100);
+  const [globalDateRange, setGlobalDateRange] = useState<DateRange>({
+    from: null,
+    to: null
+  });
+  
+  const [apiGroupConfigs, setApiGroupConfigs] = useState<Record<string, ApiGroupSyncConfig>>({});
+  const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
   
   const [securityConfirmed, setSecurityConfirmed] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
@@ -104,6 +177,11 @@ export function KiotVietIntegration({ integration, onSave, onDisconnect }: KiotV
       errors.push('Vui lòng nhập khoảng thời gian đồng bộ hợp lệ');
     }
 
+    // Validate date ranges
+    if (globalDateRange.from && globalDateRange.to && globalDateRange.from > globalDateRange.to) {
+      errors.push('Ngày bắt đầu phải nhỏ hơn ngày kết thúc');
+    }
+
     setFormErrors(errors);
     return errors.length === 0;
   };
@@ -115,10 +193,8 @@ export function KiotVietIntegration({ integration, onSave, onDisconnect }: KiotV
     setTestResult(null);
 
     try {
-      // Simulate API call to test KiotViet connection
       await new Promise(resolve => setTimeout(resolve, 3000));
       
-      // Mock successful response
       const mockResult: ConnectionTestResult = {
         success: true,
         accessibleGroups: selectedApiGroups
@@ -168,13 +244,20 @@ export function KiotVietIntegration({ integration, onSave, onDisconnect }: KiotV
       return;
     }
 
+    const initialSyncConfig: InitialSyncConfig = {
+      globalSyncLimit,
+      globalDateRange,
+      apiGroupConfigs
+    };
+
     const config: Partial<KiotVietIntegrationType> = {
       retailerName: formData.retailerName,
       clientId: formData.clientId,
       isConnected: true,
       connectedApiGroups: selectedApiGroups,
       connectionStatus: 'connected',
-      lastSync: new Date().toLocaleString('vi-VN')
+      lastSync: new Date().toLocaleString('vi-VN'),
+      initialSyncConfig
     };
 
     onSave(config);
@@ -191,11 +274,41 @@ export function KiotVietIntegration({ integration, onSave, onDisconnect }: KiotV
         ? [...prev, groupId]
         : prev.filter(id => id !== groupId)
     );
+
+    // Initialize config for new groups
+    if (checked && !apiGroupConfigs[groupId]) {
+      setApiGroupConfigs(prev => ({
+        ...prev,
+        [groupId]: {
+          enabled: true,
+          syncLimit: globalSyncLimit,
+          dateRange: { ...globalDateRange },
+          useGlobalConfig: true
+        }
+      }));
+    }
     
-    // Reset test result when changing API groups
     if (testResult) {
       setTestResult(null);
     }
+  };
+
+  const toggleGroupExpansion = (groupId: string) => {
+    setExpandedGroups(prev => 
+      prev.includes(groupId) 
+        ? prev.filter(id => id !== groupId)
+        : [...prev, groupId]
+    );
+  };
+
+  const updateApiGroupConfig = (groupId: string, config: Partial<ApiGroupSyncConfig>) => {
+    setApiGroupConfigs(prev => ({
+      ...prev,
+      [groupId]: {
+        ...prev[groupId],
+        ...config
+      }
+    }));
   };
 
   const getSyncFrequencyLabel = () => {
@@ -203,6 +316,11 @@ export function KiotVietIntegration({ integration, onSave, onDisconnect }: KiotV
       return `Mỗi ${customSyncInterval} giờ`;
     }
     return syncTimeOptions.find(opt => opt.value === syncFrequency)?.label || '';
+  };
+
+  const getSyncLimitLabel = (limit: number | 'all') => {
+    if (limit === 'all') return 'Tất cả dữ liệu';
+    return `${limit} bản ghi`;
   };
 
   // If already connected, show connection status
@@ -376,6 +494,192 @@ export function KiotVietIntegration({ integration, onSave, onDisconnect }: KiotV
               })}
             </div>
           </div>
+        </div>
+
+        {/* Initial Sync Configuration */}
+        <div className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <Settings2 className="w-5 h-5 theme-text-primary" />
+            <Label className="text-sm font-medium theme-text">Cài đặt đồng bộ lần đầu</Label>
+          </div>
+          
+          {/* Global Configuration */}
+          <Card className="theme-bg-primary/5 border theme-border-primary/20">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm theme-text">Cấu hình chung</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label className="text-sm theme-text">Số lượng đồng bộ</Label>
+                  <Select 
+                    value={globalSyncLimit.toString()} 
+                    onValueChange={(value) => setGlobalSyncLimit(value === 'all' ? 'all' : parseInt(value))}
+                    disabled={isTesting}
+                  >
+                    <SelectTrigger className="voucher-input">
+                      <SelectValue placeholder="Chọn số lượng" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {syncLimitOptions.map((option) => (
+                        <SelectItem key={option.value.toString()} value={option.value.toString()}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label className="text-sm theme-text">Từ ngày</Label>
+                  <DatePicker
+                    date={globalDateRange.from}
+                    onSelect={(date) => setGlobalDateRange(prev => ({ ...prev, from: date || null }))}
+                    placeholder="Chọn ngày bắt đầu"
+                    disabled={isTesting}
+                  />
+                </div>
+                
+                <div>
+                  <Label className="text-sm theme-text">Đến ngày</Label>
+                  <DatePicker
+                    date={globalDateRange.to}
+                    onSelect={(date) => setGlobalDateRange(prev => ({ ...prev, to: date || null }))}
+                    placeholder="Chọn ngày kết thúc"
+                    disabled={isTesting}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* API Group Specific Configuration */}
+          {selectedApiGroups.length > 0 && (
+            <div className="space-y-3">
+              <Label className="text-sm font-medium theme-text">Cấu hình riêng cho từng loại dữ liệu</Label>
+              
+              {selectedApiGroups.map((groupId) => {
+                const group = availableApiGroups.find(g => g.id === groupId);
+                const IconComponent = apiGroupIcons[groupId as keyof typeof apiGroupIcons];
+                const isExpanded = expandedGroups.includes(groupId);
+                const config = apiGroupConfigs[groupId] || {
+                  enabled: true,
+                  syncLimit: globalSyncLimit,
+                  dateRange: { ...globalDateRange },
+                  useGlobalConfig: true
+                };
+                
+                return (
+                  <Card key={groupId} className="border theme-border">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <IconComponent className="w-4 h-4 theme-text-primary" />
+                          <span className="text-sm font-medium theme-text">{group?.name}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            checked={config.useGlobalConfig}
+                            onCheckedChange={(checked) => 
+                              updateApiGroupConfig(groupId, { 
+                                useGlobalConfig: checked as boolean,
+                                syncLimit: checked ? globalSyncLimit : config.syncLimit,
+                                dateRange: checked ? { ...globalDateRange } : config.dateRange
+                              })
+                            }
+                            disabled={isTesting}
+                          />
+                          <Label className="text-xs theme-text-muted">Dùng cấu hình chung</Label>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleGroupExpansion(groupId)}
+                            className="h-6 w-6 p-0"
+                            disabled={config.useGlobalConfig}
+                          >
+                            {isExpanded ? (
+                              <ChevronUp className="w-3 h-3" />
+                            ) : (
+                              <ChevronDown className="w-3 h-3" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    
+                    {isExpanded && !config.useGlobalConfig && (
+                      <CardContent className="pt-0">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div>
+                            <Label className="text-xs theme-text">Số lượng</Label>
+                            <Select 
+                              value={config.syncLimit.toString()} 
+                              onValueChange={(value) => 
+                                updateApiGroupConfig(groupId, { 
+                                  syncLimit: value === 'all' ? 'all' : parseInt(value) 
+                                })
+                              }
+                              disabled={isTesting}
+                            >
+                              <SelectTrigger className="h-8 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {syncLimitOptions.map((option) => (
+                                  <SelectItem key={option.value.toString()} value={option.value.toString()}>
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          <div>
+                            <Label className="text-xs theme-text">Từ ngày</Label>
+                            <DatePicker
+                              date={config.dateRange.from}
+                              onSelect={(date) => 
+                                updateApiGroupConfig(groupId, { 
+                                  dateRange: { ...config.dateRange, from: date || null }
+                                })
+                              }
+                              placeholder="Từ ngày"
+                              disabled={isTesting}
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label className="text-xs theme-text">Đến ngày</Label>
+                            <DatePicker
+                              date={config.dateRange.to}
+                              onSelect={(date) => 
+                                updateApiGroupConfig(groupId, { 
+                                  dateRange: { ...config.dateRange, to: date || null }
+                                })
+                              }
+                              placeholder="Đến ngày"
+                              disabled={isTesting}
+                            />
+                          </div>
+                        </div>
+                      </CardContent>
+                    )}
+                    
+                    {config.useGlobalConfig && (
+                      <CardContent className="pt-0">
+                        <div className="text-xs theme-text-muted">
+                          Sử dụng: {getSyncLimitLabel(globalSyncLimit)}
+                          {globalDateRange.from && globalDateRange.to && (
+                            <span> | {format(globalDateRange.from, "dd/MM/yyyy", { locale: vi })} - {format(globalDateRange.to, "dd/MM/yyyy", { locale: vi })}</span>
+                          )}
+                        </div>
+                      </CardContent>
+                    )}
+                  </Card>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Sync Time Settings */}
