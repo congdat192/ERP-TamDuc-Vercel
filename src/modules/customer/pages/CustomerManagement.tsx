@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ThemedCustomerStats } from '../components/ThemedCustomerStats';
@@ -33,7 +32,7 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
     { key: 'customerGroup', label: 'Nhóm khách hàng', visible: true },
     { key: 'gender', label: 'Giới tính', visible: false },
     { key: 'birthDate', label: 'Ngày sinh', visible: false },
-    { key: 'email', label: 'Email', visible: true },
+    { key: 'email', label: 'Email', visible: false },
     { key: 'facebook', label: 'Facebook', visible: false },
     { key: 'company', label: 'Công ty', visible: false },
     { key: 'taxCode', label: 'Mã số thuế', visible: false },
@@ -42,9 +41,9 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
     { key: 'deliveryArea', label: 'Khu vực giao hàng', visible: false },
     { key: 'ward', label: 'Phường/Xã', visible: false },
     { key: 'creator', label: 'Người tạo', visible: false },
-    { key: 'createDate', label: 'Ngày tạo', visible: true },
+    { key: 'createDate', label: 'Ngày tạo', visible: false },
     { key: 'notes', label: 'Ghi chú', visible: false },
-    { key: 'lastTransactionDate', label: 'Ngày giao dịch cuối', visible: true },
+    { key: 'lastTransactionDate', label: 'Ngày giao dịch cuối', visible: false },
     { key: 'createBranch', label: 'Chi nhánh tạo', visible: false },
     { key: 'currentDebt', label: 'Nợ hiện tại', visible: false },
     { key: 'debtDays', label: 'Số ngày nợ', visible: false },
@@ -52,7 +51,7 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
     { key: 'currentPoints', label: 'Điểm hiện tại', visible: false },
     { key: 'totalPoints', label: 'Tổng điểm', visible: false },
     { key: 'totalSalesMinusReturns', label: 'Tổng bán trừ trả hàng', visible: false },
-    { key: 'status', label: 'Trạng thái', visible: true }
+    { key: 'status', label: 'Trạng thái', visible: false }
   ]);
 
   const isMobile = useIsMobile();
