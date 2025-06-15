@@ -1,6 +1,6 @@
-
 import { Badge } from '@/components/ui/badge';
 import { ProductCodeLink } from '@/modules/sales/components/ProductCodeLink';
+import { InvoiceCodeLink } from '@/modules/sales/components/InvoiceCodeLink';
 import { mockSales, mockInventory, getProductById } from '@/data/mockData';
 
 interface CustomerSalesHistoryTabProps {
@@ -80,9 +80,7 @@ export function CustomerSalesHistoryTab({ customerId }: CustomerSalesHistoryTabP
                 return (
                   <tr key={sale.id} className="hover:theme-bg-primary/5">
                     <td className="px-4 py-3 text-sm theme-text font-sans">
-                      <span className="text-blue-600 hover:text-blue-800 cursor-pointer font-medium">
-                        {sale.id}
-                      </span>
+                      <InvoiceCodeLink invoiceCode={sale.id} className="text-sm font-sans" />
                     </td>
                     <td className="px-4 py-3 text-sm theme-text-muted font-sans">
                       {sale.date}
