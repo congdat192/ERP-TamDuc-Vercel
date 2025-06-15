@@ -1,7 +1,7 @@
 
 import { Badge } from '@/components/ui/badge';
 import { ProductCodeLink } from '@/modules/sales/components/ProductCodeLink';
-import { mockSales } from '@/data/mockData';
+import { mockSales, mockInventory, getProductById } from '@/data/mockData';
 
 interface CustomerSalesHistoryTabProps {
   customerId: string;
@@ -9,7 +9,7 @@ interface CustomerSalesHistoryTabProps {
 
 export function CustomerSalesHistoryTab({ customerId }: CustomerSalesHistoryTabProps) {
   // Filter sales data for this customer
-  const customerSales = mockSales.filter(sale => sale.customer.includes(customerId) || sale.customer.includes('Nguyễn Văn A'));
+  const customerSales = mockSales.filter(sale => sale.customerId === customerId);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -29,6 +29,15 @@ export function CustomerSalesHistoryTab({ customerId }: CustomerSalesHistoryTabP
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
+  };
+
+  const getProductsForSale = (sale: any) => {
+    return sale.items?.map((itemId: string) => getProductById(itemId)).filter(Boolean) || [];
+  };
+
+  const getTotalQuantityForSale = (sale: any) => {
+    const products = getProductsForSale(sale);
+    return products.length; // Since we don't have quantity info, use product count
   };
 
   return (
@@ -66,40 +75,43 @@ export function CustomerSalesHistoryTab({ customerId }: CustomerSalesHistoryTabP
               </tr>
             </thead>
             <tbody className="divide-y theme-border-primary/10">
-              {customerSales.map((sale) => (
-                <tr key={sale.id} className="hover:theme-bg-primary/5">
-                  <td className="px-4 py-3 text-sm theme-text">
-                    <ProductCodeLink productCode={sale.invoiceCode} />
-                  </td>
-                  <td className="px-4 py-3 text-sm theme-text-muted">
-                    {sale.datetime}
-                  </td>
-                  <td className="px-4 py-3 text-sm theme-text">
-                    <div className="space-y-1">
-                      {sale.products?.slice(0, 2).map((product, idx) => (
-                        <div key={idx} className="flex items-center space-x-2">
-                          <ProductCodeLink productCode={product.code} className="text-xs" />
-                          <span className="text-xs theme-text-muted">- {product.name}</span>
-                        </div>
-                      ))}
-                      {sale.products && sale.products.length > 2 && (
-                        <div className="text-xs theme-text-muted">
-                          +{sale.products.length - 2} sản phẩm khác
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-sm theme-text text-center">
-                    {sale.products?.reduce((sum, p) => sum + p.quantity, 0) || 0}
-                  </td>
-                  <td className="px-4 py-3 text-sm theme-text font-medium">
-                    {formatCurrency(sale.totalAmount)}
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    {getStatusBadge(sale.status)}
-                  </td>
-                </tr>
-              ))}
+              {customerSales.map((sale) => {
+                const products = getProductsForSale(sale);
+                return (
+                  <tr key={sale.id} className="hover:theme-bg-primary/5">
+                    <td className="px-4 py-3 text-sm theme-text">
+                      <ProductCodeLink productCode={sale.orderCode} />
+                    </td>
+                    <td className="px-4 py-3 text-sm theme-text-muted">
+                      {sale.date}
+                    </td>
+                    <td className="px-4 py-3 text-sm theme-text">
+                      <div className="space-y-1">
+                        {products.slice(0, 2).map((product, idx) => (
+                          <div key={idx} className="flex items-center space-x-2">
+                            <ProductCodeLink productCode={product.productCode} className="text-xs" />
+                            <span className="text-xs theme-text-muted">- {product.name}</span>
+                          </div>
+                        ))}
+                        {products.length > 2 && (
+                          <div className="text-xs theme-text-muted">
+                            +{products.length - 2} sản phẩm khác
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-sm theme-text text-center">
+                      {getTotalQuantityForSale(sale)}
+                    </td>
+                    <td className="px-4 py-3 text-sm theme-text font-medium">
+                      {formatCurrency(sale.totalAmount)}
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      {getStatusBadge(sale.status)}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
