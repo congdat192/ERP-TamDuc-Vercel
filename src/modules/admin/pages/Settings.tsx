@@ -1,8 +1,8 @@
 
-import { SettingsLayout } from './settings/SettingsLayout';
+import { SettingsRouter } from '../components/SettingsRouter';
 
 export function Settings() {
-  return <SettingsLayout />;
+  return <SettingsRouter />;
 }
 
 // Export as default for easier importing
