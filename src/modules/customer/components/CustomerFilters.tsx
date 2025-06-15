@@ -335,43 +335,49 @@ export function CustomerFilters() {
       {/* 14. Trạng thái */}
       <div className="space-y-2">
         <label className="text-sm font-medium theme-text">Trạng thái</label>
-        <div className="grid grid-cols-3 gap-1">
-          <Button
-            variant={status === 'all' ? "default" : "outline"}
-            size="sm"
-            onClick={() => setStatus('all')}
-            className={`text-xs h-8 rounded-md ${
-              status === 'all'
-                ? "voucher-button-primary" 
-                : "theme-border-primary hover:theme-bg-primary/10"
-            }`}
-          >
-            Tất cả
-          </Button>
-          <Button
-            variant={status === 'yes' ? "default" : "outline"}
-            size="sm"
-            onClick={() => setStatus('yes')}
-            className={`text-xs h-8 rounded-md ${
-              status === 'yes'
-                ? "voucher-button-primary" 
-                : "theme-border-primary hover:theme-bg-primary/10"
-            }`}
-          >
-            Đang hoạt động
-          </Button>
-          <Button
-            variant={status === 'no' ? "default" : "outline"}
-            size="sm"
-            onClick={() => setStatus('no')}
-            className={`text-xs h-8 rounded-md ${
-              status === 'no'
-                ? "voucher-button-primary" 
-                : "theme-border-primary hover:theme-bg-primary/10"
-            }`}
-          >
-            Ngừng hoạt động
-          </Button>
+        <div className="space-y-1">
+          {/* Hàng 1: Tất cả và Đang hoạt động */}
+          <div className="grid grid-cols-2 gap-1">
+            <Button
+              variant={status === 'all' ? "default" : "outline"}
+              size="sm"
+              onClick={() => setStatus('all')}
+              className={`text-xs h-8 rounded-md ${
+                status === 'all'
+                  ? "voucher-button-primary" 
+                  : "theme-border-primary hover:theme-bg-primary/10"
+              }`}
+            >
+              Tất cả
+            </Button>
+            <Button
+              variant={status === 'yes' ? "default" : "outline"}
+              size="sm"
+              onClick={() => setStatus('yes')}
+              className={`text-xs h-8 rounded-md ${
+                status === 'yes'
+                  ? "voucher-button-primary" 
+                  : "theme-border-primary hover:theme-bg-primary/10"
+              }`}
+            >
+              Đang hoạt động
+            </Button>
+          </div>
+          {/* Hàng 2: Ngừng hoạt động */}
+          <div className="grid grid-cols-1">
+            <Button
+              variant={status === 'no' ? "default" : "outline"}
+              size="sm"
+              onClick={() => setStatus('no')}
+              className={`text-xs h-8 rounded-md ${
+                status === 'no'
+                  ? "voucher-button-primary" 
+                  : "theme-border-primary hover:theme-bg-primary/10"
+              }`}
+            >
+              Ngừng hoạt động
+            </Button>
+          </div>
         </div>
       </div>
 
