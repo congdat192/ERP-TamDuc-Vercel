@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,6 +17,7 @@ import { SalesPage } from "./pages/SalesPage";
 import { VoucherPage } from "./pages/VoucherPage";
 import { InventoryPage } from "./pages/InventoryPage";
 import { ProductDetailPage } from "./pages/ProductDetailPage";
+import { InvoiceDetailPage } from "./pages/InvoiceDetailPage";
 import { PlatformAdmin } from "./modules/platform-admin";
 import { ERPLayout } from "@/components/layout/ERPLayout";
 import { useAuth } from "@/components/auth/AuthContext";
@@ -119,6 +119,14 @@ const App = () => (
                   element={
                     <ProtectedERPRoute module="sales">
                       <SalesPage />
+                    </ProtectedERPRoute>
+                  } 
+                />
+                <Route 
+                  path="/ERP/Invoices/:invoiceId" 
+                  element={
+                    <ProtectedERPRoute module="sales">
+                      <InvoiceDetailPage />
                     </ProtectedERPRoute>
                   } 
                 />
