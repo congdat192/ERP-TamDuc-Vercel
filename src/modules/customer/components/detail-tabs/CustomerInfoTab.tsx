@@ -3,6 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 interface Customer {
   id: string;
@@ -30,10 +31,22 @@ interface CustomerInfoTabProps {
 }
 
 export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
+  const getInitials = (name: string) => {
+    return name.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2);
+  };
+
   return (
-    <div className="theme-card rounded-lg border theme-border-primary p-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Dòng 1: Mã khách hàng, Tên khách hàng, Loại khách hàng */}
+    <div className="theme-card rounded-lg border-2 theme-border-primary p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Dòng 1: Avatar, Mã khách hàng, Tên khách hàng, Loại khách hàng */}
+        <div className="space-y-2 flex flex-col items-center">
+          <Avatar className="w-16 h-16 mb-2">
+            <AvatarFallback className="theme-bg-primary text-white text-lg font-semibold">
+              {getInitials(customer.name)}
+            </AvatarFallback>
+          </Avatar>
+          <Label className="theme-text text-sm font-medium text-center">Ảnh đại diện</Label>
+        </div>
         <div className="space-y-2">
           <Label htmlFor="customer-code" className="theme-text text-sm font-medium">Mã khách hàng</Label>
           <Input 
@@ -64,7 +77,7 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
           </Select>
         </div>
 
-        {/* Dòng 2: Nhóm khách hàng, Điện thoại, Email */}
+        {/* Dòng 2: Nhóm khách hàng, Điện thoại, Email, Facebook */}
         <div className="space-y-2">
           <Label htmlFor="customer-group" className="theme-text text-sm font-medium">Nhóm khách hàng</Label>
           <Select defaultValue={customer.group}>
@@ -95,8 +108,6 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
             className="voucher-input h-9"
           />
         </div>
-
-        {/* Dòng 3: Facebook, Ngày sinh, (trống) */}
         <div className="space-y-2">
           <Label htmlFor="facebook" className="theme-text text-sm font-medium">Facebook</Label>
           <Input 
@@ -105,6 +116,8 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
             className="voucher-input h-9"
           />
         </div>
+
+        {/* Dòng 3: Ngày sinh và 3 cột trống */}
         <div className="space-y-2">
           <Label htmlFor="birthday" className="theme-text text-sm font-medium">Ngày sinh</Label>
           <Input 
@@ -116,9 +129,15 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
         <div className="space-y-2">
           {/* Cột trống */}
         </div>
+        <div className="space-y-2">
+          {/* Cột trống */}
+        </div>
+        <div className="space-y-2">
+          {/* Cột trống */}
+        </div>
 
-        {/* Dòng 4: Địa chỉ (span 3 cột) */}
-        <div className="space-y-2 md:col-span-2 lg:col-span-3">
+        {/* Dòng 4: Địa chỉ (span 4 cột) */}
+        <div className="space-y-2 md:col-span-2 lg:col-span-4">
           <Label htmlFor="address" className="theme-text text-sm font-medium">Địa chỉ</Label>
           <Input 
             id="address"
@@ -127,7 +146,7 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
           />
         </div>
 
-        {/* Dòng 5: Tên công ty, Mã số thuế, (trống) */}
+        {/* Dòng 5: Tên công ty, Mã số thuế, (2 cột trống) */}
         <div className="space-y-2">
           <Label htmlFor="company" className="theme-text text-sm font-medium">Tên công ty</Label>
           <Input 
@@ -147,9 +166,12 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
         <div className="space-y-2">
           {/* Cột trống */}
         </div>
+        <div className="space-y-2">
+          {/* Cột trống */}
+        </div>
 
-        {/* Ghi chú (full width) */}
-        <div className="space-y-2 md:col-span-2 lg:col-span-3">
+        {/* Dòng 6: Ghi chú (span 4 cột) */}
+        <div className="space-y-2 md:col-span-2 lg:col-span-4">
           <Label htmlFor="note" className="theme-text text-sm font-medium">Ghi chú</Label>
           <Textarea 
             id="note"

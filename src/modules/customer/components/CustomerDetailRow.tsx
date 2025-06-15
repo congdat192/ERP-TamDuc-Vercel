@@ -1,7 +1,6 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CustomerInfoTab } from './detail-tabs/CustomerInfoTab';
 import { CustomerSalesHistoryTab } from './detail-tabs/CustomerSalesHistoryTab';
@@ -37,32 +36,15 @@ interface CustomerDetailRowProps {
 export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDetailRowProps) {
   const [activeTab, setActiveTab] = useState('info');
 
-  const getInitials = (name: string) => {
-    return name.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2);
-  };
-
   return (
     <tr>
       <td colSpan={visibleColumnsCount + 2} className="p-0">
         <div className="border-t theme-border-primary/20">
           <div className="p-6 theme-background">
-            {/* Header with customer info */}
-            <div className="flex items-start justify-between mb-6">
-              <div className="flex items-center space-x-4">
-                <Avatar className="w-16 h-16">
-                  <AvatarFallback className="theme-bg-primary text-white text-lg font-semibold">
-                    {getInitials(customer.name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h3 className="text-xl font-semibold theme-text mb-1">{customer.name}</h3>
-                  <div className="space-y-1 text-sm theme-text-muted">
-                    <p>Mã khách hàng: <span className="theme-text font-medium">{customer.id}</span></p>
-                    <p>Điện thoại: <span className="theme-text font-medium">{customer.phone}</span></p>
-                    <p>Email: <span className="theme-text font-medium">{customer.email}</span></p>
-                    <p>Nhóm khách hàng: <span className="theme-text font-medium">{customer.group}</span></p>
-                  </div>
-                </div>
+            {/* Simplified Header - only customer name and actions */}
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-xl font-semibold theme-text">{customer.name}</h3>
               </div>
               
               <div className="flex space-x-2">
