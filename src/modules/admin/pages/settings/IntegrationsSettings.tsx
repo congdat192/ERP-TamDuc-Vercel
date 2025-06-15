@@ -283,25 +283,25 @@ export function IntegrationsSettings() {
         return {
           title: 'Web Platform',
           icon: Globe,
-          colorClass: 'theme-text-info',
-          bgClass: 'bg-blue-50',
-          borderClass: 'border-blue-200'
+          colorClass: 'theme-text-primary',
+          bgClass: 'theme-bg-primary/5',
+          borderClass: 'theme-border-primary/20'
         };
       case 'social':
         return {
           title: 'Mạng Xã Hội',
           icon: Users,
-          colorClass: 'theme-text-success',
-          bgClass: 'bg-green-50',
-          borderClass: 'border-green-200'
+          colorClass: 'theme-text-secondary',
+          bgClass: 'theme-bg-secondary/5',
+          borderClass: 'theme-border-secondary/20'
         };
       case 'payment':
         return {
           title: 'Cổng Thanh Toán',
           icon: CreditCard,
-          colorClass: 'text-orange-600',
-          bgClass: 'bg-orange-50',
-          borderClass: 'border-orange-200'
+          colorClass: 'theme-text-primary',
+          bgClass: 'theme-bg-primary/5',
+          borderClass: 'theme-border-primary/20'
         };
       default:
         return {

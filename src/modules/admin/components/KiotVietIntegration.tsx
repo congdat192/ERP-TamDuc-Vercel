@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -5,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LoadingSpinner } from '@/components/ui/loading';
 import { FormError, FormSuccess } from '@/components/ui/form-errors';
 import { toast } from '@/hooks/use-toast';
@@ -16,10 +18,8 @@ import {
   Shield,
   Clock,
   Users,
-  ShoppingCart,
   FileText,
-  Package,
-  CreditCard
+  Package
 } from 'lucide-react';
 import type { KiotVietIntegration as KiotVietIntegrationType, KiotVietApiGroup, ConnectionTestResult } from '../types/settings';
 
@@ -28,12 +28,6 @@ const availableApiGroups: KiotVietApiGroup[] = [
     id: 'customers',
     name: 'Khách hàng',
     description: 'Đồng bộ thông tin khách hàng và lịch sử mua hàng',
-    enabled: false
-  },
-  {
-    id: 'orders',
-    name: 'Đơn hàng',
-    description: 'Đồng bộ đơn hàng và trạng thái xử lý',
     enabled: false
   },
   {
@@ -47,22 +41,21 @@ const availableApiGroups: KiotVietApiGroup[] = [
     name: 'Sản phẩm',
     description: 'Đồng bộ danh mục sản phẩm và tồn kho',
     enabled: false
-  },
-  {
-    id: 'payments',
-    name: 'Thanh toán',
-    description: 'Đồng bộ thông tin thanh toán và giao dịch',
-    enabled: false
   }
 ];
 
 const apiGroupIcons = {
   customers: Users,
-  orders: ShoppingCart,
   invoices: FileText,
-  products: Package,
-  payments: CreditCard
+  products: Package
 };
+
+const syncTimeOptions = [
+  { value: 'realtime', label: 'Theo thời gian thực' },
+  { value: 'hourly', label: 'Mỗi giờ' },
+  { value: 'daily', label: 'Mỗi ngày' },
+  { value: 'custom', label: 'Tùy chỉnh' }
+];
 
 interface KiotVietIntegrationProps {
   integration?: KiotVietIntegrationType;
@@ -80,6 +73,9 @@ export function KiotVietIntegration({ integration, onSave, onDisconnect }: KiotV
   const [selectedApiGroups, setSelectedApiGroups] = useState<string[]>(
     integration?.connectedApiGroups || []
   );
+
+  const [syncFrequency, setSyncFrequency] = useState<string>('daily');
+  const [customSyncInterval, setCustomSyncInterval] = useState<number>(24);
   
   const [securityConfirmed, setSecurityConfirmed] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
@@ -103,6 +99,10 @@ export function KiotVietIntegration({ integration, onSave, onDisconnect }: KiotV
     
     if (selectedApiGroups.length === 0) {
       errors.push('Vui lòng chọn ít nhất một nhóm API để đồng bộ');
+    }
+
+    if (syncFrequency === 'custom' && (!customSyncInterval || customSyncInterval < 1)) {
+      errors.push('Vui lòng nhập khoảng thời gian đồng bộ hợp lệ');
     }
 
     setFormErrors(errors);
@@ -199,24 +199,31 @@ export function KiotVietIntegration({ integration, onSave, onDisconnect }: KiotV
     }
   };
 
+  const getSyncFrequencyLabel = () => {
+    if (syncFrequency === 'custom') {
+      return `Mỗi ${customSyncInterval} giờ`;
+    }
+    return syncTimeOptions.find(opt => opt.value === syncFrequency)?.label || '';
+  };
+
   // If already connected, show connection status
   if (integration?.isConnected) {
     return (
       <Card className="w-full max-w-4xl">
         <CardHeader>
           <CardTitle className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center text-white">
+            <div className="w-10 h-10 rounded-lg theme-bg-primary flex items-center justify-center text-white">
               <Building2 className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold">KiotViet - {integration.retailerName}</h3>
+              <h3 className="text-lg font-semibold theme-text">KiotViet - {integration.retailerName}</h3>
               <div className="flex items-center space-x-2 mt-1">
                 <Badge variant="default" className="bg-green-100 text-green-800">
                   <CheckCircle2 className="w-3 h-3 mr-1" />
                   Đã kết nối
                 </Badge>
                 {integration.lastSync && (
-                  <span className="text-sm text-gray-500 flex items-center">
+                  <span className="text-sm theme-text-muted flex items-center">
                     <Clock className="w-3 h-3 mr-1" />
                     Đồng bộ cuối: {integration.lastSync}
                   </span>
@@ -228,7 +235,7 @@ export function KiotVietIntegration({ integration, onSave, onDisconnect }: KiotV
         
         <CardContent className="space-y-6">
           <div>
-            <Label className="text-sm font-medium mb-3 block">Nhóm API đang đồng bộ:</Label>
+            <Label className="text-sm font-medium mb-3 block theme-text">Nhóm API đang đồng bộ:</Label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {integration.connectedApiGroups.map((groupId) => {
                 const group = availableApiGroups.find(g => g.id === groupId);
@@ -246,12 +253,19 @@ export function KiotVietIntegration({ integration, onSave, onDisconnect }: KiotV
               })}
             </div>
           </div>
+
+          <div>
+            <Label className="text-sm font-medium mb-2 block theme-text">Tần suất đồng bộ:</Label>
+            <div className="p-3 theme-bg-primary/5 rounded-lg theme-border-primary/20 border">
+              <span className="text-sm theme-text-primary font-medium">{getSyncFrequencyLabel()}</span>
+            </div>
+          </div>
           
           <div className="flex space-x-3">
             <Button variant="outline" onClick={onDisconnect} className="flex-1">
               Ngắt kết nối
             </Button>
-            <Button onClick={() => window.location.reload()} className="flex-1">
+            <Button onClick={() => window.location.reload()} className="flex-1 voucher-button-primary">
               Cấu hình lại
             </Button>
           </div>
@@ -264,12 +278,12 @@ export function KiotVietIntegration({ integration, onSave, onDisconnect }: KiotV
     <Card className="w-full max-w-4xl">
       <CardHeader>
         <CardTitle className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center text-white">
+          <div className="w-10 h-10 rounded-lg theme-bg-primary flex items-center justify-center text-white">
             <Building2 className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold">Cấu hình tích hợp KiotViet</h3>
-            <p className="text-sm text-gray-600">Kết nối hệ thống ERP với tài khoản KiotViet của bạn</p>
+            <h3 className="text-lg font-semibold theme-text">Cấu hình tích hợp KiotViet</h3>
+            <p className="text-sm theme-text-muted">Kết nối hệ thống ERP với tài khoản KiotViet của bạn</p>
           </div>
         </CardTitle>
       </CardHeader>
@@ -290,7 +304,7 @@ export function KiotVietIntegration({ integration, onSave, onDisconnect }: KiotV
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <div>
-              <Label htmlFor="retailerName">Tên cửa hàng *</Label>
+              <Label htmlFor="retailerName" className="theme-text">Tên cửa hàng *</Label>
               <Input
                 id="retailerName"
                 value={formData.retailerName}
@@ -301,7 +315,7 @@ export function KiotVietIntegration({ integration, onSave, onDisconnect }: KiotV
             </div>
             
             <div>
-              <Label htmlFor="clientId">Client ID *</Label>
+              <Label htmlFor="clientId" className="theme-text">Client ID *</Label>
               <Input
                 id="clientId"
                 value={formData.clientId}
@@ -312,7 +326,7 @@ export function KiotVietIntegration({ integration, onSave, onDisconnect }: KiotV
             </div>
             
             <div>
-              <Label htmlFor="clientSecret">Client Secret *</Label>
+              <Label htmlFor="clientSecret" className="theme-text">Client Secret *</Label>
               <Input
                 id="clientSecret"
                 type="password"
@@ -325,7 +339,7 @@ export function KiotVietIntegration({ integration, onSave, onDisconnect }: KiotV
           </div>
           
           <div>
-            <Label className="text-sm font-medium mb-3 block">Nhóm API cần đồng bộ *</Label>
+            <Label className="text-sm font-medium mb-3 block theme-text">Nhóm API cần đồng bộ *</Label>
             <div className="space-y-3 max-h-64 overflow-y-auto">
               {availableApiGroups.map((group) => {
                 const IconComponent = apiGroupIcons[group.id as keyof typeof apiGroupIcons];
@@ -336,7 +350,7 @@ export function KiotVietIntegration({ integration, onSave, onDisconnect }: KiotV
                   <div 
                     key={group.id} 
                     className={`flex items-start space-x-3 p-3 rounded-lg border transition-colors ${
-                      isSelected ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'
+                      isSelected ? 'theme-bg-primary/10 theme-border-primary/30' : 'theme-bg-muted theme-border'
                     }`}
                   >
                     <Checkbox
@@ -345,20 +359,57 @@ export function KiotVietIntegration({ integration, onSave, onDisconnect }: KiotV
                       onCheckedChange={(checked) => handleApiGroupToggle(group.id, checked as boolean)}
                       disabled={isTesting}
                     />
-                    <IconComponent className={`w-4 h-4 mt-0.5 ${isSelected ? 'text-blue-600' : 'text-gray-500'}`} />
+                    <IconComponent className={`w-4 h-4 mt-0.5 ${isSelected ? 'theme-text-primary' : 'theme-text-muted'}`} />
                     <div className="flex-1">
-                      <Label htmlFor={group.id} className="text-sm font-medium cursor-pointer">
+                      <Label htmlFor={group.id} className="text-sm font-medium cursor-pointer theme-text">
                         {group.name}
                         {isAccessible && (
                           <CheckCircle2 className="w-3 h-3 text-green-500 inline ml-1" />
                         )}
                       </Label>
-                      <p className="text-xs text-gray-600 mt-1">{group.description}</p>
+                      <p className="text-xs theme-text-muted mt-1">{group.description}</p>
                     </div>
                   </div>
                 );
               })}
             </div>
+          </div>
+        </div>
+
+        {/* Sync Time Settings */}
+        <div className="space-y-4">
+          <Label className="text-sm font-medium theme-text">Cài đặt thời gian đồng bộ</Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="syncFrequency" className="text-sm theme-text">Tần suất đồng bộ</Label>
+              <Select value={syncFrequency} onValueChange={setSyncFrequency} disabled={isTesting}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Chọn tần suất đồng bộ" />
+                </SelectTrigger>
+                <SelectContent>
+                  {syncTimeOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {syncFrequency === 'custom' && (
+              <div>
+                <Label htmlFor="customInterval" className="text-sm theme-text">Khoảng thời gian (giờ)</Label>
+                <Input
+                  id="customInterval"
+                  type="number"
+                  min="1"
+                  value={customSyncInterval}
+                  onChange={(e) => setCustomSyncInterval(parseInt(e.target.value) || 1)}
+                  placeholder="Nhập số giờ"
+                  disabled={isTesting}
+                />
+              </div>
+            )}
           </div>
         </div>
 
@@ -382,7 +433,7 @@ export function KiotVietIntegration({ integration, onSave, onDisconnect }: KiotV
           </div>
         </div>
 
-        <div className="flex space-x-3 pt-4 border-t">
+        <div className="flex space-x-3 pt-4 border-t theme-border">
           <Button
             onClick={handleTestConnection}
             variant="outline"
@@ -402,7 +453,7 @@ export function KiotVietIntegration({ integration, onSave, onDisconnect }: KiotV
           <Button
             onClick={handleSaveConfiguration}
             disabled={!testResult?.success || !securityConfirmed || isTesting}
-            className="flex-1"
+            className="flex-1 voucher-button-primary"
           >
             <CheckCircle2 className="w-4 h-4 mr-2" />
             Lưu cấu hình
