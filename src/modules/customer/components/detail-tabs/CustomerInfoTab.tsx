@@ -36,7 +36,7 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
   };
 
   return (
-    <div className="theme-card rounded-lg border-2 theme-border-primary p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+    <div className="theme-card rounded-lg border-2 theme-border-primary p-6 shadow-md hover:shadow-lg transition-all duration-200">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Dòng 1: Avatar, Mã khách hàng, Tên khách hàng, Loại khách hàng */}
         <div className="space-y-2 flex flex-col items-center">
