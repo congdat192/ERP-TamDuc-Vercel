@@ -37,10 +37,10 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
   const [activeTab, setActiveTab] = useState('info');
 
   return (
-    <tr>
+    <tr className="bg-gray-50/50">
       <td colSpan={visibleColumnsCount + 2} className="p-0">
-        <div className="border-t theme-border-primary/20">
-          <div className="p-6 theme-background">
+        <div className="border-2 border-solid theme-border-primary bg-white/80 rounded-lg mx-2 my-1 shadow-sm">
+          <div className="p-6">
             {/* Simplified Header - only customer name and actions */}
             <div className="flex items-center justify-between mb-6">
               <div>
@@ -67,7 +67,7 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
 
             {/* Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-4 theme-background">
+              <TabsList className="grid w-full grid-cols-4 max-w-2xl mb-6">
                 <TabsTrigger 
                   value="info"
                   className="data-[state=active]:theme-bg-primary data-[state=active]:text-white"
@@ -94,19 +94,19 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="info" className="mt-6">
+              <TabsContent value="info" className="mt-0">
                 <CustomerInfoTab customer={customer} />
               </TabsContent>
 
-              <TabsContent value="sales-history" className="mt-6">
+              <TabsContent value="sales-history" className="mt-0">
                 <CustomerSalesHistoryTab customerId={customer.id} />
               </TabsContent>
 
-              <TabsContent value="debt" className="mt-6">
+              <TabsContent value="debt" className="mt-0">
                 <CustomerDebtTab customerId={customer.id} />
               </TabsContent>
 
-              <TabsContent value="points-history" className="mt-6">
+              <TabsContent value="points-history" className="mt-0">
                 <CustomerPointsHistoryTab customerId={customer.id} />
               </TabsContent>
             </Tabs>
