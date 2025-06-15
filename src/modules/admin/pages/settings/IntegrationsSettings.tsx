@@ -1,10 +1,10 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { 
   Plug, 
   ExternalLink, 
@@ -19,6 +19,8 @@ import {
   CreditCard
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { KiotVietIntegration } from '../../components/KiotVietIntegration';
+import type { KiotVietIntegration as KiotVietIntegrationType } from '../../types/settings';
 
 interface Integration {
   id: string;
@@ -33,6 +35,8 @@ interface Integration {
 
 export function IntegrationsSettings() {
   const { toast } = useToast();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedIntegration, setSelectedIntegration] = useState<string | null>(null);
   
   const [integrations, setIntegrations] = useState<Integration[]>([
     // Nền tảng bán hàng - POS
@@ -176,6 +180,8 @@ export function IntegrationsSettings() {
     }
   ]);
 
+  const [kiotVietConfig, setKiotVietConfig] = useState<KiotVietIntegrationType | null>(null);
+
   const handleToggleIntegration = (id: string, enabled: boolean) => {
     setIntegrations(prev => prev.map(integration => 
       integration.id === id ? { ...integration, enabled } : integration
@@ -187,10 +193,60 @@ export function IntegrationsSettings() {
     });
   };
 
-  const handleConnect = (name: string) => {
+  const handleConnect = (integrationId: string, name: string) => {
+    if (integrationId === 'kiotviet') {
+      setSelectedIntegration(integrationId);
+      setDialogOpen(true);
+    } else {
+      toast({
+        title: 'Đang kết nối...',
+        description: `Đang thiết lập kết nối với ${name}.`
+      });
+    }
+  };
+
+  const handleSettings = (integrationId: string) => {
+    if (integrationId === 'kiotviet') {
+      setSelectedIntegration(integrationId);
+      setDialogOpen(true);
+    }
+  };
+
+  const handleKiotVietSave = (config: Partial<KiotVietIntegrationType>) => {
+    // Update the integration status
+    setIntegrations(prev => prev.map(integration => 
+      integration.id === 'kiotviet' 
+        ? { 
+            ...integration, 
+            status: 'connected', 
+            enabled: true,
+            lastSync: config.lastSync || new Date().toLocaleString('vi-VN')
+          } 
+        : integration
+    ));
+
+    // Save KiotViet specific config
+    setKiotVietConfig(prev => ({ ...prev, ...config } as KiotVietIntegrationType));
+    setDialogOpen(false);
+    
     toast({
-      title: 'Đang kết nối...',
-      description: `Đang thiết lập kết nối với ${name}.`
+      title: 'Cấu hình thành công',
+      description: 'Đã lưu cấu hình tích hợp KiotViet.'
+    });
+  };
+
+  const handleKiotVietDisconnect = () => {
+    setIntegrations(prev => prev.map(integration => 
+      integration.id === 'kiotviet' 
+        ? { ...integration, status: 'disconnected', enabled: false, lastSync: null }
+        : integration
+    ));
+    setKiotVietConfig(null);
+    setDialogOpen(false);
+    
+    toast({
+      title: 'Đã ngắt kết nối',
+      description: 'Đã ngắt kết nối với KiotViet.'
     });
   };
 
@@ -324,13 +380,18 @@ export function IntegrationsSettings() {
                                 onCheckedChange={(enabled) => handleToggleIntegration(integration.id, enabled)}
                               />
                             </div>
-                            <Button variant="ghost" size="sm" className="theme-text hover:theme-bg-primary/10">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="theme-text hover:theme-bg-primary/10"
+                              onClick={() => handleSettings(integration.id)}
+                            >
                               <Settings className="w-4 h-4" />
                             </Button>
                           </>
                         ) : (
                           <Button 
-                            onClick={() => handleConnect(integration.name)}
+                            onClick={() => handleConnect(integration.id, integration.name)}
                             className="voucher-button-secondary"
                             size="sm"
                           >
@@ -347,6 +408,22 @@ export function IntegrationsSettings() {
           );
         })}
       </div>
+
+      {/* KiotViet Integration Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Cấu hình tích hợp KiotViet</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            <KiotVietIntegration
+              integration={kiotVietConfig}
+              onSave={handleKiotVietSave}
+              onDisconnect={handleKiotVietDisconnect}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
