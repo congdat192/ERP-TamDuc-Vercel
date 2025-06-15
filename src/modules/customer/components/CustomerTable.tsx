@@ -4,6 +4,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Eye, Edit, MoreHorizontal } from 'lucide-react';
 import { ColumnConfig } from './ColumnVisibilityFilter';
+import { CustomerDetailRow } from './CustomerDetailRow';
 
 interface Customer {
   id: string;
@@ -95,6 +96,12 @@ export function CustomerTable({
   totalCustomers,
   totalPages
 }: CustomerTableProps) {
+  const [expandedCustomerId, setExpandedCustomerId] = useState<string | null>(null);
+
+  const handleRowClick = (customerId: string) => {
+    setExpandedCustomerId(prev => prev === customerId ? null : customerId);
+  };
+
   const getStatusBadge = (status: string) => {
     if (status === 'Hoạt động') {
       return <Badge className="theme-badge-success whitespace-nowrap">Hoạt động</Badge>;
@@ -204,48 +211,61 @@ export function CustomerTable({
           </thead>
           <tbody>
             {paginatedData.map((customer) => (
-              <tr key={customer.id} className="hover:theme-bg-primary/5 border-b theme-border-primary/10">
-                <td className="sticky left-0 bg-white z-10 w-12 px-4 py-3 border-r theme-border-primary/10">
-                  <Checkbox
-                    checked={selectedCustomers.includes(customer.id)}
-                    onCheckedChange={(checked) => handleSelectCustomer(customer.id, checked as boolean)}
-                    className="voucher-checkbox"
-                  />
-                </td>
-                {visibleColumns.map((column) => (
-                  <td 
-                    key={column.key} 
-                    className={`theme-text px-4 py-3 text-sm ${getColumnWidth(column.key)}`}
-                  >
-                    {renderCellContent(customer, column.key)}
+              <>
+                <tr 
+                  key={customer.id} 
+                  className="hover:theme-bg-primary/5 border-b theme-border-primary/10 cursor-pointer"
+                  onClick={() => handleRowClick(customer.id)}
+                >
+                  <td className="sticky left-0 bg-white z-10 w-12 px-4 py-3 border-r theme-border-primary/10">
+                    <Checkbox
+                      checked={selectedCustomers.includes(customer.id)}
+                      onCheckedChange={(checked) => handleSelectCustomer(customer.id, checked as boolean)}
+                      className="voucher-checkbox"
+                      onClick={(e) => e.stopPropagation()}
+                    />
                   </td>
-                ))}
-                <td className="w-24 px-4 py-3">
-                  <div className="flex items-center space-x-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0 hover:voucher-bg-primary/10 hover:voucher-text-primary"
+                  {visibleColumns.map((column) => (
+                    <td 
+                      key={column.key} 
+                      className={`theme-text px-4 py-3 text-sm ${getColumnWidth(column.key)}`}
                     >
-                      <Eye className="w-4 h-4 voucher-text-primary" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0 hover:theme-bg-secondary/10 hover:theme-text-secondary"
-                    >
-                      <Edit className="w-4 h-4 theme-text-secondary" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0 hover:voucher-bg-primary/10 hover:voucher-text-primary"
-                    >
-                      <MoreHorizontal className="w-4 h-4 voucher-text-primary" />
-                    </Button>
-                  </div>
-                </td>
-              </tr>
+                      {renderCellContent(customer, column.key)}
+                    </td>
+                  ))}
+                  <td className="w-24 px-4 py-3">
+                    <div className="flex items-center space-x-1" onClick={(e) => e.stopPropagation()}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 hover:voucher-bg-primary/10 hover:voucher-text-primary"
+                      >
+                        <Eye className="w-4 h-4 voucher-text-primary" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 hover:theme-bg-secondary/10 hover:theme-text-secondary"
+                      >
+                        <Edit className="w-4 h-4 theme-text-secondary" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 hover:voucher-bg-primary/10 hover:voucher-text-primary"
+                      >
+                        <MoreHorizontal className="w-4 h-4 voucher-text-primary" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+                {expandedCustomerId === customer.id && (
+                  <CustomerDetailRow 
+                    customer={customer} 
+                    visibleColumnsCount={visibleColumns.length}
+                  />
+                )}
+              </>
             ))}
           </tbody>
         </table>
