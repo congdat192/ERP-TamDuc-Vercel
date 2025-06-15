@@ -6,77 +6,35 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Key, Plus, Copy, Eye, EyeOff, Trash2, RefreshCw } from 'lucide-react';
+import { Key, Plus, Eye, EyeOff, Copy, RefreshCw, Trash2, Settings, Webhook } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface APIKey {
-  id: string;
-  name: string;
-  key: string;
-  permissions: string[];
-  lastUsed: string;
-  createdDate: string;
-  status: 'active' | 'disabled';
-}
-
-const mockAPIKeys: APIKey[] = [
-  {
-    id: '1',
-    name: 'Mobile App API',
-    key: 'erp_live_sk_123456789abcdef',
-    permissions: ['read:customers', 'write:orders'],
-    lastUsed: '2024-05-29 14:30',
-    createdDate: '2024-03-15',
-    status: 'active'
-  },
-  {
-    id: '2',
-    name: 'Website Integration',
-    key: 'erp_live_sk_987654321fedcba',
-    permissions: ['read:products', 'read:inventory'],
-    lastUsed: '2024-05-28 10:15',
-    createdDate: '2024-04-01',
-    status: 'active'
-  }
-];
 
 export function APISettings() {
   const { toast } = useToast();
-  const [apiKeys, setApiKeys] = useState<APIKey[]>(mockAPIKeys);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
-  const [newAPIKey, setNewAPIKey] = useState({
-    name: '',
-    permissions: [] as string[]
-  });
-
-  const availablePermissions = [
-    'read:customers', 'write:customers',
-    'read:products', 'write:products',
-    'read:orders', 'write:orders',
-    'read:inventory', 'write:inventory',
-    'read:reports', 'admin:all'
-  ];
-
-  const handleCreateAPIKey = () => {
-    const newKey: APIKey = {
-      id: Date.now().toString(),
-      name: newAPIKey.name,
-      key: `erp_live_sk_${Math.random().toString(36).substring(2, 15)}`,
-      permissions: newAPIKey.permissions,
-      lastUsed: 'Chưa sử dụng',
-      createdDate: new Date().toLocaleDateString('vi-VN'),
+  const [showKey, setShowKey] = useState<string | null>(null);
+  const [apiKeys, setApiKeys] = useState([
+    {
+      id: '1',
+      name: 'Mobile App API',
+      key: 'erp_live_sk_1234567890abcdef',
+      permissions: ['read:customers', 'write:orders'],
+      lastUsed: '2024-05-29 14:30',
       status: 'active'
-    };
+    },
+    {
+      id: '2',
+      name: 'Website Integration',
+      key: 'erp_live_sk_abcdef1234567890',
+      permissions: ['read:products', 'read:inventory'],
+      lastUsed: '2024-05-28 10:15',
+      status: 'active'
+    }
+  ]);
 
-    setApiKeys(prev => [...prev, newKey]);
-    setIsCreateModalOpen(false);
-    setNewAPIKey({ name: '', permissions: [] });
-    
+  const handleCreateKey = () => {
     toast({
-      title: 'Tạo API Key thành công',
-      description: 'API Key mới đã được tạo và có thể sử dụng ngay.'
+      title: 'API Key được tạo thành công',
+      description: 'API key mới đã được thêm vào danh sách.'
     });
   };
 
@@ -84,207 +42,139 @@ export function APISettings() {
     navigator.clipboard.writeText(key);
     toast({
       title: 'Đã sao chép',
-      description: 'API Key đã được sao chép vào clipboard.'
+      description: 'API key đã được sao chép vào clipboard.'
     });
   };
 
-  const toggleKeyVisibility = (keyId: string) => {
-    setShowKeys(prev => ({ ...prev, [keyId]: !prev[keyId] }));
-  };
-
-  const handleDeleteKey = (keyId: string) => {
-    setApiKeys(prev => prev.filter(key => key.id !== keyId));
-    toast({
-      title: 'Đã xóa API Key',
-      description: 'API Key đã được xóa khỏi hệ thống.'
-    });
+  const handleToggleVisibility = (keyId: string) => {
+    setShowKey(showKey === keyId ? null : keyId);
   };
 
   const maskKey = (key: string) => {
-    return key.substring(0, 12) + '•'.repeat(20) + key.substring(key.length - 4);
+    return key.substring(0, 12) + '•'.repeat(20) + key.substring(key.length - 3);
   };
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-2xl font-semibold text-gray-900">API Keys & Webhooks</h3>
-          <p className="text-gray-600">Quản lý API keys để các ứng dụng bên ngoài kết nối với ERP của bạn</p>
+          <h3 className="text-2xl font-semibold theme-text">API Keys & Webhooks</h3>
+          <p className="theme-text-muted">Quản lý API keys để các ứng dụng bên ngoài kết nối với ERP của bạn</p>
         </div>
-        
-        <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-blue-600 hover:bg-blue-700">
-              <Plus className="w-4 h-4 mr-2" />
-              Tạo API Key
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Tạo API Key Mới</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Tên API Key</Label>
-                <Input
-                  placeholder="Ví dụ: Mobile App API"
-                  value={newAPIKey.name}
-                  onChange={(e) => setNewAPIKey(prev => ({ ...prev, name: e.target.value }))}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label>Quyền Truy Cập</Label>
-                <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
-                  {availablePermissions.map(permission => (
-                    <label key={permission} className="flex items-center space-x-2 text-sm">
-                      <input
-                        type="checkbox"
-                        checked={newAPIKey.permissions.includes(permission)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setNewAPIKey(prev => ({
-                              ...prev,
-                              permissions: [...prev.permissions, permission]
-                            }));
-                          } else {
-                            setNewAPIKey(prev => ({
-                              ...prev,
-                              permissions: prev.permissions.filter(p => p !== permission)
-                            }));
-                          }
-                        }}
-                        className="rounded border-gray-300"
-                      />
-                      <span>{permission}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="flex space-x-2 pt-4">
-                <Button onClick={handleCreateAPIKey} className="flex-1">
-                  Tạo API Key
-                </Button>
-                <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>
-                  Hủy
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={handleCreateKey} className="voucher-button-primary">
+          <Plus className="w-4 h-4 mr-2" />
+          Tạo API Key
+        </Button>
       </div>
 
-      {/* API Keys Table */}
-      <Card>
+      {/* API Keys Management */}
+      <Card className="theme-card">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <Key className="w-5 h-5 text-blue-600" />
-            <span>Danh Sách API Keys ({apiKeys.length})</span>
+            <Key className="w-5 h-5 theme-text-primary" />
+            <span className="theme-text">Danh Sách API Keys ({apiKeys.length})</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Tên</TableHead>
-                <TableHead>API Key</TableHead>
-                <TableHead>Quyền</TableHead>
-                <TableHead>Lần Sử Dụng Cuối</TableHead>
-                <TableHead>Trạng Thái</TableHead>
-                <TableHead className="text-right">Thao Tác</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {apiKeys.map((apiKey) => (
-                <TableRow key={apiKey.id}>
-                  <TableCell className="font-medium">{apiKey.name}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <code className="bg-gray-100 px-2 py-1 rounded text-sm">
-                        {showKeys[apiKey.id] ? apiKey.key : maskKey(apiKey.key)}
-                      </code>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toggleKeyVisibility(apiKey.id)}
-                      >
-                        {showKeys[apiKey.id] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleCopyKey(apiKey.key)}
-                      >
-                        <Copy className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {apiKey.permissions.slice(0, 2).map(permission => (
-                        <Badge key={permission} variant="secondary" className="text-xs">
-                          {permission}
-                        </Badge>
-                      ))}
-                      {apiKey.permissions.length > 2 && (
-                        <Badge variant="secondary" className="text-xs">
-                          +{apiKey.permissions.length - 2}
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-sm text-gray-600">{apiKey.lastUsed}</TableCell>
-                  <TableCell>
-                    <Badge 
-                      className={
-                        apiKey.status === 'active' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }
-                    >
-                      {apiKey.status === 'active' ? 'Hoạt động' : 'Tạm khóa'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end space-x-1">
-                      <Button variant="ghost" size="sm">
-                        <RefreshCw className="w-4 h-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="text-red-600 hover:text-red-700"
-                        onClick={() => handleDeleteKey(apiKey.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="theme-text">Tên</TableHead>
+                  <TableHead className="theme-text">API Key</TableHead>
+                  <TableHead className="theme-text">Quyền</TableHead>
+                  <TableHead className="theme-text">Lần Sử Dụng Cuối</TableHead>
+                  <TableHead className="theme-text">Trạng Thái</TableHead>
+                  <TableHead className="theme-text">Thao Tác</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {apiKeys.map((apiKey) => (
+                  <TableRow key={apiKey.id}>
+                    <TableCell className="font-medium theme-text">{apiKey.name}</TableCell>
+                    <TableCell className="font-mono text-sm theme-text-muted">
+                      <div className="flex items-center space-x-2">
+                        <span>
+                          {showKey === apiKey.id ? apiKey.key : maskKey(apiKey.key)}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleToggleVisibility(apiKey.id)}
+                          className="theme-text hover:theme-bg-primary/10"
+                        >
+                          {showKey === apiKey.id ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleCopyKey(apiKey.key)}
+                          className="theme-text hover:theme-bg-primary/10"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {apiKey.permissions.map((permission) => (
+                          <Badge key={permission} variant="secondary" className="text-xs">
+                            {permission}
+                          </Badge>
+                        ))}
+                      </div>
+                    </TableCell>
+                    <TableCell className="theme-text-muted">{apiKey.lastUsed}</TableCell>
+                    <TableCell>
+                      <Badge 
+                        variant={apiKey.status === 'active' ? 'success' : 'destructive'}
+                        className="capitalize"
+                      >
+                        {apiKey.status === 'active' ? 'Hoạt động' : 'Không hoạt động'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex space-x-1">
+                        <Button variant="ghost" size="sm" className="theme-text hover:theme-bg-primary/10">
+                          <RefreshCw className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" className="theme-text hover:theme-bg-primary/10">
+                          <Settings className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 
       {/* Webhook Configuration */}
-      <Card>
+      <Card className="theme-card">
         <CardHeader>
-          <CardTitle>Webhook Configuration</CardTitle>
+          <CardTitle className="flex items-center space-x-2">
+            <Webhook className="w-5 h-5 theme-text-secondary" />
+            <span className="theme-text">Webhook Configuration</span>
+          </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <h4 className="font-medium text-blue-900 mb-2">Webhook Endpoints</h4>
-              <p className="text-sm text-blue-700 mb-3">
-                Cấu hình webhook để nhận thông báo real-time khi có sự kiện trong hệ thống
-              </p>
-              <Button variant="outline" size="sm">
-                Cấu Hình Webhook
-              </Button>
-            </div>
+        <CardContent className="space-y-4">
+          <div className="p-4 rounded-lg theme-bg-primary/5 border theme-border-primary/20">
+            <h4 className="font-medium theme-text-primary mb-2">Webhook Endpoints</h4>
+            <p className="text-sm theme-text-muted mb-4">
+              Cấu hình webhook để nhận thông báo real-time khi có sự kiện trong hệ thống
+            </p>
+            <Button variant="outline" className="voucher-button-secondary">
+              Cấu Hình Webhook
+            </Button>
           </div>
         </CardContent>
       </Card>
