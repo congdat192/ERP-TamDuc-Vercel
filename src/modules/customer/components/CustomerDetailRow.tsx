@@ -1,6 +1,5 @@
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CustomerInfoTab } from './detail-tabs/CustomerInfoTab';
 import { CustomerSalesHistoryTab } from './detail-tabs/CustomerSalesHistoryTab';
@@ -41,30 +40,6 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
       <td colSpan={visibleColumnsCount + 2} className="p-0">
         <div className="border-2 border-solid theme-border-primary bg-white/80 rounded-lg mx-2 my-1 shadow-sm">
           <div className="p-6">
-            {/* Simplified Header - only customer name and actions */}
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h3 className="text-xl font-semibold theme-text">{customer.name}</h3>
-              </div>
-              
-              <div className="flex space-x-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="theme-border-primary hover:theme-bg-primary/10"
-                >
-                  Chỉnh sửa
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="border-red-300 text-red-600 hover:bg-red-50"
-                >
-                  Ngừng hoạt động
-                </Button>
-              </div>
-            </div>
-
             {/* Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-4 max-w-2xl mb-6">

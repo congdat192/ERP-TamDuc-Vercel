@@ -117,7 +117,7 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
           />
         </div>
 
-        {/* Dòng 3: Ngày sinh và 3 cột trống */}
+        {/* Dòng 3: Ngày sinh, Ngày tạo, Người tạo, Chi nhánh */}
         <div className="space-y-2">
           <Label htmlFor="birthday" className="theme-text text-sm font-medium">Ngày sinh</Label>
           <Input 
@@ -127,13 +127,31 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
           />
         </div>
         <div className="space-y-2">
-          {/* Cột trống */}
+          <Label htmlFor="created-date" className="theme-text text-sm font-medium">Ngày tạo</Label>
+          <Input 
+            id="created-date"
+            value={customer.createdDate} 
+            readOnly
+            className="voucher-input h-9"
+          />
         </div>
         <div className="space-y-2">
-          {/* Cột trống */}
+          <Label htmlFor="creator" className="theme-text text-sm font-medium">Người tạo</Label>
+          <Input 
+            id="creator"
+            value={customer.creator} 
+            readOnly
+            className="voucher-input h-9"
+          />
         </div>
         <div className="space-y-2">
-          {/* Cột trống */}
+          <Label htmlFor="branch" className="theme-text text-sm font-medium">Chi nhánh</Label>
+          <Input 
+            id="branch"
+            value="Chi nhánh HCM" 
+            readOnly
+            className="voucher-input h-9"
+          />
         </div>
 
         {/* Dòng 4: Địa chỉ (span 4 cột) */}
