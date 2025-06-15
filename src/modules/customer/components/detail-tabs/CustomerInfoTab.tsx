@@ -31,135 +31,133 @@ interface CustomerInfoTabProps {
 
 export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
   return (
-    <div className="space-y-6">
-      {/* Thông tin cơ bản */}
-      <div className="theme-card rounded-lg border theme-border-primary p-6">
-        <h4 className="text-lg font-semibold theme-text mb-4">Thông tin cơ bản</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="customer-code" className="theme-text">Mã khách hàng</Label>
-            <Input 
-              id="customer-code"
-              value={customer.id} 
-              readOnly 
-              className="voucher-input"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="customer-name" className="theme-text">Tên khách hàng</Label>
-            <Input 
-              id="customer-name"
-              value={customer.name} 
-              className="voucher-input"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="customer-type" className="theme-text">Loại khách hàng</Label>
-            <Select defaultValue="individual">
-              <SelectTrigger className="voucher-input">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="individual">Cá nhân</SelectItem>
-                <SelectItem value="company">Công ty</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="customer-group" className="theme-text">Nhóm khách hàng</Label>
-            <Select defaultValue={customer.group}>
-              <SelectTrigger className="voucher-input">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="VIP">VIP</SelectItem>
-                <SelectItem value="Thường">Thường</SelectItem>
-                <SelectItem value="Bán sỉ">Bán sỉ</SelectItem>
-                <SelectItem value="Khách lẻ">Khách lẻ</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+    <div className="theme-card rounded-lg border theme-border-primary p-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Dòng 1: Mã khách hàng, Tên khách hàng, Loại khách hàng */}
+        <div className="space-y-2">
+          <Label htmlFor="customer-code" className="theme-text text-sm font-medium">Mã khách hàng</Label>
+          <Input 
+            id="customer-code"
+            value={customer.id} 
+            readOnly 
+            className="voucher-input h-9"
+          />
         </div>
-      </div>
-
-      {/* Thông tin liên hệ */}
-      <div className="theme-card rounded-lg border theme-border-primary p-6">
-        <h4 className="text-lg font-semibold theme-text mb-4">Thông tin liên hệ</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="phone" className="theme-text">Điện thoại</Label>
-            <Input 
-              id="phone"
-              value={customer.phone} 
-              className="voucher-input"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="email" className="theme-text">Email</Label>
-            <Input 
-              id="email"
-              value={customer.email} 
-              className="voucher-input"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="facebook" className="theme-text">Facebook</Label>
-            <Input 
-              id="facebook"
-              value={customer.facebook} 
-              className="voucher-input"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="birthday" className="theme-text">Ngày sinh</Label>
-            <Input 
-              id="birthday"
-              value={customer.birthday} 
-              className="voucher-input"
-            />
-          </div>
-          <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="address" className="theme-text">Địa chỉ</Label>
-            <Input 
-              id="address"
-              value={customer.address} 
-              className="voucher-input"
-            />
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="customer-name" className="theme-text text-sm font-medium">Tên khách hàng</Label>
+          <Input 
+            id="customer-name"
+            value={customer.name} 
+            className="voucher-input h-9"
+          />
         </div>
-      </div>
-
-      {/* Thông tin công ty */}
-      <div className="theme-card rounded-lg border theme-border-primary p-6">
-        <h4 className="text-lg font-semibold theme-text mb-4">Thông tin công ty</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="company" className="theme-text">Tên công ty</Label>
-            <Input 
-              id="company"
-              value={customer.company} 
-              className="voucher-input"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="tax-code" className="theme-text">Mã số thuế</Label>
-            <Input 
-              id="tax-code"
-              value={customer.taxCode} 
-              className="voucher-input"
-            />
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="customer-type" className="theme-text text-sm font-medium">Loại khách hàng</Label>
+          <Select defaultValue="individual">
+            <SelectTrigger className="voucher-input h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="individual">Cá nhân</SelectItem>
+              <SelectItem value="company">Công ty</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-      </div>
 
-      {/* Ghi chú */}
-      <div className="theme-card rounded-lg border theme-border-primary p-6">
-        <h4 className="text-lg font-semibold theme-text mb-4">Ghi chú</h4>
-        <Textarea 
-          value={customer.note} 
-          rows={4}
-          className="voucher-input"
-        />
+        {/* Dòng 2: Nhóm khách hàng, Điện thoại, Email */}
+        <div className="space-y-2">
+          <Label htmlFor="customer-group" className="theme-text text-sm font-medium">Nhóm khách hàng</Label>
+          <Select defaultValue={customer.group}>
+            <SelectTrigger className="voucher-input h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="VIP">VIP</SelectItem>
+              <SelectItem value="Thường">Thường</SelectItem>
+              <SelectItem value="Bán sỉ">Bán sỉ</SelectItem>
+              <SelectItem value="Khách lẻ">Khách lẻ</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="phone" className="theme-text text-sm font-medium">Điện thoại</Label>
+          <Input 
+            id="phone"
+            value={customer.phone} 
+            className="voucher-input h-9"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="email" className="theme-text text-sm font-medium">Email</Label>
+          <Input 
+            id="email"
+            value={customer.email} 
+            className="voucher-input h-9"
+          />
+        </div>
+
+        {/* Dòng 3: Facebook, Ngày sinh, (trống) */}
+        <div className="space-y-2">
+          <Label htmlFor="facebook" className="theme-text text-sm font-medium">Facebook</Label>
+          <Input 
+            id="facebook"
+            value={customer.facebook} 
+            className="voucher-input h-9"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="birthday" className="theme-text text-sm font-medium">Ngày sinh</Label>
+          <Input 
+            id="birthday"
+            value={customer.birthday} 
+            className="voucher-input h-9"
+          />
+        </div>
+        <div className="space-y-2">
+          {/* Cột trống */}
+        </div>
+
+        {/* Dòng 4: Địa chỉ (span 3 cột) */}
+        <div className="space-y-2 md:col-span-2 lg:col-span-3">
+          <Label htmlFor="address" className="theme-text text-sm font-medium">Địa chỉ</Label>
+          <Input 
+            id="address"
+            value={customer.address} 
+            className="voucher-input h-9"
+          />
+        </div>
+
+        {/* Dòng 5: Tên công ty, Mã số thuế, (trống) */}
+        <div className="space-y-2">
+          <Label htmlFor="company" className="theme-text text-sm font-medium">Tên công ty</Label>
+          <Input 
+            id="company"
+            value={customer.company} 
+            className="voucher-input h-9"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="tax-code" className="theme-text text-sm font-medium">Mã số thuế</Label>
+          <Input 
+            id="tax-code"
+            value={customer.taxCode} 
+            className="voucher-input h-9"
+          />
+        </div>
+        <div className="space-y-2">
+          {/* Cột trống */}
+        </div>
+
+        {/* Ghi chú (full width) */}
+        <div className="space-y-2 md:col-span-2 lg:col-span-3">
+          <Label htmlFor="note" className="theme-text text-sm font-medium">Ghi chú</Label>
+          <Textarea 
+            id="note"
+            value={customer.note} 
+            rows={3}
+            className="voucher-input"
+          />
+        </div>
       </div>
     </div>
   );
