@@ -10,6 +10,8 @@ export function InvoiceCodeLink({ invoiceCode, className = '' }: InvoiceCodeLink
   return (
     <Link 
       to={`/ERP/Invoices/${invoiceCode}`}
+      target="_blank"
+      rel="noopener noreferrer"
       className={`theme-text-primary hover:theme-text-primary/80 underline cursor-pointer transition-colors font-medium ${className}`}
     >
       {invoiceCode}
