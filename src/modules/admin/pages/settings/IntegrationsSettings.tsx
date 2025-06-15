@@ -267,49 +267,49 @@ export function IntegrationsSettings() {
         return {
           title: 'Nền Tảng Bán Hàng - POS',
           icon: Store,
-          colorClass: 'text-voucher-primary-600',
-          bgClass: 'bg-voucher-primary-50',
-          borderClass: 'border-voucher-primary-200'
+          colorClass: 'theme-text-primary',
+          bgClass: 'theme-bg-primary/10',
+          borderClass: 'theme-border-primary/20'
         };
       case 'ecommerce':
         return {
           title: 'Thương Mại Điện Tử',
           icon: ShoppingCart,
-          colorClass: 'text-voucher-secondary-600',
-          bgClass: 'bg-voucher-secondary-50',
-          borderClass: 'border-voucher-secondary-200'
+          colorClass: 'theme-text-secondary',
+          bgClass: 'theme-bg-secondary/10',
+          borderClass: 'theme-border-secondary/20'
         };
       case 'web':
         return {
           title: 'Web Platform',
           icon: Globe,
-          colorClass: 'text-voucher-primary-600',
-          bgClass: 'bg-voucher-primary-50',
-          borderClass: 'border-voucher-primary-200'
+          colorClass: 'theme-text-primary',
+          bgClass: 'theme-bg-primary/10',
+          borderClass: 'theme-border-primary/20'
         };
       case 'social':
         return {
           title: 'Mạng Xã Hội',
           icon: Users,
-          colorClass: 'text-voucher-secondary-600',
-          bgClass: 'bg-voucher-secondary-50',
-          borderClass: 'border-voucher-secondary-200'
+          colorClass: 'theme-text-secondary',
+          bgClass: 'theme-bg-secondary/10',
+          borderClass: 'theme-border-secondary/20'
         };
       case 'payment':
         return {
           title: 'Cổng Thanh Toán',
           icon: CreditCard,
-          colorClass: 'text-voucher-primary-600',
-          bgClass: 'bg-voucher-primary-50',
-          borderClass: 'border-voucher-primary-200'
+          colorClass: 'theme-text-primary',
+          bgClass: 'theme-bg-primary/10',
+          borderClass: 'theme-border-primary/20'
         };
       default:
         return {
           title: 'Khác',
           icon: Plug,
-          colorClass: 'text-gray-700',
-          bgClass: 'bg-gray-50',
-          borderClass: 'border-gray-200'
+          colorClass: 'theme-text-muted',
+          bgClass: 'theme-bg-primary/5',
+          borderClass: 'theme-border'
         };
     }
   };
@@ -320,8 +320,8 @@ export function IntegrationsSettings() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-2xl font-semibold text-gray-900">Tích Hợp Bên Thứ 3</h3>
-          <p className="text-gray-600">Kết nối ERP với các nền tảng và dịch vụ bên ngoài</p>
+          <h3 className="text-2xl font-semibold theme-text">Tích Hợp Bên Thứ 3</h3>
+          <p className="theme-text-muted">Kết nối ERP với các nền tảng và dịch vụ bên ngoài</p>
         </div>
         <Button className="voucher-button-primary">
           <Plus className="w-4 h-4 mr-2" />
@@ -337,12 +337,12 @@ export function IntegrationsSettings() {
           const IconComponent = config.icon;
           
           return (
-            <Card key={category} className="bg-white border border-gray-200 shadow-sm">
+            <Card key={category} className="theme-card">
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <IconComponent className={`w-5 h-5 ${config.colorClass}`} />
-                  <span className="text-gray-900">{config.title}</span>
-                  <Badge variant="secondary" className="ml-auto">
+                  <span className="theme-text">{config.title}</span>
+                  <Badge variant="secondary" className="ml-auto theme-badge-secondary">
                     {categoryIntegrations.length} tích hợp
                   </Badge>
                 </CardTitle>
@@ -355,12 +355,12 @@ export function IntegrationsSettings() {
                         <div className="text-2xl">{integration.icon}</div>
                         <div className="flex-1">
                           <div className="flex items-center space-x-2">
-                            <h4 className="font-medium text-gray-900">{integration.name}</h4>
+                            <h4 className="font-medium theme-text">{integration.name}</h4>
                             {getStatusBadge(integration.status)}
                           </div>
-                          <p className="text-sm text-gray-600 mt-1">{integration.description}</p>
+                          <p className="text-sm theme-text-muted mt-1">{integration.description}</p>
                           {integration.lastSync && (
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs theme-text-muted mt-1">
                               Đồng bộ lần cuối: {integration.lastSync}
                             </p>
                           )}
@@ -371,7 +371,7 @@ export function IntegrationsSettings() {
                         {integration.status === 'connected' ? (
                           <>
                             <div className="flex items-center space-x-2">
-                              <Label htmlFor={`toggle-${integration.id}`} className="text-sm text-gray-700">
+                              <Label htmlFor={`toggle-${integration.id}`} className="text-sm theme-text">
                                 Kích hoạt
                               </Label>
                               <Switch
@@ -383,7 +383,7 @@ export function IntegrationsSettings() {
                             <Button 
                               variant="ghost" 
                               size="sm" 
-                              className="text-gray-700 hover:bg-gray-100"
+                              className="theme-text hover:theme-bg-primary/10"
                               onClick={() => handleSettings(integration.id)}
                             >
                               <Settings className="w-4 h-4" />

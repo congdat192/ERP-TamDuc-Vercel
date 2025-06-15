@@ -86,7 +86,7 @@ export function SettingsLayout({ children }: SettingsLayoutProps) {
       
       {/* Settings Sidebar */}
       <div className={cn(
-        "fixed inset-y-0 left-0 z-50 w-80 theme-card border-r transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0",
+        "fixed inset-y-0 left-0 z-50 w-80 theme-card theme-border border-r transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex flex-col h-full">
@@ -109,11 +109,11 @@ export function SettingsLayout({ children }: SettingsLayoutProps) {
               {settingsMenuStructure.map((item) => (
                 <Button
                   key={item.id}
-                  variant={currentPage === item.id ? "secondary" : "ghost"}
+                  variant="ghost"
                   className={cn(
-                    "w-full justify-start text-left h-11 transition-all duration-200",
+                    "w-full justify-start text-left h-11 transition-all duration-200 font-medium",
                     currentPage === item.id 
-                      ? "theme-bg-primary text-white border-r-2 theme-border-primary font-medium" 
+                      ? "voucher-sidebar-active" 
                       : "theme-text hover:theme-bg-primary/10 hover:theme-text-primary"
                   )}
                   onClick={() => handleMenuItemClick(item.url)}

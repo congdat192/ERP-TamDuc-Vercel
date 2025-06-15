@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -58,8 +59,8 @@ export function APISettings() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-2xl font-semibold text-gray-900">API Keys & Webhooks</h3>
-          <p className="text-gray-600">Quản lý API keys để các ứng dụng bên ngoài kết nối với ERP của bạn</p>
+          <h3 className="text-2xl font-semibold theme-text">API Keys & Webhooks</h3>
+          <p className="theme-text-muted">Quản lý API keys để các ứng dụng bên ngoài kết nối với ERP của bạn</p>
         </div>
         <Button onClick={handleCreateKey} className="voucher-button-primary">
           <Plus className="w-4 h-4 mr-2" />
@@ -68,11 +69,11 @@ export function APISettings() {
       </div>
 
       {/* API Keys Management */}
-      <Card className="bg-white border border-gray-200 shadow-sm">
+      <Card className="theme-card">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <Key className="w-5 h-5 text-voucher-primary-600" />
-            <span className="text-gray-900">Danh Sách API Keys ({apiKeys.length})</span>
+            <Key className="w-5 h-5 theme-text-primary" />
+            <span className="theme-text">Danh Sách API Keys ({apiKeys.length})</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -80,19 +81,19 @@ export function APISettings() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-gray-900">Tên</TableHead>
-                  <TableHead className="text-gray-900">API Key</TableHead>
-                  <TableHead className="text-gray-900">Quyền</TableHead>
-                  <TableHead className="text-gray-900">Lần Sử Dụng Cuối</TableHead>
-                  <TableHead className="text-gray-900">Trạng Thái</TableHead>
-                  <TableHead className="text-gray-900">Thao Tác</TableHead>
+                  <TableHead className="theme-text">Tên</TableHead>
+                  <TableHead className="theme-text">API Key</TableHead>
+                  <TableHead className="theme-text">Quyền</TableHead>
+                  <TableHead className="theme-text">Lần Sử Dụng Cuối</TableHead>
+                  <TableHead className="theme-text">Trạng Thái</TableHead>
+                  <TableHead className="theme-text">Thao Tác</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {apiKeys.map((apiKey) => (
                   <TableRow key={apiKey.id}>
-                    <TableCell className="font-medium text-gray-900">{apiKey.name}</TableCell>
-                    <TableCell className="font-mono text-sm text-gray-600">
+                    <TableCell className="font-medium theme-text">{apiKey.name}</TableCell>
+                    <TableCell className="font-mono text-sm theme-text-muted">
                       <div className="flex items-center space-x-2">
                         <span>
                           {showKey === apiKey.id ? apiKey.key : maskKey(apiKey.key)}
@@ -101,7 +102,7 @@ export function APISettings() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleToggleVisibility(apiKey.id)}
-                          className="text-gray-700 hover:bg-gray-100"
+                          className="theme-text hover:theme-bg-primary/10"
                         >
                           {showKey === apiKey.id ? (
                             <EyeOff className="w-4 h-4" />
@@ -113,7 +114,7 @@ export function APISettings() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleCopyKey(apiKey.key)}
-                          className="text-gray-700 hover:bg-gray-100"
+                          className="theme-text hover:theme-bg-primary/10"
                         >
                           <Copy className="w-4 h-4" />
                         </Button>
@@ -122,13 +123,13 @@ export function APISettings() {
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {apiKey.permissions.map((permission) => (
-                          <Badge key={permission} variant="secondary" className="text-xs">
+                          <Badge key={permission} variant="secondary" className="text-xs theme-badge-primary">
                             {permission}
                           </Badge>
                         ))}
                       </div>
                     </TableCell>
-                    <TableCell className="text-gray-600">{apiKey.lastUsed}</TableCell>
+                    <TableCell className="theme-text-muted">{apiKey.lastUsed}</TableCell>
                     <TableCell>
                       <Badge 
                         variant={apiKey.status === 'active' ? 'success' : 'destructive'}
@@ -139,10 +140,10 @@ export function APISettings() {
                     </TableCell>
                     <TableCell>
                       <div className="flex space-x-1">
-                        <Button variant="ghost" size="sm" className="text-gray-700 hover:bg-gray-100">
+                        <Button variant="ghost" size="sm" className="theme-text hover:theme-bg-primary/10">
                           <RefreshCw className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" className="text-gray-700 hover:bg-gray-100">
+                        <Button variant="ghost" size="sm" className="theme-text hover:theme-bg-primary/10">
                           <Settings className="w-4 h-4" />
                         </Button>
                         <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50">
@@ -159,17 +160,17 @@ export function APISettings() {
       </Card>
 
       {/* Webhook Configuration */}
-      <Card className="bg-white border border-gray-200 shadow-sm">
+      <Card className="theme-card">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <Webhook className="w-5 h-5 text-voucher-secondary-600" />
-            <span className="text-gray-900">Webhook Configuration</span>
+            <Webhook className="w-5 h-5 theme-text-secondary" />
+            <span className="theme-text">Webhook Configuration</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="p-4 rounded-lg bg-voucher-primary-50 border border-voucher-primary-200">
-            <h4 className="font-medium text-voucher-primary-700 mb-2">Webhook Endpoints</h4>
-            <p className="text-sm text-gray-600 mb-4">
+          <div className="p-4 rounded-lg theme-bg-primary/10 theme-border-primary/20 border">
+            <h4 className="font-medium theme-text-primary mb-2">Webhook Endpoints</h4>
+            <p className="text-sm theme-text-muted mb-4">
               Cấu hình webhook để nhận thông báo real-time khi có sự kiện trong hệ thống
             </p>
             <Button variant="outline" className="voucher-button-secondary">
