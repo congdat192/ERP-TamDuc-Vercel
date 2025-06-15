@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -168,12 +167,12 @@ export function APISettings() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="p-4 rounded-lg theme-bg-primary/10 theme-border-primary/20 border">
-            <h4 className="font-medium theme-text-primary mb-2">Webhook Endpoints</h4>
+          <div className="p-4 rounded-lg bg-white border theme-border">
+            <h4 className="font-medium theme-text mb-2">Webhook Endpoints</h4>
             <p className="text-sm theme-text-muted mb-4">
               Cấu hình webhook để nhận thông báo real-time khi có sự kiện trong hệ thống
             </p>
-            <Button variant="outline" className="voucher-button-secondary">
+            <Button variant="outline" className="border-2 hover:voucher-button-primary">
               Cấu Hình Webhook
             </Button>
           </div>

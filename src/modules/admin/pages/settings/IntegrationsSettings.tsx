@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -392,8 +393,9 @@ export function IntegrationsSettings() {
                         ) : (
                           <Button 
                             onClick={() => handleConnect(integration.id, integration.name)}
-                            className="voucher-button-secondary"
+                            variant="outline"
                             size="sm"
+                            className="border-2 hover:voucher-button-primary"
                           >
                             <ExternalLink className="w-4 h-4 mr-2" />
                             Kết nối
