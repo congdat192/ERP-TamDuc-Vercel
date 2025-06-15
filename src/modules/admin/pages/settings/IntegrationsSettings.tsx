@@ -5,21 +5,69 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Plug, ExternalLink, Settings, CheckCircle, AlertCircle, Plus } from 'lucide-react';
+import { 
+  Plug, 
+  ExternalLink, 
+  Settings, 
+  CheckCircle, 
+  AlertCircle, 
+  Plus,
+  Store,
+  ShoppingCart,
+  Globe,
+  Users,
+  CreditCard
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+
+interface Integration {
+  id: string;
+  name: string;
+  description: string;
+  status: 'connected' | 'disconnected' | 'error';
+  enabled: boolean;
+  icon: string;
+  lastSync: string | null;
+  category: 'pos' | 'ecommerce' | 'web' | 'social' | 'payment';
+}
 
 export function IntegrationsSettings() {
   const { toast } = useToast();
-  const [integrations, setIntegrations] = useState([
+  
+  const [integrations, setIntegrations] = useState<Integration[]>([
+    // Nền tảng bán hàng - POS
     {
       id: 'kiotviet',
       name: 'KiotViet',
-      description: 'Đồng bộ sản phẩm và đơn hàng với KiotViet',
+      description: 'Đồng bộ sản phẩm và đơn hàng với KiotViet POS',
       status: 'connected',
       enabled: true,
       icon: '🏪',
-      lastSync: '2024-05-29 14:30'
+      lastSync: '2024-05-29 14:30',
+      category: 'pos'
     },
+    {
+      id: 'nhanh',
+      name: 'Nhanh.vn',
+      description: 'Tích hợp với hệ thống quản lý Nhanh.vn',
+      status: 'disconnected',
+      enabled: false,
+      icon: '⚡',
+      lastSync: null,
+      category: 'pos'
+    },
+    {
+      id: 'sapa',
+      name: 'Sapa',
+      description: 'Kết nối với nền tảng POS Sapa',
+      status: 'disconnected',
+      enabled: false,
+      icon: '🎯',
+      lastSync: null,
+      category: 'pos'
+    },
+    
+    // Thương mại điện tử
     {
       id: 'shopee',
       name: 'Shopee',
@@ -27,7 +75,8 @@ export function IntegrationsSettings() {
       status: 'disconnected',
       enabled: false,
       icon: '🛒',
-      lastSync: null
+      lastSync: null,
+      category: 'ecommerce'
     },
     {
       id: 'lazada',
@@ -36,16 +85,94 @@ export function IntegrationsSettings() {
       status: 'error',
       enabled: true,
       icon: '🛍️',
-      lastSync: '2024-05-28 10:15'
+      lastSync: '2024-05-28 10:15',
+      category: 'ecommerce'
     },
     {
-      id: 'tiki',
-      name: 'Tiki',
-      description: 'Đồng bộ catalog và đơn hàng với Tiki',
+      id: 'tiktok',
+      name: 'TikTok Shop',
+      description: 'Đồng bộ sản phẩm và đơn hàng TikTok Shop',
       status: 'disconnected',
       enabled: false,
-      icon: '📦',
-      lastSync: null
+      icon: '🎵',
+      lastSync: null,
+      category: 'ecommerce'
+    },
+    
+    // Web Platform
+    {
+      id: 'website',
+      name: 'Website',
+      description: 'Tích hợp với website thương mại điện tử',
+      status: 'connected',
+      enabled: true,
+      icon: '🌐',
+      lastSync: '2024-05-29 16:45',
+      category: 'web'
+    },
+    
+    // Mạng xã hội
+    {
+      id: 'zalo_oa',
+      name: 'Zalo OA',
+      description: 'Kết nối với Zalo Official Account',
+      status: 'connected',
+      enabled: true,
+      icon: '💬',
+      lastSync: '2024-05-29 13:20',
+      category: 'social'
+    },
+    {
+      id: 'fanpage',
+      name: 'Facebook Fanpage',
+      description: 'Tích hợp với Facebook Business Page',
+      status: 'disconnected',
+      enabled: false,
+      icon: '📘',
+      lastSync: null,
+      category: 'social'
+    },
+    {
+      id: 'instagram',
+      name: 'Instagram',
+      description: 'Đồng bộ với Instagram Business Account',
+      status: 'disconnected',
+      enabled: false,
+      icon: '📸',
+      lastSync: null,
+      category: 'social'
+    },
+    
+    // Cổng thanh toán
+    {
+      id: 'vnpay',
+      name: 'VNPay',
+      description: 'Cổng thanh toán VNPay',
+      status: 'connected',
+      enabled: true,
+      icon: '💳',
+      lastSync: '2024-05-29 15:30',
+      category: 'payment'
+    },
+    {
+      id: 'momo',
+      name: 'MoMo',
+      description: 'Ví điện tử MoMo',
+      status: 'disconnected',
+      enabled: false,
+      icon: '🎀',
+      lastSync: null,
+      category: 'payment'
+    },
+    {
+      id: 'zalopay',
+      name: 'ZaloPay',
+      description: 'Ví điện tử ZaloPay',
+      status: 'disconnected',
+      enabled: false,
+      icon: '⚡',
+      lastSync: null,
+      category: 'payment'
     }
   ]);
 
@@ -78,6 +205,61 @@ export function IntegrationsSettings() {
     }
   };
 
+  const getCategoryConfig = (category: string) => {
+    switch (category) {
+      case 'pos':
+        return {
+          title: 'Nền Tảng Bán Hàng - POS',
+          icon: Store,
+          colorClass: 'theme-text-primary',
+          bgClass: 'theme-bg-primary/5',
+          borderClass: 'theme-border-primary/20'
+        };
+      case 'ecommerce':
+        return {
+          title: 'Thương Mại Điện Tử',
+          icon: ShoppingCart,
+          colorClass: 'theme-text-secondary',
+          bgClass: 'theme-bg-secondary/5',
+          borderClass: 'theme-border-secondary/20'
+        };
+      case 'web':
+        return {
+          title: 'Web Platform',
+          icon: Globe,
+          colorClass: 'theme-text-info',
+          bgClass: 'bg-blue-50',
+          borderClass: 'border-blue-200'
+        };
+      case 'social':
+        return {
+          title: 'Mạng Xã Hội',
+          icon: Users,
+          colorClass: 'theme-text-success',
+          bgClass: 'bg-green-50',
+          borderClass: 'border-green-200'
+        };
+      case 'payment':
+        return {
+          title: 'Cổng Thanh Toán',
+          icon: CreditCard,
+          colorClass: 'text-orange-600',
+          bgClass: 'bg-orange-50',
+          borderClass: 'border-orange-200'
+        };
+      default:
+        return {
+          title: 'Khác',
+          icon: Plug,
+          colorClass: 'theme-text',
+          bgClass: 'theme-bg-primary/5',
+          borderClass: 'theme-border'
+        };
+    }
+  };
+
+  const categories = ['pos', 'ecommerce', 'web', 'social', 'payment'];
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -91,109 +273,80 @@ export function IntegrationsSettings() {
         </Button>
       </div>
 
-      {/* Marketplace Integrations */}
-      <Card className="theme-card">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Plug className="w-5 h-5 theme-text-primary" />
-            <span className="theme-text">Marketplace & E-commerce</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4">
-            {integrations.map((integration) => (
-              <div key={integration.id} className="flex items-center justify-between p-4 rounded-lg border theme-border hover:theme-bg-primary/5 transition-colors">
-                <div className="flex items-center space-x-4">
-                  <div className="text-2xl">{integration.icon}</div>
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2">
-                      <h4 className="font-medium theme-text">{integration.name}</h4>
-                      {getStatusBadge(integration.status)}
-                    </div>
-                    <p className="text-sm theme-text-muted mt-1">{integration.description}</p>
-                    {integration.lastSync && (
-                      <p className="text-xs theme-text-muted mt-1">
-                        Đồng bộ lần cuối: {integration.lastSync}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-3">
-                  {integration.status === 'connected' ? (
-                    <>
-                      <div className="flex items-center space-x-2">
-                        <Label htmlFor={`toggle-${integration.id}`} className="text-sm theme-text">
-                          Kích hoạt
-                        </Label>
-                        <Switch
-                          id={`toggle-${integration.id}`}
-                          checked={integration.enabled}
-                          onCheckedChange={(enabled) => handleToggleIntegration(integration.id, enabled)}
-                        />
+      {/* Integration Categories */}
+      <div className="space-y-6">
+        {categories.map((category) => {
+          const categoryIntegrations = integrations.filter(integration => integration.category === category);
+          const config = getCategoryConfig(category);
+          const IconComponent = config.icon;
+          
+          return (
+            <Card key={category} className="theme-card">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <IconComponent className={`w-5 h-5 ${config.colorClass}`} />
+                  <span className="theme-text">{config.title}</span>
+                  <Badge variant="secondary" className="ml-auto">
+                    {categoryIntegrations.length} tích hợp
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4">
+                  {categoryIntegrations.map((integration) => (
+                    <div key={integration.id} className={`flex items-center justify-between p-4 rounded-lg border ${config.borderClass} ${config.bgClass} hover:shadow-sm transition-all duration-200`}>
+                      <div className="flex items-center space-x-4">
+                        <div className="text-2xl">{integration.icon}</div>
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2">
+                            <h4 className="font-medium theme-text">{integration.name}</h4>
+                            {getStatusBadge(integration.status)}
+                          </div>
+                          <p className="text-sm theme-text-muted mt-1">{integration.description}</p>
+                          {integration.lastSync && (
+                            <p className="text-xs theme-text-muted mt-1">
+                              Đồng bộ lần cuối: {integration.lastSync}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                      <Button variant="ghost" size="sm" className="theme-text hover:theme-bg-primary/10">
-                        <Settings className="w-4 h-4" />
-                      </Button>
-                    </>
-                  ) : (
-                    <Button 
-                      onClick={() => handleConnect(integration.name)}
-                      className="voucher-button-secondary"
-                      size="sm"
-                    >
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Kết nối
-                    </Button>
-                  )}
+                      
+                      <div className="flex items-center space-x-3">
+                        {integration.status === 'connected' ? (
+                          <>
+                            <div className="flex items-center space-x-2">
+                              <Label htmlFor={`toggle-${integration.id}`} className="text-sm theme-text">
+                                Kích hoạt
+                              </Label>
+                              <Switch
+                                id={`toggle-${integration.id}`}
+                                checked={integration.enabled}
+                                onCheckedChange={(enabled) => handleToggleIntegration(integration.id, enabled)}
+                              />
+                            </div>
+                            <Button variant="ghost" size="sm" className="theme-text hover:theme-bg-primary/10">
+                              <Settings className="w-4 h-4" />
+                            </Button>
+                          </>
+                        ) : (
+                          <Button 
+                            onClick={() => handleConnect(integration.name)}
+                            className="voucher-button-secondary"
+                            size="sm"
+                          >
+                            <ExternalLink className="w-4 h-4 mr-2" />
+                            Kết nối
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Payment Gateways */}
-      <Card className="theme-card">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Plug className="w-5 h-5 theme-text-secondary" />
-            <span className="theme-text">Cổng Thanh Toán</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="p-4 rounded-lg theme-bg-secondary/5 border theme-border-secondary/20 text-center">
-            <h4 className="font-medium theme-text-secondary mb-2">Tích hợp cổng thanh toán</h4>
-            <p className="text-sm theme-text-muted mb-4">
-              Kết nối với VNPay, MoMo, ZaloPay và các cổng thanh toán khác
-            </p>
-            <Button variant="outline" className="voucher-button-secondary">
-              Cấu hình thanh toán
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Accounting Software */}
-      <Card className="theme-card">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Plug className="w-5 h-5 theme-text-success" />
-            <span className="theme-text">Phần Mềm Kế Toán</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="p-4 rounded-lg theme-bg-success/5 border theme-border-success/20 text-center">
-            <h4 className="font-medium theme-text-success mb-2">Đồng bộ dữ liệu kế toán</h4>
-            <p className="text-sm theme-text-muted mb-4">
-              Tích hợp với MISA, Fast, Bravo và các phần mềm kế toán phổ biến
-            </p>
-            <Button variant="outline" className="border-green-300 text-green-700 hover:bg-green-50">
-              Thiết lập kế toán
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
     </div>
   );
 }
