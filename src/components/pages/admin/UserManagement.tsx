@@ -25,8 +25,8 @@ import {
 import { BulkOperationsBar, BulkSelectCheckbox, BulkSelectHeader } from '@/components/ui/bulk-operations';
 import { AdvancedSearch } from '@/components/ui/advanced-search';
 import { KeyboardShortcutsDialog } from '@/components/ui/keyboard-shortcuts';
-import { EnhancedEmptyState, NoDataEmptyState } from '@/components/ui/enhanced-empty-states';
-import { TableLoadingSkeleton } from '@/components/ui/enhanced-loading';
+import { EmptyState, EmptyTableState, EmptySearchState } from '@/components/ui/empty-states';
+import { TableLoadingSkeleton } from '@/components/ui/loading';
 import { PageTransition } from '@/components/ui/page-transitions';
 
 const mockUsers = [
@@ -369,15 +369,9 @@ export function UserManagement() {
               <TableLoadingSkeleton />
             ) : filteredUsers.length === 0 ? (
               searchTerm ? (
-                <EnhancedEmptyState
-                  variant="no-results"
-                  title="Không tìm thấy người dùng"
-                  description={`Không có người dùng nào phù hợp với "${searchTerm}"`}
-                  actionLabel="Xóa Tìm Kiếm"
-                  onAction={handleClearSearch}
-                />
+                <EmptySearchState searchTerm={searchTerm} />
               ) : (
-                <NoDataEmptyState 
+                <EmptyTableState 
                   entityName="người dùng"
                   onAdd={() => setIsAddUserOpen(true)}
                 />
