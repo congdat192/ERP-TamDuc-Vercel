@@ -1,7 +1,7 @@
-
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { mockInventory } from '@/data/mockData';
+import { ProductCodeLink } from '../ProductCodeLink';
 
 interface InvoiceInfoTabProps {
   invoice: any;
@@ -108,8 +108,12 @@ export function InvoiceInfoTab({ invoice }: InvoiceInfoTabProps) {
                 const product = getProductDetails(productId);
                 return (
                   <tr key={productId} className="border-t theme-border-primary/10">
-                    <td className="px-4 py-3 text-sm theme-text font-medium">
-                      {product?.productCode || productId}
+                    <td className="px-4 py-3 text-sm font-medium">
+                      {product?.productCode ? (
+                        <ProductCodeLink productCode={product.productCode} />
+                      ) : (
+                        <span className="theme-text">{productId}</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-sm theme-text">
                       {product?.name || 'Sản phẩm không tìm thấy'}

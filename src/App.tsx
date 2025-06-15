@@ -17,6 +17,7 @@ import { CustomerPage } from "./pages/CustomerPage";
 import { SalesPage } from "./pages/SalesPage";
 import { VoucherPage } from "./pages/VoucherPage";
 import { InventoryPage } from "./pages/InventoryPage";
+import { ProductDetailPage } from "./pages/ProductDetailPage";
 import { PlatformAdmin } from "./modules/platform-admin";
 import { ERPLayout } from "@/components/layout/ERPLayout";
 import { useAuth } from "@/components/auth/AuthContext";
@@ -134,6 +135,14 @@ const App = () => (
                   element={
                     <ProtectedERPRoute module="inventory">
                       <InventoryPage />
+                    </ProtectedERPRoute>
+                  } 
+                />
+                <Route 
+                  path="/ERP/Products/:productCode" 
+                  element={
+                    <ProtectedERPRoute module="inventory">
+                      <ProductDetailPage />
                     </ProtectedERPRoute>
                   } 
                 />
