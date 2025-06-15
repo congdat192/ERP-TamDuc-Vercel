@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,6 +20,7 @@ import { InventoryPage } from "./pages/InventoryPage";
 import { ProductDetailPage } from "./pages/ProductDetailPage";
 import { InvoiceDetailPage } from "./pages/InvoiceDetailPage";
 import { PlatformAdmin } from "./modules/platform-admin";
+import { SettingsRouter } from "./modules/admin/components/SettingsRouter";
 import { ERPLayout } from "@/components/layout/ERPLayout";
 import { useAuth } from "@/components/auth/AuthContext";
 import { Navigate, useNavigate } from "react-router-dom";

@@ -1,129 +1,79 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { X, Menu, ChevronDown, ChevronRight } from 'lucide-react';
-import { SettingsCategory, SettingsMenuItem } from '../../types/settings';
-import { GeneralInfo } from './GeneralInfo';
-import { EmailSettings } from './EmailSettings';
-import { SecuritySettings } from './SecuritySettings';
-import { ApiIntegration } from './ApiIntegration';
-import { ThirdPartyIntegrations } from './ThirdPartyIntegrations';
-import { BackupRestore } from './BackupRestore';
-import { FeaturesPlans } from './FeaturesPlans';
 
-// Settings menu structure with nested categories for scalability
+interface SettingsLayoutProps {
+  children: React.ReactNode;
+}
+
+// Settings menu structure với URL mapping
 const settingsMenuStructure = [
   {
-    id: 'general-info',
+    id: 'general',
     label: 'Thông Tin Chung',
-    icon: 'Building2',
+    url: '/ERP/Setting/General',
     type: 'single' as const
   },
   {
-    id: 'email',
-    label: 'Email',
-    icon: 'Mail',
+    id: 'api',
+    label: 'API Keys & Webhooks',
+    url: '/ERP/Setting/API',
+    type: 'single' as const
+  },
+  {
+    id: 'integrations',
+    label: 'Tích Hợp Bên Thứ 3',
+    url: '/ERP/Setting/Integrations',
     type: 'single' as const
   },
   {
     id: 'security',
     label: 'Bảo Mật',
-    icon: 'Shield',
+    url: '/ERP/Setting/Security',
     type: 'single' as const
   },
   {
-    id: 'api-integration',
-    label: 'API & Kết Nối',
-    icon: 'Link',
-    type: 'expandable' as const,
-    subItems: [
-      { id: 'api-keys', label: 'API Keys & Webhooks' },
-      { id: 'third-party', label: 'Tích Hợp Bên Thứ 3' }
-    ]
-  },
-  {
-    id: 'backup-restore',
-    label: 'Sao Lưu & Khôi Phục',
-    icon: 'Database',
+    id: 'notifications',
+    label: 'Thông Báo',
+    url: '/ERP/Setting/Notifications',
     type: 'single' as const
   },
   {
-    id: 'features-plans',
-    label: 'Tính Năng & Gói Dịch Vụ',
-    icon: 'Crown',
+    id: 'appearance',
+    label: 'Giao Diện & Thương Hiệu',
+    url: '/ERP/Setting/Appearance',
     type: 'single' as const
   }
 ];
 
-export function SettingsLayout() {
-  const [currentCategory, setCurrentCategory] = useState<SettingsCategory>('general-info');
+export function SettingsLayout({ children }: SettingsLayoutProps) {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    'api-integration': true // Default expand API section
-  });
 
-  const toggleSection = (sectionId: string) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [sectionId]: !prev[sectionId]
-    }));
+  // Xác định trang hiện tại từ URL
+  const getCurrentPage = () => {
+    const currentPath = location.pathname;
+    const menuItem = settingsMenuStructure.find(item => item.url === currentPath);
+    return menuItem?.id || 'general';
   };
 
-  const handleMenuItemClick = (categoryId: SettingsCategory) => {
-    setCurrentCategory(categoryId);
+  const getCurrentPageLabel = () => {
+    const currentPath = location.pathname;
+    const menuItem = settingsMenuStructure.find(item => item.url === currentPath);
+    return menuItem?.label || 'Cài Đặt Hệ Thống';
+  };
+
+  const handleMenuItemClick = (url: string) => {
+    navigate(url);
     setSidebarOpen(false);
-    
-    // Auto-expand parent section if clicking on a submenu item
-    if (categoryId === 'api-keys' || categoryId === 'third-party') {
-      setExpandedSections(prev => ({
-        ...prev,
-        'api-integration': true
-      }));
-    }
   };
 
-  const renderSettingsPage = () => {
-    switch (currentCategory) {
-      case 'general-info':
-        return <GeneralInfo />;
-      case 'email':
-        return <EmailSettings />;
-      case 'security':
-        return <SecuritySettings />;
-      case 'api-integration':
-      case 'api-keys':
-        return <ApiIntegration />;
-      case 'third-party':
-        return <ThirdPartyIntegrations />;
-      case 'backup-restore':
-        return <BackupRestore />;
-      case 'features-plans':
-        return <FeaturesPlans />;
-      default:
-        return <GeneralInfo />;
-    }
-  };
-
-  const getCurrentCategoryLabel = () => {
-    const findLabel = (items: typeof settingsMenuStructure): string => {
-      for (const item of items) {
-        if (item.id === currentCategory) {
-          return item.label;
-        }
-        if (item.type === 'expandable' && item.subItems) {
-          for (const subItem of item.subItems) {
-            if (subItem.id === currentCategory) {
-              return `${item.label} > ${subItem.label}`;
-            }
-          }
-        }
-      }
-      return 'Cài Đặt Hệ Thống';
-    };
-    return findLabel(settingsMenuStructure);
-  };
+  const currentPage = getCurrentPage();
 
   return (
     <div className="flex h-full">
@@ -135,7 +85,7 @@ export function SettingsLayout() {
         />
       )}
       
-      {/* Settings Sidebar with Accordion Navigation */}
+      {/* Settings Sidebar */}
       <div className={cn(
         "fixed inset-y-0 left-0 z-50 w-80 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -154,86 +104,28 @@ export function SettingsLayout() {
             </Button>
           </div>
 
-          {/* Accordion Navigation Menu */}
+          {/* Navigation Menu */}
           <div className="flex-1 overflow-y-auto py-4">
             <nav className="space-y-1 px-3">
-              {settingsMenuStructure.map((item) => {
-                if (item.type === 'single') {
-                  return (
-                    <Button
-                      key={item.id}
-                      variant={currentCategory === item.id ? "secondary" : "ghost"}
-                      className={cn(
-                        "w-full justify-start text-left h-11",
-                        currentCategory === item.id 
-                          ? "bg-blue-50 text-blue-700 border-r-2 border-blue-600" 
-                          : "text-gray-700 hover:bg-gray-50"
-                      )}
-                      onClick={() => handleMenuItemClick(item.id as SettingsCategory)}
-                    >
-                      {item.label}
-                    </Button>
-                  );
-                }
-
-                // Expandable section with sub-items
-                const isParentActive = currentCategory === item.id || 
-                  (item.subItems?.some(sub => sub.id === currentCategory));
-
-                return (
-                  <Collapsible
-                    key={item.id}
-                    open={expandedSections[item.id]}
-                    onOpenChange={() => toggleSection(item.id)}
-                  >
-                    <CollapsibleTrigger asChild>
-                      <Button
-                        variant={isParentActive ? "secondary" : "ghost"}
-                        className={cn(
-                          "w-full justify-between text-left h-11",
-                          isParentActive 
-                            ? "bg-blue-50 text-blue-700" 
-                            : "text-gray-700 hover:bg-gray-50"
-                        )}
-                        onClick={() => {
-                          if (!expandedSections[item.id]) {
-                            handleMenuItemClick(item.id as SettingsCategory);
-                          }
-                        }}
-                      >
-                        <span>{item.label}</span>
-                        {expandedSections[item.id] ? (
-                          <ChevronDown className="w-4 h-4" />
-                        ) : (
-                          <ChevronRight className="w-4 h-4" />
-                        )}
-                      </Button>
-                    </CollapsibleTrigger>
-                    
-                    <CollapsibleContent className="space-y-1">
-                      {item.subItems?.map((subItem) => (
-                        <Button
-                          key={subItem.id}
-                          variant={currentCategory === subItem.id ? "secondary" : "ghost"}
-                          className={cn(
-                            "w-full justify-start text-left h-10 pl-8",
-                            currentCategory === subItem.id 
-                              ? "bg-blue-100 text-blue-800 border-r-2 border-blue-600" 
-                              : "text-gray-600 hover:bg-gray-50"
-                          )}
-                          onClick={() => handleMenuItemClick(subItem.id as SettingsCategory)}
-                        >
-                          {subItem.label}
-                        </Button>
-                      ))}
-                    </CollapsibleContent>
-                  </Collapsible>
-                );
-              })}
+              {settingsMenuStructure.map((item) => (
+                <Button
+                  key={item.id}
+                  variant={currentPage === item.id ? "secondary" : "ghost"}
+                  className={cn(
+                    "w-full justify-start text-left h-11",
+                    currentPage === item.id 
+                      ? "bg-blue-50 text-blue-700 border-r-2 border-blue-600" 
+                      : "text-gray-700 hover:bg-gray-50"
+                  )}
+                  onClick={() => handleMenuItemClick(item.url)}
+                >
+                  {item.label}
+                </Button>
+              ))}
             </nav>
           </div>
 
-          {/* Sidebar Footer - Help/Documentation Link */}
+          {/* Sidebar Footer */}
           <div className="p-4 border-t border-gray-200">
             <p className="text-xs text-gray-500">
               Hướng dẫn cài đặt hệ thống và tài liệu hỗ trợ
@@ -255,7 +147,7 @@ export function SettingsLayout() {
           </Button>
           <div className="ml-2">
             <h1 className="text-lg font-semibold text-gray-900">Cài Đặt</h1>
-            <p className="text-sm text-gray-600">{getCurrentCategoryLabel()}</p>
+            <p className="text-sm text-gray-600">{getCurrentPageLabel()}</p>
           </div>
         </div>
 
@@ -264,14 +156,14 @@ export function SettingsLayout() {
           <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
             <span>Cài Đặt Hệ Thống</span>
             <span>/</span>
-            <span className="text-gray-900 font-medium">{getCurrentCategoryLabel()}</span>
+            <span className="text-gray-900 font-medium">{getCurrentPageLabel()}</span>
           </div>
         </div>
 
         {/* Settings Content */}
         <div className="flex-1 overflow-auto">
           <div className="p-6">
-            {renderSettingsPage()}
+            {children}
           </div>
         </div>
       </div>
