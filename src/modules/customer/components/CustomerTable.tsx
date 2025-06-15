@@ -159,17 +159,17 @@ export function CustomerTable({
       case 'createBranch':
         return <span className="whitespace-nowrap">Chi nhánh HCM</span>;
       case 'currentDebt':
-        return <span className="whitespace-nowrap text-right block">{formatCurrency(customer.totalDebt)}</span>;
+        return <span className="whitespace-nowrap">{formatCurrency(customer.totalDebt)}</span>;
       case 'debtDays':
-        return <span className="whitespace-nowrap text-center block">0</span>;
+        return <span className="whitespace-nowrap">0</span>;
       case 'totalSales':
-        return <span className="whitespace-nowrap text-right block">{formatCurrency(customer.totalSpent)}</span>;
+        return <span className="whitespace-nowrap">{formatCurrency(customer.totalSpent)}</span>;
       case 'currentPoints':
-        return <span className="whitespace-nowrap text-center block">{customer.points.toString()}</span>;
+        return <span className="whitespace-nowrap">{customer.points.toString()}</span>;
       case 'totalPoints':
-        return <span className="whitespace-nowrap text-center block">{(customer.points + 200).toString()}</span>;
+        return <span className="whitespace-nowrap">{(customer.points + 200).toString()}</span>;
       case 'totalSalesMinusReturns':
-        return <span className="whitespace-nowrap text-right block">{formatCurrency(customer.totalSpent - 50000)}</span>;
+        return <span className="whitespace-nowrap">{formatCurrency(customer.totalSpent - 50000)}</span>;
       case 'status':
         return getStatusBadge(customer.status);
       default:
