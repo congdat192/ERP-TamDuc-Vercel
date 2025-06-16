@@ -45,6 +45,12 @@ export const MODULE_PERMISSIONS: ModulePermission[] = [
     allowedRoles: ['erp-admin', 'voucher-admin', 'telesales', 'custom']
   },
   {
+    module: 'marketing',
+    label: 'Marketing',
+    icon: 'Target',
+    allowedRoles: ['erp-admin', 'custom']
+  },
+  {
     module: 'system-settings',
     label: 'Cài Đặt Hệ Thống',
     icon: 'Settings',
@@ -70,7 +76,7 @@ export const VOUCHER_FEATURES = [
 
 export const DEFAULT_PERMISSIONS = {
   'erp-admin': {
-    modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'system-settings', 'user-management'] as ERPModule[],
+    modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'marketing', 'system-settings', 'user-management'] as ERPModule[],
     voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'] as VoucherFeature[],
     canManageUsers: true,
     canViewAllVouchers: true
@@ -88,7 +94,7 @@ export const DEFAULT_PERMISSIONS = {
     canViewAllVouchers: false
   },
   'custom': {
-    modules: ['dashboard'] as ERPModule[],
+    modules: ['dashboard', 'marketing'] as ERPModule[],
     voucherFeatures: [] as VoucherFeature[],
     canManageUsers: false,
     canViewAllVouchers: false

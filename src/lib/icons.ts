@@ -10,7 +10,8 @@ import {
   Settings,
   Shield,
   Building2,
-  Home
+  Home,
+  Target
 } from 'lucide-react';
 
 const iconMap = {
@@ -24,7 +25,8 @@ const iconMap = {
   Settings,
   Shield,
   Building2,
-  Home
+  Home,
+  Target
 };
 
 export function getIconComponent(iconName: string) {
