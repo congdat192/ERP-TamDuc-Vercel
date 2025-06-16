@@ -132,7 +132,7 @@ const App = () => (
                   } 
                 />
                 <Route 
-                  path="/ERP/Voucher" 
+                  path="/ERP/Voucher/*" 
                   element={
                     <ProtectedERPRoute module="voucher">
                       <VoucherPage />

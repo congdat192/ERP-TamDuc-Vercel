@@ -11,33 +11,32 @@ import {
   Target,
   Plus
 } from 'lucide-react';
-import { VoucherFeature, User } from '@/types/auth';
+import { User } from '@/types/auth';
+import { Link, useLocation } from 'react-router-dom';
 
 interface VoucherModuleSidebarProps {
-  currentPage: VoucherFeature;
-  onPageChange: (page: VoucherFeature) => void;
   currentUser: User;
   onBackToModules: () => void;
 }
 
 const voucherPages = [
-  { id: 'voucher-dashboard' as VoucherFeature, label: 'Tổng Quan', icon: LayoutDashboard },
-  { id: 'campaign-management' as VoucherFeature, label: 'Quản Lý Chiến Dịch', icon: Target },
-  { id: 'issue-voucher' as VoucherFeature, label: 'Phát Hành Voucher', icon: Plus },
-  { id: 'voucher-list' as VoucherFeature, label: 'Danh Sách Voucher', icon: FileText },
-  { id: 'voucher-analytics' as VoucherFeature, label: 'Báo Cáo Phân Tích', icon: BarChart3 },
-  { id: 'voucher-leaderboard' as VoucherFeature, label: 'Bảng Xếp Hạng', icon: Trophy },
-  { id: 'voucher-settings' as VoucherFeature, label: 'Cài Đặt', icon: Settings },
+  { id: 'voucher-dashboard', path: '/ERP/Voucher/Dashboard', label: 'Tổng Quan', icon: LayoutDashboard },
+  { id: 'campaign-management', path: '/ERP/Voucher/Campaign', label: 'Quản Lý Chiến Dịch', icon: Target },
+  { id: 'issue-voucher', path: '/ERP/Voucher/Issue', label: 'Phát Hành Voucher', icon: Plus },
+  { id: 'voucher-list', path: '/ERP/Voucher/List', label: 'Danh Sách Voucher', icon: FileText },
+  { id: 'voucher-analytics', path: '/ERP/Voucher/Report', label: 'Báo Cáo Phân Tích', icon: BarChart3 },
+  { id: 'voucher-leaderboard', path: '/ERP/Voucher/Ranking', label: 'Bảng Xếp Hạng', icon: Trophy },
+  { id: 'voucher-settings', path: '/ERP/Voucher/Setting', label: 'Cài Đặt', icon: Settings },
 ];
 
 export function VoucherModuleSidebar({ 
-  currentPage, 
-  onPageChange, 
   currentUser,
   onBackToModules 
 }: VoucherModuleSidebarProps) {
+  const location = useLocation();
+  
   const allowedPages = voucherPages.filter(page => 
-    currentUser.permissions.voucherFeatures?.includes(page.id)
+    currentUser.permissions.voucherFeatures?.includes(page.id as any)
   );
 
   return (
@@ -60,7 +59,7 @@ export function VoucherModuleSidebar({
         <nav className="space-y-1 px-3">
           {allowedPages.map((page) => {
             const Icon = page.icon;
-            const isActive = currentPage === page.id;
+            const isActive = location.pathname === page.path;
             return (
               <Button
                 key={page.id}
@@ -71,13 +70,15 @@ export function VoucherModuleSidebar({
                     ? "voucher-sidebar-active" 
                     : "theme-text hover:theme-bg-primary/10 hover:theme-text-primary"
                 )}
-                onClick={() => onPageChange(page.id)}
+                asChild
               >
-                <Icon className={cn(
-                  "w-4 h-4 mr-3",
-                  isActive ? "theme-text-primary" : "theme-text-muted"
-                )} />
-                {page.label}
+                <Link to={page.path}>
+                  <Icon className={cn(
+                    "w-4 h-4 mr-3",
+                    isActive ? "theme-text-primary" : "theme-text-muted"
+                  )} />
+                  {page.label}
+                </Link>
               </Button>
             );
           })}
