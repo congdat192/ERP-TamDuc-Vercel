@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@/types/auth';
 
@@ -39,10 +38,11 @@ const mockUsers: User[] = [
     role: 'erp-admin',
     email: 'admin@company.com',
     status: 'active',
-    createdAt: new Date(),
+    createdAt: new Date().toISOString(),
     emailVerified: true,
+    isActive: true,
     permissions: {
-      modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'system-settings', 'user-management'],
+      modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'marketing', 'system-settings', 'user-management'],
       voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
       canManageUsers: true,
       canViewAllVouchers: true,
@@ -62,11 +62,13 @@ const mockUsers: User[] = [
     role: 'voucher-admin',
     email: 'voucher.admin@company.com',
     status: 'active',
-    createdAt: new Date(),
+    createdAt: new Date().toISOString(),
     emailVerified: true,
+    isActive: true,
     permissions: {
       modules: ['dashboard', 'voucher'],
       voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
+      canManageUsers: false,
       canViewAllVouchers: true,
     },
     securitySettings: {
@@ -84,11 +86,14 @@ const mockUsers: User[] = [
     role: 'telesales',
     email: 'telesales@company.com',
     status: 'active',
-    createdAt: new Date(),
+    createdAt: new Date().toISOString(),
     emailVerified: true,
+    isActive: true,
     permissions: {
       modules: ['dashboard', 'customers', 'voucher'],
-      voucherFeatures: ['issue-voucher', 'voucher-list'],
+      voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list', 'voucher-leaderboard'],
+      canManageUsers: false,
+      canViewAllVouchers: false,
     },
     securitySettings: {
       twoFactorEnabled: false,
@@ -105,10 +110,14 @@ const mockUsers: User[] = [
     role: 'custom',
     email: 'custom@company.com',
     status: 'active',
-    createdAt: new Date(),
+    createdAt: new Date().toISOString(),
     emailVerified: true,
+    isActive: true,
     permissions: {
       modules: ['dashboard', 'customers'],
+      voucherFeatures: [],
+      canManageUsers: false,
+      canViewAllVouchers: false,
     },
     securitySettings: {
       twoFactorEnabled: false,
@@ -125,10 +134,14 @@ const mockUsers: User[] = [
     role: 'platform-admin',
     email: 'platform.admin@company.com',
     status: 'active',
-    createdAt: new Date(),
+    createdAt: new Date().toISOString(),
     emailVerified: true,
+    isActive: true,
     permissions: {
       modules: [],
+      voucherFeatures: [],
+      canManageUsers: true,
+      canViewAllVouchers: true,
     },
     securitySettings: {
       twoFactorEnabled: false,
@@ -191,13 +204,9 @@ const restoreUserFromStorage = (): User | null => {
     return null;
   }
 
-  // Convert date strings back to Date objects
+  // Return user data as is since dates are already stored as strings
   try {
-    return {
-      ...userData,
-      createdAt: new Date(userData.createdAt),
-      lastLogin: userData.lastLogin ? new Date(userData.lastLogin) : undefined
-    };
+    return userData as User;
   } catch (error) {
     console.warn('Failed to restore user data:', error);
     return null;
@@ -236,13 +245,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // User was logged in in another tab
           try {
             const userData = JSON.parse(e.newValue);
-            const restoredUser = {
-              ...userData,
-              createdAt: new Date(userData.createdAt),
-              lastLogin: userData.lastLogin ? new Date(userData.lastLogin) : undefined
-            };
-            setCurrentUser(restoredUser);
-            console.log('User logged in from another tab:', restoredUser.username);
+            setCurrentUser(userData as User);
+            console.log('User logged in from another tab:', userData.username);
           } catch (error) {
             console.warn('Failed to sync user from another tab:', error);
           }
@@ -269,7 +273,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (user && user.status === 'active') {
       const userWithLastLogin = {
         ...user,
-        lastLogin: new Date()
+        lastLogin: new Date().toISOString()
       };
       
       setCurrentUser(userWithLastLogin);

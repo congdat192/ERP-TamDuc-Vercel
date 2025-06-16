@@ -1,6 +1,8 @@
 
 export type UserRole = 'erp-admin' | 'voucher-admin' | 'telesales' | 'custom' | 'platform-admin';
 
+export type UserStatus = 'active' | 'inactive' | 'locked' | 'pending';
+
 export type ERPModule = 
   | 'dashboard'
   | 'customers'
@@ -36,17 +38,30 @@ export interface UserPermissions {
   canViewAllVouchers: boolean;
 }
 
+export interface UserSecuritySettings {
+  twoFactorEnabled: boolean;
+  loginAttemptLimit: number;
+  passwordChangeRequired: boolean;
+  sessionTimeoutMinutes: number;
+}
+
 export interface User {
   id: string;
   fullName: string;
   username: string;
   email: string;
+  phone?: string;
   role: UserRole;
   permissions: UserPermissions;
   isActive: boolean;
+  status: UserStatus;
   createdAt: string;
   lastLogin?: string;
   avatar?: string;
+  emailVerified: boolean;
+  securitySettings: UserSecuritySettings;
+  activities: any[];
+  notes?: string;
 }
 
 export interface AuthState {
@@ -58,4 +73,25 @@ export interface AuthState {
 export interface LoginCredentials {
   username: string;
   password: string;
+}
+
+export interface CreateUserData {
+  username: string;
+  fullName: string;
+  email: string;
+  phone?: string;
+  role: UserRole;
+  permissions: UserPermissions;
+  notes?: string;
+}
+
+export interface UpdateUserData {
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  role?: UserRole;
+  permissions?: UserPermissions;
+  notes?: string;
+  isActive?: boolean;
+  status?: UserStatus;
 }
