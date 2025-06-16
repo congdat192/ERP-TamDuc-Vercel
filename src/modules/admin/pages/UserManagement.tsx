@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -41,9 +40,10 @@ const mockUsers: User[] = [
     phone: '0901234567',
     status: 'active',
     notes: 'System Administrator',
-    createdAt: new Date('2024-01-15'),
-    lastLogin: new Date('2024-05-29T14:30:00'),
+    createdAt: '2024-01-15T00:00:00.000Z',
+    lastLogin: '2024-05-29T14:30:00.000Z',
     emailVerified: true,
+    isActive: true,
     permissions: {
       modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'system-settings', 'user-management'],
       voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
@@ -54,8 +54,8 @@ const mockUsers: User[] = [
       twoFactorEnabled: true,
       loginAttemptLimit: 5,
       passwordChangeRequired: false,
-      lastPasswordChange: new Date('2024-01-15'),
-      sessionTimeoutMinutes: 480
+      sessionTimeoutMinutes: 480,
+      lastPasswordChange: '2024-01-15T00:00:00.000Z'
     },
     activities: []
   },
@@ -68,9 +68,10 @@ const mockUsers: User[] = [
     phone: '0901234568',
     status: 'active',
     notes: 'Voucher Module Manager',
-    createdAt: new Date('2024-02-10'),
-    lastLogin: new Date('2024-05-29T16:45:00'),
+    createdAt: '2024-02-10T00:00:00.000Z',
+    lastLogin: '2024-05-29T16:45:00.000Z',
     emailVerified: true,
+    isActive: true,
     permissions: {
       modules: ['dashboard', 'voucher'],
       voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
@@ -94,9 +95,10 @@ const mockUsers: User[] = [
     phone: '0901234569',
     status: 'locked',
     notes: 'Telesales Staff - Temporary Lock',
-    createdAt: new Date('2024-03-05'),
-    lastLogin: new Date('2024-05-25T09:15:00'),
+    createdAt: '2024-03-05T00:00:00.000Z',
+    lastLogin: '2024-05-25T09:15:00.000Z',
     emailVerified: true,
+    isActive: true,
     permissions: {
       modules: ['dashboard', 'voucher'],
       voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list', 'voucher-leaderboard'],
@@ -120,9 +122,10 @@ const mockUsers: User[] = [
     phone: '0901234570',
     status: 'pending_verification',
     notes: 'New employee - pending email verification',
-    createdAt: new Date('2024-05-28'),
+    createdAt: '2024-05-28T00:00:00.000Z',
     lastLogin: undefined,
     emailVerified: false,
+    isActive: true,
     permissions: {
       modules: ['dashboard', 'voucher'],
       voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list'],
@@ -181,6 +184,7 @@ export function UserManagement() {
       active: { className: "bg-green-100 text-green-800", label: "Hoạt Động" },
       inactive: { className: "bg-gray-100 text-gray-800", label: "Không Hoạt Động" },
       locked: { className: "bg-red-100 text-red-800", label: "Bị Khóa" },
+      pending: { className: "bg-yellow-100 text-yellow-800", label: "Chờ Xác Thực" },
       pending_verification: { className: "bg-yellow-100 text-yellow-800", label: "Chờ Xác Thực" }
     };
     
@@ -391,6 +395,7 @@ export function UserManagement() {
                   <SelectItem value="all">Tất cả trạng thái</SelectItem>
                   <SelectItem value="active">Hoạt động</SelectItem>
                   <SelectItem value="locked">Bị khóa</SelectItem>
+                  <SelectItem value="pending">Chờ xác thực</SelectItem>
                   <SelectItem value="pending_verification">Chờ xác thực</SelectItem>
                 </SelectContent>
               </Select>
@@ -460,7 +465,7 @@ export function UserManagement() {
                     )}
                   </TableCell>
                   <TableCell className="text-sm text-gray-600">
-                    {user.lastLogin ? user.lastLogin.toLocaleString('vi-VN') : 'Chưa đăng nhập'}
+                    {user.lastLogin ? new Date(user.lastLogin).toLocaleString('vi-VN') : 'Chưa đăng nhập'}
                   </TableCell>
                   <TableCell>
                     {user.securitySettings.twoFactorEnabled ? (

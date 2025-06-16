@@ -26,7 +26,13 @@ export function UserCreateModal({ isOpen, onClose, onUserCreated }: UserCreateMo
     password: '',
     notes: '',
     requirePasswordReset: true,
-    sendVerificationEmail: true
+    sendVerificationEmail: true,
+    permissions: {
+      modules: [],
+      voucherFeatures: [],
+      canManageUsers: false,
+      canViewAllVouchers: false
+    }
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof CreateUserData, string>>>({});
@@ -93,9 +99,10 @@ export function UserCreateModal({ isOpen, onClose, onUserCreated }: UserCreateMo
         role: formData.role,
         status: formData.sendVerificationEmail ? 'pending_verification' : 'active',
         notes: formData.notes || undefined,
-        createdAt: new Date(),
+        createdAt: new Date().toISOString(),
         lastLogin: undefined,
         emailVerified: !formData.sendVerificationEmail,
+        isActive: true,
         permissions: DEFAULT_PERMISSIONS[formData.role],
         securitySettings: {
           twoFactorEnabled: false,
@@ -118,7 +125,13 @@ export function UserCreateModal({ isOpen, onClose, onUserCreated }: UserCreateMo
         password: '',
         notes: '',
         requirePasswordReset: true,
-        sendVerificationEmail: true
+        sendVerificationEmail: true,
+        permissions: {
+          modules: [],
+          voucherFeatures: [],
+          canManageUsers: false,
+          canViewAllVouchers: false
+        }
       });
       setErrors({});
     } catch (error) {

@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -34,6 +33,7 @@ export function UserDetailModal({ isOpen, onClose, user }: UserDetailModalProps)
       active: { className: "bg-green-100 text-green-800", label: "Hoạt Động", icon: CheckCircle },
       inactive: { className: "bg-gray-100 text-gray-800", label: "Không Hoạt Động", icon: XCircle },
       locked: { className: "bg-red-100 text-red-800", label: "Bị Khóa", icon: XCircle },
+      pending: { className: "bg-yellow-100 text-yellow-800", label: "Chờ Xác Thực", icon: Clock },
       pending_verification: { className: "bg-yellow-100 text-yellow-800", label: "Chờ Xác Thực", icon: Clock }
     };
     
@@ -177,12 +177,12 @@ export function UserDetailModal({ isOpen, onClose, user }: UserDetailModalProps)
                 )}
                 <div className="flex items-center space-x-3">
                   <Calendar className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm">Tạo: {user.createdAt.toLocaleDateString('vi-VN')}</span>
+                  <span className="text-sm">Tạo: {new Date(user.createdAt).toLocaleDateString('vi-VN')}</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <Clock className="w-4 h-4 text-gray-400" />
                   <span className="text-sm">
-                    Đăng nhập cuối: {user.lastLogin ? user.lastLogin.toLocaleString('vi-VN') : 'Chưa đăng nhập'}
+                    Đăng nhập cuối: {user.lastLogin ? new Date(user.lastLogin).toLocaleString('vi-VN') : 'Chưa đăng nhập'}
                   </span>
                 </div>
               </CardContent>
@@ -220,7 +220,7 @@ export function UserDetailModal({ isOpen, onClose, user }: UserDetailModalProps)
                 {user.securitySettings.lastPasswordChange && (
                   <div className="flex justify-between items-center">
                     <span className="text-sm">Đổi MK lần cuối</span>
-                    <span className="text-sm">{user.securitySettings.lastPasswordChange.toLocaleDateString('vi-VN')}</span>
+                    <span className="text-sm">{new Date(user.securitySettings.lastPasswordChange).toLocaleDateString('vi-VN')}</span>
                   </div>
                 )}
               </CardContent>

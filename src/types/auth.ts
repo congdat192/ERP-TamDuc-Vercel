@@ -1,7 +1,7 @@
 
 export type UserRole = 'erp-admin' | 'voucher-admin' | 'telesales' | 'custom' | 'platform-admin';
 
-export type UserStatus = 'active' | 'inactive' | 'locked' | 'pending';
+export type UserStatus = 'active' | 'inactive' | 'locked' | 'pending' | 'pending_verification';
 
 export type ERPModule = 
   | 'dashboard'
@@ -43,6 +43,7 @@ export interface UserSecuritySettings {
   loginAttemptLimit: number;
   passwordChangeRequired: boolean;
   sessionTimeoutMinutes: number;
+  lastPasswordChange?: string;
 }
 
 export interface User {
@@ -83,6 +84,9 @@ export interface CreateUserData {
   role: UserRole;
   permissions: UserPermissions;
   notes?: string;
+  password: string;
+  sendVerificationEmail: boolean;
+  requirePasswordReset: boolean;
 }
 
 export interface UpdateUserData {
