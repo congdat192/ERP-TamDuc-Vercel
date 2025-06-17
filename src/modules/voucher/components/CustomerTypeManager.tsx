@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,8 +21,8 @@ import type { CustomerType } from '../types';
 
 const initialTypes: CustomerType[] = [
   { id: '1', name: 'Khách hàng mới', description: 'Lần đầu sử dụng dịch vụ', isActive: true, order: 1 },
-  { id: '2', name: 'Khách hàng thân thiết', description: 'Đã sử dụng dịch vụ > 5 lần', isActive: true, order: 2 },
-  { id: '3', name: 'Khách hàng VIP', description: 'Khách hàng cao cấp', isActive: true, order: 3 },
+  { id: '2', name: 'Khách hàng mới', description: 'Đã sử dụng dịch vụ', isActive: true, order: 2 },
+  { id: '3', name: 'Khách hàng thân thiết', description: 'Đã sử dụng dịch vụ > 5 lần', isActive: true, order: 3 },
 ];
 
 export function CustomerTypeManager() {

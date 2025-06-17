@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,10 +20,14 @@ import {
 import type { CustomerSource } from '../types';
 
 const initialSources: CustomerSource[] = [
-  { id: '1', name: 'Website', description: 'Khách hàng đăng ký từ website', isActive: true, order: 1 },
-  { id: '2', name: 'Facebook', description: 'Khách hàng từ Facebook', isActive: true, order: 2 },
-  { id: '3', name: 'Giới thiệu', description: 'Khách hàng được giới thiệu', isActive: true, order: 3 },
-  { id: '4', name: 'Hotline', description: 'Khách hàng gọi hotline', isActive: false, order: 4 },
+  { id: '1', name: 'Facebook', description: 'Khách hàng từ Facebook', isActive: true, order: 1 },
+  { id: '2', name: 'Zalo', description: 'Khách hàng từ Zalo', isActive: true, order: 2 },
+  { id: '3', name: 'Website', description: 'Khách hàng đăng ký từ website', isActive: true, order: 3 },
+  { id: '4', name: 'Hotline', description: 'Khách hàng gọi hotline', isActive: true, order: 4 },
+  { id: '5', name: 'Gọi khách hàng cũ theo data', description: 'Gọi theo dữ liệu khách hàng cũ', isActive: true, order: 5 },
+  { id: '6', name: 'Khách hàng cũ xin lại voucher', description: 'Khách hàng cũ yêu cầu voucher mới', isActive: true, order: 6 },
+  { id: '7', name: 'Xin lỗi khách hàng mới', description: 'Voucher xin lỗi cho khách hàng mới', isActive: true, order: 7 },
+  { id: '8', name: 'Data gọi không phát được voucher trong 3 tháng', description: 'Dữ liệu khách hàng không nhận voucher trong 3 tháng', isActive: true, order: 8 },
 ];
 
 export function CustomerSourceManager() {
