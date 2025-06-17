@@ -1,10 +1,33 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Voucher, VoucherIssueRequest, VoucherReissueRequest } from '../types';
+import { voucherService } from '@/services/localStorage/voucherService';
 
 export function useVoucher() {
   const [isLoading, setIsLoading] = useState(false);
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
+
+  // Load vouchers from localStorage
+  useEffect(() => {
+    const loadVouchers = () => {
+      const data = voucherService.getAll();
+      setVouchers(data);
+    };
+
+    loadVouchers();
+
+    // Listen for data changes
+    const handleDataChange = (event: CustomEvent) => {
+      if (event.detail.storageKey === 'erp_vouchers') {
+        loadVouchers();
+      }
+    };
+
+    window.addEventListener('erp-data-changed', handleDataChange as EventListener);
+    return () => {
+      window.removeEventListener('erp-data-changed', handleDataChange as EventListener);
+    };
+  }, []);
 
   const issueVoucher = async (request: VoucherIssueRequest) => {
     setIsLoading(true);
@@ -12,8 +35,7 @@ export function useVoucher() {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      const newVoucher: Voucher = {
-        id: `voucher-${Date.now()}`,
+      const newVoucher = voucherService.create({
         code: `VCH-${Date.now()}`,
         value: request.voucherValue,
         customerName: 'Khách Hàng Mới', // This would come from lookup
@@ -23,9 +45,8 @@ export function useVoucher() {
         expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN'),
         issuedBy: 'Current User', // This would come from auth context
         notes: request.notes
-      };
+      });
       
-      setVouchers(prev => [newVoucher, ...prev]);
       return newVoucher;
     } finally {
       setIsLoading(false);
@@ -38,9 +59,7 @@ export function useVoucher() {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // This would involve looking up the customer and creating a new voucher
-      const reissuedVoucher: Voucher = {
-        id: `voucher-reissue-${Date.now()}`,
+      const reissuedVoucher = voucherService.create({
         code: `VCH-${Date.now()}`,
         value: '500.000đ', // Would come from original voucher or default
         customerName: 'Khách Hàng', // From lookup
@@ -50,9 +69,8 @@ export function useVoucher() {
         expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN'),
         issuedBy: 'Current User',
         notes: `Cấp lại: ${request.reason}`
-      };
+      });
       
-      setVouchers(prev => [reissuedVoucher, ...prev]);
       return reissuedVoucher;
     } finally {
       setIsLoading(false);

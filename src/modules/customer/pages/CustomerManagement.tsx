@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ThemedCustomerStats } from '../components/ThemedCustomerStats';
 import { CustomerSearchActions } from '../components/CustomerSearchActions';
@@ -6,7 +7,8 @@ import { CustomerFilters } from '../components/CustomerFilters';
 import { CustomerTable } from '../components/CustomerTable';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ColumnConfig } from '../components/ColumnVisibilityFilter';
-import { mockCustomers } from '@/data/mockData';
+import { customerService } from '@/services/localStorage/customerService';
+import { MockCustomer } from '@/data/mockData';
 
 interface CustomerManagementProps {
   currentUser?: any;
@@ -19,11 +21,30 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [customers, setCustomers] = useState<MockCustomer[]>([]);
 
-  // Use mock data
-  const customers = mockCustomers;
+  // Load customers from localStorage
+  useEffect(() => {
+    const loadCustomers = () => {
+      const data = customerService.getAll();
+      setCustomers(data);
+    };
 
-  // Đầy đủ 27 cột khách hàng
+    loadCustomers();
+
+    // Listen for data changes
+    const handleDataChange = (event: CustomEvent) => {
+      if (event.detail.storageKey === 'erp_customers') {
+        loadCustomers();
+      }
+    };
+
+    window.addEventListener('erp-data-changed', handleDataChange as EventListener);
+    return () => {
+      window.removeEventListener('erp-data-changed', handleDataChange as EventListener);
+    };
+  }, []);
+
   const [columns, setColumns] = useState<ColumnConfig[]>([
     { key: 'customerCode', label: 'Mã khách hàng', visible: true },
     { key: 'customerName', label: 'Tên khách hàng', visible: true },
