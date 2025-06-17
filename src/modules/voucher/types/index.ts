@@ -106,6 +106,12 @@ export const TEMPLATE_VARIABLES: TemplateVariable[] = [
     placeholder: '0901234567'
   },
   {
+    key: '$giatri',
+    label: 'Giá Trị Voucher',
+    description: 'Giá trị mệnh giá của voucher',
+    placeholder: '50.000đ'
+  },
+  {
     key: '$hansudung',
     label: 'Hạn Sử Dụng',
     description: 'Ngày hết hạn của voucher',

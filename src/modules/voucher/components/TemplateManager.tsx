@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +19,7 @@ import {
 } from 'lucide-react';
 import type { VoucherTemplate, TemplateVariable } from '../types';
 import { TEMPLATE_VARIABLES } from '../types';
+import { templateService } from '../services/templateService';
 
 // Mock data - in real app this would come from API
 const initialTemplates: VoucherTemplate[] = [
@@ -44,8 +44,8 @@ const initialTemplates: VoucherTemplate[] = [
 ];
 
 export function TemplateManager() {
-  const [templates, setTemplates] = useState<VoucherTemplate[]>(initialTemplates);
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string>(templates[0]?.id || '');
+  const [templates, setTemplates] = useState<VoucherTemplate[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -54,6 +54,15 @@ export function TemplateManager() {
   const [deleteTemplateId, setDeleteTemplateId] = useState<string>('');
   const [newTemplateName, setNewTemplateName] = useState('');
   const [newTemplateContent, setNewTemplateContent] = useState('');
+
+  // Load templates from localStorage on component mount
+  useEffect(() => {
+    const loadedTemplates = templateService.getTemplates();
+    setTemplates(loadedTemplates);
+    if (loadedTemplates.length > 0) {
+      setSelectedTemplateId(loadedTemplates[0].id);
+    }
+  }, []);
 
   const selectedTemplate = templates.find(t => t.id === selectedTemplateId);
 
@@ -86,7 +95,7 @@ export function TemplateManager() {
       .replace(/\$sdt/g, '0901234567')
       .replace(/\$hansudung/g, '31/12/2024')
       .replace(/\$nhanvien/g, 'Trần Thị Lan')
-      .replace(/\$giatri/g, '500.000đ');
+      .replace(/\$giatri/g, '50.000đ');
   };
 
   const handleCreateTemplate = () => {
@@ -118,7 +127,8 @@ export function TemplateManager() {
       updatedAt: new Date().toISOString()
     };
 
-    setTemplates([...templates, newTemplate]);
+    const updatedTemplates = templateService.addTemplate(newTemplate);
+    setTemplates(updatedTemplates);
     setSelectedTemplateId(newTemplate.id);
     setNewTemplateName('');
     setNewTemplateContent('');
@@ -149,11 +159,9 @@ export function TemplateManager() {
       return;
     }
 
-    setTemplates(templates.map(t => 
-      t.id === editingTemplate.id 
-        ? { ...editingTemplate, updatedAt: new Date().toISOString() }
-        : t
-    ));
+    const updatedTemplate = { ...editingTemplate, updatedAt: new Date().toISOString() };
+    const updatedTemplates = templateService.updateTemplate(editingTemplate.id, updatedTemplate);
+    setTemplates(updatedTemplates);
     setIsEditModalOpen(false);
     setEditingTemplate(null);
     
@@ -175,7 +183,7 @@ export function TemplateManager() {
       return;
     }
 
-    const updatedTemplates = templates.filter(t => t.id !== deleteTemplateId);
+    const updatedTemplates = templateService.deleteTemplate(deleteTemplateId);
     setTemplates(updatedTemplates);
     
     // If deleted template was selected, select first available
@@ -203,7 +211,8 @@ export function TemplateManager() {
       updatedAt: new Date().toISOString()
     };
 
-    setTemplates([...templates, duplicatedTemplate]);
+    const updatedTemplates = templateService.addTemplate(duplicatedTemplate);
+    setTemplates(updatedTemplates);
     setSelectedTemplateId(duplicatedTemplate.id);
     
     toast({
