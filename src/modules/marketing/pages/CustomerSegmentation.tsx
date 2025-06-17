@@ -3,7 +3,10 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Clock } from 'lucide-react';
 import { AdvancedFilterBuilder } from '../components/AdvancedFilterBuilder';
+import { ActionHistoryPanel } from '../components/ActionHistoryPanel';
 import { AdvancedFilter, FilterResult } from '../types/filter';
 import { FilterProcessor } from '../utils/filterProcessor';
 import { mockCustomers } from '@/data/mockData';
@@ -27,6 +30,7 @@ export function CustomerSegmentation() {
 
   const [filterResult, setFilterResult] = useState<FilterResult | null>(null);
   const [isExecuting, setIsExecuting] = useState(false);
+  const [showActionHistory, setShowActionHistory] = useState(false);
 
   const executeFilter = async () => {
     setIsExecuting(true);
@@ -44,8 +48,8 @@ export function CustomerSegmentation() {
   };
 
   const saveFilter = () => {
-    // TODO: Implement save functionality
-    console.log('Saving filter:', filter);
+    // This is now handled by the AdvancedFilterBuilder component
+    console.log('Save filter triggered from legacy handler');
   };
 
   const exportResults = () => {
@@ -90,6 +94,7 @@ export function CustomerSegmentation() {
         onExport={exportResults}
         isExecuting={isExecuting}
         resultCount={filterResult?.totalCount}
+        customerIds={filterResult?.customers || []}
       />
 
       {/* Results Table */}
@@ -98,9 +103,19 @@ export function CustomerSegmentation() {
           <CardHeader className="border-b theme-border-primary/20">
             <div className="flex items-center justify-between">
               <CardTitle className="theme-text">Kết Quả Lọc</CardTitle>
-              <div className="flex items-center space-x-4 text-sm theme-text-muted">
-                <span>Thời gian thực hiện: {filterResult.executionTime}ms</span>
-                <span>Tổng số: {filterResult.totalCount.toLocaleString()} khách hàng</span>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-4 text-sm theme-text-muted">
+                  <span>Thời gian thực hiện: {filterResult.executionTime}ms</span>
+                  <span>Tổng số: {filterResult.totalCount.toLocaleString()} khách hàng</span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowActionHistory(!showActionHistory)}
+                >
+                  <Clock className="w-4 h-4 mr-2" />
+                  Lịch sử thao tác
+                </Button>
               </div>
             </div>
           </CardHeader>
@@ -171,6 +186,12 @@ export function CustomerSegmentation() {
           </CardContent>
         </Card>
       )}
+
+      {/* Action History Panel */}
+      <ActionHistoryPanel
+        isOpen={showActionHistory}
+        onClose={() => setShowActionHistory(false)}
+      />
     </div>
   );
 }

@@ -66,3 +66,44 @@ export interface SavedFilterSegment {
   createdAt: string;
   updatedAt: string;
 }
+
+// New types for action history
+export type ActionType = 'save_filter' | 'export_excel' | 'send_zalo' | 'send_email' | 'send_sms';
+
+export interface ActionHistoryItem {
+  id: string;
+  type: ActionType;
+  timestamp: string;
+  customerCount: number;
+  filterName?: string;
+  filterSnapshot?: AdvancedFilter;
+  details?: {
+    messageContent?: string;
+    exportFormat?: string;
+    recipientCount?: number;
+  };
+}
+
+// New types for message sending
+export type MessageType = 'zalo' | 'email' | 'sms';
+
+export interface MessageTemplate {
+  id: string;
+  type: MessageType;
+  name: string;
+  content: string;
+  variables: string[];
+}
+
+export interface MessageVariable {
+  key: string;
+  label: string;
+  example: string;
+}
+
+export interface SendMessageRequest {
+  type: MessageType;
+  content: string;
+  customerIds: string[];
+  variables?: Record<string, string>;
+}
