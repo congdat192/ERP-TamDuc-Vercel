@@ -1,4 +1,3 @@
-
 export type SettingsCategory = 
   | 'general-info'
   | 'email'
@@ -125,6 +124,17 @@ export interface KiotVietApiGroup {
   description: string;
   enabled: boolean;
   accessible?: boolean;
+}
+
+export interface VihatIntegration {
+  id: string;
+  apiEndpoint: string;
+  apiKey: string;
+  secretKey: string;
+  isConnected: boolean;
+  connectionStatus: 'connected' | 'disconnected' | 'testing' | 'error';
+  lastTestDate?: string;
+  errorMessage?: string;
 }
 
 export interface ConnectionTestResult {

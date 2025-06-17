@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,11 +16,13 @@ import {
   ShoppingCart,
   Globe,
   Users,
-  CreditCard
+  CreditCard,
+  MessageSquare
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { KiotVietIntegration } from '../../components/KiotVietIntegration';
-import type { KiotVietIntegration as KiotVietIntegrationType } from '../../types/settings';
+import { VihatIntegration } from '../../components/VihatIntegration';
+import type { KiotVietIntegration as KiotVietIntegrationType, VihatIntegration as VihatIntegrationType } from '../../types/settings';
 
 interface Integration {
   id: string;
@@ -31,7 +32,7 @@ interface Integration {
   enabled: boolean;
   icon: string;
   lastSync: string | null;
-  category: 'pos' | 'ecommerce' | 'web' | 'social' | 'payment';
+  category: 'pos' | 'ecommerce' | 'web' | 'social' | 'payment' | 'notification';
 }
 
 export function IntegrationsSettings() {
@@ -178,10 +179,23 @@ export function IntegrationsSettings() {
       icon: '⚡',
       lastSync: null,
       category: 'payment'
+    },
+
+    // NEW: Notification Platforms
+    {
+      id: 'vihat',
+      name: 'Vihat (eSMS.vn)',
+      description: 'Nền tảng gửi SMS và ZNS chuyên nghiệp',
+      status: 'disconnected',
+      enabled: false,
+      icon: '📨',
+      lastSync: null,
+      category: 'notification'
     }
   ]);
 
   const [kiotVietConfig, setKiotVietConfig] = useState<KiotVietIntegrationType | null>(null);
+  const [vihatConfig, setVihatConfig] = useState<VihatIntegrationType | null>(null);
 
   const handleToggleIntegration = (id: string, enabled: boolean) => {
     setIntegrations(prev => prev.map(integration => 
@@ -195,7 +209,7 @@ export function IntegrationsSettings() {
   };
 
   const handleConnect = (integrationId: string, name: string) => {
-    if (integrationId === 'kiotviet') {
+    if (integrationId === 'kiotviet' || integrationId === 'vihat') {
       setSelectedIntegration(integrationId);
       setDialogOpen(true);
     } else {
@@ -207,7 +221,7 @@ export function IntegrationsSettings() {
   };
 
   const handleSettings = (integrationId: string) => {
-    if (integrationId === 'kiotviet') {
+    if (integrationId === 'kiotviet' || integrationId === 'vihat') {
       setSelectedIntegration(integrationId);
       setDialogOpen(true);
     }
@@ -249,6 +263,48 @@ export function IntegrationsSettings() {
       title: 'Đã ngắt kết nối',
       description: 'Đã ngắt kết nối với KiotViet.'
     });
+  };
+
+  const handleVihatSave = (config: Partial<VihatIntegrationType>) => {
+    setIntegrations(prev => prev.map(integration => 
+      integration.id === 'vihat' 
+        ? { 
+            ...integration, 
+            status: 'connected', 
+            enabled: true,
+            lastSync: config.lastTestDate || new Date().toLocaleString('vi-VN')
+          } 
+        : integration
+    ));
+
+    setVihatConfig(prev => ({ ...prev, ...config } as VihatIntegrationType));
+    setDialogOpen(false);
+    
+    toast({
+      title: 'Cấu hình thành công',
+      description: 'Đã lưu cấu hình tích hợp Vihat (eSMS.vn).'
+    });
+
+    // Save to localStorage for demo
+    localStorage.setItem('vihat_config', JSON.stringify(config));
+  };
+
+  const handleVihatDisconnect = () => {
+    setIntegrations(prev => prev.map(integration => 
+      integration.id === 'vihat' 
+        ? { ...integration, status: 'disconnected', enabled: false, lastSync: null }
+        : integration
+    ));
+    setVihatConfig(null);
+    setDialogOpen(false);
+    
+    toast({
+      title: 'Đã ngắt kết nối',
+      description: 'Đã ngắt kết nối với Vihat (eSMS.vn).'
+    });
+
+    // Remove from localStorage
+    localStorage.removeItem('vihat_config');
   };
 
   const getStatusBadge = (status: string) => {
@@ -304,6 +360,14 @@ export function IntegrationsSettings() {
           bgClass: 'theme-bg-primary/10',
           borderClass: 'theme-border-primary/20'
         };
+      case 'notification':
+        return {
+          title: 'Nền Tảng Thông Báo',
+          icon: MessageSquare,
+          colorClass: 'theme-text-secondary',
+          bgClass: 'theme-bg-secondary/10',
+          borderClass: 'theme-border-secondary/20'
+        };
       default:
         return {
           title: 'Khác',
@@ -315,7 +379,7 @@ export function IntegrationsSettings() {
     }
   };
 
-  const categories = ['pos', 'ecommerce', 'web', 'social', 'payment'];
+  const categories = ['pos', 'ecommerce', 'web', 'social', 'payment', 'notification'];
 
   return (
     <div className="space-y-6">
@@ -411,18 +475,30 @@ export function IntegrationsSettings() {
         })}
       </div>
 
-      {/* KiotViet Integration Dialog */}
+      {/* Integration Dialogs */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Cấu hình tích hợp KiotViet</DialogTitle>
+            <DialogTitle>
+              {selectedIntegration === 'kiotviet' && 'Cấu hình tích hợp KiotViet'}
+              {selectedIntegration === 'vihat' && 'Cấu hình tích hợp Vihat (eSMS.vn)'}
+            </DialogTitle>
           </DialogHeader>
           <div className="mt-4">
-            <KiotVietIntegration
-              integration={kiotVietConfig}
-              onSave={handleKiotVietSave}
-              onDisconnect={handleKiotVietDisconnect}
-            />
+            {selectedIntegration === 'kiotviet' && (
+              <KiotVietIntegration
+                integration={kiotVietConfig}
+                onSave={handleKiotVietSave}
+                onDisconnect={handleKiotVietDisconnect}
+              />
+            )}
+            {selectedIntegration === 'vihat' && (
+              <VihatIntegration
+                integration={vihatConfig}
+                onSave={handleVihatSave}
+                onDisconnect={handleVihatDisconnect}
+              />
+            )}
           </div>
         </DialogContent>
       </Dialog>
