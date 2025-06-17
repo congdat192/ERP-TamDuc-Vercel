@@ -166,7 +166,12 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
               setSearchTerm={setSearchTerm}
               columns={columns}
               handleColumnToggle={handleColumnToggle}
-              onToggleSidebar={() => setIsFilterOpen(!isFilterOpen)}
+              isFilterOpen={isFilterOpen}
+              setIsFilterOpen={setIsFilterOpen}
+              clearAllFilters={handleClearFilters}
+              applyFilters={handleApplyFilters}
+              isMobile={isMobile}
+              inventoryData={products}
             />
           </div>
 
