@@ -35,6 +35,15 @@ export interface CustomerInfo {
   type: 'VIP' | 'Premium' | 'Regular';
 }
 
+// Staff interface
+export interface Staff {
+  id: string;
+  name: string;
+  type: 'telesale' | 'cskh';
+  isActive: boolean;
+  order: number;
+}
+
 // New configuration types
 export interface VoucherDenomination {
   id: string;
@@ -74,6 +83,7 @@ export interface VoucherSettings {
   denominations: VoucherDenomination[];
   customerSources: CustomerSource[];
   customerTypes: CustomerType[];
+  staff: Staff[];
   templates: VoucherTemplate[];
   allowCustomValue: boolean;
   defaultTemplateId: string;

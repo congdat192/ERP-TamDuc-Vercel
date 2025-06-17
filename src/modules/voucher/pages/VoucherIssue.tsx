@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,39 +14,29 @@ import {
   User,
   Building,
   FileText,
-  Send
+  Send,
+  UserCheck
 } from 'lucide-react';
 import { VoucherContentModal } from '../components/VoucherContentModal';
 import { templateService } from '../services/templateService';
 import type { VoucherTemplate } from '../types';
-
-// Mock data - will be replaced with real API data later
-const denominationOptions: ComboboxOption[] = [
-  { value: '50000', label: '50.000đ', description: 'Mệnh giá voucher' },
-];
-
-const customerSourceOptions: ComboboxOption[] = [
-  { value: 'facebook', label: 'Facebook', description: 'Khách hàng từ Facebook' },
-  { value: 'zalo', label: 'Zalo', description: 'Khách hàng từ Zalo' },
-  { value: 'website', label: 'Website', description: 'Khách hàng đăng ký từ website' },
-  { value: 'hotline', label: 'Hotline', description: 'Khách hàng gọi hotline' },
-  { value: 'old-customer-data', label: 'Gọi khách hàng cũ theo data', description: 'Gọi theo dữ liệu khách hàng cũ' },
-  { value: 'old-customer-request', label: 'Khách hàng cũ x lại voucher', description: 'Khách hàng cũ yêu cầu voucher mới' },
-  { value: 'apology-new', label: 'Xin lỗi khách hàng mới', description: 'Voucher xin lỗi cho khách hàng mới' },
-  { value: 'no-voucher-3months', label: 'Data gọi không phát được voucher trong 3 tháng', description: 'Dữ liệu khách hàng không nhận voucher trong 3 tháng' },
-];
-
-const customerTypeOptions: ComboboxOption[] = [
-  { value: 'new-first', label: 'Khách hàng mới', description: 'Lần đầu sử dụng dịch vụ' },
-  { value: 'old-used', label: 'Khách hàng cũ', description: 'Đã sử dụng dịch vụ' },
-  { value: 'loyal', label: 'Khách hàng thân thiết', description: 'Đã sử dụng dịch vụ > 5 lần' },
-];
+import { 
+  getCustomerSourceComboboxOptions,
+  getCustomerTypeComboboxOptions,
+  getDenominationComboboxOptions,
+  getStaffComboboxOptions,
+  getCustomerSourceById,
+  getCustomerTypeById,
+  getDenominationById,
+  getStaffById
+} from '../data/mockData';
 
 export function VoucherIssue() {
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerSource, setCustomerSource] = useState('');
   const [customerType, setCustomerType] = useState('');
   const [voucherValue, setVoucherValue] = useState('');
+  const [selectedStaff, setSelectedStaff] = useState('');
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
   const [notes, setNotes] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -54,6 +45,12 @@ export function VoucherIssue() {
   const [isVoucherModalOpen, setIsVoucherModalOpen] = useState(false);
   const [generatedVoucherCode, setGeneratedVoucherCode] = useState('');
   const [mergedVoucherContent, setMergedVoucherContent] = useState('');
+
+  // Load options from central mock data
+  const denominationOptions = getDenominationComboboxOptions();
+  const customerSourceOptions = getCustomerSourceComboboxOptions();
+  const customerTypeOptions = getCustomerTypeComboboxOptions();
+  const staffOptions = getStaffComboboxOptions();
 
   // Load templates on component mount
   useEffect(() => {
@@ -110,17 +107,20 @@ export function VoucherIssue() {
     const expiryDate = new Date(currentDate);
     expiryDate.setMonth(expiryDate.getMonth() + 3); // Voucher expires in 3 months
     
+    const selectedStaffData = getStaffById(selectedStaff);
+    const selectedDenomination = getDenominationById(voucherValue);
+    
     return templateContent
       .replace(/\$tenKH/g, customerInfo?.name || 'Khách hàng')
       .replace(/\$mavoucher/g, voucherCode)
       .replace(/\$sdt/g, customerPhone)
       .replace(/\$hansudung/g, expiryDate.toLocaleDateString('vi-VN'))
-      .replace(/\$nhanvien/g, 'Nhân viên tư vấn')
-      .replace(/\$giatri/g, '50.000đ');
+      .replace(/\$nhanvien/g, selectedStaffData?.name || 'Nhân viên tư vấn')
+      .replace(/\$giatri/g, selectedDenomination?.label || '50.000đ');
   };
 
   const handleIssueVoucher = async () => {
-    if (!customerPhone.trim() || !customerSource || !customerType || !voucherValue || !selectedTemplateId) {
+    if (!customerPhone.trim() || !customerSource || !customerType || !voucherValue || !selectedTemplateId || !selectedStaff) {
       toast({
         title: "Lỗi",
         description: "Vui lòng nhập đầy đủ thông tin bắt buộc.",
@@ -160,6 +160,7 @@ export function VoucherIssue() {
     setCustomerSource('');
     setCustomerType('');
     setVoucherValue('');
+    setSelectedStaff('');
     setSelectedTemplateId(templates.length > 0 ? templates[0].id : '');
     setNotes('');
     setCustomerInfo(null);
@@ -167,7 +168,7 @@ export function VoucherIssue() {
     setMergedVoucherContent('');
   };
 
-  const isFormValid = customerPhone.trim() && customerSource && customerType && voucherValue && selectedTemplateId;
+  const isFormValid = customerPhone.trim() && customerSource && customerType && voucherValue && selectedTemplateId && selectedStaff;
 
   return (
     <>
@@ -283,6 +284,21 @@ export function VoucherIssue() {
               </div>
 
               <div>
+                <Label htmlFor="staff-selector" className="theme-text">Nhân Viên Phụ Trách *</Label>
+                <div className="mt-1">
+                  <Combobox
+                    options={staffOptions}
+                    value={selectedStaff}
+                    onValueChange={setSelectedStaff}
+                    placeholder="Chọn nhân viên..."
+                    searchPlaceholder="Tìm nhân viên..."
+                    emptyMessage="Không tìm thấy nhân viên nào."
+                    className="w-full"
+                  />
+                </div>
+              </div>
+
+              <div>
                 <Label htmlFor="template-selector" className="theme-text">Mẫu Nội Dung Voucher *</Label>
                 <div className="mt-1">
                   <Combobox
@@ -334,9 +350,10 @@ export function VoucherIssue() {
                 <div className="text-sm theme-text-muted mt-1 space-y-1">
                   <p>1. Nhập số điện thoại khách hàng và nhấn "Tìm" để lấy thông tin</p>
                   <p>2. Chọn nguồn khách hàng và loại khách hàng từ dropdown</p>
-                  <p>3. Chọn mệnh giá voucher và mẫu nội dung voucher</p>
-                  <p>4. Thêm ghi chú nếu cần thiết</p>
-                  <p>5. Nhấn "Cấp Voucher" để hoàn tất và xem nội dung voucher</p>
+                  <p>3. Chọn mệnh giá voucher và nhân viên phụ trách</p>
+                  <p>4. Chọn mẫu nội dung voucher</p>
+                  <p>5. Thêm ghi chú nếu cần thiết</p>
+                  <p>6. Nhấn "Cấp Voucher" để hoàn tất và xem nội dung voucher</p>
                 </div>
               </div>
             </div>

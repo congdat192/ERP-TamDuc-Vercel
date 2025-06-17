@@ -17,20 +17,14 @@ import {
   ArrowDown,
   Copy
 } from 'lucide-react';
-import type { CustomerType } from '../types';
-
-const initialTypes: CustomerType[] = [
-  { id: '1', name: 'Khách hàng mới', description: 'Lần đầu sử dụng dịch vụ', isActive: true, order: 1 },
-  { id: '2', name: 'Khách hàng cũ', description: 'Đã sử dụng dịch vụ', isActive: true, order: 2 },
-  { id: '3', name: 'Khách hàng thân thiết', description: 'Đã sử dụng dịch vụ > 5 lần', isActive: true, order: 3 },
-];
+import { mockCustomerTypes, type MockCustomerType } from '../data/mockData';
 
 export function CustomerTypeManager() {
-  const [types, setTypes] = useState<CustomerType[]>(initialTypes);
+  const [types, setTypes] = useState<MockCustomerType[]>(mockCustomerTypes);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [editingType, setEditingType] = useState<CustomerType | null>(null);
+  const [editingType, setEditingType] = useState<MockCustomerType | null>(null);
   const [deleteTypeId, setDeleteTypeId] = useState<string>('');
   const [newName, setNewName] = useState('');
   const [newDescription, setNewDescription] = useState('');
@@ -60,7 +54,7 @@ export function CustomerTypeManager() {
   const handleCreateType = () => {
     if (!validateType(newName, newDescription)) return;
 
-    const newType: CustomerType = {
+    const newType: MockCustomerType = {
       id: Date.now().toString(),
       name: newName.trim(),
       description: newDescription.trim(),
@@ -107,8 +101,8 @@ export function CustomerTypeManager() {
     });
   };
 
-  const handleDuplicateType = (type: CustomerType) => {
-    const duplicated: CustomerType = {
+  const handleDuplicateType = (type: MockCustomerType) => {
+    const duplicated: MockCustomerType = {
       id: Date.now().toString(),
       name: `${type.name} (Copy)`,
       description: type.description,
