@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,10 +20,7 @@ import type { VoucherDenomination } from '../types';
 
 // Mock data - will be replaced with real API data later
 const initialDenominations: VoucherDenomination[] = [
-  { id: '1', value: 100000, label: '100.000đ', isActive: true, order: 1 },
-  { id: '2', value: 250000, label: '250.000đ', isActive: true, order: 2 },
-  { id: '3', value: 500000, label: '500.000đ', isActive: true, order: 3 },
-  { id: '4', value: 1000000, label: '1.000.000đ', isActive: true, order: 4 },
+  { id: '1', value: 50000, label: '50.000đ', isActive: true, order: 1 },
 ];
 
 interface DenominationManagerProps {

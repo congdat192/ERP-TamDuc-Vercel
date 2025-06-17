@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,23 +19,24 @@ import {
 
 // Mock data - will be replaced with real API data later
 const denominationOptions: ComboboxOption[] = [
-  { value: '100000', label: '100.000đ', description: 'Mệnh giá phổ biến' },
-  { value: '250000', label: '250.000đ', description: 'Cho khách hàng thân thiết' },
-  { value: '500000', label: '500.000đ', description: 'Mệnh giá cao' },
-  { value: '1000000', label: '1.000.000đ', description: 'Mệnh giá VIP' },
+  { value: '50000', label: '50.000đ', description: 'Mệnh giá voucher' },
 ];
 
 const customerSourceOptions: ComboboxOption[] = [
-  { value: 'website', label: 'Website', description: 'Đăng ký từ website' },
-  { value: 'facebook', label: 'Facebook', description: 'Từ Facebook' },
-  { value: 'referral', label: 'Giới thiệu', description: 'Được giới thiệu' },
-  { value: 'hotline', label: 'Hotline', description: 'Gọi hotline' },
+  { value: 'facebook', label: 'Facebook', description: 'Khách hàng từ Facebook' },
+  { value: 'zalo', label: 'Zalo', description: 'Khách hàng từ Zalo' },
+  { value: 'website', label: 'Website', description: 'Khách hàng đăng ký từ website' },
+  { value: 'hotline', label: 'Hotline', description: 'Khách hàng gọi hotline' },
+  { value: 'old-customer-data', label: 'Gọi khách hàng cũ theo data', description: 'Gọi theo dữ liệu khách hàng cũ' },
+  { value: 'old-customer-request', label: 'Khách hàng cũ x lại voucher', description: 'Khách hàng cũ yêu cầu voucher mới' },
+  { value: 'apology-new', label: 'Xin lỗi khách hàng mới', description: 'Voucher xin lỗi cho khách hàng mới' },
+  { value: 'no-voucher-3months', label: 'Data gọi không phát được voucher trong 3 tháng', description: 'Dữ liệu khách hàng không nhận voucher trong 3 tháng' },
 ];
 
 const customerTypeOptions: ComboboxOption[] = [
-  { value: 'new', label: 'Khách hàng mới', description: 'Lần đầu sử dụng' },
-  { value: 'loyal', label: 'Khách hàng thân thiết', description: 'Đã sử dụng > 5 lần' },
-  { value: 'vip', label: 'Khách hàng VIP', description: 'Khách hàng cao cấp' },
+  { value: 'new-first', label: 'Khách hàng mới', description: 'Lần đầu sử dụng dịch vụ' },
+  { value: 'old-used', label: 'Khách hàng cũ', description: 'Đã sử dụng dịch vụ' },
+  { value: 'loyal', label: 'Khách hàng thân thiết', description: 'Đã sử dụng dịch vụ > 5 lần' },
 ];
 
 export function VoucherIssue() {
