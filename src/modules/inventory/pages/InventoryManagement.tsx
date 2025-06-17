@@ -68,20 +68,22 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
   const isMobile = useIsMobile();
   const visibleColumns = columns.filter(col => col.visible);
 
-  const handleColumnToggle = (columnKey: string, visible: boolean) => {
+  const handleColumnToggle = (columnKey: string) => {
     setColumns(prev => 
       prev.map(col => 
-        col.key === columnKey ? { ...col, visible } : col
+        col.key === columnKey ? { ...col, visible: !col.visible } : col
       )
     );
   };
 
-  const handleSelectProduct = (productId: string, checked: boolean) => {
-    if (checked) {
-      setSelectedProducts(prev => [...prev, productId]);
-    } else {
-      setSelectedProducts(prev => prev.filter(id => id !== productId));
-    }
+  const handleSelectProduct = (productId: string) => {
+    setSelectedProducts(prev => {
+      if (prev.includes(productId)) {
+        return prev.filter(id => id !== productId);
+      } else {
+        return [...prev, productId];
+      }
+    });
   };
 
   const handleSelectAll = (checked: boolean) => {

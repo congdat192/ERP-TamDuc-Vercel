@@ -77,20 +77,22 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
   const isMobile = useIsMobile();
   const visibleColumns = columns.filter(col => col.visible);
 
-  const handleColumnToggle = (columnKey: string, visible: boolean) => {
+  const handleColumnToggle = (columnKey: string) => {
     setColumns(prev => 
       prev.map(col => 
-        col.key === columnKey ? { ...col, visible } : col
+        col.key === columnKey ? { ...col, visible: !col.visible } : col
       )
     );
   };
 
-  const handleSelectSale = (saleId: string, checked: boolean) => {
-    if (checked) {
-      setSelectedSales(prev => [...prev, saleId]);
-    } else {
-      setSelectedSales(prev => prev.filter(id => id !== saleId));
-    }
+  const handleSelectSale = (saleId: string) => {
+    setSelectedSales(prev => {
+      if (prev.includes(saleId)) {
+        return prev.filter(id => id !== saleId);
+      } else {
+        return [...prev, saleId];
+      }
+    });
   };
 
   const handleSelectAll = (checked: boolean) => {
