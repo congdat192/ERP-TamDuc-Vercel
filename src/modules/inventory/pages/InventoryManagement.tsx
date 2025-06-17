@@ -93,6 +93,16 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
     }
   };
 
+  const handleClearFilters = () => {
+    // Clear all filter states here
+    console.log('Clearing filters...');
+  };
+
+  const handleApplyFilters = () => {
+    // Apply filters logic here
+    console.log('Applying filters...');
+  };
+
   const totalProducts = products.length;
   const totalPages = Math.ceil(totalProducts / itemsPerPage);
 
@@ -118,7 +128,11 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
           <div className="w-80 flex-shrink-0 theme-card rounded-lg border theme-border-primary overflow-hidden">
             <ScrollArea className="h-[calc(100vh-280px)]">
               <div className="p-4">
-                <InventoryFilters />
+                <InventoryFilters 
+                  onClearFilters={handleClearFilters}
+                  onApplyFilters={handleApplyFilters}
+                  isMobile={isMobile}
+                />
               </div>
             </ScrollArea>
           </div>
@@ -131,7 +145,11 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
           }`}>
             <ScrollArea className="h-[calc(100vh-100px)]">
               <div className="p-4">
-                <InventoryFilters />
+                <InventoryFilters 
+                  onClearFilters={handleClearFilters}
+                  onApplyFilters={handleApplyFilters}
+                  isMobile={isMobile}
+                />
               </div>
             </ScrollArea>
           </div>
@@ -153,16 +171,16 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
           {/* Products Table */}
           <div className="flex-1 min-h-0">
             <InventoryTable 
-              products={products}
+              inventoryData={products}
               visibleColumns={visibleColumns}
-              selectedProducts={selectedProducts}
-              handleSelectProduct={handleSelectProduct}
-              handleSelectAll={handleSelectAll}
+              selectedItems={selectedProducts}
+              onSelectItem={handleSelectProduct}
+              onSelectAll={handleSelectAll}
               currentPage={currentPage}
               setCurrentPage={setCurrentPage}
               itemsPerPage={itemsPerPage}
               setItemsPerPage={setItemsPerPage}
-              totalProducts={totalProducts}
+              totalItems={totalProducts}
               totalPages={totalPages}
             />
           </div>

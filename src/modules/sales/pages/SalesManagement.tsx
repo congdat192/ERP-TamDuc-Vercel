@@ -102,6 +102,16 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
     }
   };
 
+  const handleClearFilters = () => {
+    // Clear all filter states here
+    console.log('Clearing filters...');
+  };
+
+  const handleApplyFilters = () => {
+    // Apply filters logic here
+    console.log('Applying filters...');
+  };
+
   const totalSales = sales.length;
   const totalPages = Math.ceil(totalSales / itemsPerPage);
 
@@ -127,7 +137,11 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
           <div className="w-64 flex-shrink-0 theme-card rounded-lg border theme-border-primary overflow-hidden">
             <ScrollArea className="h-[calc(100vh-280px)]">
               <div className="p-4">
-                <SalesFilters />
+                <SalesFilters 
+                  onClearFilters={handleClearFilters}
+                  onApplyFilters={handleApplyFilters}
+                  isMobile={isMobile}
+                />
               </div>
             </ScrollArea>
           </div>
@@ -140,7 +154,11 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
           }`}>
             <ScrollArea className="h-[calc(100vh-100px)]">
               <div className="p-4">
-                <SalesFilters />
+                <SalesFilters 
+                  onClearFilters={handleClearFilters}
+                  onApplyFilters={handleApplyFilters}
+                  isMobile={isMobile}
+                />
               </div>
             </ScrollArea>
           </div>
@@ -155,18 +173,23 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
               setSearchTerm={setSearchTerm}
               columns={columns}
               handleColumnToggle={handleColumnToggle}
-              onToggleSidebar={() => setIsFilterOpen(!isFilterOpen)}
+              isFilterOpen={isFilterOpen}
+              setIsFilterOpen={setIsFilterOpen}
+              clearAllFilters={handleClearFilters}
+              applyFilters={handleApplyFilters}
+              isMobile={isMobile}
+              salesData={sales}
             />
           </div>
 
           {/* Sales Table */}
           <div className="flex-1 min-h-0">
             <SalesTable 
-              sales={sales}
+              salesData={sales}
               visibleColumns={visibleColumns}
               selectedSales={selectedSales}
-              handleSelectSale={handleSelectSale}
-              handleSelectAll={handleSelectAll}
+              onSelectSale={handleSelectSale}
+              onSelectAll={handleSelectAll}
               currentPage={currentPage}
               setCurrentPage={setCurrentPage}
               itemsPerPage={itemsPerPage}
