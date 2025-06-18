@@ -16,7 +16,12 @@ import {
   ArrowDown,
   Copy
 } from 'lucide-react';
-import { mockVoucherDenominations, type MockVoucherDenomination } from '../data/mockData';
+import type { VoucherDenomination } from '../types';
+
+// Mock data - will be replaced with real API data later
+const initialDenominations: VoucherDenomination[] = [
+  { id: '1', value: 50000, label: '50.000đ', isActive: true, order: 1 },
+];
 
 interface DenominationManagerProps {
   allowCustomValue: boolean;
@@ -24,11 +29,11 @@ interface DenominationManagerProps {
 }
 
 export function DenominationManager({ allowCustomValue, onAllowCustomValueChange }: DenominationManagerProps) {
-  const [denominations, setDenominations] = useState<MockVoucherDenomination[]>(mockVoucherDenominations);
+  const [denominations, setDenominations] = useState<VoucherDenomination[]>(initialDenominations);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [editingDenomination, setEditingDenomination] = useState<MockVoucherDenomination | null>(null);
+  const [editingDenomination, setEditingDenomination] = useState<VoucherDenomination | null>(null);
   const [deleteDenominationId, setDeleteDenominationId] = useState<string>('');
   const [newValue, setNewValue] = useState('');
   const [newLabel, setNewLabel] = useState('');
@@ -72,7 +77,7 @@ export function DenominationManager({ allowCustomValue, onAllowCustomValueChange
   const handleCreateDenomination = () => {
     if (!validateDenomination(newValue, newLabel)) return;
 
-    const newDenomination: MockVoucherDenomination = {
+    const newDenomination: VoucherDenomination = {
       id: Date.now().toString(),
       value: parseInt(newValue),
       label: newLabel.trim(),
@@ -119,8 +124,8 @@ export function DenominationManager({ allowCustomValue, onAllowCustomValueChange
     });
   };
 
-  const handleDuplicateDenomination = (denomination: MockVoucherDenomination) => {
-    const duplicated: MockVoucherDenomination = {
+  const handleDuplicateDenomination = (denomination: VoucherDenomination) => {
+    const duplicated: VoucherDenomination = {
       id: Date.now().toString(),
       value: denomination.value,
       label: `${denomination.label} (Copy)`,

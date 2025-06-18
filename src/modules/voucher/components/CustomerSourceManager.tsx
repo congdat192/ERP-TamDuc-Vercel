@@ -17,14 +17,25 @@ import {
   ArrowDown,
   Copy
 } from 'lucide-react';
-import { mockCustomerSources, type MockCustomerSource } from '../data/mockData';
+import type { CustomerSource } from '../types';
+
+const initialSources: CustomerSource[] = [
+  { id: '1', name: 'Facebook', description: 'Khách hàng từ Facebook', isActive: true, order: 1 },
+  { id: '2', name: 'Zalo', description: 'Khách hàng từ Zalo', isActive: true, order: 2 },
+  { id: '3', name: 'Website', description: 'Khách hàng đăng ký từ website', isActive: true, order: 3 },
+  { id: '4', name: 'Hotline', description: 'Khách hàng gọi hotline', isActive: true, order: 4 },
+  { id: '5', name: 'Gọi khách hàng cũ theo data', description: 'Gọi theo dữ liệu khách hàng cũ', isActive: true, order: 5 },
+  { id: '6', name: 'Khách hàng cũ xin lại voucher', description: 'Khách hàng cũ yêu cầu voucher mới', isActive: true, order: 6 },
+  { id: '7', name: 'Xin lỗi khách hàng mới', description: 'Voucher xin lỗi cho khách hàng mới', isActive: true, order: 7 },
+  { id: '8', name: 'Data gọi không phát được voucher trong 3 tháng', description: 'Dữ liệu khách hàng không nhận voucher trong 3 tháng', isActive: true, order: 8 },
+];
 
 export function CustomerSourceManager() {
-  const [sources, setSources] = useState<MockCustomerSource[]>(mockCustomerSources);
+  const [sources, setSources] = useState<CustomerSource[]>(initialSources);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [editingSource, setEditingSource] = useState<MockCustomerSource | null>(null);
+  const [editingSource, setEditingSource] = useState<CustomerSource | null>(null);
   const [deleteSourceId, setDeleteSourceId] = useState<string>('');
   const [newName, setNewName] = useState('');
   const [newDescription, setNewDescription] = useState('');
@@ -54,7 +65,7 @@ export function CustomerSourceManager() {
   const handleCreateSource = () => {
     if (!validateSource(newName, newDescription)) return;
 
-    const newSource: MockCustomerSource = {
+    const newSource: CustomerSource = {
       id: Date.now().toString(),
       name: newName.trim(),
       description: newDescription.trim(),
@@ -101,8 +112,8 @@ export function CustomerSourceManager() {
     });
   };
 
-  const handleDuplicateSource = (source: MockCustomerSource) => {
-    const duplicated: MockCustomerSource = {
+  const handleDuplicateSource = (source: CustomerSource) => {
+    const duplicated: CustomerSource = {
       id: Date.now().toString(),
       name: `${source.name} (Copy)`,
       description: source.description,
