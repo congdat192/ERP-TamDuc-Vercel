@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,7 +19,8 @@ import {
   Settings
 } from 'lucide-react';
 import { templateService } from '../services/templateService';
-import type { VoucherTemplate, TemplateVariable, TEMPLATE_VARIABLES } from '../types';
+import type { VoucherTemplate } from '../types';
+import { TEMPLATE_VARIABLES } from '../types';
 
 export function TemplateManager() {
   const [templates, setTemplates] = useState<VoucherTemplate[]>([]);
