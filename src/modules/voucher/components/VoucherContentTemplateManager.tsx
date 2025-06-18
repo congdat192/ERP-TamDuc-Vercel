@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,11 +19,82 @@ import {
   Eye,
   Settings
 } from 'lucide-react';
-import { templateService } from '../services/templateService';
 import type { VoucherTemplate } from '../types';
 import { TEMPLATE_VARIABLES } from '../types';
 
-export function TemplateManager() {
+// Default content templates - restored from original
+const defaultContentTemplates: VoucherTemplate[] = [
+  {
+    id: '1',
+    name: 'Template Khách Hàng VIP',
+    content: `Chào anh/chị $tenKH,
+
+Cảm ơn anh/chị đã tin tưởng và sử dụng dịch vụ của chúng tôi!
+
+Với tư cách là khách hàng VIP, chúng tôi xin gửi tặng anh/chị voucher trị giá $giatri.
+
+Thông tin voucher:
+🎟️ Mã voucher: $mavoucher
+💰 Giá trị: $giatri
+📞 SĐT: $sdt
+⏰ Hạn sử dụng: $hansudung
+
+Nhân viên phụ trách: $nhanvien
+
+Chúc anh/chị có những trải nghiệm tuyệt vời!`,
+    isDefault: true,
+    isActive: true,
+    createdAt: '2024-01-15',
+    updatedAt: '2024-01-15'
+  },
+  {
+    id: '2',
+    name: 'Template Quy Trình Chuẩn',
+    content: `Xin chào $tenKH,
+
+Chúng tôi xin gửi tặng anh/chị voucher ưu đãi.
+
+Chi tiết voucher:
+- Mã: $mavoucher
+- Giá trị: $giatri
+- SĐT: $sdt
+- Hạn dùng: $hansudung
+- NV phụ trách: $nhanvien
+
+Cảm ơn anh/chị!`,
+    isDefault: false,
+    isActive: true,
+    createdAt: '2024-01-16',
+    updatedAt: '2024-01-16'
+  },
+  {
+    id: '3',
+    name: 'Template Ưu Tiên Nhân Viên',
+    content: `Kính gửi anh/chị $tenKH,
+
+Tôi là $nhanvien - nhân viên phụ trách anh/chị.
+
+Hôm nay tôi được gửi tặng anh/chị voucher đặc biệt:
+
+🎫 Mã voucher: $mavoucher
+💵 Trị giá: $giatri  
+📱 SĐT đăng ký: $sdt
+📅 Sử dụng trước: $hansudung
+
+Mọi thắc mắc, anh/chị liên hệ trực tiếp với tôi nhé!
+
+Trân trọng,
+$nhanvien`,
+    isDefault: false,
+    isActive: true,
+    createdAt: '2024-01-17',
+    updatedAt: '2024-01-17'
+  }
+];
+
+const STORAGE_KEY = 'voucher_content_templates';
+
+export function VoucherContentTemplateManager() {
   const [templates, setTemplates] = useState<VoucherTemplate[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -33,6 +105,31 @@ export function TemplateManager() {
   const [previewContent, setPreviewContent] = useState<string>('');
   const [newName, setNewName] = useState('');
   const [newContent, setNewContent] = useState('');
+
+  // Load templates from localStorage or use defaults
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        setTemplates(JSON.parse(stored));
+      } else {
+        // First time - load default templates
+        setTemplates(defaultContentTemplates);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultContentTemplates));
+      }
+    } catch (error) {
+      console.error('Error loading content templates:', error);
+      setTemplates(defaultContentTemplates);
+    }
+  }, []);
+
+  const saveTemplates = (updatedTemplates: VoucherTemplate[]) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedTemplates));
+    } catch (error) {
+      console.error('Error saving content templates:', error);
+    }
+  };
 
   const validateTemplate = (name: string, content: string, excludeId?: string) => {
     if (!name.trim()) {
@@ -72,7 +169,7 @@ export function TemplateManager() {
       id: Date.now().toString(),
       name: newName.trim(),
       content: newContent.trim(),
-      isDefault: templates.length === 0, // First template becomes default
+      isDefault: templates.length === 0,
       isActive: true,
       createdAt: new Date().toISOString().split('T')[0],
       updatedAt: new Date().toISOString().split('T')[0]
@@ -80,7 +177,7 @@ export function TemplateManager() {
 
     const updatedTemplates = [...templates, newTemplate];
     setTemplates(updatedTemplates);
-    templateService.saveTemplates(updatedTemplates);
+    saveTemplates(updatedTemplates);
     
     setNewName('');
     setNewContent('');
@@ -88,7 +185,7 @@ export function TemplateManager() {
     
     toast({
       title: "Thành công",
-      description: "Mẫu đợt phát hành voucher mới đã được tạo thành công."
+      description: "Mẫu nội dung voucher mới đã được tạo thành công."
     });
   };
 
@@ -107,7 +204,7 @@ export function TemplateManager() {
     );
     
     setTemplates(updatedTemplates);
-    templateService.saveTemplates(updatedTemplates);
+    saveTemplates(updatedTemplates);
     setIsEditModalOpen(false);
     setEditingTemplate(null);
     
@@ -120,7 +217,7 @@ export function TemplateManager() {
   const handleDeleteTemplate = () => {
     const updatedTemplates = templates.filter(t => t.id !== deleteTemplateId);
     setTemplates(updatedTemplates);
-    templateService.saveTemplates(updatedTemplates);
+    saveTemplates(updatedTemplates);
     setIsDeleteDialogOpen(false);
     setDeleteTemplateId('');
     
@@ -143,7 +240,7 @@ export function TemplateManager() {
 
     const updatedTemplates = [...templates, duplicated];
     setTemplates(updatedTemplates);
-    templateService.saveTemplates(updatedTemplates);
+    saveTemplates(updatedTemplates);
     
     toast({
       title: "Thành công",
@@ -156,7 +253,7 @@ export function TemplateManager() {
       t.id === id ? { ...t, isActive: !t.isActive } : t
     );
     setTemplates(updatedTemplates);
-    templateService.saveTemplates(updatedTemplates);
+    saveTemplates(updatedTemplates);
     
     toast({
       title: "Thành công",
@@ -170,7 +267,7 @@ export function TemplateManager() {
       isDefault: t.id === id
     }));
     setTemplates(updatedTemplates);
-    templateService.saveTemplates(updatedTemplates);
+    saveTemplates(updatedTemplates);
     
     toast({
       title: "Thành công",
@@ -214,10 +311,10 @@ export function TemplateManager() {
           <div>
             <CardTitle className="flex items-center space-x-2">
               <FileText className="w-5 h-5" />
-              <span>Quản lý đợt phát hành Voucher</span>
+              <span>Quản lý Template Nội Dung</span>
             </CardTitle>
             <p className="text-sm text-gray-600 mt-1">
-              Tạo và quản lý các mẫu đợt phát hành voucher. Bắt đầu bằng cách tạo mẫu đầu tiên.
+              Tạo và quản lý các mẫu nội dung tin nhắn voucher gửi cho khách hàng.
             </p>
           </div>
           <Button size="sm" onClick={() => setIsCreateModalOpen(true)}>
@@ -226,103 +323,89 @@ export function TemplateManager() {
           </Button>
         </CardHeader>
         <CardContent>
-          {templates.length === 0 ? (
-            <div className="text-center py-12">
-              <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có mẫu nào</h3>
-              <p className="text-gray-600 mb-4">
-                Bắt đầu bằng cách tạo mẫu đợt phát hành voucher đầu tiên.
-              </p>
-              <Button onClick={() => setIsCreateModalOpen(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Tạo Mẫu Đầu Tiên
-              </Button>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Tên Mẫu</TableHead>
-                  <TableHead>Mặc Định</TableHead>
-                  <TableHead>Trạng Thái</TableHead>
-                  <TableHead>Ngày Tạo</TableHead>
-                  <TableHead>Cập Nhật</TableHead>
-                  <TableHead className="text-right">Thao Tác</TableHead>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Tên Mẫu</TableHead>
+                <TableHead>Mặc Định</TableHead>
+                <TableHead>Trạng Thái</TableHead>
+                <TableHead>Ngày Tạo</TableHead>
+                <TableHead>Cập Nhật</TableHead>
+                <TableHead className="text-right">Thao Tác</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {templates.map((template) => (
+                <TableRow key={template.id}>
+                  <TableCell className="font-medium">{template.name}</TableCell>
+                  <TableCell>
+                    {template.isDefault ? (
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        Mặc định
+                      </span>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleSetDefault(template.id)}
+                        className="text-gray-500 hover:text-blue-600"
+                      >
+                        <Settings className="w-3 h-3 mr-1" />
+                        Đặt mặc định
+                      </Button>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Switch 
+                      checked={template.isActive} 
+                      onCheckedChange={() => handleToggleStatus(template.id)}
+                    />
+                  </TableCell>
+                  <TableCell>{template.createdAt}</TableCell>
+                  <TableCell>{template.updatedAt}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end space-x-1">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handlePreview(template)}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleDuplicateTemplate(template)}
+                      >
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => {
+                          setEditingTemplate(template);
+                          setIsEditModalOpen(true);
+                        }}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-red-600"
+                        onClick={() => {
+                          setDeleteTemplateId(template.id);
+                          setIsDeleteDialogOpen(true);
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {templates.map((template) => (
-                  <TableRow key={template.id}>
-                    <TableCell className="font-medium">{template.name}</TableCell>
-                    <TableCell>
-                      {template.isDefault ? (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          Mặc định
-                        </span>
-                      ) : (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleSetDefault(template.id)}
-                          className="text-gray-500 hover:text-blue-600"
-                        >
-                          <Settings className="w-3 h-3 mr-1" />
-                          Đặt mặc định
-                        </Button>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Switch 
-                        checked={template.isActive} 
-                        onCheckedChange={() => handleToggleStatus(template.id)}
-                      />
-                    </TableCell>
-                    <TableCell>{template.createdAt}</TableCell>
-                    <TableCell>{template.updatedAt}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end space-x-1">
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => handlePreview(template)}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => handleDuplicateTemplate(template)}
-                        >
-                          <Copy className="w-4 h-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => {
-                            setEditingTemplate(template);
-                            setIsEditModalOpen(true);
-                          }}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-red-600"
-                          onClick={() => {
-                            setDeleteTemplateId(template.id);
-                            setIsDeleteDialogOpen(true);
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 
@@ -330,7 +413,7 @@ export function TemplateManager() {
       <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Tạo Mẫu Đợt Phát Hành Voucher Mới</DialogTitle>
+            <DialogTitle>Tạo Mẫu Nội Dung Mới</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>

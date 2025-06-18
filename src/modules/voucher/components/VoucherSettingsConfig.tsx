@@ -6,11 +6,12 @@ import { Save } from 'lucide-react';
 import { DenominationManager } from './DenominationManager';
 import { CustomerSourceManager } from './CustomerSourceManager';
 import { CustomerTypeManager } from './CustomerTypeManager';
-import { TemplateManager } from './TemplateManager';
+import { VoucherContentTemplateManager } from './VoucherContentTemplateManager';
+import { CampaignManager } from './CampaignManager';
 import { StaffManager } from './StaffManager';
 
 export function VoucherSettingsConfig() {
-  const [activeTab, setActiveTab] = useState<'denominations' | 'sources' | 'types' | 'staff' | 'templates'>('denominations');
+  const [activeTab, setActiveTab] = useState<'denominations' | 'sources' | 'types' | 'staff' | 'templates' | 'campaigns'>('denominations');
   const [allowCustomValue, setAllowCustomValue] = useState(false);
 
   const handleSaveSettings = () => {
@@ -26,7 +27,7 @@ export function VoucherSettingsConfig() {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">Cấu Hình Voucher</h3>
-          <p className="text-gray-600">Quản lý mệnh giá, nguồn khách hàng, nhân viên và mẫu nội dung voucher</p>
+          <p className="text-gray-600">Quản lý mệnh giá, nguồn khách hàng, nhân viên, template và đợt phát hành voucher</p>
         </div>
         <Button onClick={handleSaveSettings}>
           <Save className="w-4 h-4 mr-2" />
@@ -42,7 +43,8 @@ export function VoucherSettingsConfig() {
             { key: 'sources', label: 'Nguồn KH' },
             { key: 'types', label: 'Loại KH' },
             { key: 'staff', label: 'Nhân Viên' },
-            { key: 'templates', label: 'Quản lý đợt phát hành Voucher' }
+            { key: 'templates', label: 'Quản lý Template' },
+            { key: 'campaigns', label: 'Đợt Phát Hành' }
           ].map((tab) => (
             <button
               key={tab.key}
@@ -69,7 +71,8 @@ export function VoucherSettingsConfig() {
       {activeTab === 'sources' && <CustomerSourceManager />}
       {activeTab === 'types' && <CustomerTypeManager />}
       {activeTab === 'staff' && <StaffManager />}
-      {activeTab === 'templates' && <TemplateManager />}
+      {activeTab === 'templates' && <VoucherContentTemplateManager />}
+      {activeTab === 'campaigns' && <CampaignManager />}
     </div>
   );
 }

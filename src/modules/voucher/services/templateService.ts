@@ -1,28 +1,29 @@
 
 import type { VoucherTemplate } from '../types';
 
-const STORAGE_KEY = 'voucher_templates';
+// Content templates storage key (separate from campaigns)
+const CONTENT_TEMPLATES_KEY = 'voucher_content_templates';
 
 export const templateService = {
   getTemplates: (): VoucherTemplate[] => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = localStorage.getItem(CONTENT_TEMPLATES_KEY);
       if (stored) {
         return JSON.parse(stored);
       }
     } catch (error) {
-      console.error('Error loading templates from localStorage:', error);
+      console.error('Error loading content templates from localStorage:', error);
     }
     
-    // Return empty array to start fresh - no default templates
+    // Return empty array - VoucherContentTemplateManager will load defaults
     return [];
   },
 
   saveTemplates: (templates: VoucherTemplate[]): void => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(templates));
+      localStorage.setItem(CONTENT_TEMPLATES_KEY, JSON.stringify(templates));
     } catch (error) {
-      console.error('Error saving templates to localStorage:', error);
+      console.error('Error saving content templates to localStorage:', error);
     }
   },
 
