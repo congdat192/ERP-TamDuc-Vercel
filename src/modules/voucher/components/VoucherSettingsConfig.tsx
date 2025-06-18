@@ -6,10 +6,10 @@ import { Save } from 'lucide-react';
 import { DenominationManager } from './DenominationManager';
 import { CustomerSourceManager } from './CustomerSourceManager';
 import { CustomerTypeManager } from './CustomerTypeManager';
-import { CampaignManager } from './CampaignManager';
+import { TemplateManager } from './TemplateManager';
 
 export function VoucherSettingsConfig() {
-  const [activeTab, setActiveTab] = useState<'denominations' | 'sources' | 'types' | 'campaigns'>('denominations');
+  const [activeTab, setActiveTab] = useState<'denominations' | 'sources' | 'types' | 'templates'>('denominations');
   const [allowCustomValue, setAllowCustomValue] = useState(false);
 
   const handleSaveSettings = () => {
@@ -25,7 +25,7 @@ export function VoucherSettingsConfig() {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">Cấu Hình Voucher</h3>
-          <p className="text-gray-600">Quản lý mệnh giá, nguồn khách hàng và đợt phát hành voucher</p>
+          <p className="text-gray-600">Quản lý mệnh giá, nguồn khách hàng và mẫu nội dung voucher</p>
         </div>
         <Button onClick={handleSaveSettings}>
           <Save className="w-4 h-4 mr-2" />
@@ -40,7 +40,7 @@ export function VoucherSettingsConfig() {
             { key: 'denominations', label: 'Mệnh Giá' },
             { key: 'sources', label: 'Nguồn KH' },
             { key: 'types', label: 'Loại KH' },
-            { key: 'campaigns', label: 'Quản lý đợt phát hành voucher' }
+            { key: 'templates', label: 'Mẫu Nội Dung' }
           ].map((tab) => (
             <button
               key={tab.key}
@@ -66,7 +66,7 @@ export function VoucherSettingsConfig() {
       )}
       {activeTab === 'sources' && <CustomerSourceManager />}
       {activeTab === 'types' && <CustomerTypeManager />}
-      {activeTab === 'campaigns' && <CampaignManager />}
+      {activeTab === 'templates' && <TemplateManager />}
     </div>
   );
 }
