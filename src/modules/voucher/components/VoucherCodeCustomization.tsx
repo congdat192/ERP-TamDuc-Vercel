@@ -187,7 +187,7 @@ export function VoucherCodeCustomization({
         </TabsContent>
 
         <TabsContent value="template-manager" className="space-y-4">
-          <ConditionTemplateManager
+          <VoucherBatchManager
             onApplyTemplate={handleApplyTemplate}
             onCreateTemplate={handleCreateTemplate}
           />
