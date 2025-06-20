@@ -6,7 +6,7 @@ import { VoucherIssue } from '../pages/VoucherIssue';
 import { VoucherList } from '../pages/VoucherList';
 import { VoucherAnalytics } from '../pages/VoucherAnalytics';
 import { VoucherLeaderboard } from '../pages/VoucherLeaderboard';
-import { VoucherSettings } from '../pages/VoucherSettings';
+import VoucherSettings from '../pages/VoucherSettings';
 import { User } from '@/types/auth';
 
 interface VoucherRouterProps {

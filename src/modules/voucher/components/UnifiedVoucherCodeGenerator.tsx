@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,7 +17,7 @@ import {
 import { VoucherBatchSelector } from './VoucherBatchSelector';
 import { ConditionValueMapping } from './ConditionValueMapping';
 import { ConditionPriorityManager } from './ConditionPriorityManager';
-import { ConditionTemplateManager } from './ConditionTemplateManager';
+import { VoucherBatchManager } from './VoucherBatchManager';
 import { 
   ConditionValueMapping as ConditionValueMappingType,
   ConditionGroupPriority,
@@ -387,7 +386,7 @@ export function UnifiedVoucherCodeGenerator({ onSettingsChange }: UnifiedVoucher
 
           {/* Template Management */}
           {(generationMethod === 'mapping' || generationMethod === 'combined') && (
-            <ConditionTemplateManager
+            <VoucherBatchManager
               onApplyTemplate={handleApplyTemplate}
               onCreateTemplate={(name, description) => {
                 console.log('Creating template:', name, description);
