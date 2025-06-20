@@ -8,6 +8,7 @@ import { VoucherConditionBuilder } from './VoucherConditionBuilder';
 import { VoucherBatchManager } from './VoucherBatchManager';
 import { ConditionValueMapping } from './ConditionValueMapping';
 import { ConditionPriorityManager } from './ConditionPriorityManager';
+import { TemplateManager } from './TemplateManager';
 import { 
   ConditionRow, 
   ConditionValueMapping as ConditionValueMappingType,
@@ -16,7 +17,7 @@ import {
   MOCK_GROUP_PRIORITIES
 } from '../types/conditionBuilder';
 import { VoucherBatch } from '../types/voucherBatch';
-import { Settings, FileText, MapPin, ArrowUpDown, Info } from 'lucide-react';
+import { Settings, FileText, MapPin, ArrowUpDown, Info, Layers } from 'lucide-react';
 
 interface VoucherCodeCustomizationProps {
   selectedBatch?: string;
@@ -104,7 +105,7 @@ export function VoucherCodeCustomization({
       )}
 
       <Tabs defaultValue="mapping" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger 
             value="mapping" 
             className="voucher-tabs-trigger flex items-center space-x-2"
@@ -127,11 +128,18 @@ export function VoucherCodeCustomization({
             <span>Điều Kiện Chi Tiết</span>
           </TabsTrigger>
           <TabsTrigger 
+            value="batch-manager" 
+            className="voucher-tabs-trigger flex items-center space-x-2"
+          >
+            <Layers className="w-4 h-4" />
+            <span>Quản Lý Đợt</span>
+          </TabsTrigger>
+          <TabsTrigger 
             value="template-manager" 
             className="voucher-tabs-trigger flex items-center space-x-2"
           >
             <FileText className="w-4 h-4" />
-            <span>Quản Lý Đợt</span>
+            <span>Mẫu Tin Nhắn</span>
           </TabsTrigger>
         </TabsList>
 
@@ -158,11 +166,15 @@ export function VoucherCodeCustomization({
           />
         </TabsContent>
 
-        <TabsContent value="template-manager" className="space-y-4">
+        <TabsContent value="batch-manager" className="space-y-4">
           <VoucherBatchManager
             onApplyBatch={handleApplyBatch}
             onCreateBatch={handleCreateBatch}
           />
+        </TabsContent>
+
+        <TabsContent value="template-manager" className="space-y-4">
+          <TemplateManager />
         </TabsContent>
       </Tabs>
 

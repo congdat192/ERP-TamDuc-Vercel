@@ -19,6 +19,7 @@ import { VoucherBatchSelector } from './VoucherBatchSelector';
 import { ConditionValueMapping } from './ConditionValueMapping';
 import { ConditionPriorityManager } from './ConditionPriorityManager';
 import { VoucherBatchManager } from './VoucherBatchManager';
+import { TemplateManager } from './TemplateManager';
 import { 
   ConditionValueMapping as ConditionValueMappingType,
   ConditionGroupPriority,
@@ -44,6 +45,9 @@ export function UnifiedVoucherCodeGenerator({ onSettingsChange }: UnifiedVoucher
   const [valueMappings, setValueMappings] = useState<ConditionValueMappingType[]>(MOCK_VALUE_MAPPINGS);
   const [groupPriorities, setGroupPriorities] = useState<ConditionGroupPriority[]>(MOCK_GROUP_PRIORITIES);
   const [showPreview, setShowPreview] = useState(true);
+  const [showMappingConfig, setShowMappingConfig] = useState(false);
+  const [showBatchManager, setShowBatchManager] = useState(false);
+  const [showTemplateManager, setShowTemplateManager] = useState(false);
 
   const handleBatchChange = (batch: string) => {
     setSelectedBatch(batch);
@@ -51,6 +55,13 @@ export function UnifiedVoucherCodeGenerator({ onSettingsChange }: UnifiedVoucher
 
   const handleMethodChange = (method: CodeGenerationMethod) => {
     setGenerationMethod(method);
+    
+    // Auto show/hide relevant sections
+    if (method === 'mapping' || method === 'combined') {
+      setShowMappingConfig(true);
+    } else {
+      setShowMappingConfig(false);
+    }
   };
 
   const generateCodePreview = () => {
@@ -154,286 +165,340 @@ export function UnifiedVoucherCodeGenerator({ onSettingsChange }: UnifiedVoucher
 
   return (
     <TooltipProvider>
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Settings className="w-5 h-5" />
-              <span>Cấu Hình Tạo Mã Voucher</span>
-              <Tooltip>
-                <TooltipTrigger>
-                  <Info className="w-4 h-4 text-gray-400" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Thiết lập cách thức tạo mã voucher cho đợt phát hành</p>
-                </TooltipContent>
-              </Tooltip>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowPreview(!showPreview)}
-            >
-              <Eye className="w-4 h-4 mr-1" />
-              {showPreview ? 'Ẩn' : 'Hiện'} Xem Trước
-            </Button>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Step 1: Batch Selection */}
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                Bước 1
-              </Badge>
-              <h3 className="font-medium">Chọn Đợt Phát Hành</h3>
-            </div>
-            <VoucherBatchSelector
-              selectedBatch={selectedBatch}
-              onBatchChange={handleBatchChange}
-            />
-          </div>
-
-          {/* Auto Issue Setting */}
-          {selectedBatch && (
-            <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="auto-issue" className="font-medium">Tự động phát hành voucher khi khởi tạo</Label>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Tự động phát hành voucher ngay khi tạo mới, không cần duyệt thủ công.
-                  </p>
-                </div>
-                <Switch 
-                  id="auto-issue" 
-                  checked={autoIssue}
-                  onCheckedChange={setAutoIssue}
-                />
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Settings className="w-5 h-5" />
+                <span>Cấu Hình Tạo Mã Voucher</span>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Info className="w-4 h-4 text-gray-400" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Thiết lập cách thức tạo mã voucher cho đợt phát hành từ KiotViet</p>
+                  </TooltipContent>
+                </Tooltip>
               </div>
-            </div>
-          )}
-
-          {/* Step 2: Generation Method */}
-          {selectedBatch && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowPreview(!showPreview)}
+              >
+                <Eye className="w-4 h-4 mr-1" />
+                {showPreview ? 'Ẩn' : 'Hiện'} Xem Trước
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Step 1: Batch Selection from KiotViet */}
             <div className="space-y-2">
               <div className="flex items-center space-x-2">
                 <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                  Bước 2
+                  Bước 1
                 </Badge>
-                <h3 className="font-medium">Cách Tạo Mã Voucher</h3>
+                <h3 className="font-medium">Chọn Đợt Phát Hành từ KiotViet</h3>
               </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {[
-                  {
-                    value: 'manual' as const,
-                    title: 'Thủ Công',
-                    description: 'Nhập ký tự đầu và cuối thủ công'
-                  },
-                  {
-                    value: 'mapping' as const,
-                    title: 'Theo Mapping',
-                    description: 'Sử dụng quy tắc mapping điều kiện'
-                  },
-                  {
-                    value: 'combined' as const,
-                    title: 'Kết Hợp',
-                    description: 'Kết hợp cả thủ công và mapping'
-                  }
-                ].map((method) => (
-                  <Card 
-                    key={method.value}
-                    className={`cursor-pointer transition-all ${
-                      generationMethod === method.value 
-                        ? 'border-blue-500 bg-blue-50' 
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                    onClick={() => handleMethodChange(method.value)}
-                  >
-                    <CardContent className="p-3">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <div className={`w-4 h-4 rounded-full border-2 ${
-                          generationMethod === method.value 
-                            ? 'border-blue-500 bg-blue-500' 
-                            : 'border-gray-300'
-                        }`}>
-                          {generationMethod === method.value && (
-                            <div className="w-full h-full rounded-full bg-white scale-50"></div>
-                          )}
+              <VoucherBatchSelector
+                selectedBatch={selectedBatch}
+                onBatchChange={handleBatchChange}
+              />
+            </div>
+
+            {/* Auto Issue Setting */}
+            {selectedBatch && (
+              <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="auto-issue" className="font-medium">Tự động phát hành voucher khi khởi tạo</Label>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Tự động phát hành voucher ngay khi tạo mới theo quy tắc đã cấu hình.
+                    </p>
+                  </div>
+                  <Switch 
+                    id="auto-issue" 
+                    checked={autoIssue}
+                    onCheckedChange={setAutoIssue}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Generation Method */}
+            {selectedBatch && (
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                    Bước 2
+                  </Badge>
+                  <h3 className="font-medium">Quy Tắc Tạo Mã Voucher</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {[
+                    {
+                      value: 'manual' as const,
+                      title: 'Thủ Công',
+                      description: 'Nhập ký tự đầu và cuối cố định'
+                    },
+                    {
+                      value: 'mapping' as const,
+                      title: 'Theo Nguồn KH & Nhân Viên',
+                      description: 'Tạo mã theo nguồn khách hàng và loại nhân viên'
+                    },
+                    {
+                      value: 'combined' as const,
+                      title: 'Kết Hợp',
+                      description: 'Kết hợp cả thủ công và mapping nguồn'
+                    }
+                  ].map((method) => (
+                    <Card 
+                      key={method.value}
+                      className={`cursor-pointer transition-all ${
+                        generationMethod === method.value 
+                          ? 'border-blue-500 bg-blue-50' 
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                      onClick={() => handleMethodChange(method.value)}
+                    >
+                      <CardContent className="p-3">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <div className={`w-4 h-4 rounded-full border-2 ${
+                            generationMethod === method.value 
+                              ? 'border-blue-500 bg-blue-500' 
+                              : 'border-gray-300'
+                          }`}>
+                            {generationMethod === method.value && (
+                              <div className="w-full h-full rounded-full bg-white scale-50"></div>
+                            )}
+                          </div>
+                          <h4 className="font-medium text-sm">{method.title}</h4>
                         </div>
-                        <h4 className="font-medium text-sm">{method.title}</h4>
+                        <p className="text-xs text-gray-600">{method.description}</p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: Code Length */}
+            {selectedBatch && generationMethod && (
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                    Bước 3
+                  </Badge>
+                  <h3 className="font-medium">Độ Dài Mã Voucher</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div>
+                    <Label htmlFor="code-length">Số ký tự</Label>
+                    <Input
+                      id="code-length"
+                      type="number"
+                      min="4"
+                      max="20"
+                      value={codeLength}
+                      onChange={(e) => setCodeLength(Number(e.target.value))}
+                      className="mt-1"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Từ 4-20 ký tự</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 4: Method-specific Configuration */}
+            {selectedBatch && generationMethod && (
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                    Bước 4
+                  </Badge>
+                  <h3 className="font-medium">Cấu Hình Chi Tiết</h3>
+                </div>
+
+                {/* Manual Configuration */}
+                {(generationMethod === 'manual' || generationMethod === 'combined') && (
+                  <Card className="border-orange-200 bg-orange-50">
+                    <CardHeader className="pb-2">
+                      <h4 className="font-medium text-orange-800 text-sm">Cấu Hình Thủ Công</h4>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <Label htmlFor="manual-prefix">Ký tự đầu (Prefix)</Label>
+                          <Input
+                            id="manual-prefix"
+                            value={manualPrefix}
+                            onChange={(e) => setManualPrefix(e.target.value.toUpperCase())}
+                            placeholder="VD: VCH, GIFT"
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="manual-suffix">Ký tự cuối (Suffix)</Label>
+                          <Input
+                            id="manual-suffix"
+                            value={manualSuffix}
+                            onChange={(e) => setManualSuffix(e.target.value.toUpperCase())}
+                            placeholder="VD: X, END"
+                            className="mt-1"
+                          />
+                        </div>
                       </div>
-                      <p className="text-xs text-gray-600">{method.description}</p>
                     </CardContent>
                   </Card>
-                ))}
-              </div>
-            </div>
-          )}
+                )}
 
-          {/* Step 3: Code Length */}
-          {selectedBatch && generationMethod && (
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                  Bước 3
-                </Badge>
-                <h3 className="font-medium">Độ Dài Mã Voucher</h3>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div>
-                  <Label htmlFor="code-length">Số ký tự</Label>
-                  <Input
-                    id="code-length"
-                    type="number"
-                    min="4"
-                    max="20"
-                    value={codeLength}
-                    onChange={(e) => setCodeLength(Number(e.target.value))}
-                    className="mt-1"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Từ 4-20 ký tự</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Step 4: Method-specific Configuration */}
-          {selectedBatch && generationMethod && (
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                  Bước 4
-                </Badge>
-                <h3 className="font-medium">Cấu Hình Chi Tiết</h3>
-              </div>
-
-              {/* Manual Configuration */}
-              {(generationMethod === 'manual' || generationMethod === 'combined') && (
-                <Card className="border-orange-200 bg-orange-50">
-                  <CardHeader className="pb-2">
-                    <h4 className="font-medium text-orange-800 text-sm">Cấu Hình Thủ Công</h4>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div>
-                        <Label htmlFor="manual-prefix">Ký tự đầu (Prefix)</Label>
-                        <Input
-                          id="manual-prefix"
-                          value={manualPrefix}
-                          onChange={(e) => setManualPrefix(e.target.value.toUpperCase())}
-                          placeholder="VD: VCH, GIFT"
-                          className="mt-1"
+                {/* Mapping Configuration Toggle */}
+                {(generationMethod === 'mapping' || generationMethod === 'combined') && (
+                  <div className="space-y-3">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setShowMappingConfig(!showMappingConfig)}
+                      className="w-full"
+                    >
+                      {showMappingConfig ? 'Ẩn' : 'Hiện'} Cấu Hình Mapping Nguồn KH & Nhân Viên
+                    </Button>
+                    
+                    {showMappingConfig && (
+                      <div className="space-y-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                        <ConditionValueMapping 
+                          onMappingsChange={setValueMappings}
+                        />
+                        <ConditionPriorityManager
+                          valueMappings={valueMappings}
+                          onPriorityChange={setGroupPriorities}
+                          codeLength={codeLength}
                         />
                       </div>
-                      <div>
-                        <Label htmlFor="manual-suffix">Ký tự cuối (Suffix)</Label>
-                        <Input
-                          id="manual-suffix"
-                          value={manualSuffix}
-                          onChange={(e) => setManualSuffix(e.target.value.toUpperCase())}
-                          placeholder="VD: X, END"
-                          className="mt-1"
-                        />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-              {/* Mapping Configuration */}
-              {(generationMethod === 'mapping' || generationMethod === 'combined') && (
-                <div className="space-y-3">
-                  <ConditionValueMapping 
-                    onMappingsChange={setValueMappings}
-                  />
-                  <ConditionPriorityManager
-                    valueMappings={valueMappings}
-                    onPriorityChange={setGroupPriorities}
-                    codeLength={codeLength}
-                  />
+        {/* Live Preview */}
+        {showPreview && selectedBatch && generationMethod && (
+          <Alert className="border-green-200 bg-green-50">
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <AlertDescription>
+              <div className="space-y-2">
+                <h4 className="font-medium text-green-800">Xem Trước Mã Voucher</h4>
+                <div className="text-sm">
+                  <span className="text-gray-600">Đợt phát hành từ KiotViet:</span>
+                  <Badge variant="secondary" className="ml-2">{selectedBatch}</Badge>
                 </div>
-              )}
-            </div>
-          )}
+                <div className="text-sm">
+                  <span className="text-gray-600">Quy tắc tạo mã:</span>
+                  <span className="ml-2 font-medium">
+                    {generationMethod === 'manual' && 'Thủ công'}
+                    {generationMethod === 'mapping' && 'Theo Nguồn KH & Nhân Viên'}
+                    {generationMethod === 'combined' && 'Kết hợp'}
+                  </span>
+                </div>
+                <div className="text-sm">
+                  <span className="text-gray-600">Mã voucher mẫu:</span>
+                  <code className="ml-2 bg-white px-2 py-1 rounded font-mono text-green-600 font-bold">
+                    {generateCodePreview()}
+                  </code>
+                </div>
+                <div className="text-sm">
+                  <span className="text-gray-600">Tự động phát hành:</span>
+                  <span className="ml-2 font-medium">
+                    {autoIssue ? 'Có' : 'Không'}
+                  </span>
+                </div>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
 
-          {/* Live Preview */}
-          {showPreview && selectedBatch && generationMethod && (
-            <Alert className="border-green-200 bg-green-50">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              <AlertDescription>
-                <div className="space-y-2">
-                  <h4 className="font-medium text-green-800">Xem Trước Mã Voucher</h4>
-                  <div className="text-sm">
-                    <span className="text-gray-600">Đợt phát hành:</span>
-                    <Badge variant="secondary" className="ml-2">{selectedBatch}</Badge>
-                  </div>
-                  <div className="text-sm">
-                    <span className="text-gray-600">Phương thức:</span>
-                    <span className="ml-2 font-medium">
-                      {generationMethod === 'manual' && 'Thủ công'}
-                      {generationMethod === 'mapping' && 'Theo Mapping'}
-                      {generationMethod === 'combined' && 'Kết hợp'}
-                    </span>
-                  </div>
-                  <div className="text-sm">
-                    <span className="text-gray-600">Mã voucher mẫu:</span>
-                    <code className="ml-2 bg-white px-2 py-1 rounded font-mono text-green-600 font-bold">
-                      {generateCodePreview()}
-                    </code>
-                  </div>
-                  <div className="text-sm">
-                    <span className="text-gray-600">Tự động phát hành:</span>
-                    <span className="ml-2 font-medium">
-                      {autoIssue ? 'Có' : 'Không'}
-                    </span>
-                  </div>
-                </div>
-              </AlertDescription>
-            </Alert>
-          )}
+        {/* Additional Management Sections */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Batch Management */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm flex items-center justify-between">
+                <span>Quản Lý Đợt Phát Hành</span>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setShowBatchManager(!showBatchManager)}
+                >
+                  {showBatchManager ? 'Ẩn' : 'Hiện'}
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            {showBatchManager && (
+              <CardContent>
+                <VoucherBatchManager
+                  onApplyBatch={handleApplyBatch}
+                  onCreateBatch={handleCreateBatch}
+                />
+              </CardContent>
+            )}
+          </Card>
 
           {/* Template Management */}
-          {(generationMethod === 'mapping' || generationMethod === 'combined') && (
-            <VoucherBatchManager
-              onApplyBatch={handleApplyBatch}
-              onCreateBatch={handleCreateBatch}
-            />
-          )}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm flex items-center justify-between">
+                <span>Quản Lý Mẫu Tin Nhắn</span>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setShowTemplateManager(!showTemplateManager)}
+                >
+                  {showTemplateManager ? 'Ẩn' : 'Hiện'}
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            {showTemplateManager && (
+              <CardContent>
+                <TemplateManager />
+              </CardContent>
+            )}
+          </Card>
+        </div>
 
-          {/* Save Configuration */}
-          <div className="flex justify-end pt-3 border-t">
-            <Button 
-              onClick={handleSaveConfiguration}
-              disabled={!isFormValid()}
-              size="lg"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              Lưu Cấu Hình
-            </Button>
-          </div>
+        {/* Save Configuration */}
+        <div className="flex justify-end pt-3 border-t">
+          <Button 
+            onClick={handleSaveConfiguration}
+            disabled={!isFormValid()}
+            size="lg"
+          >
+            <Save className="w-4 h-4 mr-2" />
+            Lưu Cấu Hình Tạo Mã
+          </Button>
+        </div>
 
-          {/* Form Validation Notice */}
-          {!isFormValid() && selectedBatch && (
-            <Alert className="border-yellow-200 bg-yellow-50">
-              <Info className="h-4 w-4 text-yellow-600" />
-              <AlertDescription className="text-yellow-800">
-                <div className="text-sm">
-                  <div className="font-medium mb-1">Vui lòng hoàn thành các thông tin bắt buộc:</div>
-                  <ul className="list-disc list-inside space-y-1">
-                    {!selectedBatch && <li>Chọn mã đợt phát hành</li>}
-                    {codeLength < 4 && <li>Độ dài mã tối thiểu 4 ký tự</li>}
-                    {generationMethod === 'manual' && !manualPrefix && <li>Nhập ký tự đầu (prefix)</li>}
-                    {(generationMethod === 'mapping' || generationMethod === 'combined') && !valueMappings.some(m => m.active) && <li>Thiết lập ít nhất 1 mapping hoạt động</li>}
-                    {(generationMethod === 'mapping' || generationMethod === 'combined') && !groupPriorities.some(p => p.active) && <li>Kích hoạt ít nhất 1 nhóm ưu tiên</li>}
-                  </ul>
-                </div>
-              </AlertDescription>
-            </Alert>
-          )}
-        </CardContent>
-      </Card>
+        {/* Form Validation Notice */}
+        {!isFormValid() && selectedBatch && (
+          <Alert className="border-yellow-200 bg-yellow-50">
+            <Info className="h-4 w-4 text-yellow-600" />
+            <AlertDescription className="text-yellow-800">
+              <div className="text-sm">
+                <div className="font-medium mb-1">Vui lòng hoàn thành các thông tin bắt buộc:</div>
+                <ul className="list-disc list-inside space-y-1">
+                  {!selectedBatch && <li>Chọn đợt phát hành từ KiotViet</li>}
+                  {codeLength < 4 && <li>Độ dài mã tối thiểu 4 ký tự</li>}
+                  {generationMethod === 'manual' && !manualPrefix && <li>Nhập ký tự đầu (prefix)</li>}
+                  {(generationMethod === 'mapping' || generationMethod === 'combined') && !valueMappings.some(m => m.active) && <li>Thiết lập ít nhất 1 mapping nguồn khách hàng/nhân viên</li>}
+                  {(generationMethod === 'mapping' || generationMethod === 'combined') && !groupPriorities.some(p => p.active) && <li>Kích hoạt ít nhất 1 nhóm ưu tiên</li>}
+                </ul>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+      </div>
     </TooltipProvider>
   );
 }
