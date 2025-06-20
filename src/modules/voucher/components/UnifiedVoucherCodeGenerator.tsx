@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,10 +22,10 @@ import { VoucherBatchManager } from './VoucherBatchManager';
 import { 
   ConditionValueMapping as ConditionValueMappingType,
   ConditionGroupPriority,
-  ConditionTemplate,
   MOCK_VALUE_MAPPINGS,
   MOCK_GROUP_PRIORITIES
 } from '../types/conditionBuilder';
+import { VoucherBatch } from '../types/voucherBatch';
 import { toast } from '@/hooks/use-toast';
 
 type CodeGenerationMethod = 'manual' | 'mapping' | 'combined';
@@ -129,16 +130,25 @@ export function UnifiedVoucherCodeGenerator({ onSettingsChange }: UnifiedVoucher
     return false;
   };
 
-  const handleApplyTemplate = (template: ConditionTemplate) => {
-    setValueMappings(template.valueMappings);
-    setGroupPriorities(template.groupPriorities);
-    if (generationMethod === 'manual') {
-      setGenerationMethod('mapping');
-    }
+  const handleApplyBatch = (batch: VoucherBatch) => {
+    setManualPrefix(batch.codePrefix);
+    setManualSuffix(batch.codeSuffix || '');
+    setCodeLength(batch.codeLength);
+    setSelectedBatch(batch.name);
+    setGenerationMethod('manual');
     
     toast({
-      title: "Áp dụng template",
-      description: `Template "${template.name}" đã được áp dụng thành công.`
+      title: "Áp dụng đợt phát hành",
+      description: `Cấu hình từ đợt "${batch.name}" đã được áp dụng thành công.`
+    });
+  };
+
+  const handleCreateBatch = (name: string, description: string) => {
+    console.log('Creating voucher batch:', name, description);
+    
+    toast({
+      title: "Tạo đợt phát hành",
+      description: `Đợt "${name}" đã được tạo thành công.`
     });
   };
 
@@ -387,14 +397,8 @@ export function UnifiedVoucherCodeGenerator({ onSettingsChange }: UnifiedVoucher
           {/* Template Management */}
           {(generationMethod === 'mapping' || generationMethod === 'combined') && (
             <VoucherBatchManager
-              onApplyTemplate={handleApplyTemplate}
-              onCreateTemplate={(name, description) => {
-                console.log('Creating template:', name, description);
-                toast({
-                  title: "Tạo template",
-                  description: `Template "${name}" đã được tạo thành công.`
-                });
-              }}
+              onApplyBatch={handleApplyBatch}
+              onCreateBatch={handleCreateBatch}
             />
           )}
 

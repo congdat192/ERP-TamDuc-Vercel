@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,12 +10,12 @@ import { ConditionValueMapping } from './ConditionValueMapping';
 import { ConditionPriorityManager } from './ConditionPriorityManager';
 import { 
   ConditionRow, 
-  ConditionTemplate,
   ConditionValueMapping as ConditionValueMappingType,
   ConditionGroupPriority,
   MOCK_VALUE_MAPPINGS,
   MOCK_GROUP_PRIORITIES
 } from '../types/conditionBuilder';
+import { VoucherBatch } from '../types/voucherBatch';
 import { Settings, FileText, MapPin, ArrowUpDown, Info } from 'lucide-react';
 
 interface VoucherCodeCustomizationProps {
@@ -70,47 +71,18 @@ export function VoucherCodeCustomization({
     });
   };
 
-  const handleApplyTemplate = (template: ConditionTemplate) => {
-    setConditions(template.conditionRows);
-    if (template.valueMappings) {
-      setValueMappings(template.valueMappings);
-    }
-    if (template.groupPriorities) {
-      setGroupPriorities(template.groupPriorities);
-    }
-    notifyChange(codeLength, template.conditionRows, template.valueMappings || valueMappings, template.groupPriorities || groupPriorities);
-  };
-
   const handleSaveAsTemplate = (templateName: string, conditionRows: ConditionRow[]) => {
-    const template: ConditionTemplate = {
-      id: `template-${Date.now()}`,
-      name: templateName,
-      conditionRows,
-      valueMappings,
-      groupPriorities,
-      createdBy: 'Current User',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    
-    console.log('Saving template:', template);
+    console.log('Saving template:', templateName, conditionRows);
     // In a real app, this would save to backend
   };
 
-  const handleCreateTemplate = (name: string, description: string) => {
-    const template: ConditionTemplate = {
-      id: `template-${Date.now()}`,
-      name,
-      description,
-      conditionRows: conditions,
-      valueMappings,
-      groupPriorities,
-      createdBy: 'Current User',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    
-    console.log('Creating new template:', template);
+  const handleApplyBatch = (batch: VoucherBatch) => {
+    console.log('Applying voucher batch:', batch);
+    // Apply batch configuration logic here
+  };
+
+  const handleCreateBatch = (name: string, description: string) => {
+    console.log('Creating new batch:', name, description);
     // In a real app, this would save to backend
   };
 
@@ -159,7 +131,7 @@ export function VoucherCodeCustomization({
             className="voucher-tabs-trigger flex items-center space-x-2"
           >
             <FileText className="w-4 h-4" />
-            <span>Quản Lý Template</span>
+            <span>Quản Lý Đợt</span>
           </TabsTrigger>
         </TabsList>
 
@@ -188,8 +160,8 @@ export function VoucherCodeCustomization({
 
         <TabsContent value="template-manager" className="space-y-4">
           <VoucherBatchManager
-            onApplyTemplate={handleApplyTemplate}
-            onCreateTemplate={handleCreateTemplate}
+            onApplyBatch={handleApplyBatch}
+            onCreateBatch={handleCreateBatch}
           />
         </TabsContent>
       </Tabs>
