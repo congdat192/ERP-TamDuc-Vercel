@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,6 +28,7 @@ import {
 import { ConditionTemplate, MOCK_VALUE_MAPPINGS, MOCK_GROUP_PRIORITIES } from '../types/conditionBuilder';
 import { VoucherBatchSelector } from './VoucherBatchSelector';
 import { CollapsibleMappingSection } from './CollapsibleMappingSection';
+import { templateService } from '../services/templateService';
 import { toast } from '@/hooks/use-toast';
 
 interface VoucherBatchManagerProps {
@@ -60,8 +61,28 @@ export function VoucherBatchManager({
   const [autoIssue, setAutoIssue] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
 
-  // Empty templates array - no mock data
+  // Templates state - now using localStorage
   const [templates, setTemplates] = useState<ConditionTemplate[]>([]);
+
+  // Load templates from localStorage on component mount
+  useEffect(() => {
+    const loadedTemplates = templateService.getTemplates().map(voucherTemplate => {
+      // Convert VoucherTemplate to ConditionTemplate format
+      const conditionTemplate: ConditionTemplate = {
+        id: voucherTemplate.id,
+        name: voucherTemplate.name,
+        description: voucherTemplate.content, // Use content as description for now
+        conditionRows: [], // Empty condition rows for existing templates
+        valueMappings: MOCK_VALUE_MAPPINGS,
+        groupPriorities: MOCK_GROUP_PRIORITIES,
+        createdBy: 'Template User',
+        createdAt: voucherTemplate.createdAt,
+        updatedAt: voucherTemplate.updatedAt
+      };
+      return conditionTemplate;
+    });
+    setTemplates(loadedTemplates);
+  }, []);
 
   const generateCodePreview = () => {
     let prefix = '';
@@ -131,6 +152,20 @@ export function VoucherBatchManager({
         updatedAt: new Date().toISOString()
       };
 
+      // Save to localStorage using templateService
+      const voucherTemplate = {
+        id: newTemplate.id,
+        name: newTemplate.name,
+        content: newTemplate.description || '',
+        isDefault: false,
+        isActive: true,
+        createdAt: newTemplate.createdAt,
+        updatedAt: newTemplate.updatedAt
+      };
+      
+      const updatedTemplates = templateService.addTemplate(voucherTemplate);
+      
+      // Update local state
       setTemplates([...templates, newTemplate]);
       resetTemplateForm();
       setIsCreateModalOpen(false);
@@ -148,10 +183,24 @@ export function VoucherBatchManager({
 
   const handleEditTemplate = () => {
     if (editingTemplate && editingTemplate.name.trim()) {
+      const updatedTemplate = { ...editingTemplate, updatedAt: new Date().toISOString() };
+      
+      // Update in localStorage
+      const voucherTemplate = {
+        id: updatedTemplate.id,
+        name: updatedTemplate.name,
+        content: updatedTemplate.description || '',
+        isDefault: false,
+        isActive: true,
+        createdAt: updatedTemplate.createdAt,
+        updatedAt: updatedTemplate.updatedAt
+      };
+      
+      templateService.updateTemplate(updatedTemplate.id, voucherTemplate);
+      
+      // Update local state
       setTemplates(templates.map(t => 
-        t.id === editingTemplate.id 
-          ? { ...editingTemplate, updatedAt: new Date().toISOString() }
-          : t
+        t.id === editingTemplate.id ? updatedTemplate : t
       ));
       setIsEditModalOpen(false);
       setEditingTemplate(null);
@@ -185,6 +234,20 @@ export function VoucherBatchManager({
       updatedAt: new Date().toISOString()
     };
 
+    // Save to localStorage
+    const voucherTemplate = {
+      id: duplicatedTemplate.id,
+      name: duplicatedTemplate.name,
+      content: duplicatedTemplate.description || '',
+      isDefault: false,
+      isActive: true,
+      createdAt: duplicatedTemplate.createdAt,
+      updatedAt: duplicatedTemplate.updatedAt
+    };
+    
+    templateService.addTemplate(voucherTemplate);
+    
+    // Update local state
     setTemplates([...templates, duplicatedTemplate]);
     
     toast({
@@ -195,6 +258,11 @@ export function VoucherBatchManager({
 
   const handleDeleteTemplate = () => {
     const templateToDelete = templates.find(t => t.id === deleteTemplateId);
+    
+    // Remove from localStorage
+    templateService.deleteTemplate(deleteTemplateId);
+    
+    // Update local state
     setTemplates(templates.filter(t => t.id !== deleteTemplateId));
     setIsDeleteDialogOpen(false);
     setDeleteTemplateId('');
