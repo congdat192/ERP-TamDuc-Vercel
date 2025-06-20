@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,17 +30,17 @@ import { VoucherBatchSelector } from './VoucherBatchSelector';
 import { CollapsibleMappingSection } from './CollapsibleMappingSection';
 import { toast } from '@/hooks/use-toast';
 
-interface ConditionTemplateManagerProps {
+interface VoucherBatchManagerProps {
   onApplyTemplate?: (template: ConditionTemplate) => void;
   onCreateTemplate?: (name: string, description: string) => void;
 }
 
 type CodeGenerationMethod = 'manual' | 'mapping' | 'hybrid';
 
-export function ConditionTemplateManager({ 
+export function VoucherBatchManager({ 
   onApplyTemplate,
   onCreateTemplate 
-}: ConditionTemplateManagerProps) {
+}: VoucherBatchManagerProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -61,42 +60,8 @@ export function ConditionTemplateManager({
   const [autoIssue, setAutoIssue] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
 
-  // Mock templates with proper structure
-  const [templates, setTemplates] = useState<ConditionTemplate[]>([
-    {
-      id: 'template-1',
-      name: 'Template Khách Hàng VIP',
-      description: 'Cấu hình cho khách hàng VIP với ưu tiên cao',
-      conditionRows: [],
-      valueMappings: MOCK_VALUE_MAPPINGS,
-      groupPriorities: MOCK_GROUP_PRIORITIES,
-      createdBy: 'Quản trị viên',
-      createdAt: '2024-01-15T10:30:00Z',
-      updatedAt: '2024-01-15T10:30:00Z'
-    },
-    {
-      id: 'template-2',
-      name: 'Template Quy Trình Chuẩn',
-      description: 'Quy trình chuẩn cho khách hàng thường',
-      conditionRows: [],
-      valueMappings: MOCK_VALUE_MAPPINGS,
-      groupPriorities: MOCK_GROUP_PRIORITIES,
-      createdBy: 'Người quản lý',
-      createdAt: '2024-01-14T15:20:00Z',
-      updatedAt: '2024-01-14T15:20:00Z'
-    },
-    {
-      id: 'template-3',
-      name: 'Template Ưu Tiên Nhân Viên',
-      description: 'Ưu tiên theo nhân viên phụ trách',
-      conditionRows: [],
-      valueMappings: MOCK_VALUE_MAPPINGS,
-      groupPriorities: MOCK_GROUP_PRIORITIES,
-      createdBy: 'Nhóm HR',
-      createdAt: '2024-01-13T09:45:00Z',
-      updatedAt: '2024-01-13T09:45:00Z'
-    }
-  ]);
+  // Empty templates array - no mock data
+  const [templates, setTemplates] = useState<ConditionTemplate[]>([]);
 
   const generateCodePreview = () => {
     let prefix = '';
@@ -519,7 +484,7 @@ export function ConditionTemplateManager({
               setIsCreateModalOpen(true);
             }} size="sm">
               <Plus className="w-4 h-4 mr-1" />
-              Tạo Template
+              Tạo mới
             </Button>
           </CardTitle>
         </CardHeader>
@@ -531,8 +496,8 @@ export function ConditionTemplateManager({
             {templates.length === 0 ? (
               <div className="text-center py-6 text-gray-500">
                 <FileText className="w-10 h-10 mx-auto mb-3 text-gray-300" />
-                <p className="text-sm">Chưa có template nào được tạo</p>
-                <p className="text-xs">Tạo template đầu tiên để lưu cấu hình điều kiện</p>
+                <p className="text-sm">Chưa có đợt phát hành nào được tạo</p>
+                <p className="text-xs">Tạo đợt phát hành đầu tiên để lưu cấu hình điều kiện</p>
               </div>
             ) : (
               <div className="grid gap-3">
