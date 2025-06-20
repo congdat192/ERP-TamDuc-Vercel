@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,15 +15,33 @@ import {
   Trash2, 
   Eye, 
   Copy,
-  HelpCircle,
-  FileText
+  HelpCircle
 } from 'lucide-react';
 import type { VoucherTemplate, TemplateVariable } from '../types';
 import { TEMPLATE_VARIABLES } from '../types';
 import { templateService } from '../services/templateService';
 
-// Empty initial templates - no mock data
-const initialTemplates: VoucherTemplate[] = [];
+// Mock data - in real app this would come from API
+const initialTemplates: VoucherTemplate[] = [
+  {
+    id: '1',
+    name: 'Mẫu Mặc Định',
+    content: 'Xin chào $tenKH,\n\nBạn đã nhận được voucher $mavoucher trị giá $giatri.\nSố điện thoại: $sdt\nHạn sử dụng: $hansudung\nNhân viên phát hành: $nhanvien\n\nCảm ơn bạn đã tin tưởng dịch vụ của chúng tôi!',
+    isDefault: true,
+    isActive: true,
+    createdAt: '2024-01-15',
+    updatedAt: '2024-01-15'
+  },
+  {
+    id: '2',
+    name: 'Mẫu VIP',
+    content: 'Kính chào Quý khách $tenKH,\n\nChúng tôi xin gửi tặng Quý khách voucher $mavoucher với giá trị $giatri.\nThông tin liên hệ: $sdt\nVoucher có hiệu lực đến: $hansudung\nĐược xử lý bởi: $nhanvien\n\nChân thành cảm ơn sự tin tưởng của Quý khách!',
+    isDefault: false,
+    isActive: true,
+    createdAt: '2024-01-16',
+    updatedAt: '2024-01-16'
+  }
+];
 
 export function TemplateManager() {
   const [templates, setTemplates] = useState<VoucherTemplate[]>([]);
@@ -40,8 +57,11 @@ export function TemplateManager() {
 
   // Load templates from localStorage on component mount
   useEffect(() => {
-    // Start with empty array instead of loading from service
-    setTemplates(initialTemplates);
+    const loadedTemplates = templateService.getTemplates();
+    setTemplates(loadedTemplates);
+    if (loadedTemplates.length > 0) {
+      setSelectedTemplateId(loadedTemplates[0].id);
+    }
   }, []);
 
   const selectedTemplate = templates.find(t => t.id === selectedTemplateId);
@@ -82,7 +102,7 @@ export function TemplateManager() {
     if (!newTemplateName.trim() || !newTemplateContent.trim()) {
       toast({
         title: "Lỗi",
-        description: "Vui lòng nhập đầy đủ tên và nội dung đợt phát hành.",
+        description: "Vui lòng nhập đầy đủ tên và nội dung mẫu.",
         variant: "destructive"
       });
       return;
@@ -91,7 +111,7 @@ export function TemplateManager() {
     if (templates.some(t => t.name === newTemplateName.trim())) {
       toast({
         title: "Lỗi",
-        description: "Tên đợt phát hành đã tồn tại. Vui lòng chọn tên khác.",
+        description: "Tên mẫu đã tồn tại. Vui lòng chọn tên khác.",
         variant: "destructive"
       });
       return;
@@ -107,7 +127,7 @@ export function TemplateManager() {
       updatedAt: new Date().toISOString()
     };
 
-    const updatedTemplates = [...templates, newTemplate];
+    const updatedTemplates = templateService.addTemplate(newTemplate);
     setTemplates(updatedTemplates);
     setSelectedTemplateId(newTemplate.id);
     setNewTemplateName('');
@@ -116,7 +136,7 @@ export function TemplateManager() {
     
     toast({
       title: "Thành công",
-      description: "Đợt phát hành mới đã được tạo thành công."
+      description: "Mẫu mới đã được tạo thành công."
     });
   };
 
@@ -124,7 +144,7 @@ export function TemplateManager() {
     if (!editingTemplate?.name.trim() || !editingTemplate?.content.trim()) {
       toast({
         title: "Lỗi",
-        description: "Vui lòng nhập đầy đủ tên và nội dung đợt phát hành.",
+        description: "Vui lòng nhập đầy đủ tên và nội dung mẫu.",
         variant: "destructive"
       });
       return;
@@ -133,26 +153,37 @@ export function TemplateManager() {
     if (templates.some(t => t.name === editingTemplate.name.trim() && t.id !== editingTemplate.id)) {
       toast({
         title: "Lỗi",
-        description: "Tên đợt phát hành đã tồn tại. Vui lòng chọn tên khác.",
+        description: "Tên mẫu đã tồn tại. Vui lòng chọn tên khác.",
         variant: "destructive"
       });
       return;
     }
 
     const updatedTemplate = { ...editingTemplate, updatedAt: new Date().toISOString() };
-    const updatedTemplates = templates.map(t => t.id === editingTemplate.id ? updatedTemplate : t);
+    const updatedTemplates = templateService.updateTemplate(editingTemplate.id, updatedTemplate);
     setTemplates(updatedTemplates);
     setIsEditModalOpen(false);
     setEditingTemplate(null);
     
     toast({
       title: "Thành công",
-      description: "Đợt phát hành đã được cập nhật thành công."
+      description: "Mẫu đã được cập nhật thành công."
     });
   };
 
   const handleDeleteTemplate = () => {
-    const updatedTemplates = templates.filter(t => t.id !== deleteTemplateId);
+    const templateToDelete = templates.find(t => t.id === deleteTemplateId);
+    
+    if (templateToDelete?.isDefault) {
+      toast({
+        title: "Lỗi",
+        description: "Không thể xóa mẫu mặc định.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const updatedTemplates = templateService.deleteTemplate(deleteTemplateId);
     setTemplates(updatedTemplates);
     
     // If deleted template was selected, select first available
@@ -165,7 +196,7 @@ export function TemplateManager() {
     
     toast({
       title: "Thành công",
-      description: "Đợt phát hành đã được xóa thành công."
+      description: "Mẫu đã được xóa thành công."
     });
   };
 
@@ -180,13 +211,13 @@ export function TemplateManager() {
       updatedAt: new Date().toISOString()
     };
 
-    const updatedTemplates = [...templates, duplicatedTemplate];
+    const updatedTemplates = templateService.addTemplate(duplicatedTemplate);
     setTemplates(updatedTemplates);
     setSelectedTemplateId(duplicatedTemplate.id);
     
     toast({
       title: "Thành công",
-      description: "Đợt phát hành đã được sao chép thành công."
+      description: "Mẫu đã được sao chép thành công."
     });
   };
 
@@ -195,112 +226,95 @@ export function TemplateManager() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>Quản lý đợt phát hành voucher</span>
+            <span>Quản Lý Mẫu Nội Dung Voucher</span>
             <Button onClick={() => setIsCreateModalOpen(true)} size="sm">
               <Plus className="w-4 h-4 mr-2" />
-              Cài đặt đợt phát hành voucher
+              Thêm Mẫu
             </Button>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Template Selector */}
-          {templates.length > 0 ? (
-            <>
-              <div className="flex items-center space-x-4">
-                <Label htmlFor="template-select" className="text-sm font-medium">
-                  Chọn đợt phát hành:
-                </Label>
-                <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
-                  <SelectTrigger className="w-64">
-                    <SelectValue placeholder="Chọn đợt phát hành để chỉnh sửa" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {templates.map((template) => (
-                      <SelectItem key={template.id} value={template.id}>
-                        <div className="flex items-center space-x-2">
-                          <span>{template.name}</span>
-                          {template.isDefault && (
-                            <Badge variant="secondary" className="text-xs">Mặc Định</Badge>
-                          )}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Selected Template Display */}
-              {selectedTemplate && (
-                <div className="border rounded-lg p-4 bg-gray-50">
-                  <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center space-x-4">
+            <Label htmlFor="template-select" className="text-sm font-medium">
+              Chọn Mẫu:
+            </Label>
+            <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+              <SelectTrigger className="w-64">
+                <SelectValue placeholder="Chọn mẫu để chỉnh sửa" />
+              </SelectTrigger>
+              <SelectContent>
+                {templates.map((template) => (
+                  <SelectItem key={template.id} value={template.id}>
                     <div className="flex items-center space-x-2">
-                      <h4 className="font-medium">{selectedTemplate.name}</h4>
-                      {selectedTemplate.isDefault && (
-                        <Badge variant="default" className="text-xs">Mặc Định</Badge>
+                      <span>{template.name}</span>
+                      {template.isDefault && (
+                        <Badge variant="secondary" className="text-xs">Mặc Định</Badge>
                       )}
-                      <Badge variant={selectedTemplate.isActive ? 'default' : 'secondary'} className="text-xs">
-                        {selectedTemplate.isActive ? 'Hoạt Động' : 'Tạm Dừng'}
-                      </Badge>
                     </div>
-                    <div className="flex space-x-1">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => setIsPreviewModalOpen(true)}
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleDuplicateTemplate(selectedTemplate)}
-                      >
-                        <Copy className="w-4 h-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => {
-                          setEditingTemplate(selectedTemplate);
-                          setIsEditModalOpen(true);
-                        }}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="text-red-600"
-                        onClick={() => {
-                          setDeleteTemplateId(selectedTemplate.id);
-                          setIsDeleteDialogOpen(true);
-                        }}
-                        disabled={selectedTemplate.isDefault}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="text-sm text-gray-600 bg-white p-3 rounded border max-h-40 overflow-y-auto">
-                    <pre className="whitespace-pre-wrap font-mono text-xs">
-                      {selectedTemplate.content}
-                    </pre>
-                  </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Selected Template Display */}
+          {selectedTemplate && (
+            <div className="border rounded-lg p-4 bg-gray-50">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <h4 className="font-medium">{selectedTemplate.name}</h4>
+                  {selectedTemplate.isDefault && (
+                    <Badge variant="default" className="text-xs">Mặc Định</Badge>
+                  )}
+                  <Badge variant={selectedTemplate.isActive ? 'default' : 'secondary'} className="text-xs">
+                    {selectedTemplate.isActive ? 'Hoạt Động' : 'Tạm Dừng'}
+                  </Badge>
                 </div>
-              )}
-            </>
-          ) : (
-            // Empty state when no templates exist
-            <div className="text-center py-12 text-gray-500">
-              <FileText className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có đợt phát hành nào</h3>
-              <p className="text-sm text-gray-500 mb-4">
-                Tạo đợt phát hành đầu tiên để bắt đầu quản lý voucher
-              </p>
-              <Button onClick={() => setIsCreateModalOpen(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Cài đặt đợt phát hành voucher
-              </Button>
+                <div className="flex space-x-1">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setIsPreviewModalOpen(true)}
+                  >
+                    <Eye className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => handleDuplicateTemplate(selectedTemplate)}
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => {
+                      setEditingTemplate(selectedTemplate);
+                      setIsEditModalOpen(true);
+                    }}
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-red-600"
+                    onClick={() => {
+                      setDeleteTemplateId(selectedTemplate.id);
+                      setIsDeleteDialogOpen(true);
+                    }}
+                    disabled={selectedTemplate.isDefault}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+              <div className="text-sm text-gray-600 bg-white p-3 rounded border max-h-40 overflow-y-auto">
+                <pre className="whitespace-pre-wrap font-mono text-xs">
+                  {selectedTemplate.content}
+                </pre>
+              </div>
             </div>
           )}
         </CardContent>
@@ -345,16 +359,16 @@ export function TemplateManager() {
       <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Cài đặt đợt phát hành voucher mới</DialogTitle>
+            <DialogTitle>Tạo Mẫu Mới</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="new-template-name">Tên đợt phát hành</Label>
+              <Label htmlFor="new-template-name">Tên Mẫu</Label>
               <Input
                 id="new-template-name"
                 value={newTemplateName}
                 onChange={(e) => setNewTemplateName(e.target.value)}
-                placeholder="Nhập tên đợt phát hành..."
+                placeholder="Nhập tên mẫu..."
                 className="mt-1"
               />
             </div>
@@ -364,7 +378,7 @@ export function TemplateManager() {
                 id="new-template-content"
                 value={newTemplateContent}
                 onChange={(e) => setNewTemplateContent(e.target.value)}
-                placeholder="Nhập nội dung đợt phát hành..."
+                placeholder="Nhập nội dung mẫu..."
                 className="mt-1 min-h-32"
                 rows={8}
               />
@@ -375,7 +389,7 @@ export function TemplateManager() {
               Hủy
             </Button>
             <Button onClick={handleCreateTemplate}>
-              Tạo đợt phát hành
+              Tạo Mẫu
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -385,17 +399,17 @@ export function TemplateManager() {
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Chỉnh sửa đợt phát hành voucher</DialogTitle>
+            <DialogTitle>Chỉnh Sửa Mẫu</DialogTitle>
           </DialogHeader>
           {editingTemplate && (
             <div className="space-y-4">
               <div>
-                <Label htmlFor="edit-template-name">Tên đợt phát hành</Label>
+                <Label htmlFor="edit-template-name">Tên Mẫu</Label>
                 <Input
                   id="edit-template-name"
                   value={editingTemplate.name}
                   onChange={(e) => setEditingTemplate({ ...editingTemplate, name: e.target.value })}
-                  placeholder="Nhập tên đợt phát hành..."
+                  placeholder="Nhập tên mẫu..."
                   className="mt-1"
                 />
               </div>
@@ -405,7 +419,7 @@ export function TemplateManager() {
                   id="edit-template-content"
                   value={editingTemplate.content}
                   onChange={(e) => setEditingTemplate({ ...editingTemplate, content: e.target.value })}
-                  placeholder="Nhập nội dung đợt phát hành..."
+                  placeholder="Nhập nội dung mẫu..."
                   className="mt-1 min-h-32"
                   rows={8}
                 />
@@ -429,7 +443,7 @@ export function TemplateManager() {
           <AlertDialogHeader>
             <AlertDialogTitle>Xác Nhận Xóa</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn có chắc chắn muốn xóa đợt phát hành này? Hành động này không thể hoàn tác.
+              Bạn có chắc chắn muốn xóa mẫu này? Hành động này không thể hoàn tác.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -445,7 +459,7 @@ export function TemplateManager() {
       <Dialog open={isPreviewModalOpen} onOpenChange={setIsPreviewModalOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Xem trước đợt phát hành voucher</DialogTitle>
+            <DialogTitle>Xem Trước Mẫu Voucher</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">

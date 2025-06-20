@@ -40,7 +40,7 @@ export function VoucherSettingsConfig() {
             { key: 'denominations', label: 'Mệnh Giá' },
             { key: 'sources', label: 'Nguồn KH' },
             { key: 'types', label: 'Loại KH' },
-            { key: 'templates', label: 'Quản lý đợt phát hành voucher' }
+            { key: 'templates', label: 'Mẫu Nội Dung' }
           ].map((tab) => (
             <button
               key={tab.key}
