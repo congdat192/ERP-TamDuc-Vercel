@@ -304,7 +304,6 @@ export function VoucherIssue() {
                     searchPlaceholder="Tìm đợt..."
                     emptyMessage="Không tìm thấy đợt nào."
                     className="w-full"
-                    icon={<Package className="w-4 h-4" />}
                   />
                 </div>
               </div>
@@ -350,7 +349,6 @@ export function VoucherIssue() {
                     searchPlaceholder="Tìm nhân viên..."
                     emptyMessage="Không tìm thấy nhân viên nào."
                     className="w-full"
-                    icon={<User className="w-4 h-4" />}
                   />
                 </div>
               </div>

@@ -152,6 +152,7 @@ export function CreateVoucherBatchForm({ onSave, onCancel }: CreateVoucherBatchF
       codeSuffix: manualSuffix?.trim().toUpperCase() || '',
       codeLength: codeLength,
       isActive: true,
+      isDefault: false,
       createdBy: 'Người dùng hiện tại',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()

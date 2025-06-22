@@ -20,9 +20,9 @@ import {
 import type { CustomerType } from '../types';
 
 const initialTypes: CustomerType[] = [
-  { id: '1', name: 'Khách hàng mới', description: 'Lần đầu sử dụng dịch vụ', isActive: true, order: 1 },
-  { id: '2', name: 'Khách hàng cũ', description: 'Đã sử dụng dịch vụ', isActive: true, order: 2 },
-  { id: '3', name: 'Khách hàng thân thiết', description: 'Đã sử dụng dịch vụ > 5 lần', isActive: true, order: 3 },
+  { id: '1', name: 'Khách hàng mới', description: 'Lần đầu sử dụng dịch vụ', isActive: true, isDefault: true, order: 1 },
+  { id: '2', name: 'Khách hàng cũ', description: 'Đã sử dụng dịch vụ', isActive: true, isDefault: false, order: 2 },
+  { id: '3', name: 'Khách hàng thân thiết', description: 'Đã sử dụng dịch vụ > 5 lần', isActive: true, isDefault: false, order: 3 },
 ];
 
 export function CustomerTypeManager() {
@@ -65,6 +65,7 @@ export function CustomerTypeManager() {
       name: newName.trim(),
       description: newDescription.trim(),
       isActive: true,
+      isDefault: false,
       order: types.length + 1
     };
 
@@ -113,6 +114,7 @@ export function CustomerTypeManager() {
       name: `${type.name} (Copy)`,
       description: type.description,
       isActive: type.isActive,
+      isDefault: false,
       order: types.length + 1
     };
 

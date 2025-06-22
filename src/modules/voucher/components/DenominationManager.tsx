@@ -20,7 +20,7 @@ import type { VoucherDenomination } from '../types';
 
 // Mock data - will be replaced with real API data later
 const initialDenominations: VoucherDenomination[] = [
-  { id: '1', value: 50000, label: '50.000đ', isActive: true, order: 1 },
+  { id: '1', value: 50000, label: '50.000đ', isActive: true, isDefault: true, order: 1 },
 ];
 
 interface DenominationManagerProps {
@@ -82,6 +82,7 @@ export function DenominationManager({ allowCustomValue, onAllowCustomValueChange
       value: parseInt(newValue),
       label: newLabel.trim(),
       isActive: true,
+      isDefault: false,
       order: denominations.length + 1
     };
 
@@ -130,6 +131,7 @@ export function DenominationManager({ allowCustomValue, onAllowCustomValueChange
       value: denomination.value,
       label: `${denomination.label} (Copy)`,
       isActive: denomination.isActive,
+      isDefault: false,
       order: denominations.length + 1
     };
 
