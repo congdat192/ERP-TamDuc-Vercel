@@ -1,3 +1,4 @@
+
 export interface FilterCondition {
   id: string;
   field: string;
@@ -27,8 +28,8 @@ export interface ConditionValueMapping {
   id: string;
   conditionType: 'customerSource' | 'customerType' | 'staffType' | 'denomination' | 'timeSlot';
   conditionValue: string;
-  value: string; // Added missing property
-  label: string; // Added missing property
+  value: string;
+  label: string;
   code: string;
   description?: string;
   active: boolean;
@@ -38,32 +39,30 @@ export interface ConditionValueMapping {
 export interface ConditionGroupPriority {
   id: string;
   type: 'customerSource' | 'customerType' | 'staffType' | 'denomination' | 'timeSlot';
-  label: string; // Added missing property
+  label: string;
   priority: number;
   active: boolean;
   description?: string;
 }
 
-// Updated ConditionRow interface
 export interface ConditionRow {
   id: string;
   field: string;
   operator: string;
   value: string;
-  conditions: VoucherCondition[]; // Added missing property
-  prefix: string; // Added missing property
-  suffix: string; // Added missing property
-  priority: number; // Added missing property
-  isDefault?: boolean; // Added missing property
+  conditions: VoucherCondition[];
+  prefix: string;
+  suffix: string;
+  priority: number;
+  isDefault?: boolean;
 }
 
-// Updated VoucherCondition interface
 export interface VoucherCondition {
   id: string;
   type: string;
   operator: string;
   value: string | string[];
-  label: string; // Added missing property
+  label: string;
 }
 
 // Updated mock data to match ConditionValueMapping interface
@@ -296,7 +295,6 @@ export const CONDITION_TYPE_LABELS = {
   timeSlot: 'Khung Giờ'
 };
 
-// Legacy exports for backward compatibility
 export const CONDITION_TYPES = [
   { value: 'customerSource', label: 'Nguồn Khách Hàng' },
   { value: 'customerType', label: 'Loại Khách Hàng' },
@@ -304,7 +302,7 @@ export const CONDITION_TYPES = [
   { value: 'denomination', label: 'Mệnh Giá' }
 ];
 
-// Updated MOCK_CONDITION_VALUES to be properly typed array
+// Single export for condition values - removes duplicate
 export const MOCK_CONDITION_VALUES: Record<string, Array<{value: string, label: string}>> = {
   customerSource: [
     { value: 'website', label: 'Website' },
@@ -331,6 +329,3 @@ export const MOCK_CONDITION_VALUES: Record<string, Array<{value: string, label: 
     { value: '200000', label: '200.000 VNĐ' }
   ]
 };
-
-// Keep legacy export as alias
-export { MOCK_VALUE_MAPPINGS as MOCK_CONDITION_VALUES };
