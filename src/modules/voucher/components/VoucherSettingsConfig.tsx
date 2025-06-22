@@ -7,9 +7,10 @@ import { DenominationManager } from './DenominationManager';
 import { CustomerSourceManager } from './CustomerSourceManager';
 import { CustomerTypeManager } from './CustomerTypeManager';
 import { TemplateManager } from './TemplateManager';
+import { StaffManager } from './StaffManager';
 
 export function VoucherSettingsConfig() {
-  const [activeTab, setActiveTab] = useState<'denominations' | 'sources' | 'types' | 'templates'>('denominations');
+  const [activeTab, setActiveTab] = useState<'denominations' | 'sources' | 'types' | 'staff' | 'templates'>('denominations');
   const [allowCustomValue, setAllowCustomValue] = useState(false);
 
   const handleSaveSettings = () => {
@@ -25,7 +26,7 @@ export function VoucherSettingsConfig() {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">Cấu Hình Voucher</h3>
-          <p className="text-gray-600">Quản lý mệnh giá, nguồn khách hàng và mẫu nội dung voucher</p>
+          <p className="text-gray-600">Quản lý mệnh giá, nguồn khách hàng, nhân viên và mẫu nội dung voucher</p>
         </div>
         <Button onClick={handleSaveSettings}>
           <Save className="w-4 h-4 mr-2" />
@@ -40,6 +41,7 @@ export function VoucherSettingsConfig() {
             { key: 'denominations', label: 'Mệnh Giá' },
             { key: 'sources', label: 'Nguồn KH' },
             { key: 'types', label: 'Loại KH' },
+            { key: 'staff', label: 'Nhân Viên' },
             { key: 'templates', label: 'Mẫu Nội Dung' }
           ].map((tab) => (
             <button
@@ -66,6 +68,7 @@ export function VoucherSettingsConfig() {
       )}
       {activeTab === 'sources' && <CustomerSourceManager />}
       {activeTab === 'types' && <CustomerTypeManager />}
+      {activeTab === 'staff' && <StaffManager />}
       {activeTab === 'templates' && <TemplateManager />}
     </div>
   );
