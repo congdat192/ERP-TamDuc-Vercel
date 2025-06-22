@@ -1,169 +1,169 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Plus, Edit, Trash2, Users } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { 
-  Plus, 
-  Edit, 
-  Trash2,
-  ArrowUp,
-  ArrowDown,
-  Copy
-} from 'lucide-react';
-import type { CustomerSource } from '../types';
 
-const initialSources: CustomerSource[] = [
-  { id: '1', name: 'Facebook', description: 'Khách hàng từ Facebook', isActive: true, order: 1 },
-  { id: '2', name: 'Zalo', description: 'Khách hàng từ Zalo', isActive: true, order: 2 },
-  { id: '3', name: 'Website', description: 'Khách hàng đăng ký từ website', isActive: true, order: 3 },
-  { id: '4', name: 'Hotline', description: 'Khách hàng gọi hotline', isActive: true, order: 4 },
-  { id: '5', name: 'Gọi khách hàng cũ theo data', description: 'Gọi theo dữ liệu khách hàng cũ', isActive: true, order: 5 },
-  { id: '6', name: 'Khách hàng cũ xin lại voucher', description: 'Khách hàng cũ yêu cầu voucher mới', isActive: true, order: 6 },
-  { id: '7', name: 'Xin lỗi khách hàng mới', description: 'Voucher xin lỗi cho khách hàng mới', isActive: true, order: 7 },
-  { id: '8', name: 'Data gọi không phát được voucher trong 3 tháng', description: 'Dữ liệu khách hàng không nhận voucher trong 3 tháng', isActive: true, order: 8 },
+interface CustomerSource {
+  id: string;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+// Consistent mock data for customer sources
+const mockCustomerSources: CustomerSource[] = [
+  {
+    id: '1',
+    name: 'Website',
+    description: 'Khách hàng từ website chính thức',
+    isActive: true,
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: '2', 
+    name: 'Facebook',
+    description: 'Khách hàng từ Facebook fanpage',
+    isActive: true,
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: '3',
+    name: 'Zalo',
+    description: 'Khách hàng từ Zalo OA',
+    isActive: true,
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: '4',
+    name: 'Giới thiệu',
+    description: 'Khách hàng được giới thiệu',
+    isActive: true,
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: '5',
+    name: 'Tại cửa hàng',
+    description: 'Khách hàng đến trực tiếp cửa hàng',
+    isActive: true,
+    createdAt: new Date().toISOString()
+  }
 ];
 
 export function CustomerSourceManager() {
-  const [sources, setSources] = useState<CustomerSource[]>(initialSources);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [sources, setSources] = useState<CustomerSource[]>(mockCustomerSources);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [editingSource, setEditingSource] = useState<CustomerSource | null>(null);
+  const [selectedSource, setSelectedSource] = useState<CustomerSource | null>(null);
   const [deleteSourceId, setDeleteSourceId] = useState<string>('');
-  const [newName, setNewName] = useState('');
-  const [newDescription, setNewDescription] = useState('');
 
-  const validateSource = (name: string, description: string, excludeId?: string) => {
-    if (!name.trim()) {
-      toast({
-        title: "Lỗi",
-        description: "Vui lòng nhập tên nguồn khách hàng.",
-        variant: "destructive"
-      });
-      return false;
-    }
-
-    if (sources.some(s => s.name.toLowerCase() === name.trim().toLowerCase() && s.id !== excludeId)) {
-      toast({
-        title: "Lỗi",
-        description: "Tên nguồn khách hàng đã tồn tại.",
-        variant: "destructive"
-      });
-      return false;
-    }
-
-    return true;
-  };
+  // Form states
+  const [formName, setFormName] = useState('');
+  const [formDescription, setFormDescription] = useState('');
 
   const handleCreateSource = () => {
-    if (!validateSource(newName, newDescription)) return;
+    if (!formName.trim()) {
+      toast({
+        title: "Lỗi",
+        description: "Vui lòng nhập tên nguồn khách hàng",
+        variant: "destructive"
+      });
+      return;
+    }
 
     const newSource: CustomerSource = {
       id: Date.now().toString(),
-      name: newName.trim(),
-      description: newDescription.trim(),
+      name: formName.trim(),
+      description: formDescription.trim(),
       isActive: true,
-      order: sources.length + 1
+      createdAt: new Date().toISOString()
     };
 
     setSources([...sources, newSource]);
-    setNewName('');
-    setNewDescription('');
-    setIsCreateModalOpen(false);
-    
+    setFormName('');
+    setFormDescription('');
+    setIsCreateDialogOpen(false);
+
     toast({
       title: "Thành công",
-      description: "Nguồn khách hàng mới đã được tạo thành công."
+      description: `Đã thêm nguồn khách hàng "${newSource.name}"`,
     });
   };
 
   const handleEditSource = () => {
-    if (!editingSource) return;
-    
-    if (!validateSource(editingSource.name, editingSource.description, editingSource.id)) return;
+    if (!selectedSource || !formName.trim()) return;
 
-    setSources(sources.map(s => 
-      s.id === editingSource.id ? editingSource : s
+    const updatedSource = {
+      ...selectedSource,
+      name: formName.trim(),
+      description: formDescription.trim()
+    };
+
+    setSources(sources.map(source => 
+      source.id === selectedSource.id ? updatedSource : source
     ));
-    setIsEditModalOpen(false);
-    setEditingSource(null);
-    
+
+    setIsEditDialogOpen(false);
+    setSelectedSource(null);
+    setFormName('');
+    setFormDescription('');
+
     toast({
       title: "Thành công",
-      description: "Nguồn khách hàng đã được cập nhật thành công."
+      description: `Đã cập nhật nguồn khách hàng "${updatedSource.name}"`,
     });
   };
 
   const handleDeleteSource = () => {
+    const sourceToDelete = sources.find(s => s.id === deleteSourceId);
     setSources(sources.filter(s => s.id !== deleteSourceId));
     setIsDeleteDialogOpen(false);
     setDeleteSourceId('');
-    
+
     toast({
       title: "Thành công",
-      description: "Nguồn khách hàng đã được xóa thành công."
+      description: `Đã xóa nguồn khách hàng "${sourceToDelete?.name}"`,
     });
   };
 
-  const handleDuplicateSource = (source: CustomerSource) => {
-    const duplicated: CustomerSource = {
-      id: Date.now().toString(),
-      name: `${source.name} (Copy)`,
-      description: source.description,
-      isActive: source.isActive,
-      order: sources.length + 1
-    };
-
-    setSources([...sources, duplicated]);
-    
-    toast({
-      title: "Thành công",
-      description: "Nguồn khách hàng đã được sao chép thành công."
-    });
-  };
-
-  const handleToggleStatus = (id: string) => {
-    setSources(sources.map(s => 
-      s.id === id ? { ...s, isActive: !s.isActive } : s
+  const toggleSourceStatus = (sourceId: string) => {
+    setSources(sources.map(source => 
+      source.id === sourceId ? { ...source, isActive: !source.isActive } : source
     ));
-    
-    toast({
-      title: "Thành công",
-      description: "Trạng thái đã được cập nhật."
-    });
   };
 
-  const handleMoveUp = (id: string) => {
-    const index = sources.findIndex(s => s.id === id);
-    if (index > 0) {
-      const newSources = [...sources];
-      [newSources[index], newSources[index - 1]] = [newSources[index - 1], newSources[index]];
-      setSources(newSources);
-    }
+  const openEditDialog = (source: CustomerSource) => {
+    setSelectedSource(source);
+    setFormName(source.name);
+    setFormDescription(source.description || '');
+    setIsEditDialogOpen(true);
   };
 
-  const handleMoveDown = (id: string) => {
-    const index = sources.findIndex(s => s.id === id);
-    if (index < sources.length - 1) {
-      const newSources = [...sources];
-      [newSources[index], newSources[index + 1]] = [newSources[index + 1], newSources[index]];
-      setSources(newSources);
-    }
+  const openCreateDialog = () => {
+    setFormName('');
+    setFormDescription('');
+    setIsCreateDialogOpen(true);
   };
 
   return (
-    <>
-      <Card>
+    <div className="space-y-4">
+      <Card className="voucher-card">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Nguồn Khách Hàng</CardTitle>
-          <Button size="sm" onClick={() => setIsCreateModalOpen(true)}>
+          <CardTitle className="flex items-center space-x-2">
+            <Users className="w-5 h-5 theme-text-primary" />
+            <span className="theme-text">Nguồn Khách Hàng</span>
+          </CardTitle>
+          <Button onClick={openCreateDialog} size="sm">
             <Plus className="w-4 h-4 mr-2" />
             Thêm Nguồn
           </Button>
@@ -172,7 +172,6 @@ export function CustomerSourceManager() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Thứ Tự</TableHead>
                 <TableHead>Tên Nguồn</TableHead>
                 <TableHead>Mô Tả</TableHead>
                 <TableHead>Trạng Thái</TableHead>
@@ -180,35 +179,16 @@ export function CustomerSourceManager() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sources.map((item, index) => (
-                <TableRow key={item.id}>
-                  <TableCell>
-                    <div className="flex items-center space-x-1">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleMoveUp(item.id)}
-                        disabled={index === 0}
-                      >
-                        <ArrowUp className="w-3 h-3" />
-                      </Button>
-                      <span className="font-medium">{index + 1}</span>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleMoveDown(item.id)}
-                        disabled={index === sources.length - 1}
-                      >
-                        <ArrowDown className="w-3 h-3" />
-                      </Button>
-                    </div>
+              {sources.map((source) => (
+                <TableRow key={source.id}>
+                  <TableCell className="font-medium theme-text">{source.name}</TableCell>
+                  <TableCell className="theme-text-muted text-sm">
+                    {source.description || '-'}
                   </TableCell>
-                  <TableCell className="font-medium">{item.name}</TableCell>
-                  <TableCell>{item.description}</TableCell>
                   <TableCell>
                     <Switch 
-                      checked={item.isActive} 
-                      onCheckedChange={() => handleToggleStatus(item.id)}
+                      checked={source.isActive}
+                      onCheckedChange={() => toggleSourceStatus(source.id)}
                     />
                   </TableCell>
                   <TableCell className="text-right">
@@ -216,26 +196,16 @@ export function CustomerSourceManager() {
                       <Button 
                         variant="ghost" 
                         size="sm"
-                        onClick={() => handleDuplicateSource(item)}
-                      >
-                        <Copy className="w-4 h-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => {
-                          setEditingSource(item);
-                          setIsEditModalOpen(true);
-                        }}
+                        onClick={() => openEditDialog(source)}
                       >
                         <Edit className="w-4 h-4" />
                       </Button>
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="text-red-600"
+                        className="text-red-600 hover:text-red-700"
                         onClick={() => {
-                          setDeleteSourceId(item.id);
+                          setDeleteSourceId(source.id);
                           setIsDeleteDialogOpen(true);
                         }}
                       >
@@ -247,112 +217,110 @@ export function CustomerSourceManager() {
               ))}
             </TableBody>
           </Table>
+
+          {sources.length === 0 && (
+            <div className="text-center py-8 theme-text-muted">
+              <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p className="text-sm">Chưa có nguồn khách hàng nào được thêm</p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Create Modal */}
-      <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-        <DialogContent>
+      {/* Create Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="voucher-card">
           <DialogHeader>
-            <DialogTitle>Thêm Nguồn Khách Hàng Mới</DialogTitle>
+            <DialogTitle className="theme-text">Thêm Nguồn Khách Hàng</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div>
-              <Label htmlFor="new-name">Tên Nguồn</Label>
+            <div className="space-y-2">
+              <Label htmlFor="source-name">Tên nguồn</Label>
               <Input
-                id="new-name"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                placeholder="Nhập tên nguồn..."
-                className="mt-1"
+                id="source-name"
+                value={formName}
+                onChange={(e) => setFormName(e.target.value)}
+                placeholder="VD: Website, Facebook, Zalo..."
               />
             </div>
-            <div>
-              <Label htmlFor="new-description">Mô Tả</Label>
-              <Textarea
-                id="new-description"
-                value={newDescription}
-                onChange={(e) => setNewDescription(e.target.value)}
-                placeholder="Nhập mô tả..."
-                className="mt-1"
-                rows={3}
+            <div className="space-y-2">
+              <Label htmlFor="source-description">Mô tả</Label>
+              <Input
+                id="source-description"
+                value={formDescription}
+                onChange={(e) => setFormDescription(e.target.value)}
+                placeholder="Mô tả về nguồn khách hàng này..."
               />
+            </div>
+            <div className="flex space-x-2 pt-4">
+              <Button onClick={handleCreateSource} className="flex-1">
+                Thêm Nguồn
+              </Button>
+              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                Hủy
+              </Button>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>
-              Hủy
-            </Button>
-            <Button onClick={handleCreateSource}>
-              Thêm Nguồn
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Edit Modal */}
-      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent>
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="voucher-card">
           <DialogHeader>
-            <DialogTitle>Chỉnh Sửa Nguồn Khách Hàng</DialogTitle>
+            <DialogTitle className="theme-text">Chỉnh Sửa Nguồn Khách Hàng</DialogTitle>
           </DialogHeader>
-          {editingSource && (
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="edit-name">Tên Nguồn</Label>
-                <Input
-                  id="edit-name"
-                  value={editingSource.name}
-                  onChange={(e) => setEditingSource({
-                    ...editingSource,
-                    name: e.target.value
-                  })}
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit-description">Mô Tả</Label>
-                <Textarea
-                  id="edit-description"
-                  value={editingSource.description}
-                  onChange={(e) => setEditingSource({
-                    ...editingSource,
-                    description: e.target.value
-                  })}
-                  className="mt-1"
-                  rows={3}
-                />
-              </div>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-source-name">Tên nguồn</Label>
+              <Input
+                id="edit-source-name"
+                value={formName}
+                onChange={(e) => setFormName(e.target.value)}
+                placeholder="VD: Website, Facebook, Zalo..."
+              />
             </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>
-              Hủy
-            </Button>
-            <Button onClick={handleEditSource}>
-              Lưu Thay Đổi
-            </Button>
-          </DialogFooter>
+            <div className="space-y-2">
+              <Label htmlFor="edit-source-description">Mô tả</Label>
+              <Input
+                id="edit-source-description"
+                value={formDescription}
+                onChange={(e) => setFormDescription(e.target.value)}
+                placeholder="Mô tả về nguồn khách hàng này..."
+              />
+            </div>
+            <div className="flex space-x-2 pt-4">
+              <Button onClick={handleEditSource} className="flex-1">
+                Cập Nhật
+              </Button>
+              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                Hủy
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation */}
+      {/* Delete Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="voucher-card">
           <AlertDialogHeader>
-            <AlertDialogTitle>Xác Nhận Xóa</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="theme-text">Xác Nhận Xóa</AlertDialogTitle>
+            <AlertDialogDescription className="theme-text-muted">
               Bạn có chắc chắn muốn xóa nguồn khách hàng này? Hành động này không thể hoàn tác.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Hủy</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteSource} className="bg-red-600 hover:bg-red-700">
+            <AlertDialogAction 
+              onClick={handleDeleteSource}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
               Xóa
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </div>
   );
 }
