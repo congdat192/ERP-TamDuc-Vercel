@@ -1,15 +1,15 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Filter, RotateCcw, Plus, Eye, Copy, MoreVertical } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Plus } from 'lucide-react';
 import { User } from '@/types/auth';
 import { Voucher } from '../types';
+import { VoucherTable } from '../components/VoucherTable';
+import { VoucherFilters, VoucherFilters as VoucherFiltersType } from '../components/VoucherFilters';
+import { VoucherSearchActions } from '../components/VoucherSearchActions';
+import { toast } from '@/hooks/use-toast';
 
 interface VoucherListProps {
   currentUser: User;
@@ -152,10 +152,33 @@ const mockVouchers: Voucher[] = [
 ];
 
 export function VoucherList({ currentUser }: VoucherListProps) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isReissueDialogOpen, setIsReissueDialogOpen] = useState(false);
-  const [reissuePhone, setReissuePhone] = useState('');
-  const [reissueReason, setReissueReason] = useState('');
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(15);
+  
+  // Selection states
+  const [selectedVouchers, setSelectedVouchers] = useState<string[]>([]);
+  
+  // Filter states
+  const [filters, setFilters] = useState<VoucherFiltersType>({
+    search: '',
+    status: [],
+    issuedBy: [],
+    denomination: [],
+    invoiceReconciliation: 'all',
+    customerGeneratedInvoice: 'all',
+    voucherReconciliationResult: 'all',
+    issueDateFrom: null,
+    issueDateTo: null,
+    expiryDateFrom: null,
+    expiryDateTo: null,
+    usedDateFrom: null,
+    usedDateTo: null,
+    valueFrom: '',
+    valueTo: ''
+  });
+
+  // Detail modal states
   const [selectedVoucher, setSelectedVoucher] = useState<Voucher | null>(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
 
@@ -163,29 +186,108 @@ export function VoucherList({ currentUser }: VoucherListProps) {
     currentUser.role === 'erp-admin' || 
     currentUser.role === 'voucher-admin';
 
-  // Filter vouchers based on search query
-  const filteredVouchers = mockVouchers.filter(voucher => 
-    voucher.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    voucher.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    voucher.customerPhone.includes(searchQuery)
-  );
+  // Get available issuers for filter
+  const availableIssuers = useMemo(() => {
+    const issuers = [...new Set(mockVouchers.map(voucher => voucher.issuedBy))];
+    return issuers;
+  }, []);
 
-  const handleReissueVoucher = () => {
-    if (!reissuePhone.trim()) {
-      alert('Vui lòng nhập số điện thoại khách hàng');
-      return;
+  // Filter vouchers based on all filter criteria
+  const filteredVouchers = useMemo(() => {
+    let result = mockVouchers;
+
+    // Search filter
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      result = result.filter(voucher => 
+        voucher.code.toLowerCase().includes(searchLower) ||
+        voucher.customerName.toLowerCase().includes(searchLower) ||
+        voucher.customerPhone.includes(searchLower)
+      );
     }
-    
-    console.log('Re-issuing voucher for phone:', reissuePhone);
-    console.log('Reason:', reissueReason);
-    console.log('Re-issued by:', currentUser.fullName);
-    
-    // Reset form
-    setReissuePhone('');
-    setReissueReason('');
-    setIsReissueDialogOpen(false);
-    
-    alert('Voucher đã được cấp lại thành công!');
+
+    // Status filter
+    if (filters.status.length > 0) {
+      result = result.filter(voucher => filters.status.includes(voucher.status));
+    }
+
+    // Issued by filter
+    if (filters.issuedBy.length > 0) {
+      result = result.filter(voucher => filters.issuedBy.includes(voucher.issuedBy));
+    }
+
+    // Denomination filter
+    if (filters.denomination.length > 0) {
+      result = result.filter(voucher => {
+        const value = voucher.value.replace(/[^\d]/g, '');
+        return filters.denomination.includes(value);
+      });
+    }
+
+    // Reconciliation filters
+    if (filters.invoiceReconciliation !== 'all') {
+      result = result.filter(voucher => voucher.invoiceReconciliation === filters.invoiceReconciliation);
+    }
+
+    if (filters.customerGeneratedInvoice !== 'all') {
+      result = result.filter(voucher => voucher.customerGeneratedInvoice === filters.customerGeneratedInvoice);
+    }
+
+    if (filters.voucherReconciliationResult !== 'all') {
+      result = result.filter(voucher => voucher.voucherReconciliationResult === filters.voucherReconciliationResult);
+    }
+
+    // Value range filter
+    if (filters.valueFrom || filters.valueTo) {
+      result = result.filter(voucher => {
+        const value = parseInt(voucher.value.replace(/[^\d]/g, ''));
+        const minValue = filters.valueFrom ? parseInt(filters.valueFrom) : 0;
+        const maxValue = filters.valueTo ? parseInt(filters.valueTo) : Infinity;
+        return value >= minValue && value <= maxValue;
+      });
+    }
+
+    // Date filters (implement as needed)
+    // Add date filtering logic here
+
+    return result;
+  }, [filters]);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredVouchers.length / itemsPerPage);
+
+  // Selection handlers
+  const handleSelectVoucher = (voucherId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedVouchers(prev => [...prev, voucherId]);
+    } else {
+      setSelectedVouchers(prev => prev.filter(id => id !== voucherId));
+    }
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const pageVouchers = filteredVouchers.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+      );
+      setSelectedVouchers(pageVouchers.map(voucher => voucher.id));
+    } else {
+      setSelectedVouchers([]);
+    }
+  };
+
+  const handleCopyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    toast({
+      title: "Đã sao chép",
+      description: `Đã sao chép mã voucher: ${code}`,
+    });
+  };
+
+  const handleViewDetail = (voucher: Voucher) => {
+    setSelectedVoucher(voucher);
+    setIsDetailDialogOpen(true);
   };
 
   const getStatusColor = (status: string) => {
@@ -262,16 +364,6 @@ export function VoucherList({ currentUser }: VoucherListProps) {
     }
   };
 
-  const handleCopyCode = (code: string) => {
-    navigator.clipboard.writeText(code);
-    alert(`Đã sao chép mã voucher: ${code}`);
-  };
-
-  const handleViewDetail = (voucher: Voucher) => {
-    setSelectedVoucher(voucher);
-    setIsDetailDialogOpen(true);
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -283,168 +375,46 @@ export function VoucherList({ currentUser }: VoucherListProps) {
               : 'Voucher do bạn phát hành'}
           </p>
         </div>
-        <Dialog open={isReissueDialogOpen} onOpenChange={setIsReissueDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="voucher-button-primary">
-              <RotateCcw className="w-4 h-4 mr-2" />
-              Cấp Lại Voucher
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-md voucher-card">
-            <DialogHeader>
-              <DialogTitle className="theme-text">Cấp Lại Voucher Cho Khách Hàng</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="reissue-phone" className="theme-text">Số Điện Thoại Khách Hàng *</Label>
-                <Input
-                  id="reissue-phone"
-                  placeholder="Nhập số điện thoại"
-                  value={reissuePhone}
-                  onChange={(e) => setReissuePhone(e.target.value)}
-                  className="theme-border-primary/20"
-                />
-              </div>
-              <div>
-                <Label htmlFor="reissue-reason" className="theme-text">Lý Do Cấp Lại</Label>
-                <Textarea
-                  id="reissue-reason"
-                  placeholder="Ví dụ: Khách hàng mất voucher gốc"
-                  value={reissueReason}
-                  onChange={(e) => setReissueReason(e.target.value)}
-                  className="theme-border-primary/20"
-                />
-              </div>
-              <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setIsReissueDialogOpen(false)}>
-                  Hủy
-                </Button>
-                <Button onClick={handleReissueVoucher} className="voucher-button-primary">
-                  Cấp Lại Voucher
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <VoucherSearchActions
+          filteredVouchers={filteredVouchers}
+          selectedVouchers={selectedVouchers}
+        />
       </div>
 
-      {/* Search and Filter */}
+      {/* Search and Filters */}
       <Card className="voucher-card">
         <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 theme-text-muted w-4 h-4" />
-                <Input
-                  placeholder="Tìm kiếm theo mã voucher, tên khách hàng, số điện thoại..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 theme-border-primary/20"
-                />
-              </div>
-            </div>
-            <Button variant="outline" className="whitespace-nowrap theme-border-primary/20">
-              <Filter className="w-4 h-4 mr-2" />
-              Bộ Lọc
-            </Button>
-          </div>
+          <VoucherFilters
+            filters={filters}
+            onFiltersChange={setFilters}
+            availableIssuers={availableIssuers}
+          />
         </CardContent>
       </Card>
 
-      {/* Voucher List */}
+      {/* Voucher Table */}
       <Card className="voucher-card">
         <CardHeader>
           <CardTitle className="theme-text">
             Danh Sách Voucher ({filteredVouchers.length})
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {filteredVouchers.length > 0 ? (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Mã Voucher</TableHead>
-                    <TableHead>Khách Hàng</TableHead>
-                    <TableHead>Số Điện Thoại</TableHead>
-                    <TableHead>Giá Trị</TableHead>
-                    <TableHead>Trạng Thái</TableHead>
-                    <TableHead>Ngày Phát Hành</TableHead>
-                    <TableHead>Hết Hạn</TableHead>
-                    <TableHead>Người Phát Hành</TableHead>
-                    <TableHead>Đối Soát HĐ</TableHead>
-                    <TableHead>Kết Quả Đối Soát</TableHead>
-                    <TableHead>Hóa Đơn Phát Sinh</TableHead>
-                    <TableHead>KH Phát Sinh HĐ</TableHead>
-                    <TableHead className="text-right">Thao Tác</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredVouchers.map((voucher) => (
-                    <TableRow key={voucher.id}>
-                      <TableCell className="font-mono font-medium">
-                        {voucher.code}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {voucher.customerName}
-                      </TableCell>
-                      <TableCell>{voucher.customerPhone}</TableCell>
-                      <TableCell className="font-bold theme-text-primary">
-                        {voucher.value}
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(voucher.status)}>
-                          {getStatusText(voucher.status)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{voucher.issueDate}</TableCell>
-                      <TableCell>{voucher.expiryDate}</TableCell>
-                      <TableCell className="text-sm theme-text-muted">
-                        {voucher.issuedBy}
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getReconciliationColor(voucher.invoiceReconciliation)}>
-                          {getReconciliationText(voucher.invoiceReconciliation)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getReconciliationResultColor(voucher.voucherReconciliationResult)}>
-                          {getReconciliationResultText(voucher.voucherReconciliationResult)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {voucher.generatedInvoice || '-'}
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getCustomerInvoiceColor(voucher.customerGeneratedInvoice)}>
-                          {getCustomerInvoiceText(voucher.customerGeneratedInvoice)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end space-x-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleCopyCode(voucher.code)}
-                            title="Sao chép mã"
-                          >
-                            <Copy className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleViewDetail(voucher)}
-                            title="Xem chi tiết"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <VoucherTable
+              vouchers={filteredVouchers}
+              selectedVouchers={selectedVouchers}
+              handleSelectVoucher={handleSelectVoucher}
+              handleSelectAll={handleSelectAll}
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
+              itemsPerPage={itemsPerPage}
+              setItemsPerPage={setItemsPerPage}
+              totalVouchers={filteredVouchers.length}
+              totalPages={totalPages}
+              onViewDetail={handleViewDetail}
+              onCopyCode={handleCopyCode}
+            />
           ) : (
             <div className="text-center py-12">
               <div className="w-16 h-16 theme-bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -454,8 +424,8 @@ export function VoucherList({ currentUser }: VoucherListProps) {
                 Không Tìm Thấy Voucher
               </h3>
               <p className="theme-text-muted mb-4">
-                {searchQuery 
-                  ? 'Không có voucher nào phù hợp với từ khóa tìm kiếm.' 
+                {filters.search || filters.status.length > 0 || filters.issuedBy.length > 0 
+                  ? 'Không có voucher nào phù hợp với bộ lọc hiện tại.' 
                   : 'Hệ thống chưa có voucher nào được phát hành.'}
               </p>
               <Badge className="theme-badge-secondary text-sm">
