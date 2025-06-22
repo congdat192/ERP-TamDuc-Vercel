@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,9 +38,6 @@ export function VoucherConditionBuilder({
   const [conditionRows, setConditionRows] = useState<ConditionRow[]>([
     {
       id: 'default',
-      field: '', // Add missing field
-      operator: 'equals', // Add missing operator  
-      value: '', // Add missing value
       conditions: [],
       prefix: 'VCH',
       suffix: '',
@@ -55,9 +53,6 @@ export function VoucherConditionBuilder({
   const addConditionRow = () => {
     const newRow: ConditionRow = {
       id: `row-${Date.now()}`,
-      field: '', // Add missing field
-      operator: 'equals', // Add missing operator
-      value: '', // Add missing value
       conditions: [],
       prefix: '',
       suffix: '',
@@ -80,7 +75,6 @@ export function VoucherConditionBuilder({
     const newCondition: VoucherCondition = {
       id: `condition-${Date.now()}`,
       type: 'customerType',
-      operator: 'equals', // Add missing operator
       value: '',
       label: ''
     };
@@ -337,11 +331,9 @@ export function VoucherConditionBuilder({
                           </Select>
                           
                           <Select
-                            value={Array.isArray(condition.value) ? condition.value[0] : condition.value}
+                            value={condition.value}
                             onValueChange={(value) => {
-                              const values = MOCK_CONDITION_VALUES[condition.type];
-                              const option = Array.isArray(values) ? values.find(v => v.value === value) : null;
-                              const label = option?.label || value;
+                              const label = MOCK_CONDITION_VALUES[condition.type]?.find(v => v.value === value)?.label || value;
                               updateCondition(row.id, condition.id, { value, label });
                             }}
                           >
@@ -349,14 +341,11 @@ export function VoucherConditionBuilder({
                               <SelectValue placeholder="Chọn giá trị..." />
                             </SelectTrigger>
                             <SelectContent>
-                              {(() => {
-                                const values = MOCK_CONDITION_VALUES[condition.type];
-                                return Array.isArray(values) ? values.map((option) => (
-                                  <SelectItem key={option.value} value={option.value}>
-                                    {option.label}
-                                  </SelectItem>
-                                )) : null;
-                              })()}
+                              {MOCK_CONDITION_VALUES[condition.type]?.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                           

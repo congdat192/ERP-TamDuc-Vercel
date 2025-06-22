@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -43,7 +44,6 @@ export function ConditionValueMapping({ onMappingsChange }: ConditionValueMappin
     const mapping: ConditionValueMappingType = {
       id: `mapping-${Date.now()}`,
       conditionType: selectedConditionType as any,
-      conditionValue: newMapping.value, // Add missing conditionValue
       value: newMapping.value,
       label: newMapping.label || newMapping.value,
       code: newMapping.code.toUpperCase(),
@@ -100,8 +100,7 @@ export function ConditionValueMapping({ onMappingsChange }: ConditionValueMappin
 
   const getAvailableValues = () => {
     if (!selectedConditionType) return [];
-    const values = MOCK_CONDITION_VALUES[selectedConditionType as keyof typeof MOCK_CONDITION_VALUES];
-    return Array.isArray(values) ? values : [];
+    return MOCK_CONDITION_VALUES[selectedConditionType as keyof typeof MOCK_CONDITION_VALUES] || [];
   };
 
   return (

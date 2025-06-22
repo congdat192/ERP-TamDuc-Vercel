@@ -19,24 +19,15 @@ const mockCampaigns: Campaign[] = [
       {
         id: 'choice1',
         voucherType: 'coupon',
-        staffTypes: ['telesales'],
+        staffTypes: ['telesale'],
         customerTargets: ['new', 'vip'],
         value: 15,
         valueType: 'percentage',
         conditions: ['Áp dụng cho đơn hàng từ 500,000 VNĐ', 'Có hiệu lực trong 30 ngày']
       }
     ],
-    startDate: new Date('2024-11-25').toISOString(),
-    endDate: new Date('2024-11-30').toISOString(),
-    isActive: true,
-    conditions: [],
-    voucherTemplate: {
-      prefix: 'BF',
-      length: 8,
-      format: 'alphanumeric'
-    },
-    createdAt: new Date('2024-11-01').toISOString(),
-    updatedAt: new Date('2024-11-15').toISOString(),
+    createdAt: new Date('2024-11-01'),
+    updatedAt: new Date('2024-11-15'),
     createdBy: 'Admin'
   },
   {
@@ -54,24 +45,15 @@ const mockCampaigns: Campaign[] = [
       {
         id: 'choice2',
         voucherType: 'voucher',
-        staffTypes: ['cskh', 'telesales'],
+        staffTypes: ['cskh', 'telesale'],
         customerTargets: ['all'],
         value: 100000,
         valueType: 'fixed',
         conditions: ['Chỉ sử dụng 1 lần/khách hàng']
       }
     ],
-    startDate: new Date('2024-12-01').toISOString(),
-    endDate: new Date('2024-12-31').toISOString(),
-    isActive: false,
-    conditions: [],
-    voucherTemplate: {
-      prefix: 'VM',
-      length: 10,
-      format: 'numeric'
-    },
-    createdAt: new Date('2024-11-10').toISOString(),
-    updatedAt: new Date('2024-11-10').toISOString(),
+    createdAt: new Date('2024-11-10'),
+    updatedAt: new Date('2024-11-10'),
     createdBy: 'Manager'
   }
 ];
@@ -107,17 +89,8 @@ export function useCampaignManagement() {
       status: data.status || 'draft',
       description: data.description,
       choices: data.choices || [],
-      startDate: data.schedule.startDate.toISOString(),
-      endDate: data.schedule.endDate ? data.schedule.endDate.toISOString() : '',
-      isActive: data.status === 'active',
-      conditions: [],
-      voucherTemplate: {
-        prefix: 'NEW',
-        length: 8,
-        format: 'alphanumeric'
-      },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
       createdBy: 'Current User'
     };
 
@@ -140,7 +113,7 @@ export function useCampaignManagement() {
               ...campaign.schedule,
               ...data.schedule
             },
-            updatedAt: new Date().toISOString()
+            updatedAt: new Date()
           }
         : campaign
     ));
@@ -165,7 +138,7 @@ export function useCampaignManagement() {
     
     setCampaigns(prev => prev.map(campaign => 
       ids.includes(campaign.id) 
-        ? { ...campaign, status, updatedAt: new Date().toISOString() }
+        ? { ...campaign, status, updatedAt: new Date() }
         : campaign
     ));
     setLoading(false);
