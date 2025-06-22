@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,8 @@ import {
   Trash2,
   ArrowUp,
   ArrowDown,
-  Copy
+  Copy,
+  Star
 } from 'lucide-react';
 import type { VoucherDenomination } from '../types';
 
@@ -154,6 +156,18 @@ export function DenominationManager({ allowCustomValue, onAllowCustomValueChange
     });
   };
 
+  const handleSetAsDefault = (id: string) => {
+    setDenominations(denominations.map(d => ({
+      ...d,
+      isDefault: d.id === id
+    })));
+    
+    toast({
+      title: "Thành công",
+      description: "Đã đặt làm mệnh giá mặc định."
+    });
+  };
+
   const handleMoveUp = (id: string) => {
     const index = denominations.findIndex(d => d.id === id);
     if (index > 0) {
@@ -199,6 +213,7 @@ export function DenominationManager({ allowCustomValue, onAllowCustomValueChange
                 <TableHead>Thứ Tự</TableHead>
                 <TableHead>Giá Trị</TableHead>
                 <TableHead>Nhãn Hiển Thị</TableHead>
+                <TableHead>Mặc Định</TableHead>
                 <TableHead>Trạng Thái</TableHead>
                 <TableHead className="text-right">Thao Tác</TableHead>
               </TableRow>
@@ -232,6 +247,11 @@ export function DenominationManager({ allowCustomValue, onAllowCustomValueChange
                   </TableCell>
                   <TableCell>{item.label}</TableCell>
                   <TableCell>
+                    {item.isDefault && (
+                      <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                    )}
+                  </TableCell>
+                  <TableCell>
                     <Switch 
                       checked={item.isActive} 
                       onCheckedChange={() => handleToggleStatus(item.id)}
@@ -239,6 +259,15 @@ export function DenominationManager({ allowCustomValue, onAllowCustomValueChange
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end space-x-1">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleSetAsDefault(item.id)}
+                        disabled={item.isDefault}
+                        title="Đặt làm mặc định"
+                      >
+                        <Star className={`w-4 h-4 ${item.isDefault ? 'text-yellow-500 fill-current' : 'text-gray-400'}`} />
+                      </Button>
                       <Button 
                         variant="ghost" 
                         size="sm"

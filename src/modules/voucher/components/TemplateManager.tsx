@@ -15,7 +15,8 @@ import {
   Trash2, 
   Eye, 
   Copy,
-  HelpCircle
+  HelpCircle,
+  Star
 } from 'lucide-react';
 import type { VoucherTemplate, TemplateVariable } from '../types';
 import { TEMPLATE_VARIABLES } from '../types';
@@ -221,6 +222,25 @@ export function TemplateManager() {
     });
   };
 
+  const handleSetAsDefault = (templateId: string) => {
+    const updatedTemplates = templates.map(t => ({
+      ...t,
+      isDefault: t.id === templateId
+    }));
+    
+    setTemplates(updatedTemplates);
+    
+    // Update in localStorage
+    updatedTemplates.forEach(template => {
+      templateService.updateTemplate(template.id, template);
+    });
+    
+    toast({
+      title: "Thành công",
+      description: "Đã đặt làm mẫu mặc định."
+    });
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -272,6 +292,15 @@ export function TemplateManager() {
                   </Badge>
                 </div>
                 <div className="flex space-x-1">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => handleSetAsDefault(selectedTemplate.id)}
+                    disabled={selectedTemplate.isDefault}
+                    title="Đặt làm mặc định"
+                  >
+                    <Star className={`w-4 h-4 ${selectedTemplate.isDefault ? 'text-yellow-500 fill-current' : 'text-gray-400'}`} />
+                  </Button>
                   <Button 
                     variant="ghost" 
                     size="sm" 

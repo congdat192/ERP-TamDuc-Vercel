@@ -15,7 +15,8 @@ import {
   Trash2,
   ArrowUp,
   ArrowDown,
-  Copy
+  Copy,
+  Star
 } from 'lucide-react';
 import type { CustomerType } from '../types';
 
@@ -137,6 +138,18 @@ export function CustomerTypeManager() {
     });
   };
 
+  const handleSetAsDefault = (id: string) => {
+    setTypes(types.map(t => ({
+      ...t,
+      isDefault: t.id === id
+    })));
+    
+    toast({
+      title: "Thành công",
+      description: "Đã đặt làm loại khách hàng mặc định."
+    });
+  };
+
   const handleMoveUp = (id: string) => {
     const index = types.findIndex(t => t.id === id);
     if (index > 0) {
@@ -172,6 +185,7 @@ export function CustomerTypeManager() {
                 <TableHead>Thứ Tự</TableHead>
                 <TableHead>Tên Loại</TableHead>
                 <TableHead>Mô Tả</TableHead>
+                <TableHead>Mặc Định</TableHead>
                 <TableHead>Trạng Thái</TableHead>
                 <TableHead className="text-right">Thao Tác</TableHead>
               </TableRow>
@@ -203,6 +217,11 @@ export function CustomerTypeManager() {
                   <TableCell className="font-medium">{item.name}</TableCell>
                   <TableCell>{item.description}</TableCell>
                   <TableCell>
+                    {item.isDefault && (
+                      <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                    )}
+                  </TableCell>
+                  <TableCell>
                     <Switch 
                       checked={item.isActive} 
                       onCheckedChange={() => handleToggleStatus(item.id)}
@@ -210,6 +229,15 @@ export function CustomerTypeManager() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end space-x-1">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => handleSetAsDefault(item.id)}
+                        disabled={item.isDefault}
+                        title="Đặt làm mặc định"
+                      >
+                        <Star className={`w-4 h-4 ${item.isDefault ? 'text-yellow-500 fill-current' : 'text-gray-400'}`} />
+                      </Button>
                       <Button 
                         variant="ghost" 
                         size="sm"
