@@ -1,4 +1,3 @@
-
 export interface Voucher {
   id: string;
   code: string;
@@ -11,6 +10,14 @@ export interface Voucher {
   issuedBy: string;
   usedDate?: string;
   notes?: string;
+  // New reconciliation fields
+  invoiceReconciliation: 'reconciled' | 'not_reconciled';
+  voucherReconciliationResult: 'correct_voucher' | 'wrong_phone' | 'wrong_voucher' | 'not_used' | 'no_invoice';
+  generatedInvoice?: string;
+  customerGeneratedInvoice: 'yes' | 'no';
+  // Additional fields for detailed tracking
+  actualUsedPhone?: string; // For wrong_phone cases
+  actualUsedVoucher?: string; // For wrong_voucher cases
 }
 
 export interface VoucherIssueRequest {

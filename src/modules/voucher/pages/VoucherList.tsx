@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +15,7 @@ interface VoucherListProps {
   currentUser: User;
 }
 
-// Mock voucher data based on customer module data
+// Enhanced mock voucher data with reconciliation information
 const mockVouchers: Voucher[] = [
   {
     id: 'voucher-001',
@@ -24,11 +23,16 @@ const mockVouchers: Voucher[] = [
     value: '500.000đ',
     customerName: 'Nguyễn Văn An',
     customerPhone: '0901234567',
-    status: 'active',
+    status: 'used',
     issueDate: '15/12/2024',
     expiryDate: '15/01/2025',
     issuedBy: 'Trần Thị Lan',
-    notes: 'Voucher cho khách hàng VIP'
+    usedDate: '20/12/2024',
+    notes: 'Voucher cho khách hàng VIP',
+    invoiceReconciliation: 'reconciled',
+    voucherReconciliationResult: 'correct_voucher',
+    generatedInvoice: 'HD-2024-5678 (20/12/2024)',
+    customerGeneratedInvoice: 'yes'
   },
   {
     id: 'voucher-002',
@@ -40,8 +44,12 @@ const mockVouchers: Voucher[] = [
     issueDate: '10/12/2024',
     expiryDate: '10/01/2025',
     issuedBy: 'Nguyễn Văn Minh',
-    usedDate: '20/12/2024',
-    notes: 'Đã sử dụng tại cửa hàng'
+    usedDate: '18/12/2024',
+    notes: 'Đã sử dụng tại cửa hàng',
+    invoiceReconciliation: 'reconciled',
+    voucherReconciliationResult: 'correct_voucher',
+    generatedInvoice: 'HD-2024-5679 (18/12/2024)',
+    customerGeneratedInvoice: 'yes'
   },
   {
     id: 'voucher-003',
@@ -49,11 +57,17 @@ const mockVouchers: Voucher[] = [
     value: '200.000đ',
     customerName: 'Lê Thị Cúc',
     customerPhone: '0903456789',
-    status: 'active',
+    status: 'used',
     issueDate: '18/12/2024',
     expiryDate: '18/01/2025',
     issuedBy: 'Phạm Thị Hoa',
-    notes: 'Voucher khuyến mãi'
+    usedDate: '22/12/2024',
+    notes: 'Voucher khuyến mãi',
+    invoiceReconciliation: 'reconciled',
+    voucherReconciliationResult: 'wrong_phone',
+    generatedInvoice: 'HD-2024-5680 (22/12/2024)',
+    customerGeneratedInvoice: 'yes',
+    actualUsedPhone: '0987654321'
   },
   {
     id: 'voucher-004',
@@ -61,11 +75,17 @@ const mockVouchers: Voucher[] = [
     value: '100.000đ',
     customerName: 'Phạm Văn Dũng',
     customerPhone: '0904567890',
-    status: 'expired',
+    status: 'used',
     issueDate: '01/11/2024',
     expiryDate: '01/12/2024',
     issuedBy: 'Lê Văn Tú',
-    notes: 'Voucher hết hạn'
+    usedDate: '25/11/2024',
+    notes: 'Voucher hết hạn',
+    invoiceReconciliation: 'reconciled',
+    voucherReconciliationResult: 'wrong_voucher',
+    generatedInvoice: 'HD-2024-5681 (25/11/2024)',
+    customerGeneratedInvoice: 'yes',
+    actualUsedVoucher: 'VCH-2024-001250'
   },
   {
     id: 'voucher-005',
@@ -77,7 +97,11 @@ const mockVouchers: Voucher[] = [
     issueDate: '22/12/2024',
     expiryDate: '22/01/2025',
     issuedBy: 'Đỗ Thị Mai',
-    notes: 'Voucher sinh nhật'
+    notes: 'Voucher sinh nhật',
+    invoiceReconciliation: 'reconciled',
+    voucherReconciliationResult: 'not_used',
+    generatedInvoice: 'HD-2024-5682 (23/12/2024)',
+    customerGeneratedInvoice: 'yes'
   },
   {
     id: 'voucher-006',
@@ -89,7 +113,11 @@ const mockVouchers: Voucher[] = [
     issueDate: '05/12/2024',
     expiryDate: '05/01/2025',
     issuedBy: 'Bùi Thị Nga',
-    notes: 'Hủy theo yêu cầu khách hàng'
+    notes: 'Hủy theo yêu cầu khách hàng',
+    invoiceReconciliation: 'reconciled',
+    voucherReconciliationResult: 'not_used',
+    generatedInvoice: 'HD-2024-5683 (10/12/2024)',
+    customerGeneratedInvoice: 'yes'
   },
   {
     id: 'voucher-007',
@@ -101,7 +129,10 @@ const mockVouchers: Voucher[] = [
     issueDate: '20/12/2024',
     expiryDate: '20/01/2025',
     issuedBy: 'Trần Văn Hùng',
-    notes: 'Voucher khách hàng thân thiết'
+    notes: 'Voucher khách hàng thân thiết',
+    invoiceReconciliation: 'not_reconciled',
+    voucherReconciliationResult: 'no_invoice',
+    customerGeneratedInvoice: 'no'
   },
   {
     id: 'voucher-008',
@@ -109,12 +140,14 @@ const mockVouchers: Voucher[] = [
     value: '350.000đ',
     customerName: 'Ngô Văn Hải',
     customerPhone: '0908901234',
-    status: 'used',
+    status: 'active',
     issueDate: '08/12/2024',
     expiryDate: '08/01/2025',
     issuedBy: 'Lý Thị Kim',
-    usedDate: '18/12/2024',
-    notes: 'Đã sử dụng online'
+    notes: 'Voucher mới phát hành',
+    invoiceReconciliation: 'not_reconciled',
+    voucherReconciliationResult: 'no_invoice',
+    customerGeneratedInvoice: 'no'
   }
 ];
 
@@ -171,6 +204,60 @@ export function VoucherList({ currentUser }: VoucherListProps) {
       case 'used': return 'Đã Sử Dụng';
       case 'expired': return 'Hết Hạn';
       case 'cancelled': return 'Đã Hủy';
+      default: return 'Không Xác Định';
+    }
+  };
+
+  const getReconciliationColor = (status: string) => {
+    switch (status) {
+      case 'reconciled': return 'bg-green-100 text-green-800';
+      case 'not_reconciled': return 'bg-yellow-100 text-yellow-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getReconciliationText = (status: string) => {
+    switch (status) {
+      case 'reconciled': return 'Đã Đối Soát';
+      case 'not_reconciled': return 'Chưa Đối Soát';
+      default: return 'Không Xác Định';
+    }
+  };
+
+  const getReconciliationResultColor = (result: string) => {
+    switch (result) {
+      case 'correct_voucher': return 'bg-green-100 text-green-800';
+      case 'wrong_phone': return 'bg-orange-100 text-orange-800';
+      case 'wrong_voucher': return 'bg-red-100 text-red-800';
+      case 'not_used': return 'bg-blue-100 text-blue-800';
+      case 'no_invoice': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getReconciliationResultText = (result: string) => {
+    switch (result) {
+      case 'correct_voucher': return 'Dùng Đúng Voucher';
+      case 'wrong_phone': return 'Dùng Sai SĐT';
+      case 'wrong_voucher': return 'Dùng Voucher Khác';
+      case 'not_used': return 'Không Sử Dụng';
+      case 'no_invoice': return 'Chưa Phát Sinh Đơn';
+      default: return 'Không Xác Định';
+    }
+  };
+
+  const getCustomerInvoiceColor = (hasInvoice: string) => {
+    switch (hasInvoice) {
+      case 'yes': return 'bg-green-100 text-green-800';
+      case 'no': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getCustomerInvoiceText = (hasInvoice: string) => {
+    switch (hasInvoice) {
+      case 'yes': return 'Có';
+      case 'no': return 'Không';
       default: return 'Không Xác Định';
     }
   };
@@ -273,67 +360,91 @@ export function VoucherList({ currentUser }: VoucherListProps) {
         </CardHeader>
         <CardContent>
           {filteredVouchers.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Mã Voucher</TableHead>
-                  <TableHead>Khách Hàng</TableHead>
-                  <TableHead>Số Điện Thoại</TableHead>
-                  <TableHead>Giá Trị</TableHead>
-                  <TableHead>Trạng Thái</TableHead>
-                  <TableHead>Ngày Phát Hành</TableHead>
-                  <TableHead>Hết Hạn</TableHead>
-                  <TableHead>Người Phát Hành</TableHead>
-                  <TableHead className="text-right">Thao Tác</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredVouchers.map((voucher) => (
-                  <TableRow key={voucher.id}>
-                    <TableCell className="font-mono font-medium">
-                      {voucher.code}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {voucher.customerName}
-                    </TableCell>
-                    <TableCell>{voucher.customerPhone}</TableCell>
-                    <TableCell className="font-bold theme-text-primary">
-                      {voucher.value}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(voucher.status)}>
-                        {getStatusText(voucher.status)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{voucher.issueDate}</TableCell>
-                    <TableCell>{voucher.expiryDate}</TableCell>
-                    <TableCell className="text-sm theme-text-muted">
-                      {voucher.issuedBy}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end space-x-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleCopyCode(voucher.code)}
-                          title="Sao chép mã"
-                        >
-                          <Copy className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleViewDetail(voucher)}
-                          title="Xem chi tiết"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Mã Voucher</TableHead>
+                    <TableHead>Khách Hàng</TableHead>
+                    <TableHead>Số Điện Thoại</TableHead>
+                    <TableHead>Giá Trị</TableHead>
+                    <TableHead>Trạng Thái</TableHead>
+                    <TableHead>Ngày Phát Hành</TableHead>
+                    <TableHead>Hết Hạn</TableHead>
+                    <TableHead>Người Phát Hành</TableHead>
+                    <TableHead>Đối Soát HĐ</TableHead>
+                    <TableHead>Kết Quả Đối Soát</TableHead>
+                    <TableHead>Hóa Đơn Phát Sinh</TableHead>
+                    <TableHead>KH Phát Sinh HĐ</TableHead>
+                    <TableHead className="text-right">Thao Tác</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredVouchers.map((voucher) => (
+                    <TableRow key={voucher.id}>
+                      <TableCell className="font-mono font-medium">
+                        {voucher.code}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {voucher.customerName}
+                      </TableCell>
+                      <TableCell>{voucher.customerPhone}</TableCell>
+                      <TableCell className="font-bold theme-text-primary">
+                        {voucher.value}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getStatusColor(voucher.status)}>
+                          {getStatusText(voucher.status)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{voucher.issueDate}</TableCell>
+                      <TableCell>{voucher.expiryDate}</TableCell>
+                      <TableCell className="text-sm theme-text-muted">
+                        {voucher.issuedBy}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getReconciliationColor(voucher.invoiceReconciliation)}>
+                          {getReconciliationText(voucher.invoiceReconciliation)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getReconciliationResultColor(voucher.voucherReconciliationResult)}>
+                          {getReconciliationResultText(voucher.voucherReconciliationResult)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {voucher.generatedInvoice || '-'}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getCustomerInvoiceColor(voucher.customerGeneratedInvoice)}>
+                          {getCustomerInvoiceText(voucher.customerGeneratedInvoice)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end space-x-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleCopyCode(voucher.code)}
+                            title="Sao chép mã"
+                          >
+                            <Copy className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleViewDetail(voucher)}
+                            title="Xem chi tiết"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           ) : (
             <div className="text-center py-12">
               <div className="w-16 h-16 theme-bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -359,54 +470,100 @@ export function VoucherList({ currentUser }: VoucherListProps) {
 
       {/* Voucher Detail Dialog */}
       <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle className="theme-text">Chi Tiết Voucher</DialogTitle>
           </DialogHeader>
           {selectedVoucher && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm font-medium theme-text-muted">Mã Voucher</Label>
-                  <p className="font-mono font-bold">{selectedVoucher.code}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium theme-text-muted">Giá Trị</Label>
-                  <p className="font-bold theme-text-primary text-lg">{selectedVoucher.value}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium theme-text-muted">Khách Hàng</Label>
-                  <p className="font-medium">{selectedVoucher.customerName}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium theme-text-muted">Số Điện Thoại</Label>
-                  <p>{selectedVoucher.customerPhone}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium theme-text-muted">Trạng Thái</Label>
-                  <Badge className={getStatusColor(selectedVoucher.status)}>
-                    {getStatusText(selectedVoucher.status)}
-                  </Badge>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium theme-text-muted">Người Phát Hành</Label>
-                  <p className="text-sm">{selectedVoucher.issuedBy}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium theme-text-muted">Ngày Phát Hành</Label>
-                  <p>{selectedVoucher.issueDate}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium theme-text-muted">Hết Hạn</Label>
-                  <p>{selectedVoucher.expiryDate}</p>
-                </div>
-                {selectedVoucher.usedDate && (
-                  <div className="col-span-2">
-                    <Label className="text-sm font-medium theme-text-muted">Ngày Sử Dụng</Label>
-                    <p>{selectedVoucher.usedDate}</p>
+            <div className="space-y-6">
+              {/* Basic Information */}
+              <div>
+                <h4 className="text-sm font-semibold theme-text-muted mb-3">Thông Tin Cơ Bản</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium theme-text-muted">Mã Voucher</Label>
+                    <p className="font-mono font-bold">{selectedVoucher.code}</p>
                   </div>
-                )}
+                  <div>
+                    <Label className="text-sm font-medium theme-text-muted">Giá Trị</Label>
+                    <p className="font-bold theme-text-primary text-lg">{selectedVoucher.value}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium theme-text-muted">Khách Hàng</Label>
+                    <p className="font-medium">{selectedVoucher.customerName}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium theme-text-muted">Số Điện Thoại</Label>
+                    <p>{selectedVoucher.customerPhone}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium theme-text-muted">Trạng Thái</Label>
+                    <Badge className={getStatusColor(selectedVoucher.status)}>
+                      {getStatusText(selectedVoucher.status)}
+                    </Badge>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium theme-text-muted">Người Phát Hành</Label>
+                    <p className="text-sm">{selectedVoucher.issuedBy}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium theme-text-muted">Ngày Phát Hành</Label>
+                    <p>{selectedVoucher.issueDate}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium theme-text-muted">Hết Hạn</Label>
+                    <p>{selectedVoucher.expiryDate}</p>
+                  </div>
+                  {selectedVoucher.usedDate && (
+                    <div className="col-span-2">
+                      <Label className="text-sm font-medium theme-text-muted">Ngày Sử Dụng</Label>
+                      <p>{selectedVoucher.usedDate}</p>
+                    </div>
+                  )}
+                </div>
               </div>
+
+              {/* Reconciliation Information */}
+              <div>
+                <h4 className="text-sm font-semibold theme-text-muted mb-3">Thông Tin Đối Soát</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium theme-text-muted">Đối Soát Hóa Đơn</Label>
+                    <Badge className={getReconciliationColor(selectedVoucher.invoiceReconciliation)}>
+                      {getReconciliationText(selectedVoucher.invoiceReconciliation)}
+                    </Badge>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium theme-text-muted">Kết Quả Đối Soát</Label>
+                    <Badge className={getReconciliationResultColor(selectedVoucher.voucherReconciliationResult)}>
+                      {getReconciliationResultText(selectedVoucher.voucherReconciliationResult)}
+                    </Badge>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium theme-text-muted">Hóa Đơn Phát Sinh</Label>
+                    <p className="text-sm">{selectedVoucher.generatedInvoice || '-'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium theme-text-muted">KH Phát Sinh HĐ</Label>
+                    <Badge className={getCustomerInvoiceColor(selectedVoucher.customerGeneratedInvoice)}>
+                      {getCustomerInvoiceText(selectedVoucher.customerGeneratedInvoice)}
+                    </Badge>
+                  </div>
+                  {selectedVoucher.actualUsedPhone && (
+                    <div>
+                      <Label className="text-sm font-medium theme-text-muted">SĐT Sử Dụng Thực Tế</Label>
+                      <p className="text-sm font-medium text-orange-600">{selectedVoucher.actualUsedPhone}</p>
+                    </div>
+                  )}
+                  {selectedVoucher.actualUsedVoucher && (
+                    <div>
+                      <Label className="text-sm font-medium theme-text-muted">Voucher Sử Dụng Thực Tế</Label>
+                      <p className="text-sm font-medium text-red-600">{selectedVoucher.actualUsedVoucher}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {selectedVoucher.notes && (
                 <div>
                   <Label className="text-sm font-medium theme-text-muted">Ghi Chú</Label>
