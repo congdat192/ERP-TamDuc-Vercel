@@ -41,6 +41,7 @@ export interface VoucherDenomination {
   value: number;
   label: string;
   isActive: boolean;
+  isDefault: boolean;
   order: number;
 }
 
@@ -49,6 +50,7 @@ export interface CustomerSource {
   name: string;
   description: string;
   isActive: boolean;
+  isDefault: boolean;
   order: number;
 }
 
@@ -57,6 +59,7 @@ export interface CustomerType {
   name: string;
   description: string;
   isActive: boolean;
+  isDefault: boolean;
   order: number;
 }
 
@@ -68,6 +71,15 @@ export interface VoucherTemplate {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface Staff {
+  id: string;
+  name: string;
+  type: 'cskh' | 'telesale' | 'admin' | 'sales';
+  isActive: boolean;
+  isDefault: boolean;
+  createdAt: string;
 }
 
 export interface VoucherSettings {

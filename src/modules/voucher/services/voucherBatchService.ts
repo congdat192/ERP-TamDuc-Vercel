@@ -13,6 +13,7 @@ const getDefaultBatches = (): VoucherBatch[] => [
     codeSuffix: 'X',
     codeLength: 8,
     isActive: true,
+    isDefault: true,
     createdBy: 'Hệ thống',
     createdAt: '2024-01-01T00:00:00.000Z',
     updatedAt: '2024-01-01T00:00:00.000Z'
@@ -25,6 +26,7 @@ const getDefaultBatches = (): VoucherBatch[] => [
     codeSuffix: '',
     codeLength: 10,
     isActive: true,
+    isDefault: false,
     createdBy: 'Hệ thống',
     createdAt: '2024-01-01T00:00:00.000Z',
     updatedAt: '2024-01-01T00:00:00.000Z'
@@ -37,6 +39,7 @@ const getDefaultBatches = (): VoucherBatch[] => [
     codeSuffix: 'S',
     codeLength: 6,
     isActive: true,
+    isDefault: false,
     createdBy: 'Hệ thống',
     createdAt: '2024-01-01T00:00:00.000Z',
     updatedAt: '2024-01-01T00:00:00.000Z'
@@ -95,5 +98,20 @@ export const voucherBatchService = {
   getBatchById(id: string): VoucherBatch | undefined {
     const batches = this.getBatches();
     return batches.find(batch => batch.id === id);
+  },
+
+  getDefaultBatch(): VoucherBatch | undefined {
+    const batches = this.getBatches();
+    return batches.find(batch => batch.isDefault);
+  },
+
+  setDefaultBatch(id: string): VoucherBatch[] {
+    const batches = this.getBatches();
+    const newBatches = batches.map(batch => ({
+      ...batch,
+      isDefault: batch.id === id
+    }));
+    this.setBatches(newBatches);
+    return newBatches;
   }
 };
