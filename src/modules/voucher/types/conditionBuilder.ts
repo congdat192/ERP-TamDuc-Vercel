@@ -42,6 +42,21 @@ export interface ConditionGroupPriority {
   description?: string;
 }
 
+// Legacy types for backward compatibility
+export interface ConditionRow {
+  id: string;
+  field: string;
+  operator: string;
+  value: string;
+}
+
+export interface VoucherCondition {
+  id: string;
+  type: string;
+  operator: string;
+  value: string | string[];
+}
+
 // Updated mock data to match StaffManager, CustomerSourceManager, CustomerTypeManager
 export const MOCK_VALUE_MAPPINGS: ConditionValueMapping[] = [
   // Staff mappings - consistent with StaffManager
@@ -235,3 +250,13 @@ export const CONDITION_TYPE_LABELS = {
   denomination: 'Mệnh Giá',
   timeSlot: 'Khung Giờ'
 };
+
+// Legacy exports for backward compatibility
+export const CONDITION_TYPES = [
+  { value: 'customerSource', label: 'Nguồn Khách Hàng' },
+  { value: 'customerType', label: 'Loại Khách Hàng' },
+  { value: 'staffType', label: 'Loại Nhân Viên' },
+  { value: 'denomination', label: 'Mệnh Giá' }
+];
+
+export const MOCK_CONDITION_VALUES = MOCK_VALUE_MAPPINGS;

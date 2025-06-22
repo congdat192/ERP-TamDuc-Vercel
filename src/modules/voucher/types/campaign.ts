@@ -1,6 +1,9 @@
 
 export type StaffType = 'cskh' | 'telesales' | 'admin' | 'sales';
-export type CustomerTargetType = 'new' | 'existing' | 'vip' | 'regular' | 'business';
+export type CustomerTargetType = 'new' | 'existing' | 'vip' | 'regular' | 'business' | 'all';
+export type VoucherType = 'voucher' | 'coupon';
+export type CampaignType = 'monthly' | 'promotion-batch' | 'ongoing';
+export type CampaignStatus = 'active' | 'inactive' | 'draft' | 'completed';
 
 export interface CampaignCondition {
   id: string;
@@ -10,10 +13,31 @@ export interface CampaignCondition {
   label: string;
 }
 
+export interface CampaignChoice {
+  id: string;
+  voucherType: VoucherType;
+  staffTypes: StaffType[];
+  customerTargets: CustomerTargetType[];
+  value: number;
+  valueType: 'fixed' | 'percentage';
+  conditions: string[];
+}
+
+export interface CampaignSchedule {
+  startDate: Date;
+  endDate?: Date;
+  isCustom: boolean;
+  customDescription?: string;
+}
+
 export interface Campaign {
   id: string;
   name: string;
   description: string;
+  types: CampaignType[];
+  schedule: CampaignSchedule;
+  status: CampaignStatus;
+  choices: CampaignChoice[];
   startDate: string;
   endDate: string;
   isActive: boolean;
@@ -27,6 +51,15 @@ export interface Campaign {
   createdBy: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface CampaignFormData {
+  name: string;
+  description: string;
+  types: CampaignType[];
+  schedule: CampaignSchedule;
+  status: CampaignStatus;
+  choices: CampaignChoice[];
 }
 
 // Updated staff type labels to match StaffManager
@@ -43,7 +76,26 @@ export const CUSTOMER_TARGET_LABELS: Record<CustomerTargetType, string> = {
   existing: 'Khách hàng cũ',
   vip: 'Khách hàng VIP',
   regular: 'Khách hàng thường',
-  business: 'Khách hàng doanh nghiệp'
+  business: 'Khách hàng doanh nghiệp',
+  all: 'Tất cả khách hàng'
+};
+
+export const VOUCHER_TYPE_LABELS: Record<VoucherType, string> = {
+  voucher: 'Voucher',
+  coupon: 'Coupon'
+};
+
+export const CAMPAIGN_TYPE_LABELS: Record<CampaignType, string> = {
+  monthly: 'Hàng tháng',
+  'promotion-batch': 'Đợt khuyến mãi',
+  ongoing: 'Liên tục'
+};
+
+export const CAMPAIGN_STATUS_LABELS: Record<CampaignStatus, string> = {
+  active: 'Đang hoạt động',
+  inactive: 'Tạm dừng',
+  draft: 'Nháp',
+  completed: 'Hoàn thành'
 };
 
 // Customer source options consistent with CustomerSourceManager
