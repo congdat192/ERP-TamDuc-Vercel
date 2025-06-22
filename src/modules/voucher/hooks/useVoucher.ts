@@ -22,7 +22,11 @@ export function useVoucher() {
         issueDate: new Date().toLocaleDateString('vi-VN'),
         expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN'),
         issuedBy: 'Current User', // This would come from auth context
-        notes: request.notes
+        notes: request.notes,
+        // New reconciliation fields
+        invoiceReconciliation: 'not_reconciled',
+        voucherReconciliationResult: 'no_invoice',
+        customerGeneratedInvoice: 'no'
       };
       
       setVouchers(prev => [newVoucher, ...prev]);
@@ -49,7 +53,11 @@ export function useVoucher() {
         issueDate: new Date().toLocaleDateString('vi-VN'),
         expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN'),
         issuedBy: 'Current User',
-        notes: `Cấp lại: ${request.reason}`
+        notes: `Cấp lại: ${request.reason}`,
+        // New reconciliation fields
+        invoiceReconciliation: 'not_reconciled',
+        voucherReconciliationResult: 'no_invoice',
+        customerGeneratedInvoice: 'no'
       };
       
       setVouchers(prev => [reissuedVoucher, ...prev]);
