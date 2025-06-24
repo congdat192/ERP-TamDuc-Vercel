@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ExternalLink } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 interface VoucherHistory {
   id: string;
@@ -29,104 +28,100 @@ interface CustomerVoucherHistoryTabProps {
   customerId: string;
 }
 
+// Move mock data outside component to avoid re-creation on every render
+const mockVoucherHistory: VoucherHistory[] = [
+  {
+    id: '1',
+    voucherCode: 'VC240624001',
+    value: 50000,
+    status: 'used',
+    issuedBy: 'Nguyễn Văn A',
+    issueDate: '2024-06-20',
+    expiryDate: '2024-07-20',
+    invoiceReconciliation: 'HD001234',
+    reconciliationResult: 'correct_voucher',
+    generatedInvoice: 'HD001234',
+    customerGeneratedInvoice: 'yes',
+    notes: 'Sử dụng đúng quy định'
+  },
+  {
+    id: '2',
+    voucherCode: 'VC240624002',
+    value: 100000,
+    status: 'used',
+    issuedBy: 'Trần Thị B',
+    issueDate: '2024-06-18',
+    expiryDate: '2024-07-18',
+    invoiceReconciliation: 'HD001235',
+    reconciliationResult: 'wrong_phone',
+    generatedInvoice: 'HD001235',
+    customerGeneratedInvoice: 'yes',
+    actualUsedPhone: '0987654321',
+    notes: 'Khách sử dụng voucher cho số điện thoại khác'
+  },
+  {
+    id: '3',
+    voucherCode: 'VC240624003',
+    value: 200000,
+    status: 'used',
+    issuedBy: 'Lê Văn C',
+    issueDate: '2024-06-15',
+    expiryDate: '2024-07-15',
+    invoiceReconciliation: 'HD001236',
+    reconciliationResult: 'wrong_voucher',
+    generatedInvoice: 'HD001236',
+    customerGeneratedInvoice: 'yes',
+    actualUsedVoucher: 'VC240624010',
+    notes: 'Khách sử dụng voucher khác thay vì voucher được cấp'
+  },
+  {
+    id: '4',
+    voucherCode: 'VC240624004',
+    value: 300000,
+    status: 'active',
+    issuedBy: 'Phạm Thị D',
+    issueDate: '2024-06-22',
+    expiryDate: '2024-07-22',
+    invoiceReconciliation: '',
+    reconciliationResult: 'not_used',
+    generatedInvoice: '',
+    customerGeneratedInvoice: 'no',
+    notes: 'Voucher chưa được sử dụng'
+  },
+  {
+    id: '5',
+    voucherCode: 'VC240624005',
+    value: 500000,
+    status: 'expired',
+    issuedBy: 'Hoàng Văn E',
+    issueDate: '2024-05-15',
+    expiryDate: '2024-06-15',
+    invoiceReconciliation: '',
+    reconciliationResult: 'not_used',
+    generatedInvoice: 'HD001237',
+    customerGeneratedInvoice: 'yes',
+    notes: 'Khách phát sinh hóa đơn nhưng không sử dụng voucher'
+  },
+  {
+    id: '6',
+    voucherCode: 'VC240624006',
+    value: 50000,
+    status: 'cancelled',
+    issuedBy: 'Nguyễn Thị F',
+    issueDate: '2024-06-10',
+    expiryDate: '2024-07-10',
+    invoiceReconciliation: '',
+    reconciliationResult: 'no_invoice',
+    generatedInvoice: '',
+    customerGeneratedInvoice: 'no',
+    notes: 'Voucher bị hủy do yêu cầu khách hàng'
+  }
+];
+
 export function CustomerVoucherHistoryTab({ customerId }: CustomerVoucherHistoryTabProps) {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Remove initial loading state
   const [selectedVoucher, setSelectedVoucher] = useState<VoucherHistory | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const navigate = useNavigate();
-
-  // Mock data with diverse scenarios
-  const mockVoucherHistory: VoucherHistory[] = [
-    {
-      id: '1',
-      voucherCode: 'VC240624001',
-      value: 50000,
-      status: 'used',
-      issuedBy: 'Nguyễn Văn A',
-      issueDate: '2024-06-20',
-      expiryDate: '2024-07-20',
-      invoiceReconciliation: 'HD001234',
-      reconciliationResult: 'correct_voucher',
-      generatedInvoice: 'HD001234',
-      customerGeneratedInvoice: 'yes',
-      notes: 'Sử dụng đúng quy định'
-    },
-    {
-      id: '2',
-      voucherCode: 'VC240624002',
-      value: 100000,
-      status: 'used',
-      issuedBy: 'Trần Thị B',
-      issueDate: '2024-06-18',
-      expiryDate: '2024-07-18',
-      invoiceReconciliation: 'HD001235',
-      reconciliationResult: 'wrong_phone',
-      generatedInvoice: 'HD001235',
-      customerGeneratedInvoice: 'yes',
-      actualUsedPhone: '0987654321',
-      notes: 'Khách sử dụng voucher cho số điện thoại khác'
-    },
-    {
-      id: '3',
-      voucherCode: 'VC240624003',
-      value: 200000,
-      status: 'used',
-      issuedBy: 'Lê Văn C',
-      issueDate: '2024-06-15',
-      expiryDate: '2024-07-15',
-      invoiceReconciliation: 'HD001236',
-      reconciliationResult: 'wrong_voucher',
-      generatedInvoice: 'HD001236',
-      customerGeneratedInvoice: 'yes',
-      actualUsedVoucher: 'VC240624010',
-      notes: 'Khách sử dụng voucher khác thay vì voucher được cấp'
-    },
-    {
-      id: '4',
-      voucherCode: 'VC240624004',
-      value: 300000,
-      status: 'active',
-      issuedBy: 'Phạm Thị D',
-      issueDate: '2024-06-22',
-      expiryDate: '2024-07-22',
-      invoiceReconciliation: '',
-      reconciliationResult: 'not_used',
-      generatedInvoice: '',
-      customerGeneratedInvoice: 'no',
-      notes: 'Voucher chưa được sử dụng'
-    },
-    {
-      id: '5',
-      voucherCode: 'VC240624005',
-      value: 500000,
-      status: 'expired',
-      issuedBy: 'Hoàng Văn E',
-      issueDate: '2024-05-15',
-      expiryDate: '2024-06-15',
-      invoiceReconciliation: '',
-      reconciliationResult: 'not_used',
-      generatedInvoice: 'HD001237',
-      customerGeneratedInvoice: 'yes',
-      notes: 'Khách phát sinh hóa đơn nhưng không sử dụng voucher'
-    },
-    {
-      id: '6',
-      voucherCode: 'VC240624006',
-      value: 50000,
-      status: 'cancelled',
-      issuedBy: 'Nguyễn Thị F',
-      issueDate: '2024-06-10',
-      expiryDate: '2024-07-10',
-      invoiceReconciliation: '',
-      reconciliationResult: 'no_invoice',
-      generatedInvoice: '',
-      customerGeneratedInvoice: 'no',
-      notes: 'Voucher bị hủy do yêu cầu khách hàng'
-    }
-  ];
-
-  // Simulate loading
-  setTimeout(() => setLoading(false), 1000);
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
@@ -157,7 +152,8 @@ export function CustomerVoucherHistoryTab({ customerId }: CustomerVoucherHistory
   };
 
   const handleInvoiceClick = (invoiceCode: string) => {
-    navigate(`/ERP/Invoices/${invoiceCode}`);
+    // Open in new tab instead of navigation
+    window.open(`/ERP/Invoices/${invoiceCode}`, '_blank');
   };
 
   const formatCurrency = (amount: number) => {
