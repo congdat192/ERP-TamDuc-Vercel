@@ -5,6 +5,8 @@ import { CustomerInfoTab } from './detail-tabs/CustomerInfoTab';
 import { CustomerSalesHistoryTab } from './detail-tabs/CustomerSalesHistoryTab';
 import { CustomerDebtTab } from './detail-tabs/CustomerDebtTab';
 import { CustomerPointsHistoryTab } from './detail-tabs/CustomerPointsHistoryTab';
+import { CustomerVoucherHistoryTab } from './detail-tabs/CustomerVoucherHistoryTab';
+import { CustomerInteractionHistoryTab } from './detail-tabs/CustomerInteractionHistoryTab';
 
 interface Customer {
   id: string;
@@ -42,7 +44,7 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
           <div className="p-6">
             {/* Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-4 max-w-2xl mb-6">
+              <TabsList className="grid w-full grid-cols-6 max-w-4xl mb-6">
                 <TabsTrigger 
                   value="info"
                   className="data-[state=active]:theme-bg-primary data-[state=active]:text-white"
@@ -67,6 +69,18 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
                 >
                   Lịch sử tích điểm
                 </TabsTrigger>
+                <TabsTrigger 
+                  value="voucher-history"
+                  className="data-[state=active]:theme-bg-primary data-[state=active]:text-white"
+                >
+                  Lịch sử voucher
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="interaction-history"
+                  className="data-[state=active]:theme-bg-primary data-[state=active]:text-white"
+                >
+                  Lịch sử tương tác
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="info" className="mt-0">
@@ -83,6 +97,14 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
 
               <TabsContent value="points-history" className="mt-0">
                 <CustomerPointsHistoryTab customerId={customer.id} />
+              </TabsContent>
+
+              <TabsContent value="voucher-history" className="mt-0">
+                <CustomerVoucherHistoryTab customerId={customer.id} />
+              </TabsContent>
+
+              <TabsContent value="interaction-history" className="mt-0">
+                <CustomerInteractionHistoryTab customerId={customer.id} />
               </TabsContent>
             </Tabs>
           </div>
