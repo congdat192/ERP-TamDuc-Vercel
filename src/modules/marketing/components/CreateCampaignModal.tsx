@@ -190,7 +190,7 @@ export function CreateCampaignModal({ isOpen, onClose, onCampaignCreated }: Crea
               rows={4}
             />
             <div className="text-xs text-gray-500 mt-1">
-              Biến có thể sử dụng: {'{'}{'{'}{'}name{'}'}, {'{'}{'{'}{'}date{'}'}
+              Biến có thể sử dụng: &#123;&#123;name&#125;&#125;, &#123;&#123;date&#125;&#125;
             </div>
           </div>
 
