@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -45,6 +44,11 @@ const messageTemplates = {
     welcome: '{{name}} chào mừng bạn! Dùng mã WELCOME10 giảm 10% đơn đầu. Cảm ơn!',
     promotion: '{{name}} ơi! Sale 50% đang diễn ra. Mã: SALE50. Đặt hàng ngay!',
     winback: '{{name}} à! Voucher 200k đang chờ bạn. Mã: COMEBACK200. Quay lại nào!'
+  },
+  vihat: {
+    welcome: 'Xin chào {{name}}! Chào mừng bạn đến với hệ thống Vihat. Sử dụng mã WELCOME10 để nhận ưu đãi 10%.',
+    promotion: 'Thông báo khuyến mãi cho {{name}}! Giảm giá đặc biệt 50% với mã SALE50 từ Vihat.',
+    winback: 'Kính gửi {{name}}, Vihat có voucher 200k dành cho bạn. Mã: COMEBACK200. Trở lại ngay!'
   }
 };
 
