@@ -3,9 +3,10 @@ import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Eye, Edit, Play, Pause } from 'lucide-react';
+import { Plus, Eye, Edit, Trash2, Play, Pause, BarChart3, Calendar, Beaker, Calculator, Archive, Download } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 import { CreateCampaignModal } from '../CreateCampaignModal';
-import { CampaignDetailModal } from '../CampaignDetailModal';
+import { BulkOperationsBar, BulkSelectCheckbox, BulkSelectHeader } from '@/components/ui/bulk-operations';
 
 interface MarketingCampaign {
   id: string;
@@ -26,61 +27,148 @@ interface MarketingCampaign {
 const mockCampaigns: MarketingCampaign[] = [
   {
     id: '1',
-    name: 'Khuyến mãi mùa hè - VIP Customers',
+    name: 'Chiến dịch chào mừng khách hàng mới',
     type: 'zalo',
-    status: 'completed',
-    targetCustomers: 127,
-    sentCount: 125,
-    openRate: 85.6,
-    clickRate: 32.4,
-    conversionRate: 12.8,
-    createdBy: 'Nguyễn Văn Marketing',
-    createdDate: '2024-06-15',
-    filterName: 'Khách hàng VIP có voucher chưa sử dụng'
-  },
-  {
-    id: '2',
-    name: 'Chào mừng khách hàng mới',
-    type: 'email',
     status: 'active',
-    targetCustomers: 89,
-    sentCount: 89,
-    openRate: 72.1,
-    clickRate: 18.9,
-    conversionRate: 8.4,
-    createdBy: 'Trần Thị Customer Success',
+    targetCustomers: 150,
+    sentCount: 145,
+    openRate: 85.2,
+    clickRate: 12.4,
+    conversionRate: 3.8,
+    createdBy: 'Nguyễn Văn A',
     createdDate: '2024-06-20',
-    scheduledDate: '2024-06-25',
     filterName: 'Khách hàng mới trong 30 ngày'
   },
   {
-    id: '3',
-    name: 'Win-back inactive customers',
-    type: 'sms',
-    status: 'draft',
-    targetCustomers: 45,
-    sentCount: 0,
-    openRate: 0,
-    clickRate: 0,
-    conversionRate: 0,
-    createdBy: 'Lê Văn Retention',
-    createdDate: '2024-06-22',
-    filterName: 'Khách hàng không hoạt động > 90 ngày'
+    id: '2',
+    name: 'Khuyến mãi cuối tháng',
+    type: 'email',
+    status: 'completed',
+    targetCustomers: 300,
+    sentCount: 300,
+    openRate: 68.5,
+    clickRate: 8.9,
+    conversionRate: 2.1,
+    createdBy: 'Trần Thị B',
+    createdDate: '2024-06-15',
+    filterName: 'Khách hàng VIP có voucher chưa sử dụng'
   }
 ];
 
 export function MarketingCampaignsTab() {
   const [campaigns, setCampaigns] = useState(mockCampaigns);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [selectedCampaign, setSelectedCampaign] = useState<MarketingCampaign | null>(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedCampaignIds, setSelectedCampaignIds] = useState<string[]>([]);
+
+  const handleCreateCampaign = (newCampaign: MarketingCampaign) => {
+    setCampaigns(prev => [...prev, newCampaign]);
+    setIsCreateModalOpen(false);
+  };
+
+  const handleViewAnalytics = (campaign: MarketingCampaign) => {
+    toast({
+      title: "Xem báo cáo",
+      description: `Mở báo cáo chi tiết cho "${campaign.name}"`,
+    });
+  };
+
+  const handleScheduleCampaign = (campaign: MarketingCampaign) => {
+    toast({
+      title: "Lên lịch chiến dịch",
+      description: `Mở trình lên lịch cho "${campaign.name}"`,
+    });
+  };
+
+  const handleABTest = (campaign: MarketingCampaign) => {
+    toast({
+      title: "A/B Test",
+      description: `Tạo A/B test cho "${campaign.name}"`,
+    });
+  };
+
+  const handleROICalculator = (campaign: MarketingCampaign) => {
+    toast({
+      title: "Tính toán ROI",
+      description: `Mở máy tính ROI cho "${campaign.name}"`,
+    });
+  };
+
+  const handleTemplateLibrary = () => {
+    toast({
+      title: "Thư viện template",
+      description: "Mở thư viện template tin nhắn",
+    });
+  };
+
+  const handleAnalyticsDashboard = () => {
+    toast({
+      title: "Bảng điều khiển Analytics",
+      description: "Mở dashboard tổng quan về các chiến dịch",
+    });
+  };
+
+  const handleSelectCampaign = (campaignId: string, selected: boolean) => {
+    if (selected) {
+      setSelectedCampaignIds(prev => [...prev, campaignId]);
+    } else {
+      setSelectedCampaignIds(prev => prev.filter(id => id !== campaignId));
+    }
+  };
+
+  const handleSelectAll = () => {
+    setSelectedCampaignIds(campaigns.map(campaign => campaign.id));
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedCampaignIds([]);
+  };
+
+  const handleBulkDelete = () => {
+    setCampaigns(prev => prev.filter(campaign => !selectedCampaignIds.includes(campaign.id)));
+    setSelectedCampaignIds([]);
+    toast({
+      title: "Xóa thành công",
+      description: `Đã xóa ${selectedCampaignIds.length} chiến dịch`,
+    });
+  };
+
+  const handleBulkArchive = () => {
+    // In real implementation, would update status to archived
+    toast({
+      title: "Lưu trữ thành công",
+      description: `Đã lưu trữ ${selectedCampaignIds.length} chiến dịch`,
+    });
+    setSelectedCampaignIds([]);
+  };
+
+  const handleBulkExport = () => {
+    const selectedCampaigns = campaigns.filter(campaign => 
+      selectedCampaignIds.includes(campaign.id)
+    );
+    
+    const csvContent = selectedCampaigns.map(campaign => 
+      `${campaign.name},${campaign.type},${campaign.status},${campaign.targetCustomers},${campaign.sentCount}`
+    ).join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'selected-campaigns.csv';
+    a.click();
+    
+    toast({
+      title: "Xuất dữ liệu đã chọn",
+      description: `Đã xuất ${selectedCampaigns.length} chiến dịch`,
+    });
+  };
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      draft: { className: "bg-gray-100 text-gray-800", label: "Nháp" },
-      active: { className: "bg-green-100 text-green-800", label: "Đang chạy" },
-      paused: { className: "bg-yellow-100 text-yellow-800", label: "Tạm dừng" },
-      completed: { className: "bg-blue-100 text-blue-800", label: "Hoàn thành" }
+      'draft': { className: "bg-gray-100 text-gray-800", label: "Nháp" },
+      'active': { className: "bg-green-100 text-green-800", label: "Đang chạy" },
+      'paused': { className: "bg-yellow-100 text-yellow-800", label: "Tạm dừng" },
+      'completed': { className: "bg-blue-100 text-blue-800", label: "Hoàn thành" }
     };
     const config = statusConfig[status as keyof typeof statusConfig];
     return <Badge className={config.className}>{config.label}</Badge>;
@@ -88,73 +176,61 @@ export function MarketingCampaignsTab() {
 
   const getTypeBadge = (type: string) => {
     const typeConfig = {
-      zalo: { className: "bg-blue-100 text-blue-800", label: "Zalo" },
-      sms: { className: "bg-orange-100 text-orange-800", label: "SMS" },
-      email: { className: "bg-purple-100 text-purple-800", label: "Email" },
-      vihat: { className: "bg-green-100 text-green-800", label: "Vihat" }
+      'zalo': { className: "bg-blue-100 text-blue-800", label: "Zalo" },
+      'email': { className: "bg-purple-100 text-purple-800", label: "Email" },
+      'sms': { className: "bg-orange-100 text-orange-800", label: "SMS" },
+      'vihat': { className: "bg-green-100 text-green-800", label: "Vihat" }
     };
     const config = typeConfig[type as keyof typeof typeConfig];
     return <Badge className={config.className}>{config.label}</Badge>;
-  };
-
-  const handleCampaignClick = (campaign: MarketingCampaign) => {
-    setSelectedCampaign(campaign);
-    setIsDetailModalOpen(true);
-  };
-
-  const handleStatusToggle = (campaignId: string, currentStatus: string) => {
-    setCampaigns(prev => prev.map(campaign => 
-      campaign.id === campaignId 
-        ? { 
-            ...campaign, 
-            status: currentStatus === 'active' ? 'paused' : 'active' as any
-          }
-        : campaign
-    ));
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold theme-text">Chiến dịch Marketing</h2>
-        <Button 
-          onClick={() => setIsCreateModalOpen(true)}
-          className="voucher-button-primary"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Tạo chiến dịch mới
-        </Button>
+        <div className="flex items-center space-x-2">
+          <Button onClick={handleAnalyticsDashboard} variant="outline" size="sm">
+            <BarChart3 className="w-4 h-4 mr-2" />
+            Analytics Dashboard
+          </Button>
+          <Button onClick={handleTemplateLibrary} variant="outline" size="sm">
+            <Archive className="w-4 h-4 mr-2" />
+            Thư viện Template
+          </Button>
+          <Button 
+            onClick={() => setIsCreateModalOpen(true)}
+            className="voucher-button-primary"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Tạo chiến dịch
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white p-4 rounded-lg border">
-          <div className="text-sm text-gray-600">Tổng chiến dịch</div>
-          <div className="text-2xl font-bold theme-text-primary">{campaigns.length}</div>
-        </div>
-        <div className="bg-white p-4 rounded-lg border">
-          <div className="text-sm text-gray-600">Đang hoạt động</div>
-          <div className="text-2xl font-bold text-green-600">
-            {campaigns.filter(c => c.status === 'active').length}
-          </div>
-        </div>
-        <div className="bg-white p-4 rounded-lg border">
-          <div className="text-sm text-gray-600">Tổng KH tiếp cận</div>
-          <div className="text-2xl font-bold text-blue-600">
-            {campaigns.reduce((sum, c) => sum + c.targetCustomers, 0)}
-          </div>
-        </div>
-        <div className="bg-white p-4 rounded-lg border">
-          <div className="text-sm text-gray-600">Tỷ lệ chuyển đổi TB</div>
-          <div className="text-2xl font-bold text-orange-600">
-            {(campaigns.reduce((sum, c) => sum + c.conversionRate, 0) / campaigns.length).toFixed(1)}%
-          </div>
-        </div>
-      </div>
+      <BulkOperationsBar
+        selectedCount={selectedCampaignIds.length}
+        totalCount={campaigns.length}
+        onSelectAll={handleSelectAll}
+        onDeselectAll={handleDeselectAll}
+        onBulkDelete={handleBulkDelete}
+        onBulkExport={handleBulkExport}
+        onBulkArchive={handleBulkArchive}
+        entityName="chiến dịch"
+      />
 
       <div className="border rounded-lg overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12">
+                <BulkSelectHeader
+                  selectedCount={selectedCampaignIds.length}
+                  totalCount={campaigns.length}
+                  onSelectAll={handleSelectAll}
+                  onDeselectAll={handleDeselectAll}
+                />
+              </TableHead>
               <TableHead className="font-medium">Tên chiến dịch</TableHead>
               <TableHead className="font-medium">Loại</TableHead>
               <TableHead className="font-medium">Trạng thái</TableHead>
@@ -164,17 +240,18 @@ export function MarketingCampaignsTab() {
               <TableHead className="font-medium">Tỷ lệ click</TableHead>
               <TableHead className="font-medium">Chuyển đổi</TableHead>
               <TableHead className="font-medium">Người tạo</TableHead>
-              <TableHead className="font-medium">Ngày tạo</TableHead>
               <TableHead className="font-medium">Thao tác</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {campaigns.map((campaign) => (
-              <TableRow 
-                key={campaign.id} 
-                className="hover:bg-gray-50 cursor-pointer"
-                onClick={() => handleCampaignClick(campaign)}
-              >
+              <TableRow key={campaign.id} className="hover:bg-gray-50">
+                <TableCell>
+                  <BulkSelectCheckbox
+                    checked={selectedCampaignIds.includes(campaign.id)}
+                    onChange={(checked) => handleSelectCampaign(campaign.id, checked)}
+                  />
+                </TableCell>
                 <TableCell className="font-medium">{campaign.name}</TableCell>
                 <TableCell>{getTypeBadge(campaign.type)}</TableCell>
                 <TableCell>{getStatusBadge(campaign.status)}</TableCell>
@@ -182,42 +259,42 @@ export function MarketingCampaignsTab() {
                 <TableCell>{campaign.sentCount.toLocaleString()}</TableCell>
                 <TableCell>{campaign.openRate.toFixed(1)}%</TableCell>
                 <TableCell>{campaign.clickRate.toFixed(1)}%</TableCell>
-                <TableCell className="font-semibold text-green-600">
-                  {campaign.conversionRate.toFixed(1)}%
-                </TableCell>
+                <TableCell>{campaign.conversionRate.toFixed(1)}%</TableCell>
                 <TableCell>{campaign.createdBy}</TableCell>
-                <TableCell>{new Date(campaign.createdDate).toLocaleDateString('vi-VN')}</TableCell>
-                <TableCell onClick={(e) => e.stopPropagation()}>
+                <TableCell>
                   <div className="flex items-center space-x-1">
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleCampaignClick(campaign)}
+                      onClick={() => handleViewAnalytics(campaign)}
                       className="h-8 px-2"
                     >
-                      <Eye className="w-3 h-3" />
+                      <BarChart3 className="w-3 h-3" />
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
+                      onClick={() => handleScheduleCampaign(campaign)}
                       className="h-8 px-2"
                     >
-                      <Edit className="w-3 h-3" />
+                      <Calendar className="w-3 h-3" />
                     </Button>
-                    {(campaign.status === 'active' || campaign.status === 'paused') && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleStatusToggle(campaign.id, campaign.status)}
-                        className="h-8 px-2"
-                      >
-                        {campaign.status === 'active' ? (
-                          <Pause className="w-3 h-3" />
-                        ) : (
-                          <Play className="w-3 h-3" />
-                        )}
-                      </Button>
-                    )}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleABTest(campaign)}
+                      className="h-8 px-2"
+                    >
+                      <Beaker className="w-3 h-3" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleROICalculator(campaign)}
+                      className="h-8 px-2"
+                    >
+                      <Calculator className="w-3 h-3" />
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>
@@ -229,16 +306,7 @@ export function MarketingCampaignsTab() {
       <CreateCampaignModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onCampaignCreated={(newCampaign) => {
-          setCampaigns(prev => [...prev, newCampaign]);
-          setIsCreateModalOpen(false);
-        }}
-      />
-
-      <CampaignDetailModal
-        campaign={selectedCampaign}
-        isOpen={isDetailModalOpen}
-        onClose={() => setIsDetailModalOpen(false)}
+        onCampaignCreated={handleCreateCampaign}
       />
     </div>
   );

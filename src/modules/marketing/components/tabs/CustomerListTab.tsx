@@ -1,11 +1,13 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, User, Eye } from 'lucide-react';
+import { RefreshCw, User, Eye, Download, Upload, Settings, Filter } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { CustomerDetailModal } from '../CustomerDetailModal';
+import { CustomerColumnFilter } from '../CustomerColumnFilter';
+import { BulkOperationsBar, BulkSelectCheckbox, BulkSelectHeader } from '@/components/ui/bulk-operations';
 
 interface MarketingCustomer {
   id: string;
@@ -61,14 +63,16 @@ const mockCustomers: MarketingCustomer[] = [
 
 export function CustomerListTab() {
   const [customers, setCustomers] = useState(mockCustomers);
+  const [filteredCustomers, setFilteredCustomers] = useState(mockCustomers);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<MarketingCustomer | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedCustomerIds, setSelectedCustomerIds] = useState<string[]>([]);
+  const [showColumnFilter, setShowColumnFilter] = useState(false);
 
   const handleSync = async () => {
     setIsLoading(true);
     try {
-      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       const newCustomersCount = Math.floor(Math.random() * 5) + 1;
@@ -87,9 +91,90 @@ export function CustomerListTab() {
     }
   };
 
+  const handleExport = () => {
+    const csvContent = filteredCustomers.map(customer => 
+      `${customer.name},${customer.phone},${customer.email},${customer.group},${customer.source},${customer.status},${customer.totalSpent}`
+    ).join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'customers.csv';
+    a.click();
+    
+    toast({
+      title: "Xuất dữ liệu thành công",
+      description: `Đã xuất ${filteredCustomers.length} khách hàng`,
+    });
+  };
+
+  const handleImport = () => {
+    // Mock import functionality
+    toast({
+      title: "Nhập dữ liệu",
+      description: "Tính năng nhập dữ liệu sẽ được phát triển",
+    });
+  };
+
+  const handleColumnSettings = () => {
+    toast({
+      title: "Cài đặt cột",
+      description: "Mở cài đặt hiển thị cột",
+    });
+  };
+
   const handleCustomerClick = (customer: MarketingCustomer) => {
     setSelectedCustomer(customer);
     setIsModalOpen(true);
+  };
+
+  const handleSelectCustomer = (customerId: string, selected: boolean) => {
+    if (selected) {
+      setSelectedCustomerIds(prev => [...prev, customerId]);
+    } else {
+      setSelectedCustomerIds(prev => prev.filter(id => id !== customerId));
+    }
+  };
+
+  const handleSelectAll = () => {
+    setSelectedCustomerIds(filteredCustomers.map(customer => customer.id));
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedCustomerIds([]);
+  };
+
+  const handleBulkDelete = () => {
+    setCustomers(prev => prev.filter(customer => !selectedCustomerIds.includes(customer.id)));
+    setFilteredCustomers(prev => prev.filter(customer => !selectedCustomerIds.includes(customer.id)));
+    setSelectedCustomerIds([]);
+    toast({
+      title: "Xóa thành công",
+      description: `Đã xóa ${selectedCustomerIds.length} khách hàng`,
+    });
+  };
+
+  const handleBulkExport = () => {
+    const selectedCustomers = filteredCustomers.filter(customer => 
+      selectedCustomerIds.includes(customer.id)
+    );
+    
+    const csvContent = selectedCustomers.map(customer => 
+      `${customer.name},${customer.phone},${customer.email},${customer.group}`
+    ).join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'selected-customers.csv';
+    a.click();
+    
+    toast({
+      title: "Xuất dữ liệu đã chọn",
+      description: `Đã xuất ${selectedCustomers.length} khách hàng`,
+    });
   };
 
   const getStatusBadge = (status: string) => {
@@ -118,20 +203,81 @@ export function CustomerListTab() {
           <User className="w-5 h-5 theme-text-primary" />
           <h2 className="text-xl font-semibold theme-text">Danh sách khách hàng</h2>
         </div>
-        <Button 
-          onClick={handleSync}
-          disabled={isLoading}
-          className="voucher-button-primary"
-        >
-          <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-          {isLoading ? 'Đang đồng bộ...' : 'Đồng bộ'}
-        </Button>
+        <div className="flex items-center space-x-2">
+          <Button 
+            onClick={() => setShowColumnFilter(!showColumnFilter)}
+            variant="outline"
+            size="sm"
+          >
+            <Filter className="w-4 h-4 mr-2" />
+            Lọc cột
+          </Button>
+          <Button 
+            onClick={handleImport}
+            variant="outline"
+            size="sm"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Nhập
+          </Button>
+          <Button 
+            onClick={handleExport}
+            variant="outline"
+            size="sm"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Xuất
+          </Button>
+          <Button 
+            onClick={handleColumnSettings}
+            variant="outline"
+            size="sm"
+          >
+            <Settings className="w-4 h-4 mr-2" />
+            Cài đặt cột
+          </Button>
+          <Button 
+            onClick={handleSync}
+            disabled={isLoading}
+            className="voucher-button-primary"
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            {isLoading ? 'Đang đồng bộ...' : 'Đồng bộ'}
+          </Button>
+        </div>
       </div>
+
+      {showColumnFilter && (
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <CustomerColumnFilter 
+            customers={customers}
+            onFilterChange={setFilteredCustomers}
+          />
+        </div>
+      )}
+
+      <BulkOperationsBar
+        selectedCount={selectedCustomerIds.length}
+        totalCount={filteredCustomers.length}
+        onSelectAll={handleSelectAll}
+        onDeselectAll={handleDeselectAll}
+        onBulkDelete={handleBulkDelete}
+        onBulkExport={handleBulkExport}
+        entityName="khách hàng"
+      />
 
       <div className="border rounded-lg overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12">
+                <BulkSelectHeader
+                  selectedCount={selectedCustomerIds.length}
+                  totalCount={filteredCustomers.length}
+                  onSelectAll={handleSelectAll}
+                  onDeselectAll={handleDeselectAll}
+                />
+              </TableHead>
               <TableHead className="font-medium">STT</TableHead>
               <TableHead className="font-medium">Tên khách hàng</TableHead>
               <TableHead className="font-medium">Số điện thoại</TableHead>
@@ -146,8 +292,14 @@ export function CustomerListTab() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {customers.map((customer, index) => (
+            {filteredCustomers.map((customer, index) => (
               <TableRow key={customer.id} className="hover:bg-gray-50">
+                <TableCell>
+                  <BulkSelectCheckbox
+                    checked={selectedCustomerIds.includes(customer.id)}
+                    onChange={(checked) => handleSelectCustomer(customer.id, checked)}
+                  />
+                </TableCell>
                 <TableCell>{index + 1}</TableCell>
                 <TableCell className="font-medium">{customer.name}</TableCell>
                 <TableCell>{customer.phone}</TableCell>

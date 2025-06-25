@@ -1,10 +1,10 @@
-
 import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { RefreshCw, Play, Edit, Trash2, Copy, Download } from 'lucide-react';
+import { RefreshCw, Play, Edit, Trash2, Copy, Download, Upload, Archive, Share, Star } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { BulkOperationsBar, BulkSelectCheckbox, BulkSelectHeader } from '@/components/ui/bulk-operations';
 
 interface SavedFilter {
   id: string;
@@ -53,6 +53,7 @@ const mockSavedFilters: SavedFilter[] = [
 export function SavedFiltersTab() {
   const [savedFilters, setSavedFilters] = useState(mockSavedFilters);
   const [refreshingIds, setRefreshingIds] = useState<string[]>([]);
+  const [selectedFilterIds, setSelectedFilterIds] = useState<string[]>([]);
 
   const handleRefresh = async (filterId: string) => {
     setRefreshingIds(prev => [...prev, filterId]);
@@ -145,19 +146,170 @@ export function SavedFiltersTab() {
     });
   };
 
+  const handleImportFilters = () => {
+    toast({
+      title: "Nhập bộ lọc",
+      description: "Chọn file để nhập các bộ lọc đã lưu",
+    });
+  };
+
+  const handleExportAll = () => {
+    const exportData = savedFilters.map(filter => ({
+      name: filter.name,
+      description: filter.description,
+      customerCount: filter.currentCustomerCount,
+      isActive: filter.isActive
+    }));
+    
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'all-saved-filters.json';
+    a.click();
+    
+    toast({
+      title: "Xuất tất cả bộ lọc",
+      description: `Đã xuất ${savedFilters.length} bộ lọc`,
+    });
+  };
+
+  const handleShareFilters = () => {
+    toast({
+      title: "Chia sẻ bộ lọc",
+      description: "Tạo liên kết chia sẻ cho các bộ lọc đã chọn",
+    });
+  };
+
+  const handleArchive = (filterId: string) => {
+    setSavedFilters(prev => prev.map(filter => 
+      filter.id === filterId 
+        ? { ...filter, isActive: false }
+        : filter
+    ));
+    toast({
+      title: "Lưu trữ bộ lọc",
+      description: "Bộ lọc đã được chuyển vào lưu trữ",
+    });
+  };
+
+  const handleFavorite = (filterId: string) => {
+    toast({
+      title: "Thêm vào yêu thích",
+      description: "Bộ lọc đã được đánh dấu yêu thích",
+    });
+  };
+
+  const handleSelectFilter = (filterId: string, selected: boolean) => {
+    if (selected) {
+      setSelectedFilterIds(prev => [...prev, filterId]);
+    } else {
+      setSelectedFilterIds(prev => prev.filter(id => id !== filterId));
+    }
+  };
+
+  const handleSelectAll = () => {
+    setSelectedFilterIds(savedFilters.map(filter => filter.id));
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedFilterIds([]);
+  };
+
+  const handleBulkDelete = () => {
+    setSavedFilters(prev => prev.filter(filter => !selectedFilterIds.includes(filter.id)));
+    setSelectedFilterIds([]);
+    toast({
+      title: "Xóa thành công",
+      description: `Đã xóa ${selectedFilterIds.length} bộ lọc`,
+    });
+  };
+
+  const handleBulkArchive = () => {
+    setSavedFilters(prev => prev.map(filter => 
+      selectedFilterIds.includes(filter.id) 
+        ? { ...filter, isActive: false }
+        : filter
+    ));
+    setSelectedFilterIds([]);
+    toast({
+      title: "Lưu trữ thành công",
+      description: `Đã lưu trữ ${selectedFilterIds.length} bộ lọc`,
+    });
+  };
+
+  const handleBulkExport = () => {
+    const selectedFilters = savedFilters.filter(filter => 
+      selectedFilterIds.includes(filter.id)
+    );
+    
+    const exportData = selectedFilters.map(filter => ({
+      name: filter.name,
+      description: filter.description,
+      customerCount: filter.currentCustomerCount
+    }));
+    
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'selected-filters.json';
+    a.click();
+    
+    toast({
+      title: "Xuất bộ lọc đã chọn",
+      description: `Đã xuất ${selectedFilters.length} bộ lọc`,
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold theme-text">Bộ lọc đã lưu</h2>
-        <Badge variant="outline" className="theme-text">
-          Tổng: {savedFilters.length} bộ lọc
-        </Badge>
+        <div className="flex items-center space-x-2">
+          <h2 className="text-xl font-semibold theme-text">Bộ lọc đã lưu</h2>
+          <Badge variant="outline" className="theme-text">
+            Tổng: {savedFilters.length} bộ lọc
+          </Badge>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button onClick={handleImportFilters} variant="outline" size="sm">
+            <Upload className="w-4 h-4 mr-2" />
+            Nhập
+          </Button>
+          <Button onClick={handleExportAll} variant="outline" size="sm">
+            <Download className="w-4 h-4 mr-2" />
+            Xuất tất cả
+          </Button>
+          <Button onClick={handleShareFilters} variant="outline" size="sm">
+            <Share className="w-4 h-4 mr-2" />
+            Chia sẻ
+          </Button>
+        </div>
       </div>
+
+      <BulkOperationsBar
+        selectedCount={selectedFilterIds.length}
+        totalCount={savedFilters.length}
+        onSelectAll={handleSelectAll}
+        onDeselectAll={handleDeselectAll}
+        onBulkDelete={handleBulkDelete}
+        onBulkExport={handleBulkExport}
+        onBulkArchive={handleBulkArchive}
+        entityName="bộ lọc"
+      />
 
       <div className="border rounded-lg overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12">
+                <BulkSelectHeader
+                  selectedCount={selectedFilterIds.length}
+                  totalCount={savedFilters.length}
+                  onSelectAll={handleSelectAll}
+                  onDeselectAll={handleDeselectAll}
+                />
+              </TableHead>
               <TableHead className="font-medium">Tên bộ lọc</TableHead>
               <TableHead className="font-medium">Mô tả</TableHead>
               <TableHead className="font-medium">Người tạo</TableHead>
@@ -171,6 +323,12 @@ export function SavedFiltersTab() {
           <TableBody>
             {savedFilters.map((filter) => (
               <TableRow key={filter.id} className="hover:bg-gray-50">
+                <TableCell>
+                  <BulkSelectCheckbox
+                    checked={selectedFilterIds.includes(filter.id)}
+                    onChange={(checked) => handleSelectFilter(filter.id, checked)}
+                  />
+                </TableCell>
                 <TableCell className="font-medium">{filter.name}</TableCell>
                 <TableCell className="max-w-xs truncate" title={filter.description}>
                   {filter.description}
@@ -217,6 +375,14 @@ export function SavedFiltersTab() {
                     <Button
                       size="sm"
                       variant="outline"
+                      onClick={() => handleFavorite(filter.id)}
+                      className="h-8 px-2"
+                    >
+                      <Star className="w-3 h-3" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
                       onClick={() => handleEdit(filter)}
                       className="h-8 px-2"
                     >
@@ -229,6 +395,14 @@ export function SavedFiltersTab() {
                       className="h-8 px-2"
                     >
                       <Copy className="w-3 h-3" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleArchive(filter.id)}
+                      className="h-8 px-2"
+                    >
+                      <Archive className="w-3 h-3" />
                     </Button>
                     <Button
                       size="sm"
