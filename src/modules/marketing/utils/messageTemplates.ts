@@ -16,21 +16,24 @@ export const DEFAULT_TEMPLATES: Record<MessageType, MessageTemplate> = {
     type: 'zalo',
     name: 'Tin nhắn Zalo mặc định',
     content: 'Xin chào [Tên khách hàng],\n\nCảm ơn bạn đã tin tưởng và đồng hành cùng chúng tôi với tổng chi tiêu [Tổng chi tiêu].\n\nChúc bạn một ngày tốt lành!',
-    variables: ['[Tên khách hàng]', '[Tổng chi tiêu]']
+    variables: ['[Tên khách hàng]', '[Tổng chi tiêu]'],
+    isDefault: true
   },
   email: {
     id: 'email_default',
     type: 'email',
     name: 'Email marketing mặc định',
     content: 'Kính gửi [Tên khách hàng],\n\nCảm ơn bạn đã là khách hàng thân thiết với tổng chi tiêu [Tổng chi tiêu] và [Điểm tích lũy].\n\nTrân trọng,\nĐội ngũ chăm sóc khách hàng',
-    variables: ['[Tên khách hàng]', '[Tổng chi tiêu]', '[Điểm tích lũy]']
+    variables: ['[Tên khách hàng]', '[Tổng chi tiêu]', '[Điểm tích lũy]'],
+    isDefault: true
   },
   sms: {
     id: 'sms_default',
     type: 'sms',
     name: 'SMS ngắn gọn',
     content: 'Xin chào [Tên khách hàng]! Cảm ơn bạn đã đồng hành cùng chúng tôi. Tổng chi tiêu: [Tổng chi tiêu].',
-    variables: ['[Tên khách hàng]', '[Tổng chi tiêu]']
+    variables: ['[Tên khách hàng]', '[Tổng chi tiêu]'],
+    isDefault: true
   }
 };
 

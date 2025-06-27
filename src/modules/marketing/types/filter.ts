@@ -83,6 +83,12 @@ export interface MessageTemplate {
   isDefault: boolean;
 }
 
+export interface MessageVariable {
+  key: string;
+  label: string;
+  example: string;
+}
+
 export type ActionType = 'save_filter' | 'export_excel' | 'send_zalo' | 'send_email' | 'send_sms';
 
 export interface ActionHistory {
