@@ -1,44 +1,15 @@
 
-export type FilterOperator = 
-  | 'equals' 
-  | 'not_equals' 
-  | 'contains' 
-  | 'not_contains'
-  | 'starts_with'
-  | 'ends_with'
-  | 'greater_than'
-  | 'less_than'
-  | 'greater_equal'
-  | 'less_equal'
-  | 'in'
-  | 'not_in'
-  | 'between'
-  | 'is_null'
-  | 'is_not_null';
-
-export type FilterFieldType = 'string' | 'number' | 'date' | 'boolean' | 'select' | 'multiselect';
-
-export type FilterLogic = 'and' | 'or';
-
-export interface FilterField {
-  id: string;
-  label: string;
-  type: FilterFieldType;
-  category: 'customer' | 'invoice' | 'product';
-  operators: FilterOperator[];
-  options?: Array<{ value: string; label: string }>;
-}
-
 export interface FilterCondition {
   id: string;
   field: string;
-  operator: FilterOperator;
-  value: any;
+  operator: 'equals' | 'not_equals' | 'contains' | 'not_contains' | 'starts_with' | 'ends_with' | 'greater_than' | 'less_than' | 'greater_equal' | 'less_equal' | 'between' | 'is_empty' | 'is_not_empty' | 'in_list' | 'not_in_list';
+  value: string | string[] | number | boolean;
+  displayValue?: string;
 }
 
 export interface FilterGroup {
   id: string;
-  logic: FilterLogic;
+  logic: 'and' | 'or';
   conditions: FilterCondition[];
   groups?: FilterGroup[];
 }
@@ -46,64 +17,61 @@ export interface FilterGroup {
 export interface AdvancedFilter {
   id: string;
   name?: string;
-  logic: FilterLogic;
+  description?: string;
+  logic: 'and' | 'or';
   groups: FilterGroup[];
   createdAt: string;
+  updatedAt?: string;
+  createdBy?: string;
+  tags?: string[];
 }
 
 export interface FilterResult {
-  customers: string[];
-  totalCount: number;
-  executionTime: number;
+  customerId: string;
+  matchedConditions: string[];
+  score: number;
 }
 
-export interface SavedFilterSegment {
-  id: string;
-  name: string;
-  description?: string;
-  filter: AdvancedFilter;
+export interface SavedFilter extends AdvancedFilter {
   customerCount: number;
-  createdAt: string;
-  updatedAt: string;
+  lastUsed?: string;
+  usageCount: number;
+  isStarred: boolean;
+  isArchived: boolean;
 }
 
-// New types for action history
-export type ActionType = 'save_filter' | 'export_excel' | 'send_zalo' | 'send_email' | 'send_sms';
-
-export interface ActionHistoryItem {
+export interface FilterField {
   id: string;
-  type: ActionType;
-  timestamp: string;
-  customerCount: number;
-  filterName?: string;
-  filterSnapshot?: AdvancedFilter;
-  details?: {
-    messageContent?: string;
-    exportFormat?: string;
-    recipientCount?: number;
+  label: string;
+  type: 'text' | 'number' | 'date' | 'select' | 'boolean' | 'multiselect';
+  category: string;
+  options?: { value: string; label: string }[];
+  validation?: {
+    required?: boolean;
+    min?: number;
+    max?: number;
+    pattern?: string;
   };
 }
 
-// New types for message sending
 export type MessageType = 'zalo' | 'email' | 'sms';
 
 export interface MessageTemplate {
   id: string;
-  type: MessageType;
   name: string;
+  type: MessageType;
+  subject?: string;
   content: string;
   variables: string[];
+  isDefault: boolean;
 }
 
-export interface MessageVariable {
-  key: string;
-  label: string;
-  example: string;
-}
-
-export interface SendMessageRequest {
-  type: MessageType;
-  content: string;
-  customerIds: string[];
-  variables?: Record<string, string>;
+export interface ActionHistory {
+  id: string;
+  action: 'save_filter' | 'export_excel' | 'send_zalo' | 'send_email' | 'send_sms';
+  timestamp: string;
+  customerCount: number;
+  filterName: string;
+  details?: Record<string, any>;
+  user: string;
 }
