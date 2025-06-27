@@ -1,9 +1,15 @@
 
+export type FilterOperator = 
+  | 'equals' | 'not_equals' | 'contains' | 'not_contains' 
+  | 'starts_with' | 'ends_with' | 'greater_than' | 'less_than' 
+  | 'greater_equal' | 'less_equal' | 'between' | 'is_empty' 
+  | 'is_not_empty' | 'in_list' | 'not_in_list' | 'is_null' | 'is_not_null' | 'in' | 'not_in';
+
 export interface FilterCondition {
   id: string;
   field: string;
-  operator: 'equals' | 'not_equals' | 'contains' | 'not_contains' | 'starts_with' | 'ends_with' | 'greater_than' | 'less_than' | 'greater_equal' | 'less_equal' | 'between' | 'is_empty' | 'is_not_empty' | 'in_list' | 'not_in_list';
-  value: string | string[] | number | boolean;
+  operator: FilterOperator;
+  value: string | string[] | number | boolean | { from?: string; to?: string };
   displayValue?: string;
 }
 
@@ -27,9 +33,9 @@ export interface AdvancedFilter {
 }
 
 export interface FilterResult {
-  customerId: string;
-  matchedConditions: string[];
-  score: number;
+  customers: string[];
+  totalCount: number;
+  executionTime: number;
 }
 
 export interface SavedFilter extends AdvancedFilter {
@@ -40,11 +46,22 @@ export interface SavedFilter extends AdvancedFilter {
   isArchived: boolean;
 }
 
+export interface SavedFilterSegment {
+  id: string;
+  name: string;
+  description: string;
+  filter: AdvancedFilter;
+  customerCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface FilterField {
   id: string;
   label: string;
-  type: 'text' | 'number' | 'date' | 'select' | 'boolean' | 'multiselect';
+  type: 'text' | 'number' | 'date' | 'select' | 'boolean' | 'multiselect' | 'string';
   category: string;
+  operators: FilterOperator[];
   options?: { value: string; label: string }[];
   validation?: {
     required?: boolean;
@@ -66,12 +83,24 @@ export interface MessageTemplate {
   isDefault: boolean;
 }
 
+export type ActionType = 'save_filter' | 'export_excel' | 'send_zalo' | 'send_email' | 'send_sms';
+
 export interface ActionHistory {
   id: string;
-  action: 'save_filter' | 'export_excel' | 'send_zalo' | 'send_email' | 'send_sms';
+  action: ActionType;
   timestamp: string;
   customerCount: number;
   filterName: string;
   details?: Record<string, any>;
   user: string;
+}
+
+export interface ActionHistoryItem {
+  id: string;
+  type: ActionType;
+  timestamp: string;
+  customerCount: number;
+  filterName?: string;
+  filterSnapshot?: AdvancedFilter;
+  details?: Record<string, any>;
 }

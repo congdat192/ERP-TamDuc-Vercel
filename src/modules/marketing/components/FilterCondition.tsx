@@ -28,9 +28,13 @@ const OPERATOR_LABELS: Record<FilterOperator, string> = {
   less_equal: 'Nhỏ hơn hoặc bằng',
   in: 'Thuộc',
   not_in: 'Không thuộc',
+  in_list: 'Thuộc',
+  not_in_list: 'Không thuộc',
   between: 'Trong khoảng',
   is_null: 'Trống',
-  is_not_null: 'Không trống'
+  is_not_null: 'Không trống',
+  is_empty: 'Trống',
+  is_not_empty: 'Không trống'
 };
 
 export function FilterCondition({ 
@@ -73,14 +77,15 @@ export function FilterCondition({
   const renderValueInput = () => {
     if (!selectedField) return null;
 
-    if (condition.operator === 'is_null' || condition.operator === 'is_not_null') {
+    if (condition.operator === 'is_null' || condition.operator === 'is_not_null' || 
+        condition.operator === 'is_empty' || condition.operator === 'is_not_empty') {
       return null;
     }
 
     switch (selectedField.type) {
       case 'select':
         return (
-          <Select value={condition.value} onValueChange={handleValueChange}>
+          <Select value={String(condition.value)} onValueChange={handleValueChange}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Chọn giá trị" />
             </SelectTrigger>
@@ -96,7 +101,7 @@ export function FilterCondition({
 
       case 'multiselect':
         return (
-          <Select value={condition.value} onValueChange={handleValueChange}>
+          <Select value={String(condition.value)} onValueChange={handleValueChange}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Chọn giá trị" />
             </SelectTrigger>
@@ -112,23 +117,24 @@ export function FilterCondition({
 
       case 'number':
         if (condition.operator === 'between') {
+          const rangeValue = condition.value as { from?: string; to?: string } || {};
           return (
             <div className="flex space-x-2">
               <Input
                 type="number"
                 placeholder="Từ"
-                value={condition.value?.from || ''}
+                value={rangeValue.from || ''}
                 onChange={(e) => handleValueChange({ 
-                  ...condition.value, 
+                  ...rangeValue, 
                   from: e.target.value 
                 })}
               />
               <Input
                 type="number"
                 placeholder="Đến"
-                value={condition.value?.to || ''}
+                value={rangeValue.to || ''}
                 onChange={(e) => handleValueChange({ 
-                  ...condition.value, 
+                  ...rangeValue, 
                   to: e.target.value 
                 })}
               />
@@ -139,28 +145,29 @@ export function FilterCondition({
           <Input
             type="number"
             placeholder="Nhập số"
-            value={condition.value}
+            value={String(condition.value)}
             onChange={(e) => handleValueChange(e.target.value)}
           />
         );
 
       case 'date':
         if (condition.operator === 'between') {
+          const rangeValue = condition.value as { from?: string; to?: string } || {};
           return (
             <div className="flex space-x-2">
               <Input
                 type="date"
-                value={condition.value?.from || ''}
+                value={rangeValue.from || ''}
                 onChange={(e) => handleValueChange({ 
-                  ...condition.value, 
+                  ...rangeValue, 
                   from: e.target.value 
                 })}
               />
               <Input
                 type="date"
-                value={condition.value?.to || ''}
+                value={rangeValue.to || ''}
                 onChange={(e) => handleValueChange({ 
-                  ...condition.value, 
+                  ...rangeValue, 
                   to: e.target.value 
                 })}
               />
@@ -170,7 +177,7 @@ export function FilterCondition({
         return (
           <Input
             type="date"
-            value={condition.value}
+            value={String(condition.value)}
             onChange={(e) => handleValueChange(e.target.value)}
           />
         );
@@ -180,7 +187,7 @@ export function FilterCondition({
           <Input
             type="text"
             placeholder="Nhập giá trị"
-            value={condition.value}
+            value={String(condition.value)}
             onChange={(e) => handleValueChange(e.target.value)}
           />
         );

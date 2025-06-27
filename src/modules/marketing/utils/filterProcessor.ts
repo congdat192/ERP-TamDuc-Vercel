@@ -1,4 +1,3 @@
-
 import { AdvancedFilter, FilterGroup, FilterCondition, FilterResult } from '../types/filter';
 import { mockCustomers, mockSales, mockInventory, MockCustomer, MockSale, MockInventory } from '@/data/mockData';
 
@@ -185,7 +184,7 @@ export class FilterProcessor {
 
   private static evaluateCondition(fieldValue: any, operator: string, conditionValue: any): boolean {
     if (fieldValue === null || fieldValue === undefined) {
-      return operator === 'is_null';
+      return operator === 'is_null' || operator === 'is_empty';
     }
 
     switch (operator) {
@@ -200,23 +199,30 @@ export class FilterProcessor {
       case 'greater_equal': return Number(fieldValue) >= Number(conditionValue);
       case 'less_equal': return Number(fieldValue) <= Number(conditionValue);
       case 'in': 
+      case 'in_list':
         if (Array.isArray(fieldValue)) {
           return fieldValue.includes(conditionValue);
         }
         return fieldValue === conditionValue;
       case 'not_in':
+      case 'not_in_list':
         if (Array.isArray(fieldValue)) {
           return !fieldValue.includes(conditionValue);
         }
         return fieldValue !== conditionValue;
       case 'between': {
         const num = Number(fieldValue);
-        const from = Number(conditionValue.from);
-        const to = Number(conditionValue.to);
+        const range = conditionValue as { from?: string; to?: string };
+        const from = Number(range.from);
+        const to = Number(range.to);
         return num >= from && num <= to;
       }
-      case 'is_null': return fieldValue === null || fieldValue === undefined || fieldValue === '';
-      case 'is_not_null': return fieldValue !== null && fieldValue !== undefined && fieldValue !== '';
+      case 'is_null': 
+      case 'is_empty': 
+        return fieldValue === null || fieldValue === undefined || fieldValue === '';
+      case 'is_not_null': 
+      case 'is_not_empty': 
+        return fieldValue !== null && fieldValue !== undefined && fieldValue !== '';
       default: return false;
     }
   }
