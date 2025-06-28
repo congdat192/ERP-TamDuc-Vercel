@@ -1,12 +1,12 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, User, Eye, Download, Upload, Settings, Filter } from 'lucide-react';
+import { RefreshCw, User, Eye, Edit, Download, Upload, Settings } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { CustomerDetailModal } from '../CustomerDetailModal';
-import { CustomerColumnFilter } from '../CustomerColumnFilter';
+import { EditCustomerModal } from '../EditCustomerModal';
+import { CustomerFiltersBar, CustomerFilters } from '../CustomerFiltersBar';
 import { BulkOperationsBar, BulkSelectCheckbox, BulkSelectHeader } from '@/components/ui/bulk-operations';
 
 interface MarketingCustomer {
@@ -66,9 +66,69 @@ export function CustomerListTab() {
   const [filteredCustomers, setFilteredCustomers] = useState(mockCustomers);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<MarketingCustomer | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState<MarketingCustomer | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedCustomerIds, setSelectedCustomerIds] = useState<string[]>([]);
-  const [showColumnFilter, setShowColumnFilter] = useState(false);
+
+  const applyFilters = (filters: CustomerFilters) => {
+    let filtered = customers;
+
+    // Search filter
+    if (filters.search.trim()) {
+      const searchTerm = filters.search.toLowerCase();
+      filtered = filtered.filter(customer => 
+        customer.name.toLowerCase().includes(searchTerm) ||
+        customer.phone.includes(searchTerm) ||
+        customer.email.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    // Group filter
+    if (filters.group !== 'all') {
+      filtered = filtered.filter(customer => customer.group === filters.group);
+    }
+
+    // Source filter
+    if (filters.source !== 'all') {
+      filtered = filtered.filter(customer => customer.source === filters.source);
+    }
+
+    // Status filter
+    if (filters.status !== 'all') {
+      filtered = filtered.filter(customer => customer.status === filters.status);
+    }
+
+    // Voucher range filter
+    if (filters.voucherRange.min || filters.voucherRange.max) {
+      const min = parseInt(filters.voucherRange.min) || 0;
+      const max = parseInt(filters.voucherRange.max) || Infinity;
+      filtered = filtered.filter(customer => 
+        customer.voucherCount >= min && customer.voucherCount <= max
+      );
+    }
+
+    // Spent range filter
+    if (filters.spentRange.min || filters.spentRange.max) {
+      const min = parseInt(filters.spentRange.min) || 0;
+      const max = parseInt(filters.spentRange.max) || Infinity;
+      filtered = filtered.filter(customer => 
+        customer.totalSpent >= min && customer.totalSpent <= max
+      );
+    }
+
+    // Date range filter
+    if (filters.dateRange.from || filters.dateRange.to) {
+      const fromDate = filters.dateRange.from ? new Date(filters.dateRange.from) : new Date('1900-01-01');
+      const toDate = filters.dateRange.to ? new Date(filters.dateRange.to) : new Date();
+      filtered = filtered.filter(customer => {
+        const customerDate = new Date(customer.createdDate);
+        return customerDate >= fromDate && customerDate <= toDate;
+      });
+    }
+
+    setFilteredCustomers(filtered);
+  };
 
   const handleSync = async () => {
     setIsLoading(true);
@@ -110,23 +170,25 @@ export function CustomerListTab() {
   };
 
   const handleImport = () => {
-    // Mock import functionality
     toast({
       title: "Nhập dữ liệu",
       description: "Tính năng nhập dữ liệu sẽ được phát triển",
     });
   };
 
-  const handleColumnSettings = () => {
-    toast({
-      title: "Cài đặt cột",
-      description: "Mở cài đặt hiển thị cột",
-    });
-  };
-
   const handleCustomerClick = (customer: MarketingCustomer) => {
     setSelectedCustomer(customer);
-    setIsModalOpen(true);
+    setIsDetailModalOpen(true);
+  };
+
+  const handleEditClick = (customer: MarketingCustomer) => {
+    setEditingCustomer(customer);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveCustomer = (updatedCustomer: MarketingCustomer) => {
+    setCustomers(prev => prev.map(c => c.id === updatedCustomer.id ? updatedCustomer : c));
+    setFilteredCustomers(prev => prev.map(c => c.id === updatedCustomer.id ? updatedCustomer : c));
   };
 
   const handleSelectCustomer = (customerId: string, selected: boolean) => {
@@ -205,14 +267,6 @@ export function CustomerListTab() {
         </div>
         <div className="flex items-center space-x-2">
           <Button 
-            onClick={() => setShowColumnFilter(!showColumnFilter)}
-            variant="outline"
-            size="sm"
-          >
-            <Filter className="w-4 h-4 mr-2" />
-            Lọc cột
-          </Button>
-          <Button 
             onClick={handleImport}
             variant="outline"
             size="sm"
@@ -229,14 +283,6 @@ export function CustomerListTab() {
             Xuất
           </Button>
           <Button 
-            onClick={handleColumnSettings}
-            variant="outline"
-            size="sm"
-          >
-            <Settings className="w-4 h-4 mr-2" />
-            Cài đặt cột
-          </Button>
-          <Button 
             onClick={handleSync}
             disabled={isLoading}
             className="voucher-button-primary"
@@ -247,14 +293,7 @@ export function CustomerListTab() {
         </div>
       </div>
 
-      {showColumnFilter && (
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <CustomerColumnFilter 
-            customers={customers}
-            onFilterChange={setFilteredCustomers}
-          />
-        </div>
-      )}
+      <CustomerFiltersBar onFilterChange={applyFilters} />
 
       <BulkOperationsBar
         selectedCount={selectedCustomerIds.length}
@@ -313,13 +352,22 @@ export function CustomerListTab() {
                 <TableCell>{customer.totalSpent.toLocaleString('vi-VN')}đ</TableCell>
                 <TableCell>{customer.voucherCount}</TableCell>
                 <TableCell>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleCustomerClick(customer)}
-                  >
-                    <Eye className="w-4 h-4" />
-                  </Button>
+                  <div className="flex space-x-1">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleCustomerClick(customer)}
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleEditClick(customer)}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -329,8 +377,15 @@ export function CustomerListTab() {
 
       <CustomerDetailModal
         customer={selectedCustomer}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+      />
+
+      <EditCustomerModal
+        customer={editingCustomer}
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSave={handleSaveCustomer}
       />
     </div>
   );
