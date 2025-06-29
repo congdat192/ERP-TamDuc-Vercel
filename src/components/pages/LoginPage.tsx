@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { User, Building2, Eye, EyeOff, Lock, AlertTriangle } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { User, Building2, Eye, EyeOff, Lock, AlertTriangle, Globe, TestTube } from 'lucide-react';
 import { User as UserType } from '@/types/auth';
 import {
   Dialog,
@@ -19,13 +19,23 @@ import {
 import { useToast } from '@/hooks/use-toast';
 
 interface LoginPageProps {
-  onLogin: (username: string, password: string, rememberMe?: boolean) => void;
+  onLogin: (email: string, password: string, rememberMe?: boolean) => void;
   mockUsers: UserType[];
   loginAttempts?: number;
+  isLoading?: boolean;
+  apiMode?: boolean;
+  onToggleApiMode?: () => void;
 }
 
-export function LoginPage({ onLogin, mockUsers, loginAttempts = 0 }: LoginPageProps) {
-  const [username, setUsername] = useState('');
+export function LoginPage({ 
+  onLogin, 
+  mockUsers, 
+  loginAttempts = 0, 
+  isLoading = false,
+  apiMode = false,
+  onToggleApiMode 
+}: LoginPageProps) {
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -38,28 +48,30 @@ export function LoginPage({ onLogin, mockUsers, loginAttempts = 0 }: LoginPagePr
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isAccountLocked) {
-      toast({
-        title: "Tài khoản bị khóa",
-        description: "Tài khoản đã bị khóa do quá nhiều lần đăng nhập thất bại. Vui lòng thử lại sau 15 phút.",
-        variant: "destructive",
-      });
+    if (isAccountLocked || isLoading) {
+      if (isAccountLocked) {
+        toast({
+          title: "Tài khoản bị khóa",
+          description: "Tài khoản đã bị khóa do quá nhiều lần đăng nhập thất bại. Vui lòng thử lại sau 15 phút.",
+          variant: "destructive",
+        });
+      }
       return;
     }
     
-    if (username && password) {
-      onLogin(username, password, rememberMe);
+    if (email && password) {
+      onLogin(email, password, rememberMe);
     }
   };
 
   const handleQuickLogin = (userType: string) => {
-    if (isAccountLocked) return;
+    if (isAccountLocked || isLoading || apiMode) return;
     
     const user = mockUsers.find(u => u.username === userType);
     if (user) {
-      setUsername(user.username);
+      setEmail(user.email);
       setPassword('demo');
-      onLogin(user.username, 'demo', rememberMe);
+      onLogin(user.email, 'demo', rememberMe);
     }
   };
 
@@ -150,8 +162,23 @@ export function LoginPage({ onLogin, mockUsers, loginAttempts = 0 }: LoginPagePr
             <CardHeader>
               <CardTitle className="text-2xl font-bold text-center">Đăng Nhập</CardTitle>
               <CardDescription className="text-center">
-                Chọn tài khoản demo hoặc đăng nhập thủ công
+                {apiMode ? 'Đăng nhập với API thực tế' : 'Chọn tài khoản demo hoặc đăng nhập thủ công'}
               </CardDescription>
+              
+              {/* API Mode Toggle */}
+              {onToggleApiMode && (
+                <div className="flex items-center justify-center space-x-3 p-3 bg-gray-50 rounded-md">
+                  <TestTube className="w-4 h-4 text-gray-600" />
+                  <span className="text-sm text-gray-600">Demo</span>
+                  <Switch
+                    checked={apiMode}
+                    onCheckedChange={onToggleApiMode}
+                    disabled={isLoading}
+                  />
+                  <span className="text-sm text-gray-600">API</span>
+                  <Globe className="w-4 h-4 text-blue-600" />
+                </div>
+              )}
               
               {/* Account Lockout Warning */}
               {isAccountLocked && (
@@ -174,53 +201,57 @@ export function LoginPage({ onLogin, mockUsers, loginAttempts = 0 }: LoginPagePr
               )}
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Quick Login Options */}
-              <div className="space-y-3">
-                <h3 className="text-sm font-medium text-gray-700">Đăng Nhập Nhanh (Demo)</h3>
-                <div className="grid grid-cols-1 gap-2">
-                  {mockUsers.map((user) => (
-                    <Button
-                      key={user.id}
-                      variant="outline"
-                      onClick={() => handleQuickLogin(user.username)}
-                      className="justify-between h-auto p-3"
-                      disabled={isAccountLocked}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <User className="w-4 h-4" />
-                        <div className="text-left">
-                          <div className="font-medium">{user.fullName}</div>
-                          <div className="text-xs text-gray-500">{user.username}</div>
-                        </div>
-                      </div>
-                      <Badge className={getRoleBadgeColor(user.role)}>
-                        {getRoleDisplayName(user.role)}
-                      </Badge>
-                    </Button>
-                  ))}
-                </div>
-              </div>
+              {/* Quick Login Options - Only show in demo mode */}
+              {!apiMode && (
+                <>
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-medium text-gray-700">Đăng Nhập Nhanh (Demo)</h3>
+                    <div className="grid grid-cols-1 gap-2">
+                      {mockUsers.map((user) => (
+                        <Button
+                          key={user.id}
+                          variant="outline"
+                          onClick={() => handleQuickLogin(user.username)}
+                          className="justify-between h-auto p-3"
+                          disabled={isAccountLocked || isLoading}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <User className="w-4 h-4" />
+                            <div className="text-left">
+                              <div className="font-medium">{user.fullName}</div>
+                              <div className="text-xs text-gray-500">{user.email}</div>
+                            </div>
+                          </div>
+                          <Badge className={getRoleBadgeColor(user.role)}>
+                            {getRoleDisplayName(user.role)}
+                          </Badge>
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
 
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-muted-foreground">Hoặc</span>
-                </div>
-              </div>
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-white px-2 text-muted-foreground">Hoặc</span>
+                    </div>
+                  </div>
+                </>
+              )}
 
               {/* Manual Login Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="username">Tên Đăng Nhập</Label>
+                  <Label htmlFor="email">Email</Label>
                   <Input
-                    id="username"
-                    type="text"
-                    placeholder="Nhập tên đăng nhập"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    disabled={isAccountLocked}
+                    id="email"
+                    type="email"
+                    placeholder={apiMode ? "Nhập email của bạn" : "Nhập email hoặc username"}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={isAccountLocked || isLoading}
                     required
                   />
                 </div>
@@ -234,7 +265,7 @@ export function LoginPage({ onLogin, mockUsers, loginAttempts = 0 }: LoginPagePr
                       placeholder="Nhập mật khẩu"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      disabled={isAccountLocked}
+                      disabled={isAccountLocked || isLoading}
                       required
                     />
                     <Button
@@ -243,7 +274,7 @@ export function LoginPage({ onLogin, mockUsers, loginAttempts = 0 }: LoginPagePr
                       size="sm"
                       className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                       onClick={() => setShowPassword(!showPassword)}
-                      disabled={isAccountLocked}
+                      disabled={isAccountLocked || isLoading}
                     >
                       {showPassword ? (
                         <EyeOff className="h-4 w-4" />
@@ -260,7 +291,7 @@ export function LoginPage({ onLogin, mockUsers, loginAttempts = 0 }: LoginPagePr
                     id="remember"
                     checked={rememberMe}
                     onCheckedChange={(checked) => setRememberMe(checked === true)}
-                    disabled={isAccountLocked}
+                    disabled={isAccountLocked || isLoading}
                   />
                   <Label htmlFor="remember" className="text-sm font-normal">
                     Duy trì đăng nhập
@@ -270,9 +301,9 @@ export function LoginPage({ onLogin, mockUsers, loginAttempts = 0 }: LoginPagePr
                 <Button 
                   type="submit" 
                   className="w-full"
-                  disabled={isAccountLocked}
+                  disabled={isAccountLocked || isLoading}
                 >
-                  Đăng Nhập
+                  {isLoading ? 'Đang đăng nhập...' : 'Đăng Nhập'}
                 </Button>
               </form>
 
@@ -282,14 +313,21 @@ export function LoginPage({ onLogin, mockUsers, loginAttempts = 0 }: LoginPagePr
                   variant="link" 
                   className="text-sm text-blue-600 hover:text-blue-800"
                   onClick={() => setShowForgotPassword(true)}
+                  disabled={isLoading}
                 >
                   Quên mật khẩu?
                 </Button>
               </div>
 
               <div className="text-center text-xs text-gray-500">
-                <p>Demo: Sử dụng bất kỳ mật khẩu nào</p>
-                <p>Usernames: admin, voucher_admin, telesales, custom</p>
+                {apiMode ? (
+                  <p>Sử dụng email và mật khẩu thực tế để đăng nhập</p>
+                ) : (
+                  <>
+                    <p>Demo: Sử dụng bất kỳ mật khẩu nào</p>
+                    <p>Emails: admin@company.com, voucher.admin@company.com, telesales@company.com</p>
+                  </>
+                )}
               </div>
 
               {/* Footer Links */}

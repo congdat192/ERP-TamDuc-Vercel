@@ -1,12 +1,17 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@/types/auth';
+import { authService, LoginRequest } from '@/services/authService';
+import { shouldUseRealAPI } from '@/config/app';
 
 interface AuthContextType {
   currentUser: User | null;
   isAuthenticated: boolean;
-  login: (username: string, password: string) => Promise<boolean>;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   loginAttempts: number;
+  apiMode: boolean;
+  toggleApiMode: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -217,6 +222,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [apiMode, setApiMode] = useState(shouldUseRealAPI());
 
   // Initialize auth state from localStorage
   useEffect(() => {
@@ -266,33 +273,116 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  const login = async (username: string, password: string): Promise<boolean> => {
-    // Simple mock authentication
-    const user = mockUsers.find(u => u.username === username);
+  const toggleApiMode = () => {
+    const newMode = !apiMode;
+    setApiMode(newMode);
+    localStorage.setItem('use_real_api', newMode.toString());
     
-    if (user && user.status === 'active') {
-      const userWithLastLogin = {
-        ...user,
-        lastLogin: new Date().toISOString()
-      };
-      
-      setCurrentUser(userWithLastLogin);
-      setLoginAttempts(0);
-      
-      // Save to localStorage
-      saveToStorage(STORAGE_KEYS.USER, userWithLastLogin);
-      saveToStorage(STORAGE_KEYS.SESSION_TIMESTAMP, Date.now());
-      saveToStorage(STORAGE_KEYS.LOGIN_ATTEMPTS, 0);
-      
-      console.log('User logged in successfully:', username);
-      return true;
-    } else {
+    // Logout when switching modes
+    if (currentUser) {
+      logout();
+    }
+  };
+
+  const login = async (email: string, password: string): Promise<boolean> => {
+    setIsLoading(true);
+    
+    try {
+      if (apiMode) {
+        // Use real API
+        const credentials: LoginRequest = { email, password };
+        const response = await authService.login(credentials);
+        
+        if (response.success && response.data) {
+          const apiUser = response.data.user;
+          
+          // Transform API user to our User interface
+          const userWithLastLogin: User = {
+            id: apiUser.id,
+            username: apiUser.email.split('@')[0], // Use email prefix as username
+            fullName: apiUser.name || 'API User',
+            role: (apiUser.role as any) || 'custom',
+            email: apiUser.email,
+            status: 'active',
+            createdAt: new Date().toISOString(),
+            lastLogin: new Date().toISOString(),
+            emailVerified: true,
+            isActive: true,
+            permissions: {
+              modules: ['dashboard', 'customers', 'marketing'],
+              voucherFeatures: [],
+              canManageUsers: false,
+              canViewAllVouchers: false,
+            },
+            securitySettings: {
+              twoFactorEnabled: false,
+              loginAttemptLimit: 3,
+              passwordChangeRequired: false,
+              sessionTimeoutMinutes: 60,
+            },
+            activities: [],
+          };
+          
+          setCurrentUser(userWithLastLogin);
+          setLoginAttempts(0);
+          
+          // Save to localStorage
+          saveToStorage(STORAGE_KEYS.USER, userWithLastLogin);
+          saveToStorage(STORAGE_KEYS.SESSION_TIMESTAMP, Date.now());
+          saveToStorage(STORAGE_KEYS.LOGIN_ATTEMPTS, 0);
+          
+          // Save API token if provided
+          if (response.data.token) {
+            authService.saveToken(response.data.token);
+          }
+          
+          console.log('API login successful:', email);
+          return true;
+        } else {
+          const newAttempts = loginAttempts + 1;
+          setLoginAttempts(newAttempts);
+          saveToStorage(STORAGE_KEYS.LOGIN_ATTEMPTS, newAttempts);
+          
+          console.log('API login failed:', response.error);
+          return false;
+        }
+      } else {
+        // Use demo mode (existing logic)
+        const user = mockUsers.find(u => u.username === email.split('@')[0] || u.email === email);
+        
+        if (user && user.status === 'active') {
+          const userWithLastLogin = {
+            ...user,
+            lastLogin: new Date().toISOString()
+          };
+          
+          setCurrentUser(userWithLastLogin);
+          setLoginAttempts(0);
+          
+          // Save to localStorage
+          saveToStorage(STORAGE_KEYS.USER, userWithLastLogin);
+          saveToStorage(STORAGE_KEYS.SESSION_TIMESTAMP, Date.now());
+          saveToStorage(STORAGE_KEYS.LOGIN_ATTEMPTS, 0);
+          
+          console.log('Demo login successful:', email);
+          return true;
+        } else {
+          const newAttempts = loginAttempts + 1;
+          setLoginAttempts(newAttempts);
+          saveToStorage(STORAGE_KEYS.LOGIN_ATTEMPTS, newAttempts);
+          
+          console.log('Demo login failed:', email);
+          return false;
+        }
+      }
+    } catch (error) {
+      console.error('Login error:', error);
       const newAttempts = loginAttempts + 1;
       setLoginAttempts(newAttempts);
       saveToStorage(STORAGE_KEYS.LOGIN_ATTEMPTS, newAttempts);
-      
-      console.log('Login failed for:', username);
       return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -305,6 +395,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     removeFromStorage(STORAGE_KEYS.USER);
     removeFromStorage(STORAGE_KEYS.SESSION_TIMESTAMP);
     removeFromStorage(STORAGE_KEYS.LOGIN_ATTEMPTS);
+    
+    // Clear API token
+    authService.removeToken();
   };
 
   // Don't render children until auth state is initialized
@@ -324,9 +417,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         currentUser,
         isAuthenticated: !!currentUser,
+        isLoading,
         login,
         logout,
         loginAttempts,
+        apiMode,
+        toggleApiMode,
       }}
     >
       {children}
