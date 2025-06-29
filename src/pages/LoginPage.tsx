@@ -3,20 +3,10 @@ import { useAuth } from '@/components/auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { LoginPage as LoginComponent } from '@/components/pages/LoginPage';
-import { useToast } from '@/hooks/use-toast';
 
 export function LoginPage() {
-  const { 
-    isAuthenticated, 
-    currentUser, 
-    login, 
-    loginAttempts, 
-    isLoading, 
-    apiMode, 
-    toggleApiMode 
-  } = useAuth();
+  const { isAuthenticated, currentUser, login, loginAttempts } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   useEffect(() => {
     if (isAuthenticated && currentUser) {
@@ -29,39 +19,11 @@ export function LoginPage() {
     }
   }, [isAuthenticated, currentUser, navigate]);
 
-  const handleLogin = async (email: string, password: string, rememberMe?: boolean) => {
-    try {
-      const success = await login(email, password);
-      if (success) {
-        toast({
-          title: "Đăng nhập thành công",
-          description: `Chào mừng ${apiMode ? 'bạn' : 'đã quay trở lại'}!`,
-        });
-        // Navigation will be handled by useEffect
-      } else {
-        toast({
-          title: "Đăng nhập thất bại",
-          description: apiMode 
-            ? "Email hoặc mật khẩu không chính xác. Vui lòng thử lại."
-            : "Thông tin đăng nhập không chính xác. Vui lòng thử lại.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Lỗi đăng nhập",
-        description: "Đã có lỗi xảy ra. Vui lòng thử lại sau.",
-        variant: "destructive",
-      });
+  const handleLogin = async (username: string, password: string, rememberMe?: boolean) => {
+    const success = await login(username, password);
+    if (success) {
+      // Navigation will be handled by useEffect
     }
-  };
-
-  const handleToggleApiMode = () => {
-    toggleApiMode();
-    toast({
-      title: "Chế độ đã thay đổi",
-      description: apiMode ? "Chuyển sang chế độ Demo" : "Chuyển sang chế độ API",
-    });
   };
 
   // Mock users for the login component
@@ -198,9 +160,6 @@ export function LoginPage() {
       onLogin={handleLogin}
       mockUsers={mockUsers}
       loginAttempts={loginAttempts}
-      isLoading={isLoading}
-      apiMode={apiMode}
-      onToggleApiMode={handleToggleApiMode}
     />
   );
 }
