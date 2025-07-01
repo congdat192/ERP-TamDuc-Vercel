@@ -34,4 +34,5 @@ export interface BusinessContextType {
   selectBusiness: (businessId: number) => Promise<void>;
   updateBusiness: (businessId: number, data: UpdateBusinessRequest) => Promise<Business>;
   refreshCurrentBusiness: () => Promise<void>;
+  clearBusinessData: () => void;
 }

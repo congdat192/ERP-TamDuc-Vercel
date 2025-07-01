@@ -1,6 +1,7 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@/types/auth';
-import { loginUser, logoutUser, getUserProfile, isAuthenticated } from '@/services/authService';
+import { loginUser, logoutUser, getUserProfile } from '@/services/authService';
 import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextType {
@@ -23,18 +24,14 @@ export const useAuth = () => {
   return context;
 };
 
-// Sync storage keys with authService - MUST MATCH EXACTLY
+// Storage keys
 const STORAGE_KEYS = {
   TOKEN: 'auth_token',
   USER: 'erp_current_user',
   LOGIN_ATTEMPTS: 'erp_login_attempts',
-  SESSION_TIMESTAMP: 'erp_session_timestamp'
 };
 
-// Session timeout (in milliseconds) - 8 hours
-const SESSION_TIMEOUT = 8 * 60 * 60 * 1000;
-
-// Utility functions for localStorage with enhanced error handling
+// Utility functions for localStorage
 const saveToStorage = (key: string, value: any) => {
   try {
     localStorage.setItem(key, JSON.stringify(value));
@@ -66,28 +63,11 @@ const removeFromStorage = (key: string) => {
   }
 };
 
-// Check if session is valid
-const isSessionValid = () => {
-  const timestamp = loadFromStorage(STORAGE_KEYS.SESSION_TIMESTAMP);
-  if (!timestamp) {
-    console.log('⏰ [AuthContext] No session timestamp found');
-    return false;
-  }
-  
-  const now = Date.now();
-  const sessionAge = now - timestamp;
-  const isValid = sessionAge < SESSION_TIMEOUT;
-  console.log('⏰ [AuthContext] Session check:', isValid ? 'Valid' : 'Expired', `Age: ${Math.round(sessionAge / 1000 / 60)} minutes`);
-  return isValid;
-};
-
-// Check if user is authenticated by checking both token and session
+// Simple auth check - just check if token exists
 const checkAuthentication = () => {
   const hasToken = !!localStorage.getItem(STORAGE_KEYS.TOKEN);
-  const hasValidSession = isSessionValid();
-  const isAuth = hasToken && hasValidSession;
-  console.log('🔐 [AuthContext] Auth check - Token:', hasToken ? 'exists' : 'missing', 'Session:', hasValidSession ? 'valid' : 'invalid', 'Result:', isAuth ? 'Authenticated' : 'Not authenticated');
-  return isAuth;
+  console.log('🔐 [AuthContext] Auth check - Token:', hasToken ? 'exists' : 'missing');
+  return hasToken;
 };
 
 // Convert API user to internal User type
@@ -120,43 +100,6 @@ const convertApiUserToUser = (apiUser: any): User => {
   };
 };
 
-// Restore user data with validation
-const restoreUserFromStorage = async (): Promise<User | null> => {
-  console.log('🔄 [AuthContext] Restoring user from storage');
-  
-  if (!checkAuthentication()) {
-    console.log('❌ [AuthContext] Authentication check failed, clearing storage');
-    removeFromStorage(STORAGE_KEYS.USER);
-    removeFromStorage(STORAGE_KEYS.SESSION_TIMESTAMP);
-    return null;
-  }
-
-  try {
-    console.log('🌐 [AuthContext] Fetching fresh user data from API');
-    const apiUser = await getUserProfile();
-    const user = convertApiUserToUser(apiUser);
-    
-    // Update stored user data with fresh timestamp
-    saveToStorage(STORAGE_KEYS.USER, user);
-    saveToStorage(STORAGE_KEYS.SESSION_TIMESTAMP, Date.now());
-    
-    console.log('✅ [AuthContext] User restored from API successfully');
-    return user;
-  } catch (error) {
-    console.warn('⚠️ [AuthContext] Failed to restore user from API:', error);
-    
-    // Fall back to stored user data if API fails but we have valid session
-    const userData = loadFromStorage(STORAGE_KEYS.USER);
-    if (userData && userData.id && userData.username) {
-      console.log('📁 [AuthContext] Using stored user data as fallback');
-      return userData as User;
-    }
-    
-    console.log('❌ [AuthContext] No valid user data found');
-    return null;
-  }
-};
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loginAttempts, setLoginAttempts] = useState(0);
@@ -164,17 +107,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  // Initialize auth state
+  // Initialize auth state on mount
   useEffect(() => {
     const initializeAuth = async () => {
       console.log('🚀 [AuthContext] Initializing auth state');
       setIsLoading(true);
       
       try {
-        const storedUser = await restoreUserFromStorage();
+        const storedUser = loadFromStorage(STORAGE_KEYS.USER);
         const storedAttempts = loadFromStorage(STORAGE_KEYS.LOGIN_ATTEMPTS) || 0;
         
-        if (storedUser) {
+        // Only restore user if token exists
+        if (checkAuthentication() && storedUser) {
           setCurrentUser(storedUser);
           console.log('✅ [AuthContext] Restored user session:', storedUser.username);
         }
@@ -192,38 +136,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initializeAuth();
   }, []);
 
-  // Listen for storage changes from other tabs
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === STORAGE_KEYS.USER) {
-        if (e.newValue === null) {
-          setCurrentUser(null);
-          setLoginAttempts(0);
-          console.log('[AuthContext] User logged out in another tab');
-        } else {
-          try {
-            const userData = JSON.parse(e.newValue);
-            setCurrentUser(userData as User);
-            console.log('[AuthContext] User logged in from another tab:', userData.username);
-          } catch (error) {
-            console.warn('[AuthContext] Failed to sync user from another tab:', error);
-          }
-        }
-      }
-      
-      if (e.key === STORAGE_KEYS.LOGIN_ATTEMPTS && e.newValue) {
-        try {
-          setLoginAttempts(parseInt(e.newValue));
-        } catch (error) {
-          console.warn('[AuthContext] Failed to sync login attempts:', error);
-        }
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-
   const login = async (email: string, password: string): Promise<boolean> => {
     console.log('🔐 [AuthContext] Starting login process for:', email);
     setIsLoading(true);
@@ -232,33 +144,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await loginUser({ email, password });
       console.log('📨 [AuthContext] Login API response received');
       
-      // Wait a bit longer to ensure token is properly stored
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      // Verify token was stored correctly with multiple checks
-      let storedToken = localStorage.getItem(STORAGE_KEYS.TOKEN);
-      let retryCount = 0;
-      
-      while (!storedToken && retryCount < 3) {
-        console.log('⏳ [AuthContext] Token not found, waiting and retrying...', retryCount + 1);
-        await new Promise(resolve => setTimeout(resolve, 200));
-        storedToken = localStorage.getItem(STORAGE_KEYS.TOKEN);
-        retryCount++;
-      }
-      
-      if (!storedToken) {
-        console.error('❌ [AuthContext] Token not found after multiple retries');
-        throw new Error('Token storage failed');
-      }
-      
       const user = convertApiUserToUser(response.user);
       
       setCurrentUser(user);
       setLoginAttempts(0);
       
-      // Save to localStorage with current timestamp
+      // Save to localStorage
       saveToStorage(STORAGE_KEYS.USER, user);
-      saveToStorage(STORAGE_KEYS.SESSION_TIMESTAMP, Date.now());
       saveToStorage(STORAGE_KEYS.LOGIN_ATTEMPTS, 0);
       
       console.log('✅ [AuthContext] User logged in successfully:', email);
@@ -276,14 +168,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       console.log('❌ [AuthContext] Login failed for:', email, error);
       
-      // Show more specific error message
       let errorMessage = "Thông tin đăng nhập không chính xác";
       if (error instanceof Error) {
-        if (error.message.includes('Token storage failed')) {
-          errorMessage = "Lỗi lưu trữ dữ liệu. Vui lòng kiểm tra cài đặt trình duyệt và thử lại.";
-        } else {
-          errorMessage = error.message;
-        }
+        errorMessage = error.message;
       }
       
       toast({
@@ -313,7 +200,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Clear localStorage
       removeFromStorage(STORAGE_KEYS.USER);
-      removeFromStorage(STORAGE_KEYS.SESSION_TIMESTAMP);
       removeFromStorage(STORAGE_KEYS.LOGIN_ATTEMPTS);
       
       setIsLoading(false);
@@ -335,7 +221,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       setCurrentUser(updatedUser);
       saveToStorage(STORAGE_KEYS.USER, updatedUser);
-      saveToStorage(STORAGE_KEYS.SESSION_TIMESTAMP, Date.now());
       
       console.log('✅ [AuthContext] User profile refreshed:', updatedUser.username);
     } catch (error) {

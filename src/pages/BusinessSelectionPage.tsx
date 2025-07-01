@@ -32,13 +32,18 @@ export function BusinessSelectionPage() {
         await fetchBusinesses();
       } catch (error) {
         console.error('❌ [BusinessSelectionPage] Failed to fetch businesses:', error);
+        // If token expired, redirect to login
+        if (error instanceof Error && error.message.includes('Token hết hạn')) {
+          navigate('/login');
+          return;
+        }
       } finally {
         setIsInitializing(false);
       }
     };
 
     initializePage();
-  }, [isAuthenticated, currentUser, fetchBusinesses, navigate]);
+  }, []); // Remove fetchBusinesses from dependencies to avoid loop
 
   const handleBusinessSelect = async (business: Business) => {
     if (selectedBusinessId === business.id) return;
@@ -51,6 +56,11 @@ export function BusinessSelectionPage() {
     } catch (error) {
       console.error('❌ [BusinessSelectionPage] Failed to select business:', error);
       setSelectedBusinessId(null);
+      
+      // If token expired, redirect to login
+      if (error instanceof Error && error.message.includes('Token hết hạn')) {
+        navigate('/login');
+      }
     }
   };
 
