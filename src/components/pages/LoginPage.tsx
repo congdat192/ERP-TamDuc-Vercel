@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { User, Building2, Eye, EyeOff, Lock, AlertTriangle } from 'lucide-react';
 import { User as UserType } from '@/types/auth';
+import { Link } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -276,8 +276,8 @@ export function LoginPage({ onLogin, mockUsers, loginAttempts = 0 }: LoginPagePr
                 </Button>
               </form>
 
-              {/* Forgot Password Link */}
-              <div className="text-center">
+              {/* Login Link and Register Link */}
+              <div className="text-center space-y-2">
                 <Button 
                   variant="link" 
                   className="text-sm text-blue-600 hover:text-blue-800"
@@ -285,6 +285,16 @@ export function LoginPage({ onLogin, mockUsers, loginAttempts = 0 }: LoginPagePr
                 >
                   Quên mật khẩu?
                 </Button>
+                
+                <p className="text-sm text-gray-600">
+                  Chưa có tài khoản?{' '}
+                  <Link
+                    to="/register"
+                    className="text-blue-600 hover:text-blue-800 font-medium"
+                  >
+                    Đăng ký ngay
+                  </Link>
+                </p>
               </div>
 
               <div className="text-center text-xs text-gray-500">
