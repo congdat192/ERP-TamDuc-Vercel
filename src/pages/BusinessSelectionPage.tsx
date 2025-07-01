@@ -1,10 +1,11 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Building2, Plus, Crown, Users, ArrowRight, Loader2, UserCheck, AlertCircle } from 'lucide-react';
+import { Building2, Plus, Crown, Users, ArrowRight, Loader2, UserCheck, AlertCircle, RefreshCw } from 'lucide-react';
 import { useBusiness } from '@/contexts/BusinessContext';
 import { useAuth } from '@/components/auth/AuthContext';
 import { Business } from '@/types/business';
@@ -15,6 +16,7 @@ export function BusinessSelectionPage() {
   const [isInitializing, setIsInitializing] = useState(true);
   const [selectedBusinessId, setSelectedBusinessId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   const navigate = useNavigate();
 
   // Ensure businesses is always an array with defensive programming
@@ -39,16 +41,18 @@ export function BusinessSelectionPage() {
       try {
         console.log('🔄 [BusinessSelectionPage] Fetching businesses...');
         await fetchBusinesses();
+        setRetryCount(0); // Reset retry count on success
       } catch (error) {
         console.error('❌ [BusinessSelectionPage] Failed to fetch businesses:', error);
         setError(error instanceof Error ? error.message : 'Không thể tải danh sách doanh nghiệp');
+        setRetryCount(prev => prev + 1);
       } finally {
         setIsInitializing(false);
       }
     };
 
     initializePage();
-  }, [isAuthenticated, currentUser, fetchBusinesses, navigate]);
+  }, [isAuthenticated, currentUser, navigate]);
 
   const handleBusinessSelect = async (business: Business) => {
     if (selectedBusinessId === business.id) return;
@@ -80,6 +84,23 @@ export function BusinessSelectionPage() {
       navigate('/login');
     } catch (error) {
       console.error('Logout failed:', error);
+    }
+  };
+
+  const handleRetry = async () => {
+    setIsInitializing(true);
+    setError(null);
+    
+    try {
+      console.log('🔄 [BusinessSelectionPage] Retrying fetch businesses...');
+      await fetchBusinesses();
+      setRetryCount(0);
+    } catch (error) {
+      console.error('❌ [BusinessSelectionPage] Retry failed:', error);
+      setError(error instanceof Error ? error.message : 'Không thể tải danh sách doanh nghiệp');
+      setRetryCount(prev => prev + 1);
+    } finally {
+      setIsInitializing(false);
     }
   };
 
@@ -187,8 +208,18 @@ export function BusinessSelectionPage() {
             <h3 className="text-lg font-medium text-gray-900 mb-2">Đã xảy ra lỗi</h3>
             <p className="text-gray-600 mb-4">{error}</p>
             <div className="space-y-2">
-              <Button onClick={() => window.location.reload()} className="w-full">
-                Tải lại trang
+              <Button onClick={handleRetry} className="w-full" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="animate-spin w-4 h-4 mr-2" />
+                    Đang tải lại...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Thử lại ({retryCount > 0 ? `Lần ${retryCount + 1}` : 'Lần 1'})
+                  </>
+                )}
               </Button>
               <Button variant="outline" onClick={handleLogout} className="w-full">
                 Đăng xuất
@@ -327,7 +358,7 @@ export function BusinessSelectionPage() {
         </div>
 
         {/* No Businesses Message */}
-        {businesses.length === 0 && (
+        {safeBusinesses.length === 0 && (
           <Card className="text-center py-8">
             <CardContent>
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">

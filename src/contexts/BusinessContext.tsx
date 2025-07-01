@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { Business, BusinessContextType, CreateBusinessRequest, UpdateBusinessRequest } from '@/types/business';
 import { getBusinesses, createBusiness as createBusinessAPI, getBusiness, updateBusiness as updateBusinessAPI } from '@/services/businessService';
@@ -29,6 +30,10 @@ const SESSION_TIMEOUT = 8 * 60 * 60 * 1000;
 let lastAuthError: string | null = null;
 let lastErrorTime = 0;
 const ERROR_DEBOUNCE_TIME = 30000; // 30 seconds
+
+// Prevent multiple concurrent fetch attempts
+let isFetching = false;
+let fetchPromise: Promise<void> | null = null;
 
 // Utility functions for localStorage
 const saveToStorage = (key: string, value: any) => {
@@ -80,6 +85,7 @@ const isAuthenticated = () => {
   const user = localStorage.getItem(STORAGE_KEYS.USER);
   const hasValidSession = isSessionValid();
   const isAuth = !!(token && user && hasValidSession);
+  console.log('🔐 [BusinessContext] Auth check:', isAuth ? 'Authenticated' : 'Not authenticated');
   return isAuth;
 };
 
@@ -125,9 +131,8 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [currentBusiness, setCurrentBusiness] = useState<Business | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const authCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Calculate if user has own business - check for is_owner: true with defensive programming
+  // Calculate if user has own business - with defensive programming
   const hasOwnBusiness = Array.isArray(businesses) ? businesses.some(business => business.is_owner === true) : false;
 
   // Load businesses from storage on mount
@@ -150,72 +155,57 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, []);
 
-  // Optimized auth check - only run every 30 seconds instead of every second
-  useEffect(() => {
-    const checkAuth = () => {
-      if (!isAuthenticated()) {
-        console.log('🧹 [BusinessContext] User logged out, clearing business data');
-        setBusinesses([]);
-        setCurrentBusiness(null);
-        removeFromStorage(STORAGE_KEYS.BUSINESSES_LIST);
-        removeFromStorage(STORAGE_KEYS.CURRENT_BUSINESS);
-        
-        // Clear interval to stop checking
-        if (authCheckIntervalRef.current) {
-          clearInterval(authCheckIntervalRef.current);
-          authCheckIntervalRef.current = null;
-        }
-        
-        handleAuthError(toast, "auth_expired");
-      }
-    };
-
-    // Only start interval if authenticated
-    if (isAuthenticated()) {
-      authCheckIntervalRef.current = setInterval(checkAuth, 30000); // Check every 30 seconds
-    }
-
-    return () => {
-      if (authCheckIntervalRef.current) {
-        clearInterval(authCheckIntervalRef.current);
-      }
-    };
-  }, [toast]);
-
   const fetchBusinesses = async () => {
+    // Prevent multiple concurrent requests
+    if (isFetching) {
+      console.log('⏳ [BusinessContext] Fetch already in progress, waiting...');
+      return fetchPromise;
+    }
+    
     if (!isAuthenticated()) {
       console.log('⚠️ [BusinessContext] Cannot fetch businesses - user not authenticated');
       handleAuthError(toast, "fetch_businesses_auth_error");
       return;
     }
     
+    isFetching = true;
     setIsLoading(true);
-    try {
-      console.log('🔄 [BusinessContext] Fetching businesses...');
-      const businessList = await getBusinesses();
-      
-      // Ensure we have a valid array before setting state
-      const validBusinessList = ensureBusinessesArray(businessList);
-      setBusinesses(validBusinessList);
-      saveToStorage(STORAGE_KEYS.BUSINESSES_LIST, validBusinessList);
-      
-      console.log('✅ [BusinessContext] Fetched businesses:', validBusinessList.length);
-      console.log('🏢 [BusinessContext] Owned businesses:', validBusinessList.filter(b => b.is_owner).length);
-      console.log('👥 [BusinessContext] Invited businesses:', validBusinessList.filter(b => !b.is_owner).length);
-    } catch (error) {
-      console.error('❌ [BusinessContext] Failed to fetch businesses:', error);
-      
-      // Set empty array on error to prevent filter/some errors
-      setBusinesses([]);
-      
-      toast({
-        title: "Lỗi",
-        description: error instanceof Error ? error.message : "Không thể tải danh sách doanh nghiệp",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    
+    fetchPromise = (async () => {
+      try {
+        console.log('🔄 [BusinessContext] Fetching businesses...');
+        const businessList = await getBusinesses();
+        
+        // Ensure we have a valid array before setting state
+        const validBusinessList = ensureBusinessesArray(businessList);
+        setBusinesses(validBusinessList);
+        saveToStorage(STORAGE_KEYS.BUSINESSES_LIST, validBusinessList);
+        
+        console.log('✅ [BusinessContext] Fetched businesses successfully:', validBusinessList.length);
+        console.log('🏢 [BusinessContext] Owned businesses:', validBusinessList.filter(b => b.is_owner).length);
+        console.log('👥 [BusinessContext] Invited businesses:', validBusinessList.filter(b => !b.is_owner).length);
+      } catch (error) {
+        console.error('❌ [BusinessContext] Failed to fetch businesses:', error);
+        
+        // Set empty array on error to prevent filter/some errors
+        setBusinesses([]);
+        
+        // Only show toast if it's not a 401 error (handled by auth system)
+        if (error instanceof Error && !error.message.includes('Token hết hạn')) {
+          toast({
+            title: "Lỗi",
+            description: error.message || "Không thể tải danh sách doanh nghiệp",
+            variant: "destructive",
+          });
+        }
+      } finally {
+        setIsLoading(false);
+        isFetching = false;
+        fetchPromise = null;
+      }
+    })();
+    
+    return fetchPromise;
   };
 
   const createBusiness = async (data: CreateBusinessRequest): Promise<Business> => {
