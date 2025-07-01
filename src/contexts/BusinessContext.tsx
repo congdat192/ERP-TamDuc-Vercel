@@ -1,7 +1,7 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Business, BusinessContextType, CreateBusinessRequest, UpdateBusinessRequest } from '@/types/business';
 import { getBusinesses, createBusiness as createBusinessAPI, getBusiness, updateBusiness as updateBusinessAPI } from '@/services/businessService';
+import { setSelectedBusinessId, clearSelectedBusinessId, getSelectedBusinessId } from '@/services/apiService';
 import { useToast } from '@/hooks/use-toast';
 
 const BusinessContext = createContext<BusinessContextType | undefined>(undefined);
@@ -14,7 +14,7 @@ export const useBusiness = () => {
   return context;
 };
 
-// Storage keys
+// Storage keys - keeping existing ones for compatibility
 const STORAGE_KEYS = {
   CURRENT_BUSINESS: 'erp_current_business',
   BUSINESSES_LIST: 'erp_businesses_list',
@@ -72,6 +72,8 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     
     if (storedCurrentBusiness) {
       setCurrentBusiness(storedCurrentBusiness);
+      // Sync with API service
+      setSelectedBusinessId(storedCurrentBusiness.id.toString());
     }
   }, []);
 
@@ -147,6 +149,9 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setCurrentBusiness(business);
       saveToStorage(STORAGE_KEYS.CURRENT_BUSINESS, business);
       
+      // Update API service business ID
+      setSelectedBusinessId(business.id.toString());
+      
       console.log('✅ [BusinessContext] Selected business:', business.name);
     } catch (error) {
       console.error('❌ [BusinessContext] Failed to select business:', error);
@@ -220,6 +225,9 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setCurrentBusiness(null);
     removeFromStorage(STORAGE_KEYS.BUSINESSES_LIST);
     removeFromStorage(STORAGE_KEYS.CURRENT_BUSINESS);
+    
+    // Clear API service business ID
+    clearSelectedBusinessId();
   };
 
   return (
