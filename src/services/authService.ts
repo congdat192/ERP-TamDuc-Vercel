@@ -1,3 +1,4 @@
+
 // Authentication service for API calls
 export interface LoginRequest {
   email: string;
@@ -37,14 +38,13 @@ export interface ApiError {
 
 const API_BASE_URL = 'https://api.matkinhtamduc.xyz/api/v1';
 
-// Sync with AuthContext storage keys
+// Simplified storage keys - removed session timestamp
 const STORAGE_KEYS = {
   TOKEN: 'auth_token',
   USER: 'erp_current_user',
-  SESSION_TIMESTAMP: 'erp_session_timestamp'
 };
 
-// Get stored token with retry mechanism
+// Get stored token
 const getStoredToken = (): string | null => {
   try {
     const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
@@ -56,61 +56,22 @@ const getStoredToken = (): string | null => {
   }
 };
 
-// Store token with enhanced error handling and retry
+// Simplified token storage
 const storeToken = (token: string): void => {
-  const maxRetries = 3;
-  let retryCount = 0;
-  
-  const attemptStore = () => {
-    try {
-      console.log('💾 [authService] Storing token (attempt', retryCount + 1, '):', token.substring(0, 20) + '...');
-      
-      // Clear any existing token first
-      localStorage.removeItem(STORAGE_KEYS.TOKEN);
-      localStorage.removeItem(STORAGE_KEYS.SESSION_TIMESTAMP);
-      
-      // Store new token
-      localStorage.setItem(STORAGE_KEYS.TOKEN, token);
-      localStorage.setItem(STORAGE_KEYS.SESSION_TIMESTAMP, Date.now().toString());
-      
-      // Verify token was stored correctly
-      const storedToken = localStorage.getItem(STORAGE_KEYS.TOKEN);
-      const storedTimestamp = localStorage.getItem(STORAGE_KEYS.SESSION_TIMESTAMP);
-      
-      if (storedToken === token && storedTimestamp) {
-        console.log('✅ [authService] Token stored and verified successfully on attempt', retryCount + 1);
-        return true;
-      } else {
-        console.warn('⚠️ [authService] Token verification failed on attempt', retryCount + 1);
-        return false;
-      }
-    } catch (error) {
-      console.error('❌ [authService] Failed to store token on attempt', retryCount + 1, ':', error);
-      return false;
-    }
-  };
-  
-  // Try to store with retries
-  while (retryCount < maxRetries) {
-    if (attemptStore()) {
-      return; // Success
-    }
-    retryCount++;
-    if (retryCount < maxRetries) {
-      console.log('🔄 [authService] Retrying token storage...');
-    }
+  try {
+    console.log('💾 [authService] Storing token:', token.substring(0, 20) + '...');
+    localStorage.setItem(STORAGE_KEYS.TOKEN, token);
+    console.log('✅ [authService] Token stored successfully');
+  } catch (error) {
+    console.error('❌ [authService] Failed to store token:', error);
+    throw new Error('Token storage failed');
   }
-  
-  // If all retries failed, throw error
-  console.error('❌ [authService] All token storage attempts failed');
-  throw new Error('Token storage failed');
 };
 
 // Remove token
 const removeToken = (): void => {
   try {
     localStorage.removeItem(STORAGE_KEYS.TOKEN);
-    localStorage.removeItem(STORAGE_KEYS.SESSION_TIMESTAMP);
     console.log('🗑️ [authService] Token removed successfully');
   } catch (error) {
     console.error('❌ [authService] Failed to remove token:', error);
@@ -182,7 +143,7 @@ export const loginUser = async (credentials: LoginRequest): Promise<LoginRespons
     throw new Error('Không nhận được token từ server');
   }
   
-  // Store token with enhanced error handling
+  // Store token with simplified logic
   console.log('💾 [authService] Attempting to store token...');
   try {
     storeToken(token);

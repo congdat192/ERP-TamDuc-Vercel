@@ -14,7 +14,6 @@ export function SecuritySettings() {
   const [settings, setSettings] = useState({
     twoFactorAuth: false,
     passwordExpiry: 90,
-    sessionTimeout: 30,
     loginAttempts: 5,
     ipWhitelist: false,
     auditLog: true,
@@ -88,30 +87,15 @@ export function SecuritySettings() {
         </CardContent>
       </Card>
 
-      {/* Session Management */}
+      {/* Access Control */}
       <Card className="theme-card">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Lock className="w-5 h-5 theme-text-secondary" />
-            <span className="theme-text">Quản Lý Phiên</span>
+            <span className="theme-text">Kiểm Soát Truy Cập</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label className="theme-text">Thời gian timeout phiên (phút)</Label>
-            <Select value={settings.sessionTimeout.toString()} onValueChange={(value) => setSettings(prev => ({ ...prev, sessionTimeout: parseInt(value) }))}>
-              <SelectTrigger className="voucher-input">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="15">15 phút</SelectItem>
-                <SelectItem value="30">30 phút</SelectItem>
-                <SelectItem value="60">1 giờ</SelectItem>
-                <SelectItem value="120">2 giờ</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <Label className="theme-text font-medium">Whitelist IP</Label>

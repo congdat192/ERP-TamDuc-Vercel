@@ -1,6 +1,6 @@
 
-import { useState, useEffect, useCallback } from 'react';
-import { SessionInfo, LoginAttempt, SecurityAlert, TwoFactorAuth, SessionTimeoutState } from '@/types/security';
+import { useState, useCallback } from 'react';
+import { SessionInfo, LoginAttempt, SecurityAlert, TwoFactorAuth } from '@/types/security';
 
 // Mock data
 const mockSessions: SessionInfo[] = [
@@ -155,88 +155,5 @@ export const useSecurity = () => {
     enable2FA,
     disable2FA,
     generateNewBackupCodes
-  };
-};
-
-export const useSessionTimeout = (timeoutMinutes: number = 30) => {
-  const [sessionState, setSessionState] = useState<SessionTimeoutState>({
-    isWarning: false,
-    timeRemaining: timeoutMinutes * 60,
-    isExpired: false
-  });
-
-  const [lastActivity, setLastActivity] = useState(Date.now());
-
-  const resetSession = useCallback(() => {
-    setLastActivity(Date.now());
-    setSessionState({
-      isWarning: false,
-      timeRemaining: timeoutMinutes * 60,
-      isExpired: false
-    });
-  }, [timeoutMinutes]);
-
-  const forceLogout = useCallback(() => {
-    setSessionState(prev => ({
-      ...prev,
-      isExpired: true,
-      timeRemaining: 0
-    }));
-  }, []);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const now = Date.now();
-      const timeSinceLastActivity = Math.floor((now - lastActivity) / 1000);
-      const remaining = Math.max(0, (timeoutMinutes * 60) - timeSinceLastActivity);
-
-      if (remaining <= 0) {
-        setSessionState({
-          isWarning: false,
-          timeRemaining: 0,
-          isExpired: true
-        });
-      } else if (remaining <= 300) { // 5 minutes warning
-        setSessionState({
-          isWarning: true,
-          timeRemaining: remaining,
-          isExpired: false
-        });
-      } else {
-        setSessionState({
-          isWarning: false,
-          timeRemaining: remaining,
-          isExpired: false
-        });
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [lastActivity, timeoutMinutes]);
-
-  // Reset activity on user interaction
-  useEffect(() => {
-    const handleActivity = () => {
-      if (!sessionState.isExpired) {
-        setLastActivity(Date.now());
-      }
-    };
-
-    const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
-    events.forEach(event => {
-      document.addEventListener(event, handleActivity, true);
-    });
-
-    return () => {
-      events.forEach(event => {
-        document.removeEventListener(event, handleActivity, true);
-      });
-    };
-  }, [sessionState.isExpired]);
-
-  return {
-    sessionState,
-    resetSession,
-    forceLogout
   };
 };
