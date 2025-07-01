@@ -6,49 +6,114 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Building2, ArrowLeft, Loader2 } from 'lucide-react';
+import { Building2, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 import { useBusiness } from '@/contexts/BusinessContext';
 import { useAuth } from '@/components/auth/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { FormError, FormLoadingState } from '@/components/ui/form-errors';
 
 export function CreateBusinessPage() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
   const { createBusiness, hasOwnBusiness } = useBusiness();
-  const { currentUser } = useAuth();
+  const { currentUser, isAuthenticated } = useAuth();
+  const { toast } = useToast();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     
+    // Validation
     if (!name.trim()) {
+      setError('Vui lòng nhập tên doanh nghiệp');
       return;
     }
 
+    if (!isAuthenticated || !currentUser) {
+      setError('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+      setTimeout(() => navigate('/login'), 2000);
+      return;
+    }
+
+    console.log('🏗️ [CreateBusinessPage] Starting business creation process');
+    console.log('🔍 [CreateBusinessPage] Current user:', currentUser?.email);
+    console.log('🔍 [CreateBusinessPage] Auth status:', isAuthenticated);
+    
     setIsSubmitting(true);
     try {
+      console.log('📝 [CreateBusinessPage] Creating business with data:', {
+        name: name.trim(),
+        description: description.trim()
+      });
+      
       const newBusiness = await createBusiness({
         name: name.trim(),
         description: description.trim()
       });
       
-      // Auto-select the newly created business and redirect to ERP
-      navigate(`/ERP/${newBusiness.id}/Dashboard`);
+      console.log('✅ [CreateBusinessPage] Business created successfully:', newBusiness);
+      
+      toast({
+        title: "Thành công!",
+        description: `Doanh nghiệp "${newBusiness.name}" đã được tạo thành công!`,
+      });
+      
+      // Wait a bit for the toast to show, then navigate
+      setTimeout(() => {
+        navigate(`/ERP/${newBusiness.id}/Dashboard`);
+      }, 1000);
+      
     } catch (error) {
-      console.error('Failed to create business:', error);
+      console.error('❌ [CreateBusinessPage] Failed to create business:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Có lỗi xảy ra khi tạo doanh nghiệp';
+      setError(errorMessage);
+      
+      // If authentication error, redirect to login
+      if (errorMessage.includes('xác thực') || errorMessage.includes('đăng nhập')) {
+        setTimeout(() => navigate('/login'), 3000);
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleBack = () => {
+    console.log('🔙 [CreateBusinessPage] Navigating back to business selection');
     navigate('/business-selection');
   };
 
   // If user already has own business, redirect to selection
+  React.useEffect(() => {
+    if (hasOwnBusiness) {
+      console.log('⚠️ [CreateBusinessPage] User already has own business, redirecting');
+      navigate('/business-selection');
+    }
+  }, [hasOwnBusiness, navigate]);
+
+  // Check authentication on mount
+  React.useEffect(() => {
+    if (!isAuthenticated || !currentUser) {
+      console.log('❌ [CreateBusinessPage] User not authenticated, redirecting to login');
+      navigate('/login');
+    }
+  }, [isAuthenticated, currentUser, navigate]);
+
   if (hasOwnBusiness) {
-    navigate('/business-selection');
-    return null;
+    return null; // Will redirect
+  }
+
+  if (!isAuthenticated || !currentUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Đang kiểm tra xác thực...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -70,6 +135,9 @@ export function CreateBusinessPage() {
           </p>
         </div>
 
+        {/* Error Display */}
+        {error && <FormError message={error} className="mb-6" />}
+
         {/* Form Card */}
         <Card>
           <CardHeader>
@@ -79,6 +147,7 @@ export function CreateBusinessPage() {
                 size="sm"
                 onClick={handleBack}
                 className="p-1"
+                disabled={isSubmitting}
               >
                 <ArrowLeft className="w-4 h-4" />
               </Button>
@@ -91,71 +160,73 @@ export function CreateBusinessPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="business-name">
-                  Tên Doanh Nghiệp <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="business-name"
-                  type="text"
-                  placeholder="Ví dụ: Công ty TNHH ABC"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  disabled={isSubmitting}
-                  required
-                  maxLength={100}
-                />
-                <p className="text-xs text-gray-500">
-                  Tên doanh nghiệp sẽ hiển thị trong hệ thống ERP
-                </p>
-              </div>
+            <FormLoadingState isLoading={isSubmitting} loadingText="Đang tạo doanh nghiệp...">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="business-name">
+                    Tên Doanh Nghiệp <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="business-name"
+                    type="text"
+                    placeholder="Ví dụ: Công ty TNHH ABC"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    disabled={isSubmitting}
+                    required
+                    maxLength={100}
+                  />
+                  <p className="text-xs text-gray-500">
+                    Tên doanh nghiệp sẽ hiển thị trong hệ thống ERP
+                  </p>
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="business-description">Mô Tả (Tùy chọn)</Label>
-                <Textarea
-                  id="business-description"
-                  placeholder="Mô tả ngắn gọn về lĩnh vực hoạt động, sản phẩm/dịch vụ chính..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  disabled={isSubmitting}
-                  rows={4}
-                  maxLength={500}
-                />
-                <p className="text-xs text-gray-500">
-                  Mô tả giúp phân biệt doanh nghiệp khi bạn tham gia nhiều tổ chức
-                </p>
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="business-description">Mô Tả (Tùy chọn)</Label>
+                  <Textarea
+                    id="business-description"
+                    placeholder="Mô tả ngắn gọn về lĩnh vực hoạt động, sản phẩm/dịch vụ chính..."
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    disabled={isSubmitting}
+                    rows={4}
+                    maxLength={500}
+                  />
+                  <p className="text-xs text-gray-500">
+                    Mô tả giúp phân biệt doanh nghiệp khi bạn tham gia nhiều tổ chức
+                  </p>
+                </div>
 
-              <div className="flex space-x-3 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleBack}
-                  disabled={isSubmitting}
-                  className="flex-1"
-                >
-                  Quay Lại
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isSubmitting || !name.trim()}
-                  className="flex-1"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="animate-spin w-4 h-4 mr-2" />
-                      Đang Tạo...
-                    </>
-                  ) : (
-                    <>
-                      <Building2 className="w-4 h-4 mr-2" />
-                      Tạo Doanh Nghiệp
-                    </>
-                  )}
-                </Button>
-              </div>
-            </form>
+                <div className="flex space-x-3 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleBack}
+                    disabled={isSubmitting}
+                    className="flex-1"
+                  >
+                    Quay Lại
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting || !name.trim()}
+                    className="flex-1"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="animate-spin w-4 h-4 mr-2" />
+                        Đang Tạo...
+                      </>
+                    ) : (
+                      <>
+                        <Building2 className="w-4 h-4 mr-2" />
+                        Tạo Doanh Nghiệp
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </FormLoadingState>
           </CardContent>
         </Card>
 

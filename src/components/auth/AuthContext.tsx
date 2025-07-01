@@ -24,8 +24,9 @@ export const useAuth = () => {
   return context;
 };
 
-// Sync storage keys with authService
+// Sync storage keys with authService - MUST MATCH EXACTLY
 const STORAGE_KEYS = {
+  TOKEN: 'auth_token',
   USER: 'erp_current_user',
   LOGIN_ATTEMPTS: 'erp_login_attempts',
   SESSION_TIMESTAMP: 'erp_session_timestamp'
@@ -38,9 +39,9 @@ const SESSION_TIMEOUT = 8 * 60 * 60 * 1000;
 const saveToStorage = (key: string, value: any) => {
   try {
     localStorage.setItem(key, JSON.stringify(value));
-    console.log('💾 Saved to storage:', key);
+    console.log('💾 [AuthContext] Saved to storage:', key);
   } catch (error) {
-    console.warn('❌ Failed to save to localStorage:', error);
+    console.warn('❌ [AuthContext] Failed to save to localStorage:', error);
   }
 };
 
@@ -48,10 +49,10 @@ const loadFromStorage = (key: string) => {
   try {
     const item = localStorage.getItem(key);
     const result = item ? JSON.parse(item) : null;
-    console.log('📁 Loaded from storage:', key, result ? 'Data found' : 'No data');
+    console.log('📁 [AuthContext] Loaded from storage:', key, result ? 'Data found' : 'No data');
     return result;
   } catch (error) {
-    console.warn('❌ Failed to load from localStorage:', error);
+    console.warn('❌ [AuthContext] Failed to load from localStorage:', error);
     return null;
   }
 };
@@ -59,9 +60,9 @@ const loadFromStorage = (key: string) => {
 const removeFromStorage = (key: string) => {
   try {
     localStorage.removeItem(key);
-    console.log('🗑️ Removed from storage:', key);
+    console.log('🗑️ [AuthContext] Removed from storage:', key);
   } catch (error) {
-    console.warn('❌ Failed to remove from localStorage:', error);
+    console.warn('❌ [AuthContext] Failed to remove from localStorage:', error);
   }
 };
 
@@ -69,25 +70,34 @@ const removeFromStorage = (key: string) => {
 const isSessionValid = () => {
   const timestamp = loadFromStorage(STORAGE_KEYS.SESSION_TIMESTAMP);
   if (!timestamp) {
-    console.log('⏰ No session timestamp found');
+    console.log('⏰ [AuthContext] No session timestamp found');
     return false;
   }
   
   const now = Date.now();
   const sessionAge = now - timestamp;
   const isValid = sessionAge < SESSION_TIMEOUT;
-  console.log('⏰ Session check:', isValid ? 'Valid' : 'Expired', `Age: ${Math.round(sessionAge / 1000 / 60)} minutes`);
+  console.log('⏰ [AuthContext] Session check:', isValid ? 'Valid' : 'Expired', `Age: ${Math.round(sessionAge / 1000 / 60)} minutes`);
   return isValid;
+};
+
+// Check if user is authenticated by checking both token and session
+const checkAuthentication = () => {
+  const hasToken = !!localStorage.getItem(STORAGE_KEYS.TOKEN);
+  const hasValidSession = isSessionValid();
+  const isAuth = hasToken && hasValidSession;
+  console.log('🔐 [AuthContext] Auth check - Token:', hasToken ? 'exists' : 'missing', 'Session:', hasValidSession ? 'valid' : 'invalid', 'Result:', isAuth ? 'Authenticated' : 'Not authenticated');
+  return isAuth;
 };
 
 // Convert API user to internal User type
 const convertApiUserToUser = (apiUser: any): User => {
-  console.log('🔄 Converting API user to internal User type');
+  console.log('🔄 [AuthContext] Converting API user to internal User type');
   return {
     id: apiUser.id,
-    username: apiUser.email, // Use email as username
+    username: apiUser.email,
     fullName: apiUser.name,
-    role: 'erp-admin', // Default role, can be enhanced later
+    role: 'erp-admin',
     email: apiUser.email,
     status: 'active',
     createdAt: apiUser.created_at,
@@ -112,39 +122,37 @@ const convertApiUserToUser = (apiUser: any): User => {
 
 // Restore user data with validation
 const restoreUserFromStorage = async (): Promise<User | null> => {
-  console.log('🔄 Restoring user from storage');
+  console.log('🔄 [AuthContext] Restoring user from storage');
   
-  if (!isSessionValid() || !isAuthenticated()) {
-    console.log('❌ Session expired or no token, clearing storage');
-    // Session expired or no token, clear storage
+  if (!checkAuthentication()) {
+    console.log('❌ [AuthContext] Authentication check failed, clearing storage');
     removeFromStorage(STORAGE_KEYS.USER);
     removeFromStorage(STORAGE_KEYS.SESSION_TIMESTAMP);
     return null;
   }
 
   try {
-    // Try to get fresh user data from API
-    console.log('🌐 Fetching fresh user data from API');
+    console.log('🌐 [AuthContext] Fetching fresh user data from API');
     const apiUser = await getUserProfile();
     const user = convertApiUserToUser(apiUser);
     
-    // Update stored user data
+    // Update stored user data with fresh timestamp
     saveToStorage(STORAGE_KEYS.USER, user);
     saveToStorage(STORAGE_KEYS.SESSION_TIMESTAMP, Date.now());
     
-    console.log('✅ User restored from API successfully');
+    console.log('✅ [AuthContext] User restored from API successfully');
     return user;
   } catch (error) {
-    console.warn('⚠️ Failed to restore user from API:', error);
+    console.warn('⚠️ [AuthContext] Failed to restore user from API:', error);
     
-    // Fall back to stored user data
+    // Fall back to stored user data if API fails but we have valid session
     const userData = loadFromStorage(STORAGE_KEYS.USER);
     if (userData && userData.id && userData.username) {
-      console.log('📁 Using stored user data as fallback');
+      console.log('📁 [AuthContext] Using stored user data as fallback');
       return userData as User;
     }
     
-    console.log('❌ No valid user data found');
+    console.log('❌ [AuthContext] No valid user data found');
     return null;
   }
 };
@@ -159,7 +167,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Initialize auth state
   useEffect(() => {
     const initializeAuth = async () => {
-      console.log('🚀 Initializing auth state');
+      console.log('🚀 [AuthContext] Initializing auth state');
       setIsLoading(true);
       
       try {
@@ -168,16 +176,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (storedUser) {
           setCurrentUser(storedUser);
-          console.log('✅ Restored user session:', storedUser.username);
+          console.log('✅ [AuthContext] Restored user session:', storedUser.username);
         }
         
         setLoginAttempts(storedAttempts);
       } catch (error) {
-        console.warn('❌ Failed to initialize auth:', error);
+        console.warn('❌ [AuthContext] Failed to initialize auth:', error);
       } finally {
         setIsLoading(false);
         setIsInitialized(true);
-        console.log('✅ Auth initialization completed');
+        console.log('✅ [AuthContext] Auth initialization completed');
       }
     };
 
@@ -191,14 +199,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (e.newValue === null) {
           setCurrentUser(null);
           setLoginAttempts(0);
-          console.log('User logged out in another tab');
+          console.log('[AuthContext] User logged out in another tab');
         } else {
           try {
             const userData = JSON.parse(e.newValue);
             setCurrentUser(userData as User);
-            console.log('User logged in from another tab:', userData.username);
+            console.log('[AuthContext] User logged in from another tab:', userData.username);
           } catch (error) {
-            console.warn('Failed to sync user from another tab:', error);
+            console.warn('[AuthContext] Failed to sync user from another tab:', error);
           }
         }
       }
@@ -207,7 +215,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           setLoginAttempts(parseInt(e.newValue));
         } catch (error) {
-          console.warn('Failed to sync login attempts:', error);
+          console.warn('[AuthContext] Failed to sync login attempts:', error);
         }
       }
     };
@@ -217,27 +225,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    console.log('🔐 Starting login process for:', email);
+    console.log('🔐 [AuthContext] Starting login process for:', email);
     setIsLoading(true);
     
     try {
       const response = await loginUser({ email, password });
-      console.log('📨 Login API response received');
+      console.log('📨 [AuthContext] Login API response received');
       
-      // Add small delay to ensure token is stored
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Wait longer to ensure token is properly stored
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // Verify token was stored correctly
+      const storedToken = localStorage.getItem(STORAGE_KEYS.TOKEN);
+      if (!storedToken) {
+        console.error('❌ [AuthContext] Token not found after login, retrying...');
+        await new Promise(resolve => setTimeout(resolve, 100));
+        const retryToken = localStorage.getItem(STORAGE_KEYS.TOKEN);
+        if (!retryToken) {
+          throw new Error('Token storage failed');
+        }
+      }
       
       const user = convertApiUserToUser(response.user);
       
       setCurrentUser(user);
       setLoginAttempts(0);
       
-      // Save to localStorage
+      // Save to localStorage with current timestamp
       saveToStorage(STORAGE_KEYS.USER, user);
       saveToStorage(STORAGE_KEYS.SESSION_TIMESTAMP, Date.now());
       saveToStorage(STORAGE_KEYS.LOGIN_ATTEMPTS, 0);
       
-      console.log('✅ User logged in successfully:', email);
+      console.log('✅ [AuthContext] User logged in successfully:', email);
       
       toast({
         title: "Đăng nhập thành công",
@@ -250,7 +269,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoginAttempts(newAttempts);
       saveToStorage(STORAGE_KEYS.LOGIN_ATTEMPTS, newAttempts);
       
-      console.log('❌ Login failed for:', email, error);
+      console.log('❌ [AuthContext] Login failed for:', email, error);
       
       toast({
         title: "Đăng nhập thất bại",
@@ -265,14 +284,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
-    console.log('🚪 Starting logout process');
+    console.log('🚪 [AuthContext] Starting logout process');
     setIsLoading(true);
     
     try {
       await logoutUser();
-      console.log('✅ User logged out:', currentUser?.username);
+      console.log('✅ [AuthContext] User logged out:', currentUser?.username);
     } catch (error) {
-      console.warn('⚠️ Logout error:', error);
+      console.warn('⚠️ [AuthContext] Logout error:', error);
     } finally {
       setCurrentUser(null);
       setLoginAttempts(0);
@@ -294,7 +313,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const refreshUserProfile = async () => {
     if (!currentUser) return;
     
-    console.log('🔄 Refreshing user profile');
+    console.log('🔄 [AuthContext] Refreshing user profile');
     try {
       const apiUser = await getUserProfile();
       const updatedUser = convertApiUserToUser(apiUser);
@@ -303,13 +322,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       saveToStorage(STORAGE_KEYS.USER, updatedUser);
       saveToStorage(STORAGE_KEYS.SESSION_TIMESTAMP, Date.now());
       
-      console.log('✅ User profile refreshed:', updatedUser.username);
+      console.log('✅ [AuthContext] User profile refreshed:', updatedUser.username);
     } catch (error) {
-      console.warn('❌ Failed to refresh user profile:', error);
+      console.warn('❌ [AuthContext] Failed to refresh user profile:', error);
       
       if (error instanceof Error && error.message.includes('Token hết hạn')) {
-        // Token expired, force logout
-        console.log('🔒 Token expired, forcing logout');
+        console.log('🔒 [AuthContext] Token expired, forcing logout');
         await logout();
       }
     }
@@ -331,7 +349,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider
       value={{
         currentUser,
-        isAuthenticated: !!currentUser,
+        isAuthenticated: checkAuthentication() && !!currentUser,
         login,
         logout,
         loginAttempts,
