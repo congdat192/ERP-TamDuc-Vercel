@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -5,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "@/components/layout/ErrorBoundary";
 import { AuthProvider } from "@/components/auth/AuthContext";
+import { BusinessProvider } from "@/contexts/BusinessContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ThemeSystem } from "@/components/theme/ThemeSystem";
 import Index from "./pages/Index";
@@ -12,6 +14,8 @@ import NotFound from "./pages/NotFound";
 import { ForbiddenPage, ServerErrorPage, NetworkErrorPage } from "./pages/ErrorPages";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
+import { BusinessSelectionPage } from "./pages/BusinessSelectionPage";
+import { CreateBusinessPage } from "./pages/CreateBusinessPage";
 import { ERPHome } from "./pages/ERPHome";
 import { CustomerPage } from "./pages/CustomerPage";
 import { SalesPage } from "./pages/SalesPage";
@@ -24,7 +28,8 @@ import { PlatformAdmin } from "./modules/platform-admin";
 import { Settings } from "./modules/admin/pages/Settings";
 import { ERPLayout } from "@/components/layout/ERPLayout";
 import { useAuth } from "@/components/auth/AuthContext";
-import { Navigate, useNavigate } from "react-router-dom";
+import { useBusiness } from "@/contexts/BusinessContext";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -41,7 +46,9 @@ const queryClient = new QueryClient({
 // Protected Route wrapper component
 const ProtectedERPRoute = ({ children, module }: { children: React.ReactNode; module: string }) => {
   const { currentUser, isAuthenticated, logout } = useAuth();
+  const { currentBusiness, selectBusiness } = useBusiness();
   const navigate = useNavigate();
+  const { businessId } = useParams();
 
   if (!isAuthenticated || !currentUser) {
     return <Navigate to="/login" replace />;
@@ -51,28 +58,33 @@ const ProtectedERPRoute = ({ children, module }: { children: React.ReactNode; mo
     return <Navigate to="/platformadmin" replace />;
   }
 
+  // Check if business ID is provided and valid
+  if (!businessId || !currentBusiness || currentBusiness.id.toString() !== businessId) {
+    return <Navigate to="/business-selection" replace />;
+  }
+
   const handleModuleChange = (newModule: string) => {
     switch (newModule) {
       case 'dashboard':
-        navigate('/ERP/Dashboard');
+        navigate(`/ERP/${businessId}/Dashboard`);
         break;
       case 'customers':
-        navigate('/ERP/Customers');
+        navigate(`/ERP/${businessId}/Customers`);
         break;
       case 'sales':
-        navigate('/ERP/Invoices');
+        navigate(`/ERP/${businessId}/Invoices`);
         break;
       case 'voucher':
-        navigate('/ERP/Voucher');
+        navigate(`/ERP/${businessId}/Voucher`);
         break;
       case 'inventory':
-        navigate('/ERP/Products');
+        navigate(`/ERP/${businessId}/Products`);
         break;
       case 'marketing':
-        navigate('/ERP/Marketing');
+        navigate(`/ERP/${businessId}/Marketing`);
         break;
       case 'system-settings':
-        navigate('/ERP/Setting');
+        navigate(`/ERP/${businessId}/Setting`);
         break;
     }
   };
@@ -96,101 +108,105 @@ const App = () => (
       <TooltipProvider>
         <ThemeProvider>
           <AuthProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
-                
-                {/* ERP Routes with explicit full paths */}
-                <Route 
-                  path="/ERP/Dashboard" 
-                  element={
-                    <ProtectedERPRoute module="dashboard">
-                      <ERPHome />
-                    </ProtectedERPRoute>
-                  } 
-                />
-                <Route 
-                  path="/ERP/Customers" 
-                  element={
-                    <ProtectedERPRoute module="customers">
-                      <CustomerPage />
-                    </ProtectedERPRoute>
-                  } 
-                />
-                <Route 
-                  path="/ERP/Invoices" 
-                  element={
-                    <ProtectedERPRoute module="sales">
-                      <SalesPage />
-                    </ProtectedERPRoute>
-                  } 
-                />
-                <Route 
-                  path="/ERP/Invoices/:invoiceId" 
-                  element={
-                    <ProtectedERPRoute module="sales">
-                      <InvoiceDetailPage />
-                    </ProtectedERPRoute>
-                  } 
-                />
-                <Route 
-                  path="/ERP/Voucher/*" 
-                  element={
-                    <ProtectedERPRoute module="voucher">
-                      <VoucherPage />
-                    </ProtectedERPRoute>
-                  } 
-                />
-                <Route 
-                  path="/ERP/Products" 
-                  element={
-                    <ProtectedERPRoute module="inventory">
-                      <InventoryPage />
-                    </ProtectedERPRoute>
-                  } 
-                />
-                <Route 
-                  path="/ERP/Products/:productCode" 
-                  element={
-                    <ProtectedERPRoute module="inventory">
-                      <ProductDetailPage />
-                    </ProtectedERPRoute>
-                  } 
-                />
-                <Route 
-                  path="/ERP/Marketing" 
-                  element={
-                    <ProtectedERPRoute module="marketing">
-                      <MarketingPage />
-                    </ProtectedERPRoute>
-                  } 
-                />
-                <Route 
-                  path="/ERP/Setting/*" 
-                  element={
-                    <ProtectedERPRoute module="system-settings">
-                      <Settings />
-                    </ProtectedERPRoute>
-                  } 
-                />
-                
-                {/* Redirect /ERP to /ERP/Dashboard */}
-                <Route path="/ERP" element={<Navigate to="/ERP/Dashboard" replace />} />
-                
-                {/* Platform Admin */}
-                <Route path="/platformadmin" element={<PlatformAdmin />} />
-                
-                {/* Error Pages */}
-                <Route path="/403" element={<ForbiddenPage />} />
-                <Route path="/500" element={<ServerErrorPage />} />
-                <Route path="/network-error" element={<NetworkErrorPage />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
+            <BusinessProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/business-selection" element={<BusinessSelectionPage />} />
+                  <Route path="/create-business" element={<CreateBusinessPage />} />
+                  
+                  {/* ERP Routes with business ID */}
+                  <Route 
+                    path="/ERP/:businessId/Dashboard" 
+                    element={
+                      <ProtectedERPRoute module="dashboard">
+                        <ERPHome />
+                      </ProtectedERPRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/ERP/:businessId/Customers" 
+                    element={
+                      <ProtectedERPRoute module="customers">
+                        <CustomerPage />
+                      </ProtectedERPRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/ERP/:businessId/Invoices" 
+                    element={
+                      <ProtectedERPRoute module="sales">
+                        <SalesPage />
+                      </ProtectedERPRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/ERP/:businessId/Invoices/:invoiceId" 
+                    element={
+                      <ProtectedERPRoute module="sales">
+                        <InvoiceDetailPage />
+                      </ProtectedERPRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/ERP/:businessId/Voucher/*" 
+                    element={
+                      <ProtectedERPRoute module="voucher">
+                        <VoucherPage />
+                      </ProtectedERPRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/ERP/:businessId/Products" 
+                    element={
+                      <ProtectedERPRoute module="inventory">
+                        <InventoryPage />
+                      </ProtectedERPRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/ERP/:businessId/Products/:productCode" 
+                    element={
+                      <ProtectedERPRoute module="inventory">
+                        <ProductDetailPage />
+                      </ProtectedERPRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/ERP/:businessId/Marketing" 
+                    element={
+                      <ProtectedERPRoute module="marketing">
+                        <MarketingPage />
+                      </ProtectedERPRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/ERP/:businessId/Setting/*" 
+                    element={
+                      <ProtectedERPRoute module="system-settings">
+                        <Settings />
+                      </ProtectedERPRoute>
+                    } 
+                  />
+                  
+                  {/* Legacy redirects */}
+                  <Route path="/ERP/*" element={<Navigate to="/business-selection" replace />} />
+                  
+                  {/* Platform Admin */}
+                  <Route path="/platformadmin" element={<PlatformAdmin />} />
+                  
+                  {/* Error Pages */}
+                  <Route path="/403" element={<ForbiddenPage />} />
+                  <Route path="/500" element={<ServerErrorPage />} />
+                  <Route path="/network-error" element={<NetworkErrorPage />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+            </BusinessProvider>
           </AuthProvider>
         </ThemeProvider>
       </TooltipProvider>

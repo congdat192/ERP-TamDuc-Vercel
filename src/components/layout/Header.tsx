@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { NotificationCenter } from '@/components/ui/notification-center';
+import { BusinessSwitcher } from '@/components/ui/business-switcher';
 import { User as UserType } from '@/types/auth';
 
 interface HeaderProps {
@@ -74,8 +75,13 @@ export function Header({ onSidebarToggle, currentPage, onPageChange, onLogout, c
             <Menu className="w-5 h-5" />
           </Button>
           
+          {/* Business Switcher */}
+          <BusinessSwitcher className="max-w-48" />
+          
+          <div className="hidden md:block h-6 w-px bg-border" />
+          
           <div className="flex items-center space-x-3">
-            <h1 className="text-xl font-semibold text-foreground">
+            <h1 className="text-lg font-semibold text-foreground">
               {currentPage}
             </h1>
             <Badge variant="secondary" className="hidden sm:inline-flex theme-bg-primary text-white">Trực Tuyến</Badge>

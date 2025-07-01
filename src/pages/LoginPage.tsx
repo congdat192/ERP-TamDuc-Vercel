@@ -14,7 +14,8 @@ export function LoginPage() {
       if (currentUser.role === 'platform-admin') {
         navigate('/platformadmin');
       } else {
-        navigate('/ERP/Dashboard');
+        // Redirect to business selection page instead of direct ERP
+        navigate('/business-selection');
       }
     }
   }, [isAuthenticated, currentUser, navigate]);
