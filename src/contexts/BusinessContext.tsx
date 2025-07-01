@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Business, BusinessContextType, CreateBusinessRequest, UpdateBusinessRequest } from '@/types/business';
 import { getBusinesses, createBusiness as createBusinessAPI, getBusiness, updateBusiness as updateBusinessAPI } from '@/services/businessService';
 import { useToast } from '@/hooks/use-toast';
@@ -24,11 +25,6 @@ const STORAGE_KEYS = {
 
 // Session timeout (in milliseconds) - 8 hours
 const SESSION_TIMEOUT = 8 * 60 * 60 * 1000;
-
-// Error handling state
-let lastAuthError: string | null = null;
-let lastErrorTime = 0;
-const ERROR_DEBOUNCE_TIME = 30000; // 30 seconds
 
 // Utility functions for localStorage
 const saveToStorage = (key: string, value: any) => {
@@ -65,12 +61,14 @@ const removeFromStorage = (key: string) => {
 const isSessionValid = () => {
   const timestamp = loadFromStorage(STORAGE_KEYS.SESSION_TIMESTAMP);
   if (!timestamp) {
+    console.log('⏰ [BusinessContext] No session timestamp found');
     return false;
   }
   
   const now = Date.now();
   const sessionAge = now - timestamp;
   const isValid = sessionAge < SESSION_TIMEOUT;
+  console.log('⏰ [BusinessContext] Session check:', isValid ? 'Valid' : 'Expired', `Age: ${Math.round(sessionAge / 1000 / 60)} minutes`);
   return isValid;
 };
 
@@ -80,27 +78,8 @@ const isAuthenticated = () => {
   const user = localStorage.getItem(STORAGE_KEYS.USER);
   const hasValidSession = isSessionValid();
   const isAuth = !!(token && user && hasValidSession);
+  console.log('🔐 [BusinessContext] Auth check - Token:', token ? 'exists' : 'missing', 'User:', user ? 'exists' : 'missing', 'Session:', hasValidSession ? 'valid' : 'invalid', 'Result:', isAuth ? 'Authenticated' : 'Not authenticated');
   return isAuth;
-};
-
-// Debounced error handler
-const handleAuthError = (toast: any, errorMessage: string) => {
-  const now = Date.now();
-  
-  // Skip if same error within debounce time
-  if (lastAuthError === errorMessage && (now - lastErrorTime) < ERROR_DEBOUNCE_TIME) {
-    console.log('🔇 [BusinessContext] Skipping duplicate error toast');
-    return;
-  }
-  
-  lastAuthError = errorMessage;
-  lastErrorTime = now;
-  
-  toast({
-    title: "Phiên đăng nhập hết hạn",
-    description: "Vui lòng đăng nhập lại để tiếp tục",
-    variant: "destructive",
-  });
 };
 
 export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -108,10 +87,9 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [currentBusiness, setCurrentBusiness] = useState<Business | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const authCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Calculate if user has own business - check for is_owner: true
-  const hasOwnBusiness = businesses.some(business => business.is_owner === true);
+  // Calculate if user has own business
+  const hasOwnBusiness = businesses.some(business => business.is_owner);
 
   // Load businesses from storage on mount
   useEffect(() => {
@@ -132,7 +110,7 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, []);
 
-  // Optimized auth check - only run every 30 seconds instead of every second
+  // Clear business data when user logs out
   useEffect(() => {
     const checkAuth = () => {
       if (!isAuthenticated()) {
@@ -141,33 +119,22 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setCurrentBusiness(null);
         removeFromStorage(STORAGE_KEYS.BUSINESSES_LIST);
         removeFromStorage(STORAGE_KEYS.CURRENT_BUSINESS);
-        
-        // Clear interval to stop checking
-        if (authCheckIntervalRef.current) {
-          clearInterval(authCheckIntervalRef.current);
-          authCheckIntervalRef.current = null;
-        }
-        
-        handleAuthError(toast, "auth_expired");
       }
     };
 
-    // Only start interval if authenticated
-    if (isAuthenticated()) {
-      authCheckIntervalRef.current = setInterval(checkAuth, 30000); // Check every 30 seconds
-    }
-
-    return () => {
-      if (authCheckIntervalRef.current) {
-        clearInterval(authCheckIntervalRef.current);
-      }
-    };
-  }, [toast]);
+    // Check auth status periodically
+    const interval = setInterval(checkAuth, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const fetchBusinesses = async () => {
     if (!isAuthenticated()) {
       console.log('⚠️ [BusinessContext] Cannot fetch businesses - user not authenticated');
-      handleAuthError(toast, "fetch_businesses_auth_error");
+      toast({
+        title: "Lỗi xác thực",
+        description: "Vui lòng đăng nhập lại để tiếp tục",
+        variant: "destructive",
+      });
       return;
     }
     
@@ -179,8 +146,6 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       saveToStorage(STORAGE_KEYS.BUSINESSES_LIST, businessList);
       
       console.log('✅ [BusinessContext] Fetched businesses:', businessList.length);
-      console.log('🏢 [BusinessContext] Owned businesses:', businessList.filter(b => b.is_owner).length);
-      console.log('👥 [BusinessContext] Invited businesses:', businessList.filter(b => !b.is_owner).length);
     } catch (error) {
       console.error('❌ [BusinessContext] Failed to fetch businesses:', error);
       toast({
@@ -199,15 +164,8 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (!isAuthenticated()) {
       console.error('❌ [BusinessContext] Cannot create business - user not authenticated');
       const errorMsg = 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
-      handleAuthError(toast, errorMsg);
-      throw new Error(errorMsg);
-    }
-
-    // Check if user already has own business
-    if (hasOwnBusiness) {
-      const errorMsg = 'Bạn đã có doanh nghiệp riêng. Mỗi tài khoản chỉ được tạo tối đa 1 doanh nghiệp.';
       toast({
-        title: "Giới hạn tạo doanh nghiệp",
+        title: "Lỗi xác thực",
         description: errorMsg,
         variant: "destructive",
       });
@@ -248,7 +206,11 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const selectBusiness = async (businessId: number) => {
     if (!isAuthenticated()) {
       console.log('⚠️ [BusinessContext] Cannot select business - user not authenticated');
-      handleAuthError(toast, "select_business_auth_error");
+      toast({
+        title: "Lỗi xác thực",
+        description: "Vui lòng đăng nhập lại để tiếp tục",
+        variant: "destructive",
+      });
       return;
     }
     

@@ -2,21 +2,26 @@
 export interface Business {
   id: number;
   name: string;
-  description?: string;
+  description: string;
+  owner_id: number;
+  user_role: 'owner' | 'admin' | 'member';
   is_owner: boolean;
-  user_role: string;
   created_at: string;
   updated_at: string;
 }
 
+export interface BusinessListResponse {
+  data: Business[];
+}
+
 export interface CreateBusinessRequest {
   name: string;
-  description?: string;
+  description: string;
 }
 
 export interface UpdateBusinessRequest {
-  name?: string;
-  description?: string;
+  name: string;
+  description: string;
 }
 
 export interface BusinessContextType {

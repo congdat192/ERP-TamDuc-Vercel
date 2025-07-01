@@ -4,8 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Building2, Plus, Crown, Users, ArrowRight, Loader2, UserCheck } from 'lucide-react';
+import { Building2, Plus, Crown, Users, ArrowRight, Loader2 } from 'lucide-react';
 import { useBusiness } from '@/contexts/BusinessContext';
 import { useAuth } from '@/components/auth/AuthContext';
 import { Business } from '@/types/business';
@@ -17,11 +16,7 @@ export function BusinessSelectionPage() {
   const [selectedBusinessId, setSelectedBusinessId] = useState<number | null>(null);
   const navigate = useNavigate();
 
-  // Separate owned and invited businesses
-  const ownedBusinesses = businesses.filter(business => business.is_owner === true);
-  const invitedBusinesses = businesses.filter(business => business.is_owner === false);
-
-  // Check authentication and fetch businesses on mount with parallel loading
+  // Check authentication and fetch businesses on mount
   useEffect(() => {
     const initializePage = async () => {
       console.log('🚀 [BusinessSelectionPage] Initializing...');
@@ -34,7 +29,6 @@ export function BusinessSelectionPage() {
 
       try {
         console.log('🔄 [BusinessSelectionPage] Fetching businesses...');
-        // Use Promise.all for parallel loading would be ideal, but we only have one async operation here
         await fetchBusinesses();
       } catch (error) {
         console.error('❌ [BusinessSelectionPage] Failed to fetch businesses:', error);
@@ -96,65 +90,6 @@ export function BusinessSelectionPage() {
     }
   };
 
-  const BusinessCard = ({ business, isOwned }: { business: Business; isOwned: boolean }) => (
-    <Card 
-      key={business.id} 
-      className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-blue-200"
-      onClick={() => handleBusinessSelect(business)}
-    >
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-            isOwned 
-              ? 'bg-gradient-to-br from-yellow-500 to-orange-600' 
-              : 'bg-gradient-to-br from-blue-500 to-purple-600'
-          }`}>
-            {isOwned ? (
-              <Crown className="w-6 h-6 text-white" />
-            ) : (
-              <Building2 className="w-6 h-6 text-white" />
-            )}
-          </div>
-          <div className="flex flex-col items-end space-y-1">
-            <Badge className={getRoleBadgeColor(business.user_role)}>
-              {business.is_owner && <Crown className="w-3 h-3 mr-1" />}
-              {getRoleDisplayName(business.user_role)}
-            </Badge>
-            {isOwned && (
-              <Badge variant="outline" className="text-xs">
-                Của tôi
-              </Badge>
-            )}
-          </div>
-        </div>
-        <CardTitle className="text-lg">{business.name}</CardTitle>
-        {business.description && (
-          <CardDescription className="text-sm">
-            {business.description}
-          </CardDescription>
-        )}
-      </CardHeader>
-      <CardContent>
-        <Button 
-          className="w-full"
-          disabled={selectedBusinessId === business.id || isLoading}
-        >
-          {selectedBusinessId === business.id ? (
-            <>
-              <Loader2 className="animate-spin w-4 h-4 mr-2" />
-              Đang chọn...
-            </>
-          ) : (
-            <>
-              Vào ERP
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </>
-          )}
-        </Button>
-      </CardContent>
-    </Card>
-  );
-
   // Show loading while initializing
   if (isInitializing) {
     return (
@@ -174,7 +109,7 @@ export function BusinessSelectionPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4">
-      <div className="max-w-6xl mx-auto py-8">
+      <div className="max-w-4xl mx-auto py-8">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center space-x-3 mb-4">
@@ -207,95 +142,82 @@ export function BusinessSelectionPage() {
           </Button>
         </div>
 
-        {/* Owned Businesses Section */}
-        {ownedBusinesses.length > 0 && (
-          <div className="mb-8">
-            <div className="flex items-center space-x-2 mb-4">
-              <Crown className="w-5 h-5 text-yellow-600" />
-              <h2 className="text-xl font-semibold text-gray-900">
-                Doanh Nghiệp Của Tôi ({ownedBusinesses.length})
-              </h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {ownedBusinesses.map((business) => (
-                <BusinessCard key={business.id} business={business} isOwned={true} />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Invited Businesses Section */}
-        {invitedBusinesses.length > 0 && (
-          <div className="mb-8">
-            <div className="flex items-center space-x-2 mb-4">
-              <UserCheck className="w-5 h-5 text-blue-600" />
-              <h2 className="text-xl font-semibold text-gray-900">
-                Doanh Nghiệp Được Mời ({invitedBusinesses.length})
-              </h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {invitedBusinesses.map((business) => (
-                <BusinessCard key={business.id} business={business} isOwned={false} />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Separator only if both sections exist */}
-        {ownedBusinesses.length > 0 && invitedBusinesses.length > 0 && (
-          <Separator className="my-8" />
-        )}
-
-        {/* Create Business Section */}
-        <div className="mb-8">
-          <div className="flex items-center space-x-2 mb-4">
-            <Plus className="w-5 h-5 text-gray-600" />
-            <h2 className="text-xl font-semibold text-gray-900">Tạo Doanh Nghiệp Mới</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Businesses Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {businesses.map((business) => (
             <Card 
-              className={`cursor-pointer hover:shadow-lg transition-shadow border-2 border-dashed ${
-                hasOwnBusiness 
-                  ? 'border-gray-200 hover:border-gray-300 opacity-60' 
-                  : 'border-blue-300 hover:border-blue-400'
-              }`}
-              onClick={handleCreateBusiness}
+              key={business.id} 
+              className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-blue-200"
+              onClick={() => handleBusinessSelect(business)}
             >
               <CardHeader className="pb-3">
-                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                  <Plus className="w-6 h-6 text-gray-600" />
+                <div className="flex items-start justify-between">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                    <Building2 className="w-6 h-6 text-white" />
+                  </div>
+                  <Badge className={getRoleBadgeColor(business.user_role)}>
+                    {business.is_owner && <Crown className="w-3 h-3 mr-1" />}
+                    {getRoleDisplayName(business.user_role)}
+                  </Badge>
                 </div>
-                <CardTitle className="text-lg">
-                  Tạo Doanh Nghiệp Mới
-                </CardTitle>
-                <CardDescription className="text-sm">
-                  {hasOwnBusiness 
-                    ? 'Bạn đã có doanh nghiệp riêng (giới hạn 1 doanh nghiệp/tài khoản)' 
-                    : 'Tạo doanh nghiệp của riêng bạn và trở thành chủ sở hữu'
-                  }
-                </CardDescription>
+                <CardTitle className="text-lg">{business.name}</CardTitle>
+                {business.description && (
+                  <CardDescription className="text-sm">
+                    {business.description}
+                  </CardDescription>
+                )}
               </CardHeader>
               <CardContent>
                 <Button 
-                  variant={hasOwnBusiness ? "outline" : "default"}
                   className="w-full"
-                  disabled={hasOwnBusiness}
+                  disabled={selectedBusinessId === business.id || isLoading}
                 >
-                  {hasOwnBusiness ? (
+                  {selectedBusinessId === business.id ? (
                     <>
-                      <Crown className="w-4 h-4 mr-2" />
-                      Đã có doanh nghiệp
+                      <Loader2 className="animate-spin w-4 h-4 mr-2" />
+                      Đang chọn...
                     </>
                   ) : (
                     <>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Tạo Mới
+                      Vào ERP
+                      <ArrowRight className="w-4 h-4 ml-2" />
                     </>
                   )}
                 </Button>
               </CardContent>
             </Card>
-          </div>
+          ))}
+
+          {/* Create Business Card */}
+          <Card 
+            className="cursor-pointer hover:shadow-lg transition-shadow border-2 border-dashed border-gray-300 hover:border-blue-300"
+            onClick={handleCreateBusiness}
+          >
+            <CardHeader className="pb-3">
+              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                <Plus className="w-6 h-6 text-gray-600" />
+              </div>
+              <CardTitle className="text-lg">
+                {hasOwnBusiness ? 'Tạo Doanh Nghiệp' : 'Tạo Doanh Nghiệp Mới'}
+              </CardTitle>
+              <CardDescription className="text-sm">
+                {hasOwnBusiness 
+                  ? 'Bạn đã có doanh nghiệp riêng (giới hạn 1 doanh nghiệp/tài khoản)' 
+                  : 'Tạo doanh nghiệp của riêng bạn'
+                }
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                variant={hasOwnBusiness ? "outline" : "default"}
+                className="w-full"
+                disabled={hasOwnBusiness}
+              >
+                {hasOwnBusiness ? 'Đã có doanh nghiệp' : 'Tạo Mới'}
+                {!hasOwnBusiness && <Plus className="w-4 h-4 ml-2" />}
+              </Button>
+            </CardContent>
+          </Card>
         </div>
 
         {/* No Businesses Message */}
