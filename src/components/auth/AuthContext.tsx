@@ -24,7 +24,7 @@ export const useAuth = () => {
   return context;
 };
 
-// Storage keys
+// Sync storage keys with authService
 const STORAGE_KEYS = {
   USER: 'erp_current_user',
   LOGIN_ATTEMPTS: 'erp_login_attempts',
@@ -38,17 +38,20 @@ const SESSION_TIMEOUT = 8 * 60 * 60 * 1000;
 const saveToStorage = (key: string, value: any) => {
   try {
     localStorage.setItem(key, JSON.stringify(value));
+    console.log('💾 Saved to storage:', key);
   } catch (error) {
-    console.warn('Failed to save to localStorage:', error);
+    console.warn('❌ Failed to save to localStorage:', error);
   }
 };
 
 const loadFromStorage = (key: string) => {
   try {
     const item = localStorage.getItem(key);
-    return item ? JSON.parse(item) : null;
+    const result = item ? JSON.parse(item) : null;
+    console.log('📁 Loaded from storage:', key, result ? 'Data found' : 'No data');
+    return result;
   } catch (error) {
-    console.warn('Failed to load from localStorage:', error);
+    console.warn('❌ Failed to load from localStorage:', error);
     return null;
   }
 };
@@ -56,23 +59,30 @@ const loadFromStorage = (key: string) => {
 const removeFromStorage = (key: string) => {
   try {
     localStorage.removeItem(key);
+    console.log('🗑️ Removed from storage:', key);
   } catch (error) {
-    console.warn('Failed to remove from localStorage:', error);
+    console.warn('❌ Failed to remove from localStorage:', error);
   }
 };
 
 // Check if session is valid
 const isSessionValid = () => {
   const timestamp = loadFromStorage(STORAGE_KEYS.SESSION_TIMESTAMP);
-  if (!timestamp) return false;
+  if (!timestamp) {
+    console.log('⏰ No session timestamp found');
+    return false;
+  }
   
   const now = Date.now();
   const sessionAge = now - timestamp;
-  return sessionAge < SESSION_TIMEOUT;
+  const isValid = sessionAge < SESSION_TIMEOUT;
+  console.log('⏰ Session check:', isValid ? 'Valid' : 'Expired', `Age: ${Math.round(sessionAge / 1000 / 60)} minutes`);
+  return isValid;
 };
 
 // Convert API user to internal User type
 const convertApiUserToUser = (apiUser: any): User => {
+  console.log('🔄 Converting API user to internal User type');
   return {
     id: apiUser.id,
     username: apiUser.email, // Use email as username
@@ -102,7 +112,10 @@ const convertApiUserToUser = (apiUser: any): User => {
 
 // Restore user data with validation
 const restoreUserFromStorage = async (): Promise<User | null> => {
+  console.log('🔄 Restoring user from storage');
+  
   if (!isSessionValid() || !isAuthenticated()) {
+    console.log('❌ Session expired or no token, clearing storage');
     // Session expired or no token, clear storage
     removeFromStorage(STORAGE_KEYS.USER);
     removeFromStorage(STORAGE_KEYS.SESSION_TIMESTAMP);
@@ -111,6 +124,7 @@ const restoreUserFromStorage = async (): Promise<User | null> => {
 
   try {
     // Try to get fresh user data from API
+    console.log('🌐 Fetching fresh user data from API');
     const apiUser = await getUserProfile();
     const user = convertApiUserToUser(apiUser);
     
@@ -118,16 +132,19 @@ const restoreUserFromStorage = async (): Promise<User | null> => {
     saveToStorage(STORAGE_KEYS.USER, user);
     saveToStorage(STORAGE_KEYS.SESSION_TIMESTAMP, Date.now());
     
+    console.log('✅ User restored from API successfully');
     return user;
   } catch (error) {
-    console.warn('Failed to restore user from API:', error);
+    console.warn('⚠️ Failed to restore user from API:', error);
     
     // Fall back to stored user data
     const userData = loadFromStorage(STORAGE_KEYS.USER);
     if (userData && userData.id && userData.username) {
+      console.log('📁 Using stored user data as fallback');
       return userData as User;
     }
     
+    console.log('❌ No valid user data found');
     return null;
   }
 };
@@ -142,6 +159,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Initialize auth state
   useEffect(() => {
     const initializeAuth = async () => {
+      console.log('🚀 Initializing auth state');
       setIsLoading(true);
       
       try {
@@ -150,15 +168,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (storedUser) {
           setCurrentUser(storedUser);
-          console.log('Restored user session:', storedUser.username);
+          console.log('✅ Restored user session:', storedUser.username);
         }
         
         setLoginAttempts(storedAttempts);
       } catch (error) {
-        console.warn('Failed to initialize auth:', error);
+        console.warn('❌ Failed to initialize auth:', error);
       } finally {
         setIsLoading(false);
         setIsInitialized(true);
+        console.log('✅ Auth initialization completed');
       }
     };
 
@@ -198,10 +217,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
+    console.log('🔐 Starting login process for:', email);
     setIsLoading(true);
     
     try {
       const response = await loginUser({ email, password });
+      console.log('📨 Login API response received');
+      
+      // Add small delay to ensure token is stored
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const user = convertApiUserToUser(response.user);
       
       setCurrentUser(user);
@@ -212,7 +237,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       saveToStorage(STORAGE_KEYS.SESSION_TIMESTAMP, Date.now());
       saveToStorage(STORAGE_KEYS.LOGIN_ATTEMPTS, 0);
       
-      console.log('User logged in successfully:', email);
+      console.log('✅ User logged in successfully:', email);
       
       toast({
         title: "Đăng nhập thành công",
@@ -225,7 +250,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoginAttempts(newAttempts);
       saveToStorage(STORAGE_KEYS.LOGIN_ATTEMPTS, newAttempts);
       
-      console.log('Login failed for:', email, error);
+      console.log('❌ Login failed for:', email, error);
       
       toast({
         title: "Đăng nhập thất bại",
@@ -240,13 +265,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
+    console.log('🚪 Starting logout process');
     setIsLoading(true);
     
     try {
       await logoutUser();
-      console.log('User logged out:', currentUser?.username);
+      console.log('✅ User logged out:', currentUser?.username);
     } catch (error) {
-      console.warn('Logout error:', error);
+      console.warn('⚠️ Logout error:', error);
     } finally {
       setCurrentUser(null);
       setLoginAttempts(0);
@@ -268,6 +294,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const refreshUserProfile = async () => {
     if (!currentUser) return;
     
+    console.log('🔄 Refreshing user profile');
     try {
       const apiUser = await getUserProfile();
       const updatedUser = convertApiUserToUser(apiUser);
@@ -276,12 +303,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       saveToStorage(STORAGE_KEYS.USER, updatedUser);
       saveToStorage(STORAGE_KEYS.SESSION_TIMESTAMP, Date.now());
       
-      console.log('User profile refreshed:', updatedUser.username);
+      console.log('✅ User profile refreshed:', updatedUser.username);
     } catch (error) {
-      console.warn('Failed to refresh user profile:', error);
+      console.warn('❌ Failed to refresh user profile:', error);
       
       if (error instanceof Error && error.message.includes('Token hết hạn')) {
         // Token expired, force logout
+        console.log('🔒 Token expired, forcing logout');
         await logout();
       }
     }
