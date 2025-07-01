@@ -1,4 +1,3 @@
-
 // Authentication service for API calls
 export interface LoginRequest {
   email: string;
@@ -140,6 +139,9 @@ export const loginUser = async (credentials: LoginRequest): Promise<LoginRespons
     throw new Error('Trình duyệt không hỗ trợ lưu trữ dữ liệu. Vui lòng kiểm tra cài đặt trình duyệt.');
   }
   
+  console.log('📡 [authService] Making API request to:', `${API_BASE_URL}/login`);
+  console.log('📋 [authService] Request payload:', { email: credentials.email, password: '***' });
+  
   const response = await fetch(`${API_BASE_URL}/login`, {
     method: 'POST',
     headers: {
@@ -149,31 +151,63 @@ export const loginUser = async (credentials: LoginRequest): Promise<LoginRespons
     body: JSON.stringify(credentials),
   });
 
+  console.log('📨 [authService] Response status:', response.status);
+  console.log('📨 [authService] Response headers:', Object.fromEntries(response.headers.entries()));
+
   if (!response.ok) {
     const errorData = await response.json();
-    console.error('❌ [authService] Login failed:', errorData);
+    console.error('❌ [authService] Login failed with status:', response.status);
+    console.error('❌ [authService] Error response:', errorData);
     throw new Error(errorData.message || 'Đăng nhập thất bại');
   }
 
   const data = await response.json();
-  console.log('✅ [authService] Login successful for:', credentials.email);
+  console.log('📦 [authService] Raw API response:', data);
   
-  // Store token with enhanced error handling
-  if (data.access_token) {
-    console.log('💾 [authService] Attempting to store token...');
-    try {
-      storeToken(data.access_token);
-      console.log('✅ [authService] Token stored successfully');
-    } catch (error) {
-      console.error('❌ [authService] Token storage failed:', error);
-      throw new Error('Token storage failed');
+  // Check for different possible token field names
+  const possibleTokenFields = ['access_token', 'token', 'accessToken', 'authToken'];
+  let token = null;
+  
+  for (const field of possibleTokenFields) {
+    if (data[field]) {
+      token = data[field];
+      console.log(`✅ [authService] Found token in field: ${field}`);
+      break;
     }
-  } else {
-    console.error('❌ [authService] No access token in response');
+  }
+  
+  if (!token) {
+    console.error('❌ [authService] No token found in API response');
+    console.error('❌ [authService] Available fields:', Object.keys(data));
     throw new Error('Không nhận được token từ server');
   }
   
-  return data;
+  // Store token with enhanced error handling
+  console.log('💾 [authService] Attempting to store token...');
+  try {
+    storeToken(token);
+    console.log('✅ [authService] Token stored successfully');
+  } catch (error) {
+    console.error('❌ [authService] Token storage failed:', error);
+    throw new Error('Lỗi lưu trữ token');
+  }
+  
+  // Ensure we return the expected format
+  const loginResponse: LoginResponse = {
+    access_token: token,
+    token_type: data.token_type || 'Bearer',
+    expires_in: data.expires_in || 3600,
+    user: data.user || {
+      id: data.id || 'unknown',
+      name: data.name || credentials.email,
+      email: data.email || credentials.email,
+      created_at: data.created_at || new Date().toISOString(),
+      updated_at: data.updated_at || new Date().toISOString()
+    }
+  };
+  
+  console.log('✅ [authService] Login successful, returning formatted response');
+  return loginResponse;
 };
 
 // Logout API call
