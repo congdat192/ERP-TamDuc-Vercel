@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@/types/auth';
 import { loginUser, logoutUser, getUserProfile, isAuthenticated } from '@/services/authService';
@@ -35,13 +34,14 @@ const STORAGE_KEYS = {
 // Session timeout (in milliseconds) - 8 hours
 const SESSION_TIMEOUT = 8 * 60 * 60 * 1000;
 
-// Utility functions for localStorage
+// Utility functions for localStorage with enhanced error handling
 const saveToStorage = (key: string, value: any) => {
   try {
     localStorage.setItem(key, JSON.stringify(value));
     console.log('💾 [AuthContext] Saved to storage:', key);
   } catch (error) {
     console.warn('❌ [AuthContext] Failed to save to localStorage:', error);
+    throw new Error('Không thể lưu dữ liệu vào trình duyệt');
   }
 };
 
@@ -232,18 +232,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await loginUser({ email, password });
       console.log('📨 [AuthContext] Login API response received');
       
-      // Wait longer to ensure token is properly stored
-      await new Promise(resolve => setTimeout(resolve, 200));
+      // Wait a bit longer to ensure token is properly stored
+      await new Promise(resolve => setTimeout(resolve, 300));
       
-      // Verify token was stored correctly
-      const storedToken = localStorage.getItem(STORAGE_KEYS.TOKEN);
+      // Verify token was stored correctly with multiple checks
+      let storedToken = localStorage.getItem(STORAGE_KEYS.TOKEN);
+      let retryCount = 0;
+      
+      while (!storedToken && retryCount < 3) {
+        console.log('⏳ [AuthContext] Token not found, waiting and retrying...', retryCount + 1);
+        await new Promise(resolve => setTimeout(resolve, 200));
+        storedToken = localStorage.getItem(STORAGE_KEYS.TOKEN);
+        retryCount++;
+      }
+      
       if (!storedToken) {
-        console.error('❌ [AuthContext] Token not found after login, retrying...');
-        await new Promise(resolve => setTimeout(resolve, 100));
-        const retryToken = localStorage.getItem(STORAGE_KEYS.TOKEN);
-        if (!retryToken) {
-          throw new Error('Token storage failed');
-        }
+        console.error('❌ [AuthContext] Token not found after multiple retries');
+        throw new Error('Token storage failed');
       }
       
       const user = convertApiUserToUser(response.user);
@@ -271,9 +276,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       console.log('❌ [AuthContext] Login failed for:', email, error);
       
+      // Show more specific error message
+      let errorMessage = "Thông tin đăng nhập không chính xác";
+      if (error instanceof Error) {
+        if (error.message.includes('Token storage failed')) {
+          errorMessage = "Lỗi lưu trữ dữ liệu. Vui lòng kiểm tra cài đặt trình duyệt và thử lại.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       toast({
         title: "Đăng nhập thất bại",
-        description: error instanceof Error ? error.message : "Thông tin đăng nhập không chính xác",
+        description: errorMessage,
         variant: "destructive",
       });
       

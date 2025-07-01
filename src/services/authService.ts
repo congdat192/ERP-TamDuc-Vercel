@@ -1,3 +1,4 @@
+
 // Authentication service for API calls
 export interface LoginRequest {
   email: string;
@@ -44,7 +45,7 @@ const STORAGE_KEYS = {
   SESSION_TIMESTAMP: 'erp_session_timestamp'
 };
 
-// Get stored token
+// Get stored token with retry mechanism
 const getStoredToken = (): string | null => {
   try {
     const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
@@ -56,23 +57,54 @@ const getStoredToken = (): string | null => {
   }
 };
 
-// Store token
+// Store token with enhanced error handling and retry
 const storeToken = (token: string): void => {
-  try {
-    console.log('💾 [authService] Storing token:', token.substring(0, 20) + '...');
-    localStorage.setItem(STORAGE_KEYS.TOKEN, token);
-    localStorage.setItem(STORAGE_KEYS.SESSION_TIMESTAMP, Date.now().toString());
-    
-    // Verify token was stored
-    const storedToken = localStorage.getItem(STORAGE_KEYS.TOKEN);
-    if (storedToken === token) {
-      console.log('✅ [authService] Token stored and verified successfully');
-    } else {
-      console.error('❌ [authService] Token storage verification failed');
+  const maxRetries = 3;
+  let retryCount = 0;
+  
+  const attemptStore = () => {
+    try {
+      console.log('💾 [authService] Storing token (attempt', retryCount + 1, '):', token.substring(0, 20) + '...');
+      
+      // Clear any existing token first
+      localStorage.removeItem(STORAGE_KEYS.TOKEN);
+      localStorage.removeItem(STORAGE_KEYS.SESSION_TIMESTAMP);
+      
+      // Store new token
+      localStorage.setItem(STORAGE_KEYS.TOKEN, token);
+      localStorage.setItem(STORAGE_KEYS.SESSION_TIMESTAMP, Date.now().toString());
+      
+      // Verify token was stored correctly
+      const storedToken = localStorage.getItem(STORAGE_KEYS.TOKEN);
+      const storedTimestamp = localStorage.getItem(STORAGE_KEYS.SESSION_TIMESTAMP);
+      
+      if (storedToken === token && storedTimestamp) {
+        console.log('✅ [authService] Token stored and verified successfully on attempt', retryCount + 1);
+        return true;
+      } else {
+        console.warn('⚠️ [authService] Token verification failed on attempt', retryCount + 1);
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ [authService] Failed to store token on attempt', retryCount + 1, ':', error);
+      return false;
     }
-  } catch (error) {
-    console.error('❌ [authService] Failed to store token:', error);
+  };
+  
+  // Try to store with retries
+  while (retryCount < maxRetries) {
+    if (attemptStore()) {
+      return; // Success
+    }
+    retryCount++;
+    if (retryCount < maxRetries) {
+      console.log('🔄 [authService] Retrying token storage...');
+    }
   }
+  
+  // If all retries failed, throw error
+  console.error('❌ [authService] All token storage attempts failed');
+  throw new Error('Token storage failed');
 };
 
 // Remove token
@@ -86,9 +118,27 @@ const removeToken = (): void => {
   }
 };
 
+// Check localStorage availability
+const isLocalStorageAvailable = (): boolean => {
+  try {
+    const testKey = '__test_localStorage__';
+    localStorage.setItem(testKey, 'test');
+    localStorage.removeItem(testKey);
+    return true;
+  } catch (error) {
+    console.error('❌ [authService] localStorage not available:', error);
+    return false;
+  }
+};
+
 // Login API call
 export const loginUser = async (credentials: LoginRequest): Promise<LoginResponse> => {
   console.log('🚀 [authService] Starting login process for:', credentials.email);
+  
+  // Check localStorage availability
+  if (!isLocalStorageAvailable()) {
+    throw new Error('Trình duyệt không hỗ trợ lưu trữ dữ liệu. Vui lòng kiểm tra cài đặt trình duyệt.');
+  }
   
   const response = await fetch(`${API_BASE_URL}/login`, {
     method: 'POST',
@@ -108,23 +158,19 @@ export const loginUser = async (credentials: LoginRequest): Promise<LoginRespons
   const data = await response.json();
   console.log('✅ [authService] Login successful for:', credentials.email);
   
-  // Store token immediately after successful login
+  // Store token with enhanced error handling
   if (data.access_token) {
-    console.log('💾 [authService] Storing token immediately after login...');
-    storeToken(data.access_token);
-    
-    // Add a small delay to ensure storage is complete
-    await new Promise(resolve => setTimeout(resolve, 50));
-    
-    // Verify token is accessible
-    const verifyToken = getStoredToken();
-    if (verifyToken) {
-      console.log('✅ [authService] Token verification after login: SUCCESS');
-    } else {
-      console.error('❌ [authService] Token verification after login: FAILED');
+    console.log('💾 [authService] Attempting to store token...');
+    try {
+      storeToken(data.access_token);
+      console.log('✅ [authService] Token stored successfully');
+    } catch (error) {
+      console.error('❌ [authService] Token storage failed:', error);
+      throw new Error('Token storage failed');
     }
   } else {
     console.error('❌ [authService] No access token in response');
+    throw new Error('Không nhận được token từ server');
   }
   
   return data;
