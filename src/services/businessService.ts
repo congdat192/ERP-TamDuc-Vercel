@@ -1,4 +1,3 @@
-
 // Business service for API calls
 import { getAuthToken } from './authService';
 
@@ -51,9 +50,43 @@ export const getBusinesses = async (): Promise<Business[]> => {
     throw new Error(errorData.message || 'Không thể tải danh sách doanh nghiệp');
   }
 
-  const data = await response.json();
-  console.log('✅ [businessService] Fetched businesses:', data.length);
-  return data;
+  const rawData = await response.json();
+  console.log('📦 [businessService] Raw API response:', rawData);
+  console.log('📦 [businessService] Response type:', typeof rawData);
+  console.log('📦 [businessService] Is array:', Array.isArray(rawData));
+  
+  // Handle different possible API response structures
+  let businessesData: Business[] = [];
+  
+  if (Array.isArray(rawData)) {
+    // Response is directly an array
+    businessesData = rawData;
+    console.log('✅ [businessService] Using direct array response');
+  } else if (rawData && Array.isArray(rawData.data)) {
+    // Response has data property containing array
+    businessesData = rawData.data;
+    console.log('✅ [businessService] Using data property array');
+  } else if (rawData && Array.isArray(rawData.businesses)) {
+    // Response has businesses property containing array
+    businessesData = rawData.businesses;
+    console.log('✅ [businessService] Using businesses property array');
+  } else {
+    // Fallback - create empty array
+    console.warn('⚠️ [businessService] API response is not in expected format, using empty array');
+    console.log('📋 [businessService] Available properties:', Object.keys(rawData || {}));
+    businessesData = [];
+  }
+
+  // Validate that we have a proper array
+  if (!Array.isArray(businessesData)) {
+    console.error('❌ [businessService] businessesData is not an array:', typeof businessesData);
+    businessesData = [];
+  }
+
+  console.log('✅ [businessService] Fetched businesses count:', businessesData.length);
+  console.log('📋 [businessService] Business data sample:', businessesData.slice(0, 2));
+  
+  return businessesData;
 };
 
 // Get single business

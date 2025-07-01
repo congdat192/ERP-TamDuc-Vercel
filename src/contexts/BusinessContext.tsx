@@ -103,6 +103,23 @@ const handleAuthError = (toast: any, errorMessage: string) => {
   });
 };
 
+// Ensure businesses is always a valid array
+const ensureBusinessesArray = (data: any): Business[] => {
+  if (!data) {
+    console.log('🔧 [BusinessContext] Data is null/undefined, returning empty array');
+    return [];
+  }
+  
+  if (Array.isArray(data)) {
+    console.log('✅ [BusinessContext] Data is already an array');
+    return data;
+  }
+  
+  console.warn('⚠️ [BusinessContext] Data is not an array, converting to empty array');
+  console.log('📋 [BusinessContext] Data type:', typeof data, 'Value:', data);
+  return [];
+};
+
 export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [currentBusiness, setCurrentBusiness] = useState<Business | null>(null);
@@ -110,8 +127,8 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const { toast } = useToast();
   const authCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Calculate if user has own business - check for is_owner: true
-  const hasOwnBusiness = businesses.some(business => business.is_owner === true);
+  // Calculate if user has own business - check for is_owner: true with defensive programming
+  const hasOwnBusiness = Array.isArray(businesses) ? businesses.some(business => business.is_owner === true) : false;
 
   // Load businesses from storage on mount
   useEffect(() => {
@@ -121,7 +138,8 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const storedCurrentBusiness = loadFromStorage(STORAGE_KEYS.CURRENT_BUSINESS);
       
       if (storedBusinesses) {
-        setBusinesses(storedBusinesses);
+        const validBusinesses = ensureBusinessesArray(storedBusinesses);
+        setBusinesses(validBusinesses);
       }
       
       if (storedCurrentBusiness) {
@@ -175,14 +193,21 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       console.log('🔄 [BusinessContext] Fetching businesses...');
       const businessList = await getBusinesses();
-      setBusinesses(businessList);
-      saveToStorage(STORAGE_KEYS.BUSINESSES_LIST, businessList);
       
-      console.log('✅ [BusinessContext] Fetched businesses:', businessList.length);
-      console.log('🏢 [BusinessContext] Owned businesses:', businessList.filter(b => b.is_owner).length);
-      console.log('👥 [BusinessContext] Invited businesses:', businessList.filter(b => !b.is_owner).length);
+      // Ensure we have a valid array before setting state
+      const validBusinessList = ensureBusinessesArray(businessList);
+      setBusinesses(validBusinessList);
+      saveToStorage(STORAGE_KEYS.BUSINESSES_LIST, validBusinessList);
+      
+      console.log('✅ [BusinessContext] Fetched businesses:', validBusinessList.length);
+      console.log('🏢 [BusinessContext] Owned businesses:', validBusinessList.filter(b => b.is_owner).length);
+      console.log('👥 [BusinessContext] Invited businesses:', validBusinessList.filter(b => !b.is_owner).length);
     } catch (error) {
       console.error('❌ [BusinessContext] Failed to fetch businesses:', error);
+      
+      // Set empty array on error to prevent filter/some errors
+      setBusinesses([]);
+      
       toast({
         title: "Lỗi",
         description: error instanceof Error ? error.message : "Không thể tải danh sách doanh nghiệp",
@@ -203,8 +228,9 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       throw new Error(errorMsg);
     }
 
-    // Check if user already has own business
-    if (hasOwnBusiness) {
+    // Check if user already has own business with defensive programming
+    const currentHasOwnBusiness = Array.isArray(businesses) ? businesses.some(business => business.is_owner === true) : false;
+    if (currentHasOwnBusiness) {
       const errorMsg = 'Bạn đã có doanh nghiệp riêng. Mỗi tài khoản chỉ được tạo tối đa 1 doanh nghiệp.';
       toast({
         title: "Giới hạn tạo doanh nghiệp",
@@ -219,8 +245,9 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       console.log('🔄 [BusinessContext] Calling createBusinessAPI...');
       const newBusiness = await createBusinessAPI(data);
       
-      // Update businesses list
-      const updatedBusinesses = [...businesses, newBusiness];
+      // Update businesses list with defensive programming
+      const currentBusinesses = ensureBusinessesArray(businesses);
+      const updatedBusinesses = [...currentBusinesses, newBusiness];
       setBusinesses(updatedBusinesses);
       saveToStorage(STORAGE_KEYS.BUSINESSES_LIST, updatedBusinesses);
       
