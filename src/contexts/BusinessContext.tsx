@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { Business, BusinessContextType, CreateBusinessRequest, UpdateBusinessRequest } from '@/types/business';
 import { getBusinesses, createBusiness as createBusinessAPI, getBusiness, updateBusiness as updateBusinessAPI } from '@/services/businessService';
@@ -30,10 +29,6 @@ const SESSION_TIMEOUT = 8 * 60 * 60 * 1000;
 let lastAuthError: string | null = null;
 let lastErrorTime = 0;
 const ERROR_DEBOUNCE_TIME = 30000; // 30 seconds
-
-// Prevent multiple concurrent fetch attempts
-let isFetching = false;
-let fetchPromise: Promise<void> | null = null;
 
 // Utility functions for localStorage
 const saveToStorage = (key: string, value: any) => {
@@ -85,7 +80,6 @@ const isAuthenticated = () => {
   const user = localStorage.getItem(STORAGE_KEYS.USER);
   const hasValidSession = isSessionValid();
   const isAuth = !!(token && user && hasValidSession);
-  console.log('🔐 [BusinessContext] Auth check:', isAuth ? 'Authenticated' : 'Not authenticated');
   return isAuth;
 };
 
@@ -109,31 +103,15 @@ const handleAuthError = (toast: any, errorMessage: string) => {
   });
 };
 
-// Ensure businesses is always a valid array
-const ensureBusinessesArray = (data: any): Business[] => {
-  if (!data) {
-    console.log('🔧 [BusinessContext] Data is null/undefined, returning empty array');
-    return [];
-  }
-  
-  if (Array.isArray(data)) {
-    console.log('✅ [BusinessContext] Data is already an array');
-    return data;
-  }
-  
-  console.warn('⚠️ [BusinessContext] Data is not an array, converting to empty array');
-  console.log('📋 [BusinessContext] Data type:', typeof data, 'Value:', data);
-  return [];
-};
-
 export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [currentBusiness, setCurrentBusiness] = useState<Business | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const authCheckIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Calculate if user has own business - with defensive programming
-  const hasOwnBusiness = Array.isArray(businesses) ? businesses.some(business => business.is_owner === true) : false;
+  // Calculate if user has own business - check for is_owner: true
+  const hasOwnBusiness = businesses.some(business => business.is_owner === true);
 
   // Load businesses from storage on mount
   useEffect(() => {
@@ -143,8 +121,7 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const storedCurrentBusiness = loadFromStorage(STORAGE_KEYS.CURRENT_BUSINESS);
       
       if (storedBusinesses) {
-        const validBusinesses = ensureBusinessesArray(storedBusinesses);
-        setBusinesses(validBusinesses);
+        setBusinesses(storedBusinesses);
       }
       
       if (storedCurrentBusiness) {
@@ -155,57 +132,65 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, []);
 
-  const fetchBusinesses = async () => {
-    // Prevent multiple concurrent requests
-    if (isFetching) {
-      console.log('⏳ [BusinessContext] Fetch already in progress, waiting...');
-      return fetchPromise;
+  // Optimized auth check - only run every 30 seconds instead of every second
+  useEffect(() => {
+    const checkAuth = () => {
+      if (!isAuthenticated()) {
+        console.log('🧹 [BusinessContext] User logged out, clearing business data');
+        setBusinesses([]);
+        setCurrentBusiness(null);
+        removeFromStorage(STORAGE_KEYS.BUSINESSES_LIST);
+        removeFromStorage(STORAGE_KEYS.CURRENT_BUSINESS);
+        
+        // Clear interval to stop checking
+        if (authCheckIntervalRef.current) {
+          clearInterval(authCheckIntervalRef.current);
+          authCheckIntervalRef.current = null;
+        }
+        
+        handleAuthError(toast, "auth_expired");
+      }
+    };
+
+    // Only start interval if authenticated
+    if (isAuthenticated()) {
+      authCheckIntervalRef.current = setInterval(checkAuth, 30000); // Check every 30 seconds
     }
-    
+
+    return () => {
+      if (authCheckIntervalRef.current) {
+        clearInterval(authCheckIntervalRef.current);
+      }
+    };
+  }, [toast]);
+
+  const fetchBusinesses = async () => {
     if (!isAuthenticated()) {
       console.log('⚠️ [BusinessContext] Cannot fetch businesses - user not authenticated');
       handleAuthError(toast, "fetch_businesses_auth_error");
       return;
     }
     
-    isFetching = true;
     setIsLoading(true);
-    
-    fetchPromise = (async () => {
-      try {
-        console.log('🔄 [BusinessContext] Fetching businesses...');
-        const businessList = await getBusinesses();
-        
-        // Ensure we have a valid array before setting state
-        const validBusinessList = ensureBusinessesArray(businessList);
-        setBusinesses(validBusinessList);
-        saveToStorage(STORAGE_KEYS.BUSINESSES_LIST, validBusinessList);
-        
-        console.log('✅ [BusinessContext] Fetched businesses successfully:', validBusinessList.length);
-        console.log('🏢 [BusinessContext] Owned businesses:', validBusinessList.filter(b => b.is_owner).length);
-        console.log('👥 [BusinessContext] Invited businesses:', validBusinessList.filter(b => !b.is_owner).length);
-      } catch (error) {
-        console.error('❌ [BusinessContext] Failed to fetch businesses:', error);
-        
-        // Set empty array on error to prevent filter/some errors
-        setBusinesses([]);
-        
-        // Only show toast if it's not a 401 error (handled by auth system)
-        if (error instanceof Error && !error.message.includes('Token hết hạn')) {
-          toast({
-            title: "Lỗi",
-            description: error.message || "Không thể tải danh sách doanh nghiệp",
-            variant: "destructive",
-          });
-        }
-      } finally {
-        setIsLoading(false);
-        isFetching = false;
-        fetchPromise = null;
-      }
-    })();
-    
-    return fetchPromise;
+    try {
+      console.log('🔄 [BusinessContext] Fetching businesses...');
+      const businessList = await getBusinesses();
+      setBusinesses(businessList);
+      saveToStorage(STORAGE_KEYS.BUSINESSES_LIST, businessList);
+      
+      console.log('✅ [BusinessContext] Fetched businesses:', businessList.length);
+      console.log('🏢 [BusinessContext] Owned businesses:', businessList.filter(b => b.is_owner).length);
+      console.log('👥 [BusinessContext] Invited businesses:', businessList.filter(b => !b.is_owner).length);
+    } catch (error) {
+      console.error('❌ [BusinessContext] Failed to fetch businesses:', error);
+      toast({
+        title: "Lỗi",
+        description: error instanceof Error ? error.message : "Không thể tải danh sách doanh nghiệp",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const createBusiness = async (data: CreateBusinessRequest): Promise<Business> => {
@@ -218,9 +203,8 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       throw new Error(errorMsg);
     }
 
-    // Check if user already has own business with defensive programming
-    const currentHasOwnBusiness = Array.isArray(businesses) ? businesses.some(business => business.is_owner === true) : false;
-    if (currentHasOwnBusiness) {
+    // Check if user already has own business
+    if (hasOwnBusiness) {
       const errorMsg = 'Bạn đã có doanh nghiệp riêng. Mỗi tài khoản chỉ được tạo tối đa 1 doanh nghiệp.';
       toast({
         title: "Giới hạn tạo doanh nghiệp",
@@ -235,9 +219,8 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       console.log('🔄 [BusinessContext] Calling createBusinessAPI...');
       const newBusiness = await createBusinessAPI(data);
       
-      // Update businesses list with defensive programming
-      const currentBusinesses = ensureBusinessesArray(businesses);
-      const updatedBusinesses = [...currentBusinesses, newBusiness];
+      // Update businesses list
+      const updatedBusinesses = [...businesses, newBusiness];
       setBusinesses(updatedBusinesses);
       saveToStorage(STORAGE_KEYS.BUSINESSES_LIST, updatedBusinesses);
       
