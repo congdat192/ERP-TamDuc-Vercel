@@ -19,18 +19,18 @@ export function LoginPage() {
     }
   }, [isAuthenticated, currentUser, navigate]);
 
-  const handleLogin = async (username: string, password: string, rememberMe?: boolean) => {
-    const success = await login(username, password);
+  const handleLogin = async (email: string, password: string, rememberMe?: boolean) => {
+    const success = await login(email, password);
     if (success) {
       // Navigation will be handled by useEffect
     }
   };
 
-  // Mock users for the login component
+  // Demo users for quick login (now using email)
   const mockUsers = [
     {
       id: '1',
-      username: 'admin',
+      username: 'admin@company.com',
       fullName: 'Quản Trị Viên',
       role: 'erp-admin' as const,
       email: 'admin@company.com',
@@ -55,7 +55,7 @@ export function LoginPage() {
     },
     {
       id: '2',
-      username: 'voucher_admin',
+      username: 'voucher.admin@company.com',
       fullName: 'Quản Lý Voucher',
       role: 'voucher-admin' as const,
       email: 'voucher.admin@company.com',
@@ -80,7 +80,7 @@ export function LoginPage() {
     },
     {
       id: '3',
-      username: 'telesales',
+      username: 'telesales@company.com',
       fullName: 'Nhân Viên Telesales',
       role: 'telesales' as const,
       email: 'telesales@company.com',
@@ -94,56 +94,6 @@ export function LoginPage() {
         voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list', 'voucher-leaderboard'] as any[],
         canManageUsers: false,
         canViewAllVouchers: false,
-      },
-      securitySettings: {
-        twoFactorEnabled: false,
-        loginAttemptLimit: 3,
-        passwordChangeRequired: false,
-        sessionTimeoutMinutes: 60,
-      },
-      activities: [],
-    },
-    {
-      id: '4',
-      username: 'custom',
-      fullName: 'Người Dùng Tùy Chỉnh',
-      role: 'custom' as const,
-      email: 'custom@company.com',
-      status: 'active' as const,
-      createdAt: new Date().toISOString(),
-      lastLogin: new Date().toISOString(),
-      emailVerified: true,
-      isActive: true,
-      permissions: {
-        modules: ['dashboard', 'customers'] as any[],
-        voucherFeatures: [] as any[],
-        canManageUsers: false,
-        canViewAllVouchers: false,
-      },
-      securitySettings: {
-        twoFactorEnabled: false,
-        loginAttemptLimit: 3,
-        passwordChangeRequired: false,
-        sessionTimeoutMinutes: 60,
-      },
-      activities: [],
-    },
-    {
-      id: '5',
-      username: 'platform_admin',
-      fullName: 'Quản Trị Nền Tảng',
-      role: 'platform-admin' as const,
-      email: 'platform.admin@company.com',
-      status: 'active' as const,
-      createdAt: new Date().toISOString(),
-      lastLogin: new Date().toISOString(),
-      emailVerified: true,
-      isActive: true,
-      permissions: {
-        modules: [] as any[],
-        voucherFeatures: [] as any[],
-        canManageUsers: true,
-        canViewAllVouchers: true,
       },
       securitySettings: {
         twoFactorEnabled: false,

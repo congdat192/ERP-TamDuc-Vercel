@@ -1,12 +1,12 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { User, Building2, Eye, EyeOff, Lock, AlertTriangle } from 'lucide-react';
+import { User, Building2, Eye, EyeOff, Lock, AlertTriangle, Mail } from 'lucide-react';
 import { User as UserType } from '@/types/auth';
 import { Link } from 'react-router-dom';
 import {
@@ -19,13 +19,13 @@ import {
 import { useToast } from '@/hooks/use-toast';
 
 interface LoginPageProps {
-  onLogin: (username: string, password: string, rememberMe?: boolean) => void;
+  onLogin: (email: string, password: string, rememberMe?: boolean) => void;
   mockUsers: UserType[];
   loginAttempts?: number;
 }
 
 export function LoginPage({ onLogin, mockUsers, loginAttempts = 0 }: LoginPageProps) {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -47,20 +47,17 @@ export function LoginPage({ onLogin, mockUsers, loginAttempts = 0 }: LoginPagePr
       return;
     }
     
-    if (username && password) {
-      onLogin(username, password, rememberMe);
+    if (email && password) {
+      onLogin(email, password, rememberMe);
     }
   };
 
-  const handleQuickLogin = (userType: string) => {
+  const handleQuickLogin = (userEmail: string) => {
     if (isAccountLocked) return;
     
-    const user = mockUsers.find(u => u.username === userType);
-    if (user) {
-      setUsername(user.username);
-      setPassword('demo');
-      onLogin(user.username, 'demo', rememberMe);
-    }
+    setEmail(userEmail);
+    setPassword('demo');
+    onLogin(userEmail, 'demo', rememberMe);
   };
 
   const handleForgotPassword = () => {
@@ -182,7 +179,7 @@ export function LoginPage({ onLogin, mockUsers, loginAttempts = 0 }: LoginPagePr
                     <Button
                       key={user.id}
                       variant="outline"
-                      onClick={() => handleQuickLogin(user.username)}
+                      onClick={() => handleQuickLogin(user.email)}
                       className="justify-between h-auto p-3"
                       disabled={isAccountLocked}
                     >
@@ -190,7 +187,7 @@ export function LoginPage({ onLogin, mockUsers, loginAttempts = 0 }: LoginPagePr
                         <User className="w-4 h-4" />
                         <div className="text-left">
                           <div className="font-medium">{user.fullName}</div>
-                          <div className="text-xs text-gray-500">{user.username}</div>
+                          <div className="text-xs text-gray-500">{user.email}</div>
                         </div>
                       </div>
                       <Badge className={getRoleBadgeColor(user.role)}>
@@ -213,27 +210,33 @@ export function LoginPage({ onLogin, mockUsers, loginAttempts = 0 }: LoginPagePr
               {/* Manual Login Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="username">Tên Đăng Nhập</Label>
-                  <Input
-                    id="username"
-                    type="text"
-                    placeholder="Nhập tên đăng nhập"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    disabled={isAccountLocked}
-                    required
-                  />
+                  <Label htmlFor="email">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="Nhập địa chỉ email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="pl-10"
+                      disabled={isAccountLocked}
+                      required
+                    />
+                  </div>
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="password">Mật Khẩu</Label>
                   <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                     <Input
                       id="password"
                       type={showPassword ? "text" : "password"}
                       placeholder="Nhập mật khẩu"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      className="pl-10 pr-10"
                       disabled={isAccountLocked}
                       required
                     />
@@ -298,8 +301,8 @@ export function LoginPage({ onLogin, mockUsers, loginAttempts = 0 }: LoginPagePr
               </div>
 
               <div className="text-center text-xs text-gray-500">
-                <p>Demo: Sử dụng bất kỳ mật khẩu nào</p>
-                <p>Usernames: admin, voucher_admin, telesales, custom</p>
+                <p>Demo: Sử dụng email demo và bất kỳ mật khẩu nào</p>
+                <p>Hoặc sử dụng tài khoản thật đã đăng ký</p>
               </div>
 
               {/* Footer Links */}

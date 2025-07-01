@@ -1,12 +1,17 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@/types/auth';
+import { loginUser, logoutUser, getUserProfile, isAuthenticated } from '@/services/authService';
+import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextType {
   currentUser: User | null;
   isAuthenticated: boolean;
-  login: (username: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   loginAttempts: number;
+  refreshUserProfile: () => Promise<void>;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,130 +33,6 @@ const STORAGE_KEYS = {
 
 // Session timeout (in milliseconds) - 8 hours
 const SESSION_TIMEOUT = 8 * 60 * 60 * 1000;
-
-// Mock users for demonstration
-const mockUsers: User[] = [
-  {
-    id: '1',
-    username: 'admin',
-    fullName: 'Quản Trị Viên',
-    role: 'erp-admin',
-    email: 'admin@company.com',
-    status: 'active',
-    createdAt: new Date().toISOString(),
-    emailVerified: true,
-    isActive: true,
-    permissions: {
-      modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'marketing', 'system-settings', 'user-management'],
-      voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
-      canManageUsers: true,
-      canViewAllVouchers: true,
-    },
-    securitySettings: {
-      twoFactorEnabled: false,
-      loginAttemptLimit: 3,
-      passwordChangeRequired: false,
-      sessionTimeoutMinutes: 60,
-    },
-    activities: [],
-  },
-  {
-    id: '2',
-    username: 'voucher_admin',
-    fullName: 'Quản Lý Voucher',
-    role: 'voucher-admin',
-    email: 'voucher.admin@company.com',
-    status: 'active',
-    createdAt: new Date().toISOString(),
-    emailVerified: true,
-    isActive: true,
-    permissions: {
-      modules: ['dashboard', 'voucher'],
-      voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
-      canManageUsers: false,
-      canViewAllVouchers: true,
-    },
-    securitySettings: {
-      twoFactorEnabled: false,
-      loginAttemptLimit: 3,
-      passwordChangeRequired: false,
-      sessionTimeoutMinutes: 60,
-    },
-    activities: [],
-  },
-  {
-    id: '3',
-    username: 'telesales',
-    fullName: 'Nhân Viên Telesales',
-    role: 'telesales',
-    email: 'telesales@company.com',
-    status: 'active',
-    createdAt: new Date().toISOString(),
-    emailVerified: true,
-    isActive: true,
-    permissions: {
-      modules: ['dashboard', 'customers', 'voucher'],
-      voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list', 'voucher-leaderboard'],
-      canManageUsers: false,
-      canViewAllVouchers: false,
-    },
-    securitySettings: {
-      twoFactorEnabled: false,
-      loginAttemptLimit: 3,
-      passwordChangeRequired: false,
-      sessionTimeoutMinutes: 60,
-    },
-    activities: [],
-  },
-  {
-    id: '4',
-    username: 'custom',
-    fullName: 'Người Dùng Tùy Chỉnh',
-    role: 'custom',
-    email: 'custom@company.com',
-    status: 'active',
-    createdAt: new Date().toISOString(),
-    emailVerified: true,
-    isActive: true,
-    permissions: {
-      modules: ['dashboard', 'customers'],
-      voucherFeatures: [],
-      canManageUsers: false,
-      canViewAllVouchers: false,
-    },
-    securitySettings: {
-      twoFactorEnabled: false,
-      loginAttemptLimit: 3,
-      passwordChangeRequired: false,
-      sessionTimeoutMinutes: 60,
-    },
-    activities: [],
-  },
-  {
-    id: '5',
-    username: 'platform_admin',
-    fullName: 'Quản Trị Nền Tảng',
-    role: 'platform-admin',
-    email: 'platform.admin@company.com',
-    status: 'active',
-    createdAt: new Date().toISOString(),
-    emailVerified: true,
-    isActive: true,
-    permissions: {
-      modules: [],
-      voucherFeatures: [],
-      canManageUsers: true,
-      canViewAllVouchers: true,
-    },
-    securitySettings: {
-      twoFactorEnabled: false,
-      loginAttemptLimit: 3,
-      passwordChangeRequired: false,
-      sessionTimeoutMinutes: 60,
-    },
-    activities: [],
-  },
-];
 
 // Utility functions for localStorage
 const saveToStorage = (key: string, value: any) => {
@@ -190,25 +71,63 @@ const isSessionValid = () => {
   return sessionAge < SESSION_TIMEOUT;
 };
 
+// Convert API user to internal User type
+const convertApiUserToUser = (apiUser: any): User => {
+  return {
+    id: apiUser.id,
+    username: apiUser.email, // Use email as username
+    fullName: apiUser.name,
+    role: 'erp-admin', // Default role, can be enhanced later
+    email: apiUser.email,
+    status: 'active',
+    createdAt: apiUser.created_at,
+    lastLogin: new Date().toISOString(),
+    emailVerified: true,
+    isActive: true,
+    permissions: {
+      modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'marketing', 'system-settings', 'user-management'],
+      voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
+      canManageUsers: true,
+      canViewAllVouchers: true,
+    },
+    securitySettings: {
+      twoFactorEnabled: false,
+      loginAttemptLimit: 3,
+      passwordChangeRequired: false,
+      sessionTimeoutMinutes: 60,
+    },
+    activities: [],
+  };
+};
+
 // Restore user data with validation
-const restoreUserFromStorage = (): User | null => {
-  if (!isSessionValid()) {
-    // Session expired, clear storage
+const restoreUserFromStorage = async (): Promise<User | null> => {
+  if (!isSessionValid() || !isAuthenticated()) {
+    // Session expired or no token, clear storage
     removeFromStorage(STORAGE_KEYS.USER);
     removeFromStorage(STORAGE_KEYS.SESSION_TIMESTAMP);
     return null;
   }
 
-  const userData = loadFromStorage(STORAGE_KEYS.USER);
-  if (!userData || !userData.id || !userData.username) {
-    return null;
-  }
-
-  // Return user data as is since dates are already stored as strings
   try {
-    return userData as User;
+    // Try to get fresh user data from API
+    const apiUser = await getUserProfile();
+    const user = convertApiUserToUser(apiUser);
+    
+    // Update stored user data
+    saveToStorage(STORAGE_KEYS.USER, user);
+    saveToStorage(STORAGE_KEYS.SESSION_TIMESTAMP, Date.now());
+    
+    return user;
   } catch (error) {
-    console.warn('Failed to restore user data:', error);
+    console.warn('Failed to restore user from API:', error);
+    
+    // Fall back to stored user data
+    const userData = loadFromStorage(STORAGE_KEYS.USER);
+    if (userData && userData.id && userData.username) {
+      return userData as User;
+    }
+    
     return null;
   }
 };
@@ -217,19 +136,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
-  // Initialize auth state from localStorage
+  // Initialize auth state
   useEffect(() => {
-    const storedUser = restoreUserFromStorage();
-    const storedAttempts = loadFromStorage(STORAGE_KEYS.LOGIN_ATTEMPTS) || 0;
-    
-    if (storedUser) {
-      setCurrentUser(storedUser);
-      console.log('Restored user session:', storedUser.username);
-    }
-    
-    setLoginAttempts(storedAttempts);
-    setIsInitialized(true);
+    const initializeAuth = async () => {
+      setIsLoading(true);
+      
+      try {
+        const storedUser = await restoreUserFromStorage();
+        const storedAttempts = loadFromStorage(STORAGE_KEYS.LOGIN_ATTEMPTS) || 0;
+        
+        if (storedUser) {
+          setCurrentUser(storedUser);
+          console.log('Restored user session:', storedUser.username);
+        }
+        
+        setLoginAttempts(storedAttempts);
+      } catch (error) {
+        console.warn('Failed to initialize auth:', error);
+      } finally {
+        setIsLoading(false);
+        setIsInitialized(true);
+      }
+    };
+
+    initializeAuth();
   }, []);
 
   // Listen for storage changes from other tabs
@@ -237,12 +170,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === STORAGE_KEYS.USER) {
         if (e.newValue === null) {
-          // User was logged out in another tab
           setCurrentUser(null);
           setLoginAttempts(0);
           console.log('User logged out in another tab');
         } else {
-          // User was logged in in another tab
           try {
             const userData = JSON.parse(e.newValue);
             setCurrentUser(userData as User);
@@ -266,45 +197,94 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  const login = async (username: string, password: string): Promise<boolean> => {
-    // Simple mock authentication
-    const user = mockUsers.find(u => u.username === username);
+  const login = async (email: string, password: string): Promise<boolean> => {
+    setIsLoading(true);
     
-    if (user && user.status === 'active') {
-      const userWithLastLogin = {
-        ...user,
-        lastLogin: new Date().toISOString()
-      };
+    try {
+      const response = await loginUser({ email, password });
+      const user = convertApiUserToUser(response.user);
       
-      setCurrentUser(userWithLastLogin);
+      setCurrentUser(user);
       setLoginAttempts(0);
       
       // Save to localStorage
-      saveToStorage(STORAGE_KEYS.USER, userWithLastLogin);
+      saveToStorage(STORAGE_KEYS.USER, user);
       saveToStorage(STORAGE_KEYS.SESSION_TIMESTAMP, Date.now());
       saveToStorage(STORAGE_KEYS.LOGIN_ATTEMPTS, 0);
       
-      console.log('User logged in successfully:', username);
+      console.log('User logged in successfully:', email);
+      
+      toast({
+        title: "Đăng nhập thành công",
+        description: `Chào mừng ${user.fullName}!`,
+      });
+      
       return true;
-    } else {
+    } catch (error) {
       const newAttempts = loginAttempts + 1;
       setLoginAttempts(newAttempts);
       saveToStorage(STORAGE_KEYS.LOGIN_ATTEMPTS, newAttempts);
       
-      console.log('Login failed for:', username);
+      console.log('Login failed for:', email, error);
+      
+      toast({
+        title: "Đăng nhập thất bại",
+        description: error instanceof Error ? error.message : "Thông tin đăng nhập không chính xác",
+        variant: "destructive",
+      });
+      
       return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const logout = () => {
-    console.log('User logged out:', currentUser?.username);
-    setCurrentUser(null);
-    setLoginAttempts(0);
+  const logout = async () => {
+    setIsLoading(true);
     
-    // Clear localStorage
-    removeFromStorage(STORAGE_KEYS.USER);
-    removeFromStorage(STORAGE_KEYS.SESSION_TIMESTAMP);
-    removeFromStorage(STORAGE_KEYS.LOGIN_ATTEMPTS);
+    try {
+      await logoutUser();
+      console.log('User logged out:', currentUser?.username);
+    } catch (error) {
+      console.warn('Logout error:', error);
+    } finally {
+      setCurrentUser(null);
+      setLoginAttempts(0);
+      
+      // Clear localStorage
+      removeFromStorage(STORAGE_KEYS.USER);
+      removeFromStorage(STORAGE_KEYS.SESSION_TIMESTAMP);
+      removeFromStorage(STORAGE_KEYS.LOGIN_ATTEMPTS);
+      
+      setIsLoading(false);
+      
+      toast({
+        title: "Đăng xuất thành công",
+        description: "Bạn đã đăng xuất khỏi hệ thống",
+      });
+    }
+  };
+
+  const refreshUserProfile = async () => {
+    if (!currentUser) return;
+    
+    try {
+      const apiUser = await getUserProfile();
+      const updatedUser = convertApiUserToUser(apiUser);
+      
+      setCurrentUser(updatedUser);
+      saveToStorage(STORAGE_KEYS.USER, updatedUser);
+      saveToStorage(STORAGE_KEYS.SESSION_TIMESTAMP, Date.now());
+      
+      console.log('User profile refreshed:', updatedUser.username);
+    } catch (error) {
+      console.warn('Failed to refresh user profile:', error);
+      
+      if (error instanceof Error && error.message.includes('Token hết hạn')) {
+        // Token expired, force logout
+        await logout();
+      }
+    }
   };
 
   // Don't render children until auth state is initialized
@@ -327,6 +307,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         logout,
         loginAttempts,
+        refreshUserProfile,
+        isLoading,
       }}
     >
       {children}
