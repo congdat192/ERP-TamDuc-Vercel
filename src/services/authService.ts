@@ -168,48 +168,71 @@ const extractTokenFromResponse = (data: any): string | null => {
   return null;
 };
 
-// Check if error indicates unverified email
+// Check if error indicates unverified email - More specific logic
 const isUnverifiedEmailError = (status: number, errorData: any): boolean => {
   console.log('🔍 [authService] Checking if error indicates unverified email:', { status, errorData });
   
-  // Check for specific status codes that indicate unverified email
+  // Only check for unverified email on specific status codes and messages
   if (status === 422 || status === 403) {
-    console.log('✅ [authService] Status code indicates potential unverified email');
-    return true;
-  }
-  
-  // Check for specific error codes or messages
-  if (errorData) {
-    const message = errorData.message?.toLowerCase() || '';
-    const errors = JSON.stringify(errorData.errors || {}).toLowerCase();
-    const code = errorData.code?.toLowerCase() || '';
-    
-    // Check for unverified email indicators
-    const unverifiedIndicators = [
-      'email_not_verified',
-      'unverified',
-      'verify',
-      'verification',
-      'activate',
-      'activation',
-      'confirm',
-      'confirmation'
-    ];
-    
-    const hasUnverifiedIndicator = unverifiedIndicators.some(indicator => 
-      message.includes(indicator) || errors.includes(indicator) || code.includes(indicator)
-    );
-    
-    if (hasUnverifiedIndicator) {
-      console.log('✅ [authService] Found unverified email indicator in error data');
-      return true;
+    if (errorData && errorData.message) {
+      const message = errorData.message.toLowerCase();
+      
+      // More specific checks for unverified email
+      const unverifiedIndicators = [
+        'email_not_verified',
+        'email chưa được xác thực',
+        'email not verified',
+        'please verify your email',
+        'verify your email address',
+        'email verification required'
+      ];
+      
+      const hasUnverifiedIndicator = unverifiedIndicators.some(indicator => 
+        message.includes(indicator)
+      );
+      
+      if (hasUnverifiedIndicator) {
+        console.log('✅ [authService] Found unverified email indicator in error message');
+        return true;
+      }
     }
   }
   
   return false;
 };
 
-// Login API call
+// Check if error indicates email not found/doesn't exist
+const isEmailNotFoundError = (status: number, errorData: any): boolean => {
+  console.log('🔍 [authService] Checking if error indicates email not found:', { status, errorData });
+  
+  if (status === 404 || status === 422) {
+    if (errorData && errorData.message) {
+      const message = errorData.message.toLowerCase();
+      
+      const notFoundIndicators = [
+        'user not found',
+        'email not found',
+        'không tìm thấy người dùng',
+        'email không tồn tại',
+        'invalid email',
+        'email does not exist'
+      ];
+      
+      const hasNotFoundIndicator = notFoundIndicators.some(indicator => 
+        message.includes(indicator)
+      );
+      
+      if (hasNotFoundIndicator) {
+        console.log('✅ [authService] Found email not found indicator');
+        return true;
+      }
+    }
+  }
+  
+  return false;
+};
+
+// Login API call with improved error handling
 export const loginUser = async (credentials: LoginRequest): Promise<LoginResponse> => {
   console.log('🚀 [authService] Starting login process for:', credentials.email);
   
@@ -236,18 +259,42 @@ export const loginUser = async (credentials: LoginRequest): Promise<LoginRespons
     console.error('❌ [authService] Login failed with status:', response.status);
     console.error('❌ [authService] Full error response:', JSON.stringify(errorData, null, 2));
     
-    // Check for unverified email error first
+    // Check for email not found first
+    if (isEmailNotFoundError(response.status, errorData)) {
+      throw new Error('Email không tồn tại trong hệ thống. Vui lòng đăng ký tài khoản mới.');
+    }
+    
+    // Check for unverified email
     if (isUnverifiedEmailError(response.status, errorData)) {
       throw new Error('Email chưa được xác thực. Vui lòng kiểm tra email và xác thực tài khoản trước khi đăng nhập.');
     }
     
-    // Handle other 401 errors
+    // Handle 401 - Invalid credentials (wrong password or email)
     if (response.status === 401) {
-      throw new Error('Thông tin đăng nhập không chính xác.');
+      throw new Error('Thông tin đăng nhập không chính xác. Vui lòng kiểm tra lại email và mật khẩu.');
     }
     
-    // Handle other status codes
-    throw new Error(errorData.message || 'Đăng nhập thất bại');
+    // Handle other status codes with specific messages
+    if (response.status === 422) {
+      // Validation errors
+      if (errorData.errors) {
+        if (errorData.errors.email) {
+          throw new Error('Email không đúng định dạng.');
+        }
+        if (errorData.errors.password) {
+          throw new Error('Mật khẩu không hợp lệ.');
+        }
+      }
+      throw new Error('Thông tin đăng nhập không hợp lệ.');
+    }
+    
+    // Handle server errors
+    if (response.status >= 500) {
+      throw new Error('Lỗi server. Vui lòng thử lại sau.');
+    }
+    
+    // Default error message
+    throw new Error(errorData.message || 'Đăng nhập thất bại. Vui lòng thử lại.');
   }
 
   const data = await response.json();
