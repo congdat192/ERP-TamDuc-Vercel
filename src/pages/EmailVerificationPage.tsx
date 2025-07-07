@@ -22,20 +22,26 @@ export function EmailVerificationPage() {
 
   useEffect(() => {
     const performVerification = async () => {
+      console.log('🔍 [EmailVerification] Starting verification with params:', { id, hash });
+      
       if (!id || !hash) {
-        setError('Link xác thực không hợp lệ');
+        console.error('❌ [EmailVerification] Missing parameters:', { id, hash });
+        setError('Link xác thực không hợp lệ - thiếu tham số');
         setIsVerifying(false);
         return;
       }
 
       try {
+        console.log('📧 [EmailVerification] Calling verifyEmail API');
         await verifyEmail(id, hash);
+        console.log('✅ [EmailVerification] Verification successful');
         setIsVerified(true);
         toast({
           title: "Xác thực thành công",
           description: "Email của bạn đã được xác thực. Bạn có thể đăng nhập ngay bây giờ.",
         });
       } catch (error) {
+        console.error('❌ [EmailVerification] Verification failed:', error);
         const errorMessage = error instanceof Error ? error.message : 'Xác thực email thất bại';
         setError(errorMessage);
         toast({
@@ -63,6 +69,7 @@ export function EmailVerificationPage() {
 
     setIsResending(true);
     try {
+      console.log('📧 [EmailVerification] Resending verification email to:', resendEmail);
       await resendVerificationEmail(resendEmail);
       toast({
         title: "Email đã được gửi",
@@ -70,6 +77,7 @@ export function EmailVerificationPage() {
       });
       setResendEmail('');
     } catch (error) {
+      console.error('❌ [EmailVerification] Resend failed:', error);
       toast({
         title: "Lỗi",
         description: error instanceof Error ? error.message : "Không thể gửi lại email xác thực",

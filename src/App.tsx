@@ -14,6 +14,7 @@ import NotFound from "./pages/NotFound";
 import { ForbiddenPage, ServerErrorPage, NetworkErrorPage } from "./pages/ErrorPages";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
+import { EmailVerificationPage } from "./pages/EmailVerificationPage";
 import { BusinessSelectionPage } from "./pages/BusinessSelectionPage";
 import { CreateBusinessPage } from "./pages/CreateBusinessPage";
 import { ERPHome } from "./pages/ERPHome";
@@ -116,6 +117,7 @@ const App = () => (
                   <Route path="/" element={<Index />} />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/email/verify/:id/:hash" element={<EmailVerificationPage />} />
                   <Route path="/business-selection" element={<BusinessSelectionPage />} />
                   <Route path="/create-business" element={<CreateBusinessPage />} />
                   
