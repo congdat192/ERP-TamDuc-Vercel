@@ -1,3 +1,4 @@
+
 // Authentication service for API calls
 import { User } from '@/types/auth';
 
@@ -140,6 +141,75 @@ const convertApiUserToUser = (apiUser: any): User => {
   };
 };
 
+// Extract token from API response - handle multiple formats
+const extractTokenFromResponse = (data: any): string | null => {
+  console.log('🔍 [authService] Extracting token from response data:', JSON.stringify(data, null, 2));
+  
+  // Try different possible token field names
+  const possibleTokenFields = ['access_token', 'token', 'authToken', 'accessToken', 'auth_token'];
+  
+  for (const field of possibleTokenFields) {
+    if (data[field]) {
+      console.log('✅ [authService] Found token in field:', field);
+      return data[field];
+    }
+  }
+  
+  // Check nested structures
+  if (data.data && typeof data.data === 'object') {
+    for (const field of possibleTokenFields) {
+      if (data.data[field]) {
+        console.log('✅ [authService] Found token in nested data field:', field);
+        return data.data[field];
+      }
+    }
+  }
+  
+  console.error('❌ [authService] No token found in any expected fields');
+  return null;
+};
+
+// Check if error indicates unverified email
+const isUnverifiedEmailError = (status: number, errorData: any): boolean => {
+  console.log('🔍 [authService] Checking if error indicates unverified email:', { status, errorData });
+  
+  // Check for specific status codes that indicate unverified email
+  if (status === 422 || status === 403) {
+    console.log('✅ [authService] Status code indicates potential unverified email');
+    return true;
+  }
+  
+  // Check for specific error codes or messages
+  if (errorData) {
+    const message = errorData.message?.toLowerCase() || '';
+    const errors = JSON.stringify(errorData.errors || {}).toLowerCase();
+    const code = errorData.code?.toLowerCase() || '';
+    
+    // Check for unverified email indicators
+    const unverifiedIndicators = [
+      'email_not_verified',
+      'unverified',
+      'verify',
+      'verification',
+      'activate',
+      'activation',
+      'confirm',
+      'confirmation'
+    ];
+    
+    const hasUnverifiedIndicator = unverifiedIndicators.some(indicator => 
+      message.includes(indicator) || errors.includes(indicator) || code.includes(indicator)
+    );
+    
+    if (hasUnverifiedIndicator) {
+      console.log('✅ [authService] Found unverified email indicator in error data');
+      return true;
+    }
+  }
+  
+  return false;
+};
+
 // Login API call
 export const loginUser = async (credentials: LoginRequest): Promise<LoginResponse> => {
   console.log('🚀 [authService] Starting login process for:', credentials.email);
@@ -165,34 +235,34 @@ export const loginUser = async (credentials: LoginRequest): Promise<LoginRespons
   if (!response.ok) {
     const errorData = await response.json();
     console.error('❌ [authService] Login failed with status:', response.status);
-    console.error('❌ [authService] Error response:', errorData);
+    console.error('❌ [authService] Full error response:', JSON.stringify(errorData, null, 2));
     
-    // Handle email not verified error - check for specific error messages
-    if (response.status === 401) {
-      // Check if the error message indicates email not verified
-      if (errorData.message?.toLowerCase().includes('email') && 
-          (errorData.message?.toLowerCase().includes('verify') || 
-           errorData.message?.toLowerCase().includes('unverified') ||
-           errorData.message?.toLowerCase().includes('verification'))) {
-        throw new Error('Email chưa được xác thực. Vui lòng kiểm tra email và xác thực tài khoản trước khi đăng nhập.');
-      }
-      
-      // Generic 401 error
-      throw new Error('Thông tin đăng nhập không chính xác hoặc email chưa được xác thực.');
+    // Check for unverified email error first
+    if (isUnverifiedEmailError(response.status, errorData)) {
+      throw new Error('Email chưa được xác thực. Vui lòng kiểm tra email và xác thực tài khoản trước khi đăng nhập.');
     }
     
+    // Handle other 401 errors
+    if (response.status === 401) {
+      throw new Error('Thông tin đăng nhập không chính xác.');
+    }
+    
+    // Handle other status codes
     throw new Error(errorData.message || 'Đăng nhập thất bại');
   }
 
   const data = await response.json();
-  console.log('📦 [authService] Raw API response:', data);
+  console.log('📦 [authService] Full API response:', JSON.stringify(data, null, 2));
   
-  // Check for token
-  const token = data.access_token;
+  // Extract token using improved method
+  const token = extractTokenFromResponse(data);
   if (!token) {
     console.error('❌ [authService] No token found in API response');
-    throw new Error('Không nhận được token từ server');
+    console.error('❌ [authService] Available fields in response:', Object.keys(data));
+    throw new Error('Không nhận được token từ server. Vui lòng thử lại.');
   }
+  
+  console.log('✅ [authService] Token extracted successfully:', token.substring(0, 20) + '...');
   
   // Store token
   storeToken(token);
@@ -204,7 +274,7 @@ export const loginUser = async (credentials: LoginRequest): Promise<LoginRespons
     user: data.user
   };
   
-  console.log('✅ [authService] Login successful');
+  console.log('✅ [authService] Login successful for:', credentials.email);
   return loginResponse;
 };
 
