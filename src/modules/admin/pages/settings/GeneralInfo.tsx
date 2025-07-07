@@ -12,8 +12,8 @@ import { CompanySettings } from '../../types/settings';
 
 export function GeneralInfo() {
   const [settings, setSettings] = useState<CompanySettings>({
-    name: 'VoucherCRM Pro',
-    slogan: 'Giải pháp quản lý voucher chuyên nghiệp',
+    name: '',
+    slogan: '',
     timezone: 'Asia/Ho_Chi_Minh',
     language: 'vi',
     currency: 'VND',
@@ -49,7 +49,7 @@ export function GeneralInfo() {
               <Avatar className="w-20 h-20">
                 <AvatarImage src="/placeholder.svg" />
                 <AvatarFallback className="bg-blue-100 text-blue-600 text-lg">
-                  {settings.name.charAt(0)}
+                  {settings.name ? settings.name.charAt(0) : 'C'}
                 </AvatarFallback>
               </Avatar>
               <div>
@@ -70,6 +70,7 @@ export function GeneralInfo() {
                 id="companyName"
                 value={settings.name}
                 onChange={(e) => setSettings({...settings, name: e.target.value})}
+                placeholder="Nhập tên công ty"
               />
             </div>
             
@@ -79,6 +80,7 @@ export function GeneralInfo() {
                 id="slogan"
                 value={settings.slogan}
                 onChange={(e) => setSettings({...settings, slogan: e.target.value})}
+                placeholder="Nhập slogan công ty"
               />
             </div>
             

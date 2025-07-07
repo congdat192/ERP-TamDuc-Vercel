@@ -12,15 +12,15 @@ import { useToast } from '@/hooks/use-toast';
 export function GeneralSettings() {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
-    companyName: 'Công Ty ABC',
-    companyAddress: '123 Đường XYZ, Quận 1, TP.HCM',
-    companyPhone: '0901234567',
-    companyEmail: 'contact@company.com',
+    companyName: '',
+    companyAddress: '',
+    companyPhone: '',
+    companyEmail: '',
     timezone: 'Asia/Ho_Chi_Minh',
     language: 'vi',
     currency: 'VND',
-    taxCode: '1234567890',
-    description: 'Mô tả về công ty...'
+    taxCode: '',
+    description: ''
   });
 
   const handleSave = () => {

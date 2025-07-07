@@ -39,6 +39,64 @@ export interface PipelineListResponse {
   data: Pipeline[];
 }
 
+export interface TestConnectionRequest {
+  type: 'KIOT_VIET';
+  config: PipelineConfig;
+}
+
+export interface TestConnectionResponse {
+  success: boolean;
+  message: string;
+  data?: any;
+}
+
+// Test KiotViet connection
+export const testKiotVietConnection = async (config: PipelineConfig): Promise<TestConnectionResponse> => {
+  console.log('🔄 [pipelineService] Testing KiotViet connection for retailer:', config.retailer);
+  
+  try {
+    const response = await api.post<TestConnectionResponse>('/pipelines/test-connection', {
+      type: 'KIOT_VIET',
+      config
+    }, {
+      requiresBusinessId: true,
+    });
+    
+    console.log('✅ [pipelineService] Connection test result:', response.success);
+    return response;
+  } catch (error: any) {
+    console.error('❌ [pipelineService] Connection test failed:', error);
+    
+    // Handle different error scenarios
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        message: 'Client ID hoặc Client Secret không hợp lệ'
+      };
+    } else if (error.response?.status === 404) {
+      return {
+        success: false,
+        message: 'Không tìm thấy cửa hàng với tên này'
+      };
+    } else if (error.response?.status === 422) {
+      return {
+        success: false,
+        message: error.response.data?.message || 'Thông tin kết nối không hợp lệ'
+      };
+    } else if (error.response?.status >= 500) {
+      return {
+        success: false,
+        message: 'Lỗi máy chủ KiotViet, vui lòng thử lại sau'
+      };
+    } else {
+      return {
+        success: false,
+        message: 'Không thể kết nối đến KiotViet. Vui lòng kiểm tra lại thông tin.'
+      };
+    }
+  }
+};
+
 // Get all pipelines for current business
 export const getPipelines = async (): Promise<Pipeline[]> => {
   console.log('🔄 [pipelineService] Getting all pipelines');

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/ui/loading';
 import { useToast } from '@/hooks/use-toast';
 import { Building2, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
-import { createPipeline, updatePipeline, getPipelines } from '@/services/pipelineService';
+import { createPipeline, updatePipeline, testKiotVietConnection } from '@/services/pipelineService';
 import type { Pipeline, PipelineConfig } from '@/types/pipeline';
 
 interface SimpleKiotVietIntegrationProps {
@@ -56,29 +57,42 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
     setTestResult(null);
 
     try {
-      // Mock test connection - simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const config: PipelineConfig = {
+        client_id: formData.clientId,
+        client_secret: formData.clientSecret,
+        retailer: formData.retailer
+      };
+
+      const result = await testKiotVietConnection(config);
       
-      // For demo purposes, assume success
       setTestResult({
-        success: true,
-        message: 'Kết nối thành công với KiotViet'
+        success: result.success,
+        message: result.message
       });
       
-      toast({
-        title: 'Kết nối thành công',
-        description: 'Thông tin xác thực KiotViet hợp lệ. Bạn có thể lưu cấu hình.',
-      });
+      if (result.success) {
+        toast({
+          title: 'Kết nối thành công',
+          description: result.message || 'Thông tin xác thực KiotViet hợp lệ. Bạn có thể lưu cấu hình.',
+        });
+      } else {
+        toast({
+          title: 'Kết nối thất bại',
+          description: result.message,
+          variant: 'destructive'
+        });
+      }
       
     } catch (error) {
+      console.error('Connection test error:', error);
       setTestResult({
         success: false,
-        message: 'Không thể kết nối đến KiotViet. Vui lòng kiểm tra lại thông tin.'
+        message: 'Lỗi không xác định khi kiểm tra kết nối'
       });
       
       toast({
-        title: 'Kết nối thất bại',
-        description: 'Không thể kết nối đến KiotViet. Vui lòng kiểm tra lại thông tin.',
+        title: 'Lỗi',
+        description: 'Lỗi không xác định khi kiểm tra kết nối',
         variant: 'destructive'
       });
     } finally {
@@ -90,7 +104,7 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
     if (!testResult?.success) {
       toast({
         title: 'Lỗi',
-        description: 'Vui lòng kiểm tra kết nối trước khi lưu.',
+        description: 'Vui lòng kiểm tra kết nối thành công trước khi lưu.',
         variant: 'destructive'
       });
       return;
