@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,6 +9,7 @@ import { AuthProvider } from "@/components/auth/AuthContext";
 import { BusinessProvider } from "@/contexts/BusinessContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ThemeSystem } from "@/components/theme/ThemeSystem";
+import { getSelectedBusinessId } from "@/services/apiService";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { ForbiddenPage, ServerErrorPage, NetworkErrorPage } from "./pages/ErrorPages";
@@ -58,33 +60,52 @@ const ProtectedERPRoute = ({ children, module }: { children: React.ReactNode; mo
     return <Navigate to="/platformadmin" replace />;
   }
 
-  // Check if business ID is provided and valid
-  if (!businessId || !currentBusiness || currentBusiness.id.toString() !== businessId) {
+  // Check if business context is valid
+  const storedBusinessId = getSelectedBusinessId();
+  if (!storedBusinessId || !currentBusiness) {
+    console.log('⚠️ [ProtectedERPRoute] Missing business context, redirecting to business selection');
+    return <Navigate to="/business-selection" replace />;
+  }
+
+  // Verify business ID consistency (URL vs stored vs context)
+  if (businessId && businessId !== storedBusinessId) {
+    console.log('⚠️ [ProtectedERPRoute] Business ID mismatch, redirecting to business selection');
+    return <Navigate to="/business-selection" replace />;
+  }
+
+  if (currentBusiness.id.toString() !== storedBusinessId) {
+    console.log('⚠️ [ProtectedERPRoute] Business context mismatch, redirecting to business selection');
     return <Navigate to="/business-selection" replace />;
   }
 
   const handleModuleChange = (newModule: string) => {
+    const currentBusinessId = getSelectedBusinessId();
+    if (!currentBusinessId) {
+      navigate('/business-selection');
+      return;
+    }
+    
     switch (newModule) {
       case 'dashboard':
-        navigate(`/ERP/${businessId}/Dashboard`);
+        navigate(`/ERP/${currentBusinessId}/Dashboard`);
         break;
       case 'customers':
-        navigate(`/ERP/${businessId}/Customers`);
+        navigate(`/ERP/${currentBusinessId}/Customers`);
         break;
       case 'sales':
-        navigate(`/ERP/${businessId}/Invoices`);
+        navigate(`/ERP/${currentBusinessId}/Invoices`);
         break;
       case 'voucher':
-        navigate(`/ERP/${businessId}/Voucher`);
+        navigate(`/ERP/${currentBusinessId}/Voucher`);
         break;
       case 'inventory':
-        navigate(`/ERP/${businessId}/Products`);
+        navigate(`/ERP/${currentBusinessId}/Products`);
         break;
       case 'marketing':
-        navigate(`/ERP/${businessId}/Marketing`);
+        navigate(`/ERP/${currentBusinessId}/Marketing`);
         break;
       case 'system-settings':
-        navigate(`/ERP/${businessId}/Setting`);
+        navigate(`/ERP/${currentBusinessId}/Setting`);
         break;
     }
   };

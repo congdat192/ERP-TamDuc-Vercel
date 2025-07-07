@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Business, BusinessContextType, CreateBusinessRequest, UpdateBusinessRequest } from '@/types/business';
 import { getBusinesses, createBusiness as createBusinessAPI, getBusiness, updateBusiness as updateBusinessAPI } from '@/services/businessService';
@@ -14,7 +15,7 @@ export const useBusiness = () => {
   return context;
 };
 
-// Storage keys - keeping existing ones for compatibility
+// Storage keys - Updated to use 'cbi' for business ID
 const STORAGE_KEYS = {
   CURRENT_BUSINESS: 'erp_current_business',
   BUSINESSES_LIST: 'erp_businesses_list',
@@ -51,6 +52,38 @@ const removeFromStorage = (key: string) => {
   }
 };
 
+// Check if business context is valid
+const isBusinessContextValid = (): boolean => {
+  const businessId = getSelectedBusinessId();
+  const currentBusiness = loadFromStorage(STORAGE_KEYS.CURRENT_BUSINESS);
+  
+  if (!businessId || !currentBusiness) {
+    console.log('⚠️ [BusinessContext] Invalid business context - missing cbi or current business');
+    return false;
+  }
+  
+  if (currentBusiness.id.toString() !== businessId) {
+    console.log('⚠️ [BusinessContext] Business context mismatch - cbi vs current business');
+    return false;
+  }
+  
+  return true;
+};
+
+// Clear all business data
+const clearAllBusinessData = () => {
+  console.log('🧹 [BusinessContext] Clearing all business data');
+  clearSelectedBusinessId();
+  removeFromStorage(STORAGE_KEYS.CURRENT_BUSINESS);
+  removeFromStorage(STORAGE_KEYS.BUSINESSES_LIST);
+};
+
+// Redirect to business selection
+const redirectToBusinessSelection = () => {
+  console.log('🔄 [BusinessContext] Redirecting to business selection');
+  window.location.href = '/business-selection';
+};
+
 export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [currentBusiness, setCurrentBusiness] = useState<Business | null>(null);
@@ -60,9 +93,26 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Calculate if user has own business
   const hasOwnBusiness = businesses.some(business => business.is_owner);
 
-  // Load businesses from storage on mount
+  // Initialize business context cleanup function for API service
+  useEffect(() => {
+    window.clearBusinessContext = clearBusinessData;
+    return () => {
+      delete window.clearBusinessContext;
+    };
+  }, []);
+
+  // Load businesses from storage on mount and validate business context
   useEffect(() => {
     console.log('🚀 [BusinessContext] Initializing...');
+    
+    // Check if business context is valid
+    if (!isBusinessContextValid()) {
+      console.log('⚠️ [BusinessContext] Invalid business context detected, clearing and redirecting');
+      clearAllBusinessData();
+      // Don't redirect immediately, let the route handler decide
+      return;
+    }
+    
     const storedBusinesses = loadFromStorage(STORAGE_KEYS.BUSINESSES_LIST);
     const storedCurrentBusiness = loadFromStorage(STORAGE_KEYS.CURRENT_BUSINESS);
     
@@ -72,8 +122,7 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     
     if (storedCurrentBusiness) {
       setCurrentBusiness(storedCurrentBusiness);
-      // Sync with API service
-      setSelectedBusinessId(storedCurrentBusiness.id.toString());
+      console.log('✅ [BusinessContext] Restored valid business context:', storedCurrentBusiness.name);
     }
   }, []);
 
@@ -91,10 +140,7 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       
       // Clear data on 401 error
       if (error instanceof Error && error.message.includes('Token hết hạn')) {
-        setBusinesses([]);
-        setCurrentBusiness(null);
-        removeFromStorage(STORAGE_KEYS.BUSINESSES_LIST);
-        removeFromStorage(STORAGE_KEYS.CURRENT_BUSINESS);
+        clearBusinessData();
       }
       
       toast({
@@ -149,7 +195,7 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setCurrentBusiness(business);
       saveToStorage(STORAGE_KEYS.CURRENT_BUSINESS, business);
       
-      // Update API service business ID
+      // Update cbi storage
       setSelectedBusinessId(business.id.toString());
       
       console.log('✅ [BusinessContext] Selected business:', business.name);
@@ -218,16 +264,12 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  // Clear business data when logout (called from outside)
+  // Clear business data when logout or error
   const clearBusinessData = () => {
     console.log('🧹 [BusinessContext] Clearing business data');
     setBusinesses([]);
     setCurrentBusiness(null);
-    removeFromStorage(STORAGE_KEYS.BUSINESSES_LIST);
-    removeFromStorage(STORAGE_KEYS.CURRENT_BUSINESS);
-    
-    // Clear API service business ID
-    clearSelectedBusinessId();
+    clearAllBusinessData();
   };
 
   return (

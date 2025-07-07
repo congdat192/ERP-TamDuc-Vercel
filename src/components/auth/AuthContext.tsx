@@ -1,7 +1,7 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@/types/auth';
 import { loginUser, logoutUser, getUserProfile } from '@/services/authService';
+import { clearSelectedBusinessId } from '@/services/apiService';
 import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextType {
@@ -219,6 +219,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Clear localStorage
       removeFromStorage(STORAGE_KEYS.USER);
       removeFromStorage(STORAGE_KEYS.LOGIN_ATTEMPTS);
+      
+      // Clear business context including cbi
+      clearSelectedBusinessId();
+      if (window.clearBusinessContext) {
+        window.clearBusinessContext();
+      }
       
       setIsLoading(false);
       
