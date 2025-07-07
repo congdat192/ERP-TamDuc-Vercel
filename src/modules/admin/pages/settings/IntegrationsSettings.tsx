@@ -47,10 +47,10 @@ export function IntegrationsSettings() {
       id: 'kiotviet',
       name: 'KiotViet',
       description: 'Đồng bộ sản phẩm và đơn hàng với KiotViet POS',
-      status: 'connected',
-      enabled: true,
+      status: 'disconnected',
+      enabled: false,
       icon: '🏪',
-      lastSync: '2024-05-29 14:30',
+      lastSync: null,
       category: 'pos'
     },
     {
@@ -89,10 +89,10 @@ export function IntegrationsSettings() {
       id: 'lazada',
       name: 'Lazada',
       description: 'Tích hợp với marketplace Lazada',
-      status: 'error',
-      enabled: true,
+      status: 'disconnected',
+      enabled: false,
       icon: '🛍️',
-      lastSync: '2024-05-28 10:15',
+      lastSync: null,
       category: 'ecommerce'
     },
     {
@@ -111,10 +111,10 @@ export function IntegrationsSettings() {
       id: 'website',
       name: 'Website',
       description: 'Tích hợp với website thương mại điện tử',
-      status: 'connected',
-      enabled: true,
+      status: 'disconnected',
+      enabled: false,
       icon: '🌐',
-      lastSync: '2024-05-29 16:45',
+      lastSync: null,
       category: 'web'
     },
     
@@ -123,10 +123,10 @@ export function IntegrationsSettings() {
       id: 'zalo_oa',
       name: 'Zalo OA',
       description: 'Kết nối với Zalo Official Account',
-      status: 'connected',
-      enabled: true,
+      status: 'disconnected',
+      enabled: false,
       icon: '💬',
-      lastSync: '2024-05-29 13:20',
+      lastSync: null,
       category: 'social'
     },
     {
@@ -155,10 +155,10 @@ export function IntegrationsSettings() {
       id: 'vnpay',
       name: 'VNPay',
       description: 'Cổng thanh toán VNPay',
-      status: 'connected',
-      enabled: true,
+      status: 'disconnected',
+      enabled: false,
       icon: '💳',
-      lastSync: '2024-05-29 15:30',
+      lastSync: null,
       category: 'payment'
     },
     {
@@ -182,7 +182,7 @@ export function IntegrationsSettings() {
       category: 'payment'
     },
 
-    // NEW: Notification Platforms
+    // Notification Platforms
     {
       id: 'vihat',
       name: 'Vihat (eSMS.vn)',
