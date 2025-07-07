@@ -2,8 +2,9 @@
 import { api } from './apiService';
 
 export interface PipelineConfig {
-  api_key: string;
-  store_id: string;
+  client_id: string;
+  client_secret: string;
+  retailer: string;
 }
 
 export interface PipelineAccessToken {

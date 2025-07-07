@@ -20,9 +20,10 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { KiotVietIntegration } from '../../components/KiotVietIntegration';
+import { SimpleKiotVietIntegration } from '../../components/SimpleKiotVietIntegration';
 import { VihatIntegration } from '../../components/VihatIntegration';
-import type { KiotVietIntegration as KiotVietIntegrationType, VihatIntegration as VihatIntegrationType } from '../../types/settings';
+import type { VihatIntegration as VihatIntegrationType } from '../../types/settings';
+import type { Pipeline } from '@/types/pipeline';
 
 interface Integration {
   id: string;
@@ -194,7 +195,7 @@ export function IntegrationsSettings() {
     }
   ]);
 
-  const [kiotVietConfig, setKiotVietConfig] = useState<KiotVietIntegrationType | null>(null);
+  const [kiotVietConfig, setKiotVietConfig] = useState<Pipeline | null>(null);
   const [vihatConfig, setVihatConfig] = useState<VihatIntegrationType | null>(null);
 
   const handleToggleIntegration = (id: string, enabled: boolean) => {
@@ -227,7 +228,7 @@ export function IntegrationsSettings() {
     }
   };
 
-  const handleKiotVietSave = (config: Partial<KiotVietIntegrationType>) => {
+  const handleKiotVietSave = (config: any) => {
     // Update the integration status
     setIntegrations(prev => prev.map(integration => 
       integration.id === 'kiotviet' 
@@ -240,8 +241,23 @@ export function IntegrationsSettings() {
         : integration
     ));
 
-    // Save KiotViet specific config
-    setKiotVietConfig(prev => ({ ...prev, ...config } as KiotVietIntegrationType));
+    // Save KiotViet specific config (mock pipeline structure)
+    setKiotVietConfig({
+      id: 'kiotviet-pipeline',
+      type: 'KIOT_VIET',
+      status: 'ACTIVE',
+      config: {
+        retailer: config.retailer || '',
+        client_id: config.clientId || '',
+        client_secret: ''
+      },
+      access_token: {
+        token: '',
+        refresh_token: ''
+      },
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    });
     setDialogOpen(false);
     
     toast({
@@ -486,7 +502,7 @@ export function IntegrationsSettings() {
           </DialogHeader>
           <div className="mt-4">
             {selectedIntegration === 'kiotviet' && (
-              <KiotVietIntegration
+              <SimpleKiotVietIntegration
                 integration={kiotVietConfig}
                 onSave={handleKiotVietSave}
                 onDisconnect={handleKiotVietDisconnect}
