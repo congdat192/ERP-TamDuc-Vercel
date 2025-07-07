@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,7 +33,6 @@ interface HeaderProps {
 export function Header({ onSidebarToggle, currentPage, onPageChange, onLogout, currentUser }: HeaderProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showQuickVoucher, setShowQuickVoucher] = useState(false);
-  const [showUserSettings, setShowUserSettings] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
@@ -59,6 +57,11 @@ export function Header({ onSidebarToggle, currentPage, onPageChange, onLogout, c
   const confirmLogout = () => {
     setShowLogoutConfirm(false);
     onLogout();
+  };
+
+  const handleUserSettings = () => {
+    // Navigate to profile page instead of showing dialog
+    window.location.href = '/ERP/Profile';
   };
 
   return (
@@ -176,7 +179,7 @@ export function Header({ onSidebarToggle, currentPage, onPageChange, onLogout, c
                 </div>
               </div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setShowUserSettings(true)}>
+              <DropdownMenuItem onClick={handleUserSettings}>
                 <User className="mr-2 h-4 w-4" />
                 <span>Cài Đặt Cá Nhân</span>
               </DropdownMenuItem>
@@ -251,21 +254,6 @@ export function Header({ onSidebarToggle, currentPage, onPageChange, onLogout, c
           <div className="p-4">
             <p className="text-gray-600">Tính năng phát hành voucher nhanh sẽ được triển khai.</p>
             <Button className="mt-4" onClick={() => setShowQuickVoucher(false)}>
-              Đóng
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* User Settings Dialog */}
-      <Dialog open={showUserSettings} onOpenChange={setShowUserSettings}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Cài Đặt Cá Nhân</DialogTitle>
-          </DialogHeader>
-          <div className="p-4">
-            <p className="text-gray-600">Trang cài đặt cá nhân sẽ được triển khai.</p>
-            <Button className="mt-4" onClick={() => setShowUserSettings(false)}>
               Đóng
             </Button>
           </div>

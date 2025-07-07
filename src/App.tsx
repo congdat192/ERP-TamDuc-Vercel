@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -26,6 +25,7 @@ import { InventoryPage } from "./pages/InventoryPage";
 import { MarketingPage } from "./pages/MarketingPage";
 import { ProductDetailPage } from "./pages/ProductDetailPage";
 import { InvoiceDetailPage } from "./pages/InvoiceDetailPage";
+import { UserProfilePage } from "./pages/UserProfilePage";
 import { PlatformAdmin } from "./modules/platform-admin";
 import { Settings } from "./modules/admin/pages/Settings";
 import { ERPLayout } from "@/components/layout/ERPLayout";
@@ -200,6 +200,14 @@ const App = () => (
                     element={
                       <ProtectedERPRoute module="system-settings">
                         <Settings />
+                      </ProtectedERPRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/ERP/Profile" 
+                    element={
+                      <ProtectedERPRoute module="profile">
+                        <UserProfilePage />
                       </ProtectedERPRoute>
                     } 
                   />
