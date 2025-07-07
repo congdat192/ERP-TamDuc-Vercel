@@ -318,14 +318,56 @@ export const loginUser = async (credentials: LoginRequest): Promise<LoginRespons
     
     // 5. FIFTH: Handle validation errors (422) ONLY for actual format issues
     if (response.status === 422 && errorData.errors) {
-      // Only check for validation errors if the specific cases above didn't match
-      if (errorData.errors.email && !isEmailNotFoundError(response.status, errorData) && !isUnverifiedEmailError(response.status, errorData)) {
-        console.log('🔍 [authService] Email validation error detected');
-        throw new Error('Email không đúng định dạng.');
+      // Check if this is actually a format validation error (not credential error)
+      if (errorData.errors.email) {
+        const emailErrorMessage = Array.isArray(errorData.errors.email) 
+          ? errorData.errors.email[0].toLowerCase() 
+          : errorData.errors.email.toLowerCase();
+        
+        // Only treat as format error if message indicates actual format issues
+        const formatErrorIndicators = [
+          'invalid email format',
+          'email must be valid',
+          'email không đúng định dạng',
+          'định dạng email',
+          'format email',
+          'email address is invalid',
+          'please enter a valid email'
+        ];
+        
+        const isActualFormatError = formatErrorIndicators.some(indicator => 
+          emailErrorMessage.includes(indicator)
+        );
+        
+        if (isActualFormatError) {
+          console.log('🔍 [authService] Actual email format validation error detected');
+          throw new Error('Email không đúng định dạng.');
+        }
       }
-      if (errorData.errors.password && !isIncorrectPasswordError(response.status, errorData)) {
-        console.log('🔍 [authService] Password validation error detected');
-        throw new Error('Mật khẩu không hợp lệ.');
+      
+      if (errorData.errors.password) {
+        const passwordErrorMessage = Array.isArray(errorData.errors.password) 
+          ? errorData.errors.password[0].toLowerCase() 
+          : errorData.errors.password.toLowerCase();
+        
+        // Only treat as format error if message indicates actual format issues
+        const formatErrorIndicators = [
+          'password must be',
+          'password should be',
+          'mật khẩu phải',
+          'độ dài mật khẩu',
+          'password length',
+          'password format'
+        ];
+        
+        const isActualFormatError = formatErrorIndicators.some(indicator => 
+          passwordErrorMessage.includes(indicator)
+        );
+        
+        if (isActualFormatError) {
+          console.log('🔍 [authService] Actual password format validation error detected');
+          throw new Error('Mật khẩu không hợp lệ.');
+        }
       }
     }
     
