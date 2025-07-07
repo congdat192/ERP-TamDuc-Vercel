@@ -10,7 +10,7 @@ import { verifyEmail, resendVerificationEmail } from '@/services/authService';
 import { useToast } from '@/hooks/use-toast';
 
 export function EmailVerificationPage() {
-  const { id, hash } = useParams<{ id: string; hash: string }>();
+  const { id, hash, email } = useParams<{ id?: string; hash: string; email?: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -22,18 +22,37 @@ export function EmailVerificationPage() {
 
   useEffect(() => {
     const performVerification = async () => {
-      console.log('🔍 [EmailVerification] Starting verification with params:', { id, hash });
+      console.log('🔍 [EmailVerification] Starting verification with params:', { id, hash, email });
       
-      if (!id || !hash) {
-        console.error('❌ [EmailVerification] Missing parameters:', { id, hash });
-        setError('Link xác thực không hợp lệ - thiếu tham số');
+      if (!hash) {
+        console.error('❌ [EmailVerification] Missing hash parameter');
+        setError('Link xác thực không hợp lệ - thiếu mã hash');
+        setIsVerifying(false);
+        return;
+      }
+
+      // Handle both URL formats:
+      // 1. /email/verify/:id/:hash (standard API format)
+      // 2. /xac-nhan-tai-khoan/:email/:hash (email URL format)
+      let verificationId = id;
+      
+      if (!verificationId && email) {
+        // If we have email instead of id, we need to decode the email
+        console.log('🔄 [EmailVerification] Using email format, email:', email);
+        // For email format, we'll use the email as the ID since the API might expect it
+        verificationId = decodeURIComponent(email);
+      }
+
+      if (!verificationId) {
+        console.error('❌ [EmailVerification] Missing verification ID/email');
+        setError('Link xác thực không hợp lệ - thiếu thông tin định danh');
         setIsVerifying(false);
         return;
       }
 
       try {
-        console.log('📧 [EmailVerification] Calling verifyEmail API');
-        await verifyEmail(id, hash);
+        console.log('📧 [EmailVerification] Calling verifyEmail API with:', { verificationId, hash });
+        await verifyEmail(verificationId, hash);
         console.log('✅ [EmailVerification] Verification successful');
         setIsVerified(true);
         toast({
@@ -55,7 +74,7 @@ export function EmailVerificationPage() {
     };
 
     performVerification();
-  }, [id, hash, toast]);
+  }, [id, hash, email, toast]);
 
   const handleResendVerification = async () => {
     if (!resendEmail) {
