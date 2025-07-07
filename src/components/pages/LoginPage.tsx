@@ -4,10 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { User, Building2, Eye, EyeOff, Lock, AlertTriangle, Mail } from 'lucide-react';
-import { User as UserType } from '@/types/auth';
+import { Building2, Eye, EyeOff, Lock, AlertTriangle, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
   Dialog,
@@ -17,20 +15,24 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { forgotPassword, resendVerificationEmail } from '@/services/authService';
 
 interface LoginPageProps {
   onLogin: (email: string, password: string, rememberMe?: boolean) => void;
-  mockUsers: UserType[];
   loginAttempts?: number;
 }
 
-export function LoginPage({ onLogin, mockUsers, loginAttempts = 0 }: LoginPageProps) {
+export function LoginPage({ onLogin, loginAttempts = 0 }: LoginPageProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
+  const [isLoadingForgotPassword, setIsLoadingForgotPassword] = useState(false);
+  const [showResendVerification, setShowResendVerification] = useState(false);
+  const [resendEmail, setResendEmail] = useState('');
+  const [isLoadingResend, setIsLoadingResend] = useState(false);
   const { toast } = useToast();
 
   const isAccountLocked = loginAttempts >= 3;
@@ -52,15 +54,7 @@ export function LoginPage({ onLogin, mockUsers, loginAttempts = 0 }: LoginPagePr
     }
   };
 
-  const handleQuickLogin = (userEmail: string) => {
-    if (isAccountLocked) return;
-    
-    setEmail(userEmail);
-    setPassword('demo');
-    onLogin(userEmail, 'demo', rememberMe);
-  };
-
-  const handleForgotPassword = () => {
+  const handleForgotPassword = async () => {
     if (!forgotPasswordEmail) {
       toast({
         title: "Lỗi",
@@ -70,34 +64,53 @@ export function LoginPage({ onLogin, mockUsers, loginAttempts = 0 }: LoginPagePr
       return;
     }
 
-    // Simulate password reset
-    toast({
-      title: "Email đã được gửi",
-      description: `Hướng dẫn đặt lại mật khẩu đã được gửi đến ${forgotPasswordEmail}`,
-    });
-    setShowForgotPassword(false);
-    setForgotPasswordEmail('');
-  };
-
-  const getRoleDisplayName = (role: string) => {
-    switch (role) {
-      case 'erp-admin': return 'Quản Trị ERP';
-      case 'voucher-admin': return 'Quản Lý Voucher';
-      case 'telesales': return 'Nhân Viên Telesales';
-      case 'custom': return 'Vai Trò Tùy Chỉnh';
-      case 'platform-admin': return 'Quản Trị Nền Tảng';
-      default: return 'Người Dùng';
+    setIsLoadingForgotPassword(true);
+    try {
+      await forgotPassword(forgotPasswordEmail);
+      toast({
+        title: "Email đã được gửi",
+        description: `Hướng dẫn đặt lại mật khẩu đã được gửi đến ${forgotPasswordEmail}`,
+      });
+      setShowForgotPassword(false);
+      setForgotPasswordEmail('');
+    } catch (error) {
+      toast({
+        title: "Lỗi",
+        description: error instanceof Error ? error.message : "Không thể gửi email đặt lại mật khẩu",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingForgotPassword(false);
     }
   };
 
-  const getRoleBadgeColor = (role: string) => {
-    switch (role) {
-      case 'erp-admin': return 'bg-red-100 text-red-800';
-      case 'voucher-admin': return 'bg-blue-100 text-blue-800';
-      case 'telesales': return 'bg-green-100 text-green-800';
-      case 'custom': return 'bg-gray-100 text-gray-800';
-      case 'platform-admin': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+  const handleResendVerification = async () => {
+    if (!resendEmail) {
+      toast({
+        title: "Lỗi",
+        description: "Vui lòng nhập địa chỉ email của bạn.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoadingResend(true);
+    try {
+      await resendVerificationEmail(resendEmail);
+      toast({
+        title: "Email xác thực đã được gửi",
+        description: `Email xác thực đã được gửi đến ${resendEmail}`,
+      });
+      setShowResendVerification(false);
+      setResendEmail('');
+    } catch (error) {
+      toast({
+        title: "Lỗi",
+        description: error instanceof Error ? error.message : "Không thể gửi lại email xác thực",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingResend(false);
     }
   };
 
@@ -147,7 +160,7 @@ export function LoginPage({ onLogin, mockUsers, loginAttempts = 0 }: LoginPagePr
             <CardHeader>
               <CardTitle className="text-2xl font-bold text-center">Đăng Nhập</CardTitle>
               <CardDescription className="text-center">
-                Chọn tài khoản demo hoặc đăng nhập thủ công
+                Nhập thông tin đăng nhập của bạn
               </CardDescription>
               
               {/* Account Lockout Warning */}
@@ -171,43 +184,7 @@ export function LoginPage({ onLogin, mockUsers, loginAttempts = 0 }: LoginPagePr
               )}
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Quick Login Options */}
-              <div className="space-y-3">
-                <h3 className="text-sm font-medium text-gray-700">Đăng Nhập Nhanh (Demo)</h3>
-                <div className="grid grid-cols-1 gap-2">
-                  {mockUsers.map((user) => (
-                    <Button
-                      key={user.id}
-                      variant="outline"
-                      onClick={() => handleQuickLogin(user.email)}
-                      className="justify-between h-auto p-3"
-                      disabled={isAccountLocked}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <User className="w-4 h-4" />
-                        <div className="text-left">
-                          <div className="font-medium">{user.fullName}</div>
-                          <div className="text-xs text-gray-500">{user.email}</div>
-                        </div>
-                      </div>
-                      <Badge className={getRoleBadgeColor(user.role)}>
-                        {getRoleDisplayName(user.role)}
-                      </Badge>
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-muted-foreground">Hoặc</span>
-                </div>
-              </div>
-
-              {/* Manual Login Form */}
+              {/* Login Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
@@ -279,15 +256,25 @@ export function LoginPage({ onLogin, mockUsers, loginAttempts = 0 }: LoginPagePr
                 </Button>
               </form>
 
-              {/* Login Link and Register Link */}
+              {/* Action Links */}
               <div className="text-center space-y-2">
-                <Button 
-                  variant="link" 
-                  className="text-sm text-blue-600 hover:text-blue-800"
-                  onClick={() => setShowForgotPassword(true)}
-                >
-                  Quên mật khẩu?
-                </Button>
+                <div className="flex justify-center space-x-4">
+                  <Button 
+                    variant="link" 
+                    className="text-sm text-blue-600 hover:text-blue-800"
+                    onClick={() => setShowForgotPassword(true)}
+                  >
+                    Quên mật khẩu?
+                  </Button>
+                  
+                  <Button 
+                    variant="link" 
+                    className="text-sm text-blue-600 hover:text-blue-800"
+                    onClick={() => setShowResendVerification(true)}
+                  >
+                    Gửi lại email xác thực
+                  </Button>
+                </div>
                 
                 <p className="text-sm text-gray-600">
                   Chưa có tài khoản?{' '}
@@ -298,11 +285,6 @@ export function LoginPage({ onLogin, mockUsers, loginAttempts = 0 }: LoginPagePr
                     Đăng ký ngay
                   </Link>
                 </p>
-              </div>
-
-              <div className="text-center text-xs text-gray-500">
-                <p>Demo: Sử dụng email demo và bất kỳ mật khẩu nào</p>
-                <p>Hoặc sử dụng tài khoản thật đã đăng ký</p>
               </div>
 
               {/* Footer Links */}
@@ -348,14 +330,60 @@ export function LoginPage({ onLogin, mockUsers, loginAttempts = 0 }: LoginPagePr
                 variant="outline" 
                 className="flex-1"
                 onClick={() => setShowForgotPassword(false)}
+                disabled={isLoadingForgotPassword}
               >
                 Hủy
               </Button>
               <Button 
                 className="flex-1"
                 onClick={handleForgotPassword}
+                disabled={isLoadingForgotPassword}
               >
-                Gửi Email
+                {isLoadingForgotPassword ? 'Đang gửi...' : 'Gửi Email'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Resend Verification Dialog */}
+      <Dialog open={showResendVerification} onOpenChange={setShowResendVerification}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Mail className="w-5 h-5" />
+              <span>Gửi Lại Email Xác Thực</span>
+            </DialogTitle>
+            <DialogDescription>
+              Nhập địa chỉ email để gửi lại email xác thực tài khoản.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="resend-email">Địa chỉ Email</Label>
+              <Input
+                id="resend-email"
+                type="email"
+                placeholder="example@company.com"
+                value={resendEmail}
+                onChange={(e) => setResendEmail(e.target.value)}
+              />
+            </div>
+            <div className="flex space-x-2">
+              <Button 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => setShowResendVerification(false)}
+                disabled={isLoadingResend}
+              >
+                Hủy
+              </Button>
+              <Button 
+                className="flex-1"
+                onClick={handleResendVerification}
+                disabled={isLoadingResend}
+              >
+                {isLoadingResend ? 'Đang gửi...' : 'Gửi Email'}
               </Button>
             </div>
           </div>

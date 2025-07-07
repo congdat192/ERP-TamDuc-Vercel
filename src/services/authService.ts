@@ -1,4 +1,3 @@
-
 // Authentication service for API calls
 export interface LoginRequest {
   email: string;
@@ -13,6 +12,7 @@ export interface LoginResponse {
     id: string;
     name: string;
     email: string;
+    email_verified_at: string | null;
     created_at: string;
     updated_at: string;
   };
@@ -22,6 +22,7 @@ export interface UserProfile {
   id: string;
   name: string;
   email: string;
+  email_verified_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -29,6 +30,22 @@ export interface UserProfile {
 export interface UpdateProfileRequest {
   name: string;
   email: string;
+}
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ForgotPasswordResponse {
+  message: string;
+}
+
+export interface ResendVerificationRequest {
+  email: string;
+}
+
+export interface ResendVerificationResponse {
+  message: string;
 }
 
 export interface ApiError {
@@ -91,6 +108,36 @@ const isLocalStorageAvailable = (): boolean => {
   }
 };
 
+// Convert API user to internal User type
+const convertApiUserToUser = (apiUser: any): User => {
+  console.log('🔄 [authService] Converting API user to internal User type');
+  return {
+    id: apiUser.id,
+    username: apiUser.email,
+    fullName: apiUser.name,
+    role: 'erp-admin',
+    email: apiUser.email,
+    status: 'active',
+    createdAt: apiUser.created_at,
+    lastLogin: new Date().toISOString(),
+    emailVerified: !!apiUser.email_verified_at,
+    isActive: true,
+    permissions: {
+      modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'marketing', 'system-settings', 'user-management'],
+      voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
+      canManageUsers: true,
+      canViewAllVouchers: true,
+    },
+    securitySettings: {
+      twoFactorEnabled: false,
+      loginAttemptLimit: 3,
+      passwordChangeRequired: false,
+      sessionTimeoutMinutes: 60,
+    },
+    activities: [],
+  };
+};
+
 // Login API call
 export const loginUser = async (credentials: LoginRequest): Promise<LoginResponse> => {
   console.log('🚀 [authService] Starting login process for:', credentials.email);
@@ -101,7 +148,6 @@ export const loginUser = async (credentials: LoginRequest): Promise<LoginRespons
   }
   
   console.log('📡 [authService] Making API request to:', `${API_BASE_URL}/login`);
-  console.log('📋 [authService] Request payload:', { email: credentials.email, password: '***' });
   
   const response = await fetch(`${API_BASE_URL}/login`, {
     method: 'POST',
@@ -113,62 +159,146 @@ export const loginUser = async (credentials: LoginRequest): Promise<LoginRespons
   });
 
   console.log('📨 [authService] Response status:', response.status);
-  console.log('📨 [authService] Response headers:', Object.fromEntries(response.headers.entries()));
 
   if (!response.ok) {
     const errorData = await response.json();
     console.error('❌ [authService] Login failed with status:', response.status);
     console.error('❌ [authService] Error response:', errorData);
+    
+    // Handle email not verified error
+    if (response.status === 401 && errorData.message?.includes('email')) {
+      throw new Error('Email chưa được xác thực. Vui lòng kiểm tra email và xác thực tài khoản.');
+    }
+    
     throw new Error(errorData.message || 'Đăng nhập thất bại');
   }
 
   const data = await response.json();
   console.log('📦 [authService] Raw API response:', data);
   
-  // Check for different possible token field names
-  const possibleTokenFields = ['access_token', 'token', 'accessToken', 'authToken'];
-  let token = null;
-  
-  for (const field of possibleTokenFields) {
-    if (data[field]) {
-      token = data[field];
-      console.log(`✅ [authService] Found token in field: ${field}`);
-      break;
-    }
-  }
-  
+  // Check for token
+  const token = data.access_token;
   if (!token) {
     console.error('❌ [authService] No token found in API response');
-    console.error('❌ [authService] Available fields:', Object.keys(data));
     throw new Error('Không nhận được token từ server');
   }
   
-  // Store token with simplified logic
-  console.log('💾 [authService] Attempting to store token...');
-  try {
-    storeToken(token);
-    console.log('✅ [authService] Token stored successfully');
-  } catch (error) {
-    console.error('❌ [authService] Token storage failed:', error);
-    throw new Error('Lỗi lưu trữ token');
-  }
+  // Store token
+  storeToken(token);
   
-  // Ensure we return the expected format
   const loginResponse: LoginResponse = {
     access_token: token,
     token_type: data.token_type || 'Bearer',
     expires_in: data.expires_in || 3600,
-    user: data.user || {
-      id: data.id || 'unknown',
-      name: data.name || credentials.email,
-      email: data.email || credentials.email,
-      created_at: data.created_at || new Date().toISOString(),
-      updated_at: data.updated_at || new Date().toISOString()
-    }
+    user: data.user
   };
   
-  console.log('✅ [authService] Login successful, returning formatted response');
+  console.log('✅ [authService] Login successful');
   return loginResponse;
+};
+
+// Forgot Password API
+export const forgotPassword = async (email: string): Promise<ForgotPasswordResponse> => {
+  console.log('📧 [authService] Sending forgot password request for:', email);
+  
+  const response = await fetch(`${API_BASE_URL}/password/email`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: JSON.stringify({ email }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    console.error('❌ [authService] Forgot password failed:', errorData);
+    throw new Error(errorData.message || 'Không thể gửi email đặt lại mật khẩu');
+  }
+
+  console.log('✅ [authService] Forgot password request sent successfully');
+  return response.json();
+};
+
+// Resend Email Verification API
+export const resendVerificationEmail = async (email: string): Promise<ResendVerificationResponse> => {
+  console.log('📧 [authService] Resending verification email for:', email);
+  
+  const response = await fetch(`${API_BASE_URL}/email/resend`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: JSON.stringify({ email }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    console.error('❌ [authService] Resend verification failed:', errorData);
+    throw new Error(errorData.message || 'Không thể gửi lại email xác thực');
+  }
+
+  console.log('✅ [authService] Verification email resent successfully');
+  return response.json();
+};
+
+// Email Verification API
+export const verifyEmail = async (id: string, hash: string): Promise<void> => {
+  console.log('📧 [authService] Verifying email for ID:', id);
+  
+  const response = await fetch(`${API_BASE_URL}/email/verify/${id}/${hash}`, {
+    method: 'GET',
+    headers: {
+      'Accept': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    console.error('❌ [authService] Email verification failed:', errorData);
+    throw new Error(errorData.message || 'Xác thực email thất bại');
+  }
+
+  console.log('✅ [authService] Email verified successfully');
+};
+
+// Update Password (for profile page)
+export const updatePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
+  const token = getStoredToken();
+  console.log('🔒 [authService] Updating password');
+  
+  if (!token) {
+    console.error('❌ [authService] No authentication token found for password update');
+    throw new Error('No authentication token found');
+  }
+
+  const response = await fetch(`${API_BASE_URL}/password/update`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: JSON.stringify({
+      current_password: currentPassword,
+      password: newPassword,
+      password_confirmation: newPassword,
+    }),
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      console.error('❌ [authService] Token expired during password update');
+      removeToken();
+      throw new Error('Token hết hạn, vui lòng đăng nhập lại');
+    }
+    const errorData = await response.json();
+    console.error('❌ [authService] Password update failed:', errorData);
+    throw new Error(errorData.message || 'Cập nhật mật khẩu thất bại');
+  }
+
+  console.log('✅ [authService] Password updated successfully');
 };
 
 // Logout API call

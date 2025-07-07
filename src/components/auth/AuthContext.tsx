@@ -82,7 +82,7 @@ const convertApiUserToUser = (apiUser: any): User => {
     status: 'active',
     createdAt: apiUser.created_at,
     lastLogin: new Date().toISOString(),
-    emailVerified: true,
+    emailVerified: !!apiUser.email_verified_at,
     isActive: true,
     permissions: {
       modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'marketing', 'system-settings', 'user-management'],
@@ -117,10 +117,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const storedUser = loadFromStorage(STORAGE_KEYS.USER);
         const storedAttempts = loadFromStorage(STORAGE_KEYS.LOGIN_ATTEMPTS) || 0;
         
-        // Only restore user if token exists
-        if (checkAuthentication() && storedUser) {
+        // Only restore user if token exists and user email is verified
+        if (checkAuthentication() && storedUser && storedUser.emailVerified) {
           setCurrentUser(storedUser);
           console.log('✅ [AuthContext] Restored user session:', storedUser.username);
+        } else if (storedUser && !storedUser.emailVerified) {
+          console.log('⚠️ [AuthContext] User session found but email not verified, clearing session');
+          removeFromStorage(STORAGE_KEYS.USER);
+          removeFromStorage(STORAGE_KEYS.TOKEN);
         }
         
         setLoginAttempts(storedAttempts);
@@ -145,6 +149,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('📨 [AuthContext] Login API response received');
       
       const user = convertApiUserToUser(response.user);
+      
+      // Check if email is verified
+      if (!user.emailVerified) {
+        toast({
+          title: "Email chưa xác thực",
+          description: "Vui lòng kiểm tra email và xác thực tài khoản trước khi đăng nhập.",
+          variant: "destructive",
+        });
+        
+        // Don't set current user, don't save to storage
+        setLoginAttempts(prev => prev + 1);
+        saveToStorage(STORAGE_KEYS.LOGIN_ATTEMPTS, loginAttempts + 1);
+        return false;
+      }
       
       setCurrentUser(user);
       setLoginAttempts(0);
@@ -249,7 +267,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider
       value={{
         currentUser,
-        isAuthenticated: checkAuthentication() && !!currentUser,
+        isAuthenticated: checkAuthentication() && !!currentUser && currentUser.emailVerified,
         login,
         logout,
         loginAttempts,
