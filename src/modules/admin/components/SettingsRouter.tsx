@@ -12,14 +12,14 @@ export function SettingsRouter() {
   return (
     <SettingsLayout>
       <Routes>
-        <Route path="/" element={<Navigate to="/ERP/Setting/General" replace />} />
+        <Route path="/" element={<Navigate to="General" replace />} />
         <Route path="/General" element={<GeneralSettings />} />
         <Route path="/API" element={<APISettings />} />
         <Route path="/Integrations" element={<IntegrationsSettings />} />
         <Route path="/Security" element={<SecuritySettings />} />
         <Route path="/Notifications" element={<NotificationsSettings />} />
         <Route path="/Appearance" element={<AppearanceSettings />} />
-        <Route path="*" element={<Navigate to="/ERP/Setting/General" replace />} />
+        <Route path="*" element={<Navigate to="General" replace />} />
       </Routes>
     </SettingsLayout>
   );

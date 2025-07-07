@@ -31,7 +31,7 @@ import { Settings } from "./modules/admin/pages/Settings";
 import { ERPLayout } from "@/components/layout/ERPLayout";
 import { useAuth } from "@/components/auth/AuthContext";
 import { useBusiness } from "@/contexts/BusinessContext";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -48,9 +48,8 @@ const queryClient = new QueryClient({
 // Protected Route wrapper component
 const ProtectedERPRoute = ({ children, module }: { children: React.ReactNode; module: string }) => {
   const { currentUser, isAuthenticated, logout } = useAuth();
-  const { currentBusiness, selectBusiness } = useBusiness();
+  const { currentBusiness } = useBusiness();
   const navigate = useNavigate();
-  const { businessId } = useParams();
 
   if (!isAuthenticated || !currentUser) {
     return <Navigate to="/login" replace />;
@@ -67,45 +66,34 @@ const ProtectedERPRoute = ({ children, module }: { children: React.ReactNode; mo
     return <Navigate to="/business-selection" replace />;
   }
 
-  // Verify business ID consistency (URL vs stored vs context)
-  if (businessId && businessId !== storedBusinessId) {
-    console.log('⚠️ [ProtectedERPRoute] Business ID mismatch, redirecting to business selection');
-    return <Navigate to="/business-selection" replace />;
-  }
-
+  // Verify business ID consistency (stored vs context)
   if (currentBusiness.id.toString() !== storedBusinessId) {
     console.log('⚠️ [ProtectedERPRoute] Business context mismatch, redirecting to business selection');
     return <Navigate to="/business-selection" replace />;
   }
 
   const handleModuleChange = (newModule: string) => {
-    const currentBusinessId = getSelectedBusinessId();
-    if (!currentBusinessId) {
-      navigate('/business-selection');
-      return;
-    }
-    
     switch (newModule) {
       case 'dashboard':
-        navigate(`/ERP/${currentBusinessId}/Dashboard`);
+        navigate('/ERP/Dashboard');
         break;
       case 'customers':
-        navigate(`/ERP/${currentBusinessId}/Customers`);
+        navigate('/ERP/Customers');
         break;
       case 'sales':
-        navigate(`/ERP/${currentBusinessId}/Invoices`);
+        navigate('/ERP/Invoices');
         break;
       case 'voucher':
-        navigate(`/ERP/${currentBusinessId}/Voucher`);
+        navigate('/ERP/Voucher');
         break;
       case 'inventory':
-        navigate(`/ERP/${currentBusinessId}/Products`);
+        navigate('/ERP/Products');
         break;
       case 'marketing':
-        navigate(`/ERP/${currentBusinessId}/Marketing`);
+        navigate('/ERP/Marketing');
         break;
       case 'system-settings':
-        navigate(`/ERP/${currentBusinessId}/Setting`);
+        navigate('/ERP/Setting');
         break;
     }
   };
@@ -142,9 +130,9 @@ const App = () => (
                   <Route path="/business-selection" element={<BusinessSelectionPage />} />
                   <Route path="/create-business" element={<CreateBusinessPage />} />
                   
-                  {/* ERP Routes with business ID */}
+                  {/* ERP Routes without business ID */}
                   <Route 
-                    path="/ERP/:businessId/Dashboard" 
+                    path="/ERP/Dashboard" 
                     element={
                       <ProtectedERPRoute module="dashboard">
                         <ERPHome />
@@ -152,7 +140,7 @@ const App = () => (
                     } 
                   />
                   <Route 
-                    path="/ERP/:businessId/Customers" 
+                    path="/ERP/Customers" 
                     element={
                       <ProtectedERPRoute module="customers">
                         <CustomerPage />
@@ -160,7 +148,7 @@ const App = () => (
                     } 
                   />
                   <Route 
-                    path="/ERP/:businessId/Invoices" 
+                    path="/ERP/Invoices" 
                     element={
                       <ProtectedERPRoute module="sales">
                         <SalesPage />
@@ -168,7 +156,7 @@ const App = () => (
                     } 
                   />
                   <Route 
-                    path="/ERP/:businessId/Invoices/:invoiceId" 
+                    path="/ERP/Invoices/:invoiceId" 
                     element={
                       <ProtectedERPRoute module="sales">
                         <InvoiceDetailPage />
@@ -176,7 +164,7 @@ const App = () => (
                     } 
                   />
                   <Route 
-                    path="/ERP/:businessId/Voucher/*" 
+                    path="/ERP/Voucher/*" 
                     element={
                       <ProtectedERPRoute module="voucher">
                         <VoucherPage />
@@ -184,7 +172,7 @@ const App = () => (
                     } 
                   />
                   <Route 
-                    path="/ERP/:businessId/Products" 
+                    path="/ERP/Products" 
                     element={
                       <ProtectedERPRoute module="inventory">
                         <InventoryPage />
@@ -192,7 +180,7 @@ const App = () => (
                     } 
                   />
                   <Route 
-                    path="/ERP/:businessId/Products/:productCode" 
+                    path="/ERP/Products/:productCode" 
                     element={
                       <ProtectedERPRoute module="inventory">
                         <ProductDetailPage />
@@ -200,7 +188,7 @@ const App = () => (
                     } 
                   />
                   <Route 
-                    path="/ERP/:businessId/Marketing" 
+                    path="/ERP/Marketing" 
                     element={
                       <ProtectedERPRoute module="marketing">
                         <MarketingPage />
@@ -208,7 +196,7 @@ const App = () => (
                     } 
                   />
                   <Route 
-                    path="/ERP/:businessId/Setting/*" 
+                    path="/ERP/Setting/*" 
                     element={
                       <ProtectedERPRoute module="system-settings">
                         <Settings />

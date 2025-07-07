@@ -31,7 +31,7 @@ export function BusinessSwitcher({ className }: BusinessSwitcherProps) {
     setIsSelectingBusiness(true);
     try {
       await selectBusiness(business.id);
-      navigate(`/ERP/${business.id}/Dashboard`);
+      navigate('/ERP/Dashboard');
     } catch (error) {
       console.error('Failed to switch business:', error);
     } finally {
