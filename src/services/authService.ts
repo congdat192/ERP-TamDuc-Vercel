@@ -1,4 +1,3 @@
-
 // Authentication service for API calls
 import { User } from '@/types/auth';
 
@@ -168,9 +167,18 @@ export const loginUser = async (credentials: LoginRequest): Promise<LoginRespons
     console.error('❌ [authService] Login failed with status:', response.status);
     console.error('❌ [authService] Error response:', errorData);
     
-    // Handle email not verified error
-    if (response.status === 401 && errorData.message?.includes('email')) {
-      throw new Error('Email chưa được xác thực. Vui lòng kiểm tra email và xác thực tài khoản.');
+    // Handle email not verified error - check for specific error messages
+    if (response.status === 401) {
+      // Check if the error message indicates email not verified
+      if (errorData.message?.toLowerCase().includes('email') && 
+          (errorData.message?.toLowerCase().includes('verify') || 
+           errorData.message?.toLowerCase().includes('unverified') ||
+           errorData.message?.toLowerCase().includes('verification'))) {
+        throw new Error('Email chưa được xác thực. Vui lòng kiểm tra email và xác thực tài khoản trước khi đăng nhập.');
+      }
+      
+      // Generic 401 error
+      throw new Error('Thông tin đăng nhập không chính xác hoặc email chưa được xác thực.');
     }
     
     throw new Error(errorData.message || 'Đăng nhập thất bại');
