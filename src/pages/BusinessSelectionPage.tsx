@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -52,7 +51,8 @@ export function BusinessSelectionPage() {
     try {
       console.log('🏢 [BusinessSelectionPage] Selecting business:', business.name);
       await selectBusiness(business.id);
-      navigate(`/ERP/${business.id}/Dashboard`);
+      // Navigate to ERP Dashboard without business ID in URL
+      navigate('/ERP/Dashboard');
     } catch (error) {
       console.error('❌ [BusinessSelectionPage] Failed to select business:', error);
       setSelectedBusinessId(null);
