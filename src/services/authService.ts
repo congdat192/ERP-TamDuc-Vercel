@@ -1,4 +1,3 @@
-
 // Authentication service for API calls
 import { User } from '@/types/auth';
 
@@ -344,17 +343,17 @@ export const verifyEmail = async (id: string, hash: string): Promise<void> => {
   console.log('✅ [authService] Email verified successfully');
 };
 
-// Update Password (for profile page)
+// Update Password (for profile page) - Using /me endpoint with PUT method
 export const updatePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
   const token = getStoredToken();
-  console.log('🔒 [authService] Updating password');
+  console.log('🔒 [authService] Updating password via /me endpoint');
   
   if (!token) {
     console.error('❌ [authService] No authentication token found for password update');
     throw new Error('No authentication token found');
   }
 
-  const response = await fetch(`${API_BASE_URL}/password/update`, {
+  const response = await fetch(`${API_BASE_URL}/me`, {
     method: 'PUT',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -376,6 +375,17 @@ export const updatePassword = async (currentPassword: string, newPassword: strin
     }
     const errorData = await response.json();
     console.error('❌ [authService] Password update failed:', errorData);
+    
+    // Handle validation errors
+    if (response.status === 422 && errorData.errors) {
+      if (errorData.errors.current_password) {
+        throw new Error('Mật khẩu hiện tại không chính xác');
+      }
+      if (errorData.errors.password) {
+        throw new Error(errorData.errors.password[0] || 'Mật khẩu mới không hợp lệ');
+      }
+    }
+    
     throw new Error(errorData.message || 'Cập nhật mật khẩu thất bại');
   }
 
