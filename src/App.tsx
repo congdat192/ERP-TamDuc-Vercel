@@ -55,6 +55,32 @@ const ProtectedERPRoute = ({ children, module }: { children: React.ReactNode; mo
   console.log('🔐 [ProtectedERPRoute] User authenticated:', isAuthenticated);
   console.log('🔐 [ProtectedERPRoute] Current business:', currentBusiness?.id);
 
+  const handleModuleChange = (newModule: string) => {
+    switch (newModule) {
+      case 'dashboard':
+        navigate('/ERP/Dashboard');
+        break;
+      case 'customers':
+        navigate('/ERP/Customers');
+        break;
+      case 'sales':
+        navigate('/ERP/Invoices');
+        break;
+      case 'voucher':
+        navigate('/ERP/Voucher');
+        break;
+      case 'inventory':
+        navigate('/ERP/Products');
+        break;
+      case 'marketing':
+        navigate('/ERP/Marketing');
+        break;
+      case 'system-settings':
+        navigate('/ERP/Setting');
+        break;
+    }
+  };
+
   if (!isAuthenticated || !currentUser) {
     console.log('❌ [ProtectedERPRoute] Not authenticated, redirecting to login');
     return <Navigate to="/login" replace />;
@@ -93,32 +119,6 @@ const ProtectedERPRoute = ({ children, module }: { children: React.ReactNode; mo
     console.log('⚠️ [ProtectedERPRoute] Business context mismatch, redirecting to business selection');
     return <Navigate to="/business-selection" replace />;
   }
-
-  const handleModuleChange = (newModule: string) => {
-    switch (newModule) {
-      case 'dashboard':
-        navigate('/ERP/Dashboard');
-        break;
-      case 'customers':
-        navigate('/ERP/Customers');
-        break;
-      case 'sales':
-        navigate('/ERP/Invoices');
-        break;
-      case 'voucher':
-        navigate('/ERP/Voucher');
-        break;
-      case 'inventory':
-        navigate('/ERP/Products');
-        break;
-      case 'marketing':
-        navigate('/ERP/Marketing');
-        break;
-      case 'system-settings':
-        navigate('/ERP/Setting');
-        break;
-    }
-  };
 
   return (
     <ERPLayout
