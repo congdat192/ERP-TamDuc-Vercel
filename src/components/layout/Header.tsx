@@ -21,6 +21,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { NotificationCenter } from '@/components/ui/notification-center';
 import { BusinessSwitcher } from '@/components/ui/business-switcher';
 import { User as UserType } from '@/types/auth';
+import { useNavigate } from 'react-router-dom';
 
 interface HeaderProps {
   onSidebarToggle: () => void;
@@ -31,6 +32,7 @@ interface HeaderProps {
 }
 
 export function Header({ onSidebarToggle, currentPage, onPageChange, onLogout, currentUser }: HeaderProps) {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [showQuickVoucher, setShowQuickVoucher] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -60,8 +62,8 @@ export function Header({ onSidebarToggle, currentPage, onPageChange, onLogout, c
   };
 
   const handleUserSettings = () => {
-    // Navigate to profile page instead of showing dialog
-    window.location.href = '/ERP/Profile';
+    console.log('📋 [Header] Navigating to profile page');
+    navigate('/ERP/Profile');
   };
 
   return (

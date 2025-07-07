@@ -51,15 +51,37 @@ const ProtectedERPRoute = ({ children, module }: { children: React.ReactNode; mo
   const { currentBusiness } = useBusiness();
   const navigate = useNavigate();
 
+  console.log('🔐 [ProtectedERPRoute] Checking access for module:', module);
+  console.log('🔐 [ProtectedERPRoute] User authenticated:', isAuthenticated);
+  console.log('🔐 [ProtectedERPRoute] Current business:', currentBusiness?.id);
+
   if (!isAuthenticated || !currentUser) {
+    console.log('❌ [ProtectedERPRoute] Not authenticated, redirecting to login');
     return <Navigate to="/login" replace />;
   }
 
   if (currentUser.role === 'platform-admin') {
+    console.log('🏢 [ProtectedERPRoute] Platform admin, redirecting to platform admin');
     return <Navigate to="/platformadmin" replace />;
   }
 
-  // Check if business context is valid
+  // Special handling for profile module - doesn't require business context
+  if (module === 'profile') {
+    console.log('👤 [ProtectedERPRoute] Profile module access granted');
+    return (
+      <ERPLayout
+        currentUser={currentUser}
+        currentModule={module as any}
+        onModuleChange={handleModuleChange}
+        onLogout={logout}
+      >
+        {children}
+        <ThemeSystem />
+      </ERPLayout>
+    );
+  }
+
+  // Check if business context is valid for other modules
   const storedBusinessId = getSelectedBusinessId();
   if (!storedBusinessId || !currentBusiness) {
     console.log('⚠️ [ProtectedERPRoute] Missing business context, redirecting to business selection');
