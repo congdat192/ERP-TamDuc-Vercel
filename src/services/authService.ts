@@ -1,4 +1,7 @@
+
 // Authentication service for API calls
+import { User } from '@/types/auth';
+
 export interface LoginRequest {
   email: string;
   password: string;
