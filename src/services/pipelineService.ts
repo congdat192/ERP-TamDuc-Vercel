@@ -50,24 +50,45 @@ export interface TestConnectionResponse {
   data?: any;
 }
 
-// Test KiotViet connection
+// Test KiotViet connection by creating inactive pipeline
 export const testKiotVietConnection = async (config: PipelineConfig): Promise<TestConnectionResponse> => {
   console.log('🔄 [pipelineService] Testing KiotViet connection for retailer:', config.retailer);
   
   try {
-    const response = await api.post<TestConnectionResponse>('/pipelines/test-connection', {
+    // Create a test pipeline with INACTIVE status to validate connection
+    const testPipeline = await api.post<Pipeline>('/pipelines', {
       type: 'KIOT_VIET',
-      config
+      status: 'INACTIVE',
+      config,
+      access_token: {
+        token: '',
+        refresh_token: ''
+      }
     }, {
       requiresBusinessId: true,
     });
     
-    console.log('✅ [pipelineService] Connection test result:', response.success);
-    return response;
+    console.log('✅ [pipelineService] Connection test successful, pipeline created:', testPipeline.id);
+    
+    // Clean up test pipeline immediately
+    try {
+      await api.delete(`/pipelines/${testPipeline.id}`, {
+        requiresBusinessId: true,
+      });
+      console.log('🧹 [pipelineService] Test pipeline cleaned up');
+    } catch (cleanupError) {
+      console.warn('⚠️ [pipelineService] Failed to cleanup test pipeline:', cleanupError);
+    }
+    
+    return {
+      success: true,
+      message: 'Kết nối KiotViet thành công!'
+    };
+    
   } catch (error: any) {
     console.error('❌ [pipelineService] Connection test failed:', error);
     
-    // Handle different error scenarios
+    // Handle different error scenarios based on actual API responses
     if (error.response?.status === 401) {
       return {
         success: false,
@@ -86,12 +107,12 @@ export const testKiotVietConnection = async (config: PipelineConfig): Promise<Te
     } else if (error.response?.status >= 500) {
       return {
         success: false,
-        message: 'Lỗi máy chủ KiotViet, vui lòng thử lại sau'
+        message: 'Lỗi máy chủ, vui lòng thử lại sau'
       };
     } else {
       return {
         success: false,
-        message: 'Không thể kết nối đến KiotViet. Vui lòng kiểm tra lại thông tin.'
+        message: error.response?.data?.message || 'Không thể kết nối đến KiotViet. Vui lòng kiểm tra lại thông tin.'
       };
     }
   }
