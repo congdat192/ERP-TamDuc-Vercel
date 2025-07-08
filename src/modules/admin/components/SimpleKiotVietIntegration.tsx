@@ -21,8 +21,8 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
   const { toast } = useToast();
   
   const [formData, setFormData] = useState({
-    retailer: integration?.config?.retailer || '',
-    clientId: integration?.config?.client_id || '',
+    retailer: (integration?.config && 'retailer' in integration.config) ? integration.config.retailer : '',
+    clientId: (integration?.config && 'client_id' in integration.config) ? integration.config.client_id : '',
     clientSecret: ''
   });
   
@@ -192,14 +192,16 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
               <Building2 className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold theme-text">KiotViet - {integration.config.retailer}</h3>
+              <h3 className="text-lg font-semibold theme-text">
+                KiotViet - {(integration.config && 'retailer' in integration.config) ? integration.config.retailer : 'Unknown'}
+              </h3>
               <div className="flex items-center space-x-2 mt-1">
                 <Badge variant="success" className="flex items-center gap-1">
                   <CheckCircle2 className="w-3 h-3" />
                   Đã kết nối
                 </Badge>
                 <span className="text-sm theme-text-muted">
-                  Client ID: {integration.config.client_id}
+                  Client ID: {(integration.config && 'client_id' in integration.config) ? integration.config.client_id : 'Unknown'}
                 </span>
               </div>
             </div>

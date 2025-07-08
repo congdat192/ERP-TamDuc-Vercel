@@ -22,7 +22,6 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { SimpleKiotVietIntegration } from '../../components/SimpleKiotVietIntegration';
 import { VihatIntegration } from '../../components/VihatIntegration';
-import type { VihatIntegration as VihatIntegrationType } from '../../types/settings';
 import type { Pipeline } from '@/types/pipeline';
 
 interface Integration {
@@ -196,7 +195,7 @@ export function IntegrationsSettings() {
   ]);
 
   const [kiotVietConfig, setKiotVietConfig] = useState<Pipeline | null>(null);
-  const [vihatConfig, setVihatConfig] = useState<VihatIntegrationType | null>(null);
+  const [vihatConfig, setVihatConfig] = useState<Pipeline | null>(null);
 
   const handleToggleIntegration = (id: string, enabled: boolean) => {
     setIntegrations(prev => prev.map(integration => 
@@ -281,28 +280,39 @@ export function IntegrationsSettings() {
     });
   };
 
-  const handleVihatSave = (config: Partial<VihatIntegrationType>) => {
+  const handleVihatSave = (config: any) => {
     setIntegrations(prev => prev.map(integration => 
       integration.id === 'vihat' 
         ? { 
             ...integration, 
             status: 'connected', 
             enabled: true,
-            lastSync: config.lastTestDate || new Date().toLocaleString('vi-VN')
+            lastSync: config.lastSync || new Date().toLocaleString('vi-VN')
           } 
         : integration
     ));
 
-    setVihatConfig(prev => ({ ...prev, ...config } as VihatIntegrationType));
+    // Create a mock pipeline object for UI display
+    const mockPipeline: Pipeline = {
+      id: 'vihat-pipeline-1',
+      type: 'VIHAT',
+      status: 'ACTIVE',
+      config: {
+        api_key: config.apiKey || '',
+        secret_key: '***'
+      },
+      access_token: { token: '', refresh_token: '' },
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    setVihatConfig(mockPipeline);
     setDialogOpen(false);
     
     toast({
       title: 'Cấu hình thành công',
       description: 'Đã lưu cấu hình tích hợp Vihat (eSMS.vn).'
     });
-
-    // Save to localStorage for demo
-    localStorage.setItem('vihat_config', JSON.stringify(config));
   };
 
   const handleVihatDisconnect = () => {
@@ -319,8 +329,6 @@ export function IntegrationsSettings() {
       description: 'Đã ngắt kết nối với Vihat (eSMS.vn).'
     });
 
-    // Remove from localStorage
-    localStorage.removeItem('vihat_config');
   };
 
   const getStatusBadge = (status: string) => {

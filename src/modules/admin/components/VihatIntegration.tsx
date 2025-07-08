@@ -15,52 +15,27 @@ import {
   Settings
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import type { VihatIntegration as VihatIntegrationType } from '../types/settings';
+import { testVihatConnection, createVihatPipeline, updateVihatPipeline } from '@/services/vihatService';
+import type { Pipeline } from '@/types/pipeline';
 
 interface VihatIntegrationProps {
-  integration?: VihatIntegrationType;
-  onSave: (config: Partial<VihatIntegrationType>) => void;
+  integration?: Pipeline;
+  onSave: (config: any) => void;
   onDisconnect: () => void;
 }
-
-// Mock function để test connection
-const mockTestConnection = async (apiKey: string, secretKey: string, endpoint: string): Promise<{ success: boolean; errorMessage?: string }> => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  
-  // Mock validation logic
-  if (!apiKey || !secretKey) {
-    return { success: false, errorMessage: 'API Key và Secret Key không được để trống' };
-  }
-  
-  if (apiKey.length < 10) {
-    return { success: false, errorMessage: 'API Key không hợp lệ (quá ngắn)' };
-  }
-  
-  if (secretKey.length < 10) {
-    return { success: false, errorMessage: 'Secret Key không hợp lệ (quá ngắn)' };
-  }
-  
-  // Mock success/failure based on API key pattern
-  if (apiKey.toLowerCase().includes('test') || apiKey.toLowerCase().includes('demo')) {
-    return { success: true };
-  }
-  
-  return { success: false, errorMessage: 'Không thể kết nối đến eSMS.vn. Vui lòng kiểm tra lại thông tin.' };
-};
 
 export function VihatIntegration({ integration, onSave, onDisconnect }: VihatIntegrationProps) {
   const { toast } = useToast();
   
   const [config, setConfig] = useState({
-    apiEndpoint: integration?.apiEndpoint || 'https://api.esms.vn/MainService.svc/json/',
-    apiKey: integration?.apiKey || '',
-    secretKey: integration?.secretKey || ''
+    apiKey: (integration?.config && 'api_key' in integration.config) ? integration.config.api_key : '',
+    secretKey: (integration?.config && 'secret_key' in integration.config) ? integration.config.secret_key : ''
   });
   
   const [isTestingConnection, setIsTestingConnection] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
-  const [canSave, setCanSave] = useState(integration?.isConnected || false);
+  const [canSave, setCanSave] = useState(integration?.status === 'ACTIVE' || false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleTestConnection = async () => {
     if (!config.apiKey || !config.secretKey) {
@@ -76,22 +51,25 @@ export function VihatIntegration({ integration, onSave, onDisconnect }: VihatInt
     setTestResult(null);
     
     try {
-      const result = await mockTestConnection(config.apiKey, config.secretKey, config.apiEndpoint);
+      const result = await testVihatConnection({
+        api_key: config.apiKey,
+        secret_key: config.secretKey
+      });
       
       if (result.success) {
-        setTestResult({ success: true, message: 'Kết nối thành công! API credentials hợp lệ.' });
+        setTestResult({ success: true, message: result.message });
         setCanSave(true);
         toast({
           title: 'Kết nối thành công',
-          description: 'Đã xác thực thành công với eSMS.vn.',
+          description: result.message,
           variant: 'default'
         });
       } else {
-        setTestResult({ success: false, message: result.errorMessage || 'Kết nối thất bại' });
+        setTestResult({ success: false, message: result.message });
         setCanSave(false);
         toast({
           title: 'Kết nối thất bại',
-          description: result.errorMessage,
+          description: result.message,
           variant: 'destructive'
         });
       }
@@ -108,7 +86,7 @@ export function VihatIntegration({ integration, onSave, onDisconnect }: VihatInt
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!canSave) {
       toast({
         title: 'Không thể lưu',
@@ -118,19 +96,74 @@ export function VihatIntegration({ integration, onSave, onDisconnect }: VihatInt
       return;
     }
 
-    const savedConfig: Partial<VihatIntegrationType> = {
-      ...config,
-      isConnected: true,
-      connectionStatus: 'connected',
-      lastTestDate: new Date().toLocaleString('vi-VN')
-    };
+    setIsSaving(true);
+    
+    try {
+      const vihatConfig = {
+        api_key: config.apiKey,
+        secret_key: config.secretKey
+      };
 
-    onSave(savedConfig);
+      if (integration) {
+        // Update existing pipeline
+        await updateVihatPipeline(integration.id, {
+          status: 'ACTIVE',
+          config: vihatConfig
+        });
+      } else {
+        // Create new pipeline
+        await createVihatPipeline({
+          type: 'VIHAT',
+          status: 'ACTIVE',
+          config: vihatConfig,
+          access_token: {
+            token: '',
+            refresh_token: ''
+          }
+        });
+      }
+
+      onSave({
+        apiKey: config.apiKey,
+        lastSync: new Date().toLocaleString('vi-VN'),
+        status: 'connected'
+      });
+      
+      toast({
+        title: 'Lưu thành công',
+        description: 'Đã cấu hình tích hợp eSMS.vn thành công.',
+      });
+      
+    } catch (error) {
+      console.error('Failed to save ViHat configuration:', error);
+      toast({
+        title: 'Lỗi',
+        description: 'Không thể lưu cấu hình. Vui lòng thử lại.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleDisconnect = () => {
+  const handleDisconnect = async () => {
+    if (integration) {
+      try {
+        await updateVihatPipeline(integration.id, {
+          status: 'INACTIVE'
+        });
+      } catch (error) {
+        console.error('Failed to disconnect:', error);
+        toast({
+          title: 'Lỗi',
+          description: 'Không thể ngắt kết nối. Vui lòng thử lại.',
+          variant: 'destructive'
+        });
+        return;
+      }
+    }
+    
     setConfig({
-      apiEndpoint: 'https://api.esms.vn/MainService.svc/json/',
       apiKey: '',
       secretKey: ''
     });
@@ -150,7 +183,7 @@ export function VihatIntegration({ integration, onSave, onDisconnect }: VihatInt
           <h3 className="text-lg font-semibold">Vihat (eSMS.vn)</h3>
           <p className="text-sm text-gray-600">Nền tảng gửi SMS và ZNS chuyên nghiệp</p>
         </div>
-        {integration?.isConnected && (
+        {integration?.status === 'ACTIVE' && (
           <Badge variant="default" className="ml-auto">
             <CheckCircle className="w-3 h-3 mr-1" />
             Đã kết nối
@@ -167,34 +200,27 @@ export function VihatIntegration({ integration, onSave, onDisconnect }: VihatInt
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="api-endpoint">API Endpoint</Label>
-            <Input
-              id="api-endpoint"
-              value={config.apiEndpoint}
-              onChange={(e) => setConfig(prev => ({ ...prev, apiEndpoint: e.target.value }))}
-              placeholder="https://api.esms.vn/MainService.svc/json/"
-            />
-            <p className="text-xs text-gray-500">URL endpoint của eSMS.vn API</p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="api-key">API Key</Label>
+            <Label htmlFor="api-key">API Key <span className="text-red-500">*</span></Label>
             <Input
               id="api-key"
               value={config.apiKey}
               onChange={(e) => setConfig(prev => ({ ...prev, apiKey: e.target.value }))}
               placeholder="Nhập API Key từ eSMS.vn"
+              disabled={isTestingConnection || isSaving}
+              className="voucher-input"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="secret-key">Secret Key</Label>
+            <Label htmlFor="secret-key">Secret Key <span className="text-red-500">*</span></Label>
             <Input
               id="secret-key"
               type="password"
               value={config.secretKey}
               onChange={(e) => setConfig(prev => ({ ...prev, secretKey: e.target.value }))}
               placeholder="Nhập Secret Key từ eSMS.vn"
+              disabled={isTestingConnection || isSaving}
+              className="voucher-input"
             />
           </div>
 
@@ -223,7 +249,7 @@ export function VihatIntegration({ integration, onSave, onDisconnect }: VihatInt
           <div className="flex space-x-3 pt-4">
             <Button
               onClick={handleTestConnection}
-              disabled={isTestingConnection || !config.apiKey || !config.secretKey}
+              disabled={isTestingConnection || isSaving || !config.apiKey || !config.secretKey}
               variant="outline"
               className="flex-1"
             >
@@ -242,27 +268,33 @@ export function VihatIntegration({ integration, onSave, onDisconnect }: VihatInt
 
             <Button
               onClick={handleSave}
-              disabled={!canSave}
-              className="flex-1"
+              disabled={!canSave || isTestingConnection || isSaving}
+              className="flex-1 voucher-button-primary"
             >
-              Lưu cấu hình
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Đang lưu...
+                </>
+              ) : (
+                'Lưu cấu hình'
+              )}
             </Button>
           </div>
 
-          {integration?.isConnected && (
+          {integration?.status === 'ACTIVE' && (
             <div className="pt-4 border-t">
               <Button
                 onClick={handleDisconnect}
                 variant="destructive"
                 size="sm"
+                disabled={isSaving}
               >
                 Ngắt kết nối
               </Button>
-              {integration.lastTestDate && (
-                <p className="text-xs text-gray-500 mt-2">
-                  Kiểm tra lần cuối: {integration.lastTestDate}
-                </p>
-              )}
+              <p className="text-xs text-gray-500 mt-2">
+                Cập nhật lần cuối: {integration.updated_at ? new Date(integration.updated_at).toLocaleString('vi-VN') : 'Không rõ'}
+              </p>
             </div>
           )}
         </CardContent>
@@ -280,9 +312,9 @@ export function VihatIntegration({ integration, onSave, onDisconnect }: VihatInt
             <p>3. Nhập thông tin và kiểm tra kết nối</p>
             <p>4. Lưu cấu hình để sử dụng trong module Marketing</p>
           </div>
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-            <p className="text-xs text-yellow-800">
-              <strong>Lưu ý:</strong> Để test trong môi trường demo, hãy sử dụng API Key có chứa từ "test" hoặc "demo"
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p className="text-xs text-blue-800">
+              <strong>Lưu ý:</strong> API Key và Secret Key có thể lấy từ trang quản lý tài khoản eSMS.vn của bạn.
             </p>
           </div>
         </CardContent>
