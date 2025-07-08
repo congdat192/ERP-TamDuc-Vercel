@@ -44,16 +44,12 @@ export const testVihatConnection = async (config: VihatConfig): Promise<TestViha
   console.log('🔄 [vihatService] Testing ViHat connection with API key:', config.api_key.substring(0, 8) + '...');
   
   try {
-    // Call eSMS.vn API to validate credentials
-    const vihatResponse = await fetch('https://api.esms.vn/MainService.svc/json/GetBalance/1', {
-      method: 'POST',
+    // Call eSMS.vn API to validate credentials using GetBalance endpoint
+    const vihatResponse = await fetch(`http://rest.esms.vn/MainService.svc/json/GetBalance/${config.api_key}/${config.secret_key}`, {
+      method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        ApiKey: config.api_key,
-        SecretKey: config.secret_key
-      })
+        'Accept': 'application/json',
+      }
     });
 
     if (!vihatResponse.ok) {
@@ -81,17 +77,27 @@ export const testVihatConnection = async (config: VihatConfig): Promise<TestViha
     const responseData = await vihatResponse.json();
     console.log('✅ [vihatService] ViHat connection test successful');
     
-    // Check if response indicates success
-    if (responseData.CodeResult === '100') {
+    // Check if response indicates success (theo tài liệu eSMS.vn)
+    if (responseData.CodeResponse === '100') {
       return {
         success: true,
-        message: 'Kết nối eSMS.vn thành công! Thông tin xác thực hợp lệ.',
+        message: `Kết nối eSMS.vn thành công! Số dư tài khoản: ${responseData.Balance?.toLocaleString('vi-VN')} VND`,
         data: responseData
+      };
+    } else if (responseData.CodeResponse === '101') {
+      return {
+        success: false,
+        message: 'API Key hoặc Secret Key không đúng'
+      };
+    } else if (responseData.CodeResponse === '102') {
+      return {
+        success: false,
+        message: 'Tài khoản đã bị khóa'
       };
     } else {
       return {
         success: false,
-        message: responseData.ErrorMessage || 'Thông tin xác thực không hợp lệ'
+        message: `Lỗi kết nối (Code: ${responseData.CodeResponse}). Vui lòng kiểm tra lại thông tin.`
       };
     }
     
