@@ -50,39 +50,53 @@ export interface TestConnectionResponse {
   data?: any;
 }
 
-// Test KiotViet connection by creating inactive pipeline
+// Test KiotViet connection by calling KiotViet API directly
 export const testKiotVietConnection = async (config: PipelineConfig): Promise<TestConnectionResponse> => {
   console.log('🔄 [pipelineService] Testing KiotViet connection for retailer:', config.retailer);
   
   try {
-    // Create a test pipeline with INACTIVE status to validate connection
-    const testPipeline = await api.post<Pipeline>('/pipelines', {
-      type: 'KIOT_VIET',
-      status: 'INACTIVE',
-      config,
-      access_token: {
-        token: '',
-        refresh_token: ''
-      }
-    }, {
-      requiresBusinessId: true,
+    // Call KiotViet API directly to validate credentials
+    const kiotVietResponse = await fetch('https://public.kiotapi.com/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        retailer: config.retailer,
+        clientId: config.client_id,
+        clientSecret: config.client_secret
+      })
     });
-    
-    console.log('✅ [pipelineService] Connection test successful, pipeline created:', testPipeline.id);
-    
-    // Clean up test pipeline immediately
-    try {
-      await api.delete(`/pipelines/${testPipeline.id}`, {
-        requiresBusinessId: true,
-      });
-      console.log('🧹 [pipelineService] Test pipeline cleaned up');
-    } catch (cleanupError) {
-      console.warn('⚠️ [pipelineService] Failed to cleanup test pipeline:', cleanupError);
+
+    if (!kiotVietResponse.ok) {
+      const errorData = await kiotVietResponse.json().catch(() => ({}));
+      console.error('❌ [pipelineService] KiotViet API error:', kiotVietResponse.status, errorData);
+      
+      if (kiotVietResponse.status === 401) {
+        return {
+          success: false,
+          message: 'Client ID hoặc Client Secret không hợp lệ'
+        };
+      } else if (kiotVietResponse.status === 404) {
+        return {
+          success: false,
+          message: 'Không tìm thấy cửa hàng với tên này'
+        };
+      } else {
+        return {
+          success: false,
+          message: errorData.message || 'Thông tin kết nối không chính xác'
+        };
+      }
     }
+
+    const responseData = await kiotVietResponse.json();
+    console.log('✅ [pipelineService] KiotViet connection test successful');
     
     return {
       success: true,
-      message: 'Kết nối KiotViet thành công!'
+      message: 'Kết nối KiotViet thành công! Thông tin xác thực hợp lệ.',
+      data: responseData
     };
     
   } catch (error: any) {
