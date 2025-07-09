@@ -51,6 +51,17 @@ export interface ResendVerificationResponse {
   message: string;
 }
 
+export interface ResetPasswordRequest {
+  email: string;
+  password: string;
+  password_confirmation: string;
+  token: string;
+}
+
+export interface ResetPasswordResponse {
+  message: string;
+}
+
 export interface ApiError {
   message: string;
   errors?: Record<string, string[]>;
@@ -631,6 +642,53 @@ export const isAuthenticated = (): boolean => {
   const hasToken = !!getStoredToken();
   console.log('🔐 [authService] Authentication check:', hasToken ? 'Authenticated' : 'Not authenticated');
   return hasToken;
+};
+
+// Reset Password API
+export const resetPassword = async (
+  email: string, 
+  password: string, 
+  password_confirmation: string, 
+  token: string
+): Promise<ResetPasswordResponse> => {
+  console.log('🔒 [authService] Resetting password for:', email);
+  
+  const response = await fetch(`${API_BASE_URL}/password/reset`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: JSON.stringify({
+      email,
+      password,
+      password_confirmation,
+      token,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    console.error('❌ [authService] Reset password failed:', errorData);
+    
+    // Handle specific error cases
+    if (response.status === 422 && errorData.errors) {
+      if (errorData.errors.token) {
+        throw new Error('Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn');
+      }
+      if (errorData.errors.email) {
+        throw new Error('Email không hợp lệ');
+      }
+      if (errorData.errors.password) {
+        throw new Error(errorData.errors.password[0] || 'Mật khẩu không hợp lệ');
+      }
+    }
+    
+    throw new Error(errorData.message || 'Không thể đặt lại mật khẩu');
+  }
+
+  console.log('✅ [authService] Password reset successfully');
+  return response.json();
 };
 
 // Get token for other API calls
