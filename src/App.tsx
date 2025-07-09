@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -31,6 +32,7 @@ import { InvoiceDetailPage } from "./pages/InvoiceDetailPage";
 import { UserProfilePage } from "./pages/UserProfilePage";
 import { PlatformAdmin } from "./modules/platform-admin";
 import { Settings } from "./modules/admin/pages/Settings";
+import { UserManagementModule } from "./modules/user-management";
 import { ERPLayout } from "@/components/layout/ERPLayout";
 import { useAuth } from "@/components/auth/AuthContext";
 import { useBusiness } from "@/contexts/BusinessContext";
@@ -77,6 +79,9 @@ const ProtectedERPRoute = ({ children, module }: { children: React.ReactNode; mo
         break;
       case 'marketing':
         navigate('/ERP/Marketing');
+        break;
+      case 'user-management':
+        navigate('/ERP/UserManagement');
         break;
       case 'system-settings':
         navigate('/ERP/Setting');
@@ -221,6 +226,14 @@ const App = () => (
                     element={
                       <ProtectedERPRoute module="marketing">
                         <MarketingPage />
+                      </ProtectedERPRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/ERP/UserManagement" 
+                    element={
+                      <ProtectedERPRoute module="user-management">
+                        <UserManagementModule />
                       </ProtectedERPRoute>
                     } 
                   />
