@@ -3,14 +3,15 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, User, Lock, Shield, Bell, Activity } from 'lucide-react';
+import { ArrowLeft, User, Lock, Shield, Bell, Activity, Key, History } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/components/auth/AuthContext';
 import { UserProfileForm } from '@/components/profile/UserProfileForm';
 import { ChangePasswordForm } from '@/components/profile/ChangePasswordForm';
 import { SecuritySettings } from '@/components/profile/SecuritySettings';
 import { NotificationSettings } from '@/components/profile/NotificationSettings';
-import { ActivityHistory } from '@/components/profile/ActivityHistory';
+import { AccountPermissionsTab } from '@/components/profile/AccountPermissionsTab';
+import { AuditTrailTab } from '@/components/profile/AuditTrailTab';
 
 export function UserProfilePage() {
   const navigate = useNavigate();
@@ -69,10 +70,14 @@ export function UserProfilePage() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="personal" className="flex items-center space-x-2">
               <User className="w-4 h-4" />
               <span className="hidden sm:inline">Thông Tin</span>
+            </TabsTrigger>
+            <TabsTrigger value="account-permissions" className="flex items-center space-x-2">
+              <Key className="w-4 h-4" />
+              <span className="hidden sm:inline">Phân Quyền</span>
             </TabsTrigger>
             <TabsTrigger value="password" className="flex items-center space-x-2">
               <Lock className="w-4 h-4" />
@@ -86,14 +91,18 @@ export function UserProfilePage() {
               <Bell className="w-4 h-4" />
               <span className="hidden sm:inline">Thông Báo</span>
             </TabsTrigger>
-            <TabsTrigger value="activity" className="flex items-center space-x-2">
-              <Activity className="w-4 h-4" />
-              <span className="hidden sm:inline">Hoạt Động</span>
+            <TabsTrigger value="audit-trail" className="flex items-center space-x-2">
+              <History className="w-4 h-4" />
+              <span className="hidden sm:inline">Lịch Sử</span>
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="personal">
             <UserProfileForm user={currentUser} />
+          </TabsContent>
+
+          <TabsContent value="account-permissions">
+            <AccountPermissionsTab user={currentUser} isOwnProfile={true} />
           </TabsContent>
 
           <TabsContent value="password">
@@ -108,8 +117,8 @@ export function UserProfilePage() {
             <NotificationSettings user={currentUser} />
           </TabsContent>
 
-          <TabsContent value="activity">
-            <ActivityHistory user={currentUser} />
+          <TabsContent value="audit-trail">
+            <AuditTrailTab user={currentUser} />
           </TabsContent>
         </Tabs>
       </div>
