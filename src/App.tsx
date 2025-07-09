@@ -16,6 +16,8 @@ import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { EmailVerificationPage } from "./pages/EmailVerificationPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
+import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
+import { ChangePasswordPage } from "./pages/ChangePasswordPage";
 import { BusinessSelectionPage } from "./pages/BusinessSelectionPage";
 import { CreateBusinessPage } from "./pages/CreateBusinessPage";
 import { ERPHome } from "./pages/ERPHome";
@@ -150,8 +152,9 @@ const App = () => (
                   <Route path="/register" element={<RegisterPage />} />
                   <Route path="/email/verify/:id/:hash" element={<EmailVerificationPage />} />
                   <Route path="/xac-nhan-tai-khoan/:email/:hash" element={<EmailVerificationPage />} />
-                  <Route path="/doi-mat-khau" element={<ResetPasswordPage />} />
+                  <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                   <Route path="/reset-password" element={<ResetPasswordPage />} />
+                  <Route path="/change-password" element={<ChangePasswordPage />} />
                   <Route path="/business-selection" element={<BusinessSelectionPage />} />
                   <Route path="/create-business" element={<CreateBusinessPage />} />
                   

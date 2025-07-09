@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { forgotPassword, resendVerificationEmail } from '@/services/authService';
+import { resendVerificationEmail } from '@/services/authService';
 
 interface LoginPageProps {
   onLogin: (email: string, password: string, rememberMe?: boolean) => void;
@@ -27,9 +27,6 @@ export function LoginPage({ onLogin, loginAttempts = 0 }: LoginPageProps) {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
-  const [isLoadingForgotPassword, setIsLoadingForgotPassword] = useState(false);
   const [showResendVerification, setShowResendVerification] = useState(false);
   const [resendEmail, setResendEmail] = useState('');
   const [isLoadingResend, setIsLoadingResend] = useState(false);
@@ -54,35 +51,6 @@ export function LoginPage({ onLogin, loginAttempts = 0 }: LoginPageProps) {
     }
   };
 
-  const handleForgotPassword = async () => {
-    if (!forgotPasswordEmail) {
-      toast({
-        title: "Lỗi",
-        description: "Vui lòng nhập địa chỉ email của bạn.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoadingForgotPassword(true);
-    try {
-      await forgotPassword(forgotPasswordEmail);
-      toast({
-        title: "Email đã được gửi",
-        description: `Hướng dẫn đặt lại mật khẩu đã được gửi đến ${forgotPasswordEmail}`,
-      });
-      setShowForgotPassword(false);
-      setForgotPasswordEmail('');
-    } catch (error) {
-      toast({
-        title: "Lỗi",
-        description: error instanceof Error ? error.message : "Không thể gửi email đặt lại mật khẩu",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoadingForgotPassword(false);
-    }
-  };
 
   const handleResendVerification = async () => {
     if (!resendEmail) {
@@ -259,13 +227,12 @@ export function LoginPage({ onLogin, loginAttempts = 0 }: LoginPageProps) {
               {/* Action Links */}
               <div className="text-center space-y-2">
                 <div className="flex justify-center space-x-4">
-                  <Button 
-                    variant="link" 
-                    className="text-sm text-blue-600 hover:text-blue-800"
-                    onClick={() => setShowForgotPassword(true)}
+                  <Link 
+                    to="/forgot-password"
+                    className="text-sm text-blue-600 hover:text-blue-800 underline-offset-4 hover:underline"
                   >
                     Quên mật khẩu?
-                  </Button>
+                  </Link>
                   
                   <Button 
                     variant="link" 
@@ -302,49 +269,6 @@ export function LoginPage({ onLogin, loginAttempts = 0 }: LoginPageProps) {
         </div>
       </div>
 
-      {/* Forgot Password Dialog */}
-      <Dialog open={showForgotPassword} onOpenChange={setShowForgotPassword}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center space-x-2">
-              <Lock className="w-5 h-5" />
-              <span>Quên Mật Khẩu</span>
-            </DialogTitle>
-            <DialogDescription>
-              Nhập địa chỉ email của bạn để nhận hướng dẫn đặt lại mật khẩu.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="forgot-email">Địa chỉ Email</Label>
-              <Input
-                id="forgot-email"
-                type="email"
-                placeholder="example@company.com"
-                value={forgotPasswordEmail}
-                onChange={(e) => setForgotPasswordEmail(e.target.value)}
-              />
-            </div>
-            <div className="flex space-x-2">
-              <Button 
-                variant="outline" 
-                className="flex-1"
-                onClick={() => setShowForgotPassword(false)}
-                disabled={isLoadingForgotPassword}
-              >
-                Hủy
-              </Button>
-              <Button 
-                className="flex-1"
-                onClick={handleForgotPassword}
-                disabled={isLoadingForgotPassword}
-              >
-                {isLoadingForgotPassword ? 'Đang gửi...' : 'Gửi Email'}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Resend Verification Dialog */}
       <Dialog open={showResendVerification} onOpenChange={setShowResendVerification}>
