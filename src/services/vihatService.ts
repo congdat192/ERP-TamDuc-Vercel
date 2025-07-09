@@ -45,7 +45,7 @@ export const testVihatConnection = async (config: VihatConfig): Promise<TestViha
   
   try {
     // Call eSMS.vn API to validate credentials using GetBalance endpoint
-    const vihatResponse = await fetch(`http://rest.esms.vn/MainService.svc/json/GetBalance/${config.api_key}/${config.secret_key}`, {
+    const vihatResponse = await fetch(`https://rest.esms.vn/MainService.svc/json/GetBalance/${config.api_key}/${config.secret_key}`, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
