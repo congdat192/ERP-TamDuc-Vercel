@@ -152,9 +152,10 @@ const App = () => (
                   <Route path="/register" element={<RegisterPage />} />
                   <Route path="/email/verify/:id/:hash" element={<EmailVerificationPage />} />
                   <Route path="/xac-nhan-tai-khoan/:email/:hash" element={<EmailVerificationPage />} />
-                  <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                  <Route path="/reset-password" element={<ResetPasswordPage />} />
-                  <Route path="/change-password" element={<ChangePasswordPage />} />
+                   <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                   <Route path="/reset-password" element={<ResetPasswordPage />} />
+                   <Route path="/doi-mat-khau/" element={<ResetPasswordPage />} />
+                   <Route path="/change-password" element={<ChangePasswordPage />} />
                   <Route path="/business-selection" element={<BusinessSelectionPage />} />
                   <Route path="/create-business" element={<CreateBusinessPage />} />
                   
