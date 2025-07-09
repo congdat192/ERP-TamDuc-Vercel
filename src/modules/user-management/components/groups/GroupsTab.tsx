@@ -12,7 +12,7 @@ export function GroupsTab() {
       </CardHeader>
       <CardContent>
         <EmptyState 
-          icon={UserCog}
+          icon={<UserCog className="w-8 h-8 text-gray-400" />}
           title="Chức năng đang phát triển"
           description="Tab Nhóm Người Dùng sẽ được triển khai trong giai đoạn tiếp theo"
         />

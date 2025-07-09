@@ -12,7 +12,7 @@ export function DepartmentsTab() {
       </CardHeader>
       <CardContent>
         <EmptyState 
-          icon={Building2}
+          icon={<Building2 className="w-8 h-8 text-gray-400" />}
           title="Chức năng đang phát triển"
           description="Tab Phòng Ban sẽ được triển khai trong giai đoạn tiếp theo"
         />

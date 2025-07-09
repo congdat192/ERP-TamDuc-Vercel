@@ -12,7 +12,7 @@ export function RolesTab() {
       </CardHeader>
       <CardContent>
         <EmptyState 
-          icon={Shield}
+          icon={<Shield className="w-8 h-8 text-gray-400" />}
           title="Chức năng đang phát triển"
           description="Tab Vai Trò sẽ được triển khai trong giai đoạn tiếp theo"
         />

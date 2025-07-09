@@ -69,7 +69,6 @@ export function MembersTable({
     return (
       <EmptyTableState 
         entityName="thành viên"
-        description="Chưa có thành viên nào trong hệ thống"
       />
     );
   }
