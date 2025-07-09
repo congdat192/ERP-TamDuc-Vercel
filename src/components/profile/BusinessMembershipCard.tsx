@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -63,7 +64,7 @@ export function BusinessMembershipCard({
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-blue-600 font-medium">Tham gia từ:</span>
-                  <p className="text-blue-800">{new Date(currentBusiness.createdAt).toLocaleDateString('vi-VN')}</p>
+                  <p className="text-blue-800">{new Date(currentBusiness.created_at).toLocaleDateString('vi-VN')}</p>
                 </div>
                 <div>
                   <span className="text-blue-600 font-medium">Vai trò:</span>
@@ -99,7 +100,7 @@ export function BusinessMembershipCard({
                     <div>
                       <h5 className="font-medium">{business.name}</h5>
                       <p className="text-sm text-gray-500">
-                        Tham gia: {new Date(business.createdAt).toLocaleDateString('vi-VN')}
+                        Tham gia: {new Date(business.created_at).toLocaleDateString('vi-VN')}
                       </p>
                     </div>
                   </div>
@@ -109,7 +110,7 @@ export function BusinessMembershipCard({
                       <Button 
                         variant="ghost" 
                         size="sm"
-                        onClick={() => onLeaveBusiness?.(business.id)}
+                        onClick={() => onLeaveBusiness?.(business.id.toString())}
                       >
                         <UserMinus className="w-4 h-4" />
                       </Button>

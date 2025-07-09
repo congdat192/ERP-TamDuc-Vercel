@@ -104,7 +104,7 @@ export function AccountPermissionsTab({ user, isOwnProfile = true }: AccountPerm
                   <div>
                     <h4 className="font-medium">{currentBusiness.name}</h4>
                     <p className="text-sm text-gray-500">
-                      Tham gia từ: {new Date(currentBusiness.createdAt).toLocaleDateString('vi-VN')}
+                      Tham gia từ: {new Date(currentBusiness.created_at).toLocaleDateString('vi-VN')}
                     </p>
                   </div>
                 </div>
