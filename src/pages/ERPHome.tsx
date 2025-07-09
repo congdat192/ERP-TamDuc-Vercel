@@ -48,6 +48,9 @@ export function ERPHome({ currentUser: propCurrentUser, onModuleChange: propOnMo
         case 'inventory':
           navigate('/ERP/Products');
           break;
+        case 'user-management':
+          navigate('/ERP/UserManagement');
+          break;
         case 'system-settings':
           navigate('/ERP/Setting');
           break;
@@ -64,7 +67,7 @@ export function ERPHome({ currentUser: propCurrentUser, onModuleChange: propOnMo
       title: 'Phát Hành Voucher',
       description: 'Tạo voucher mới cho khách hàng',
       icon: Ticket,
-      color: 'bg-orange-100 text-orange-600',
+      color: 'berry-warning-light',
       action: () => handleModuleChange('voucher'),
       available: currentUser.permissions.modules.includes('voucher')
     },
@@ -72,7 +75,7 @@ export function ERPHome({ currentUser: propCurrentUser, onModuleChange: propOnMo
       title: 'Quản Lý Khách Hàng',
       description: 'Xem và quản lý thông tin khách hàng',
       icon: Users,
-      color: 'bg-blue-100 text-blue-600',
+      color: 'berry-primary-light',
       action: () => handleModuleChange('customers'),
       available: currentUser.permissions.modules.includes('customers')
     },
@@ -80,7 +83,7 @@ export function ERPHome({ currentUser: propCurrentUser, onModuleChange: propOnMo
       title: 'Báo Cáo Bán Hàng',
       description: 'Xem báo cáo và thống kê bán hàng',
       icon: TrendingUp,
-      color: 'bg-green-100 text-green-600',
+      color: 'berry-success-light',
       action: () => handleModuleChange('sales'),
       available: currentUser.permissions.modules.includes('sales')
     },
@@ -88,7 +91,7 @@ export function ERPHome({ currentUser: propCurrentUser, onModuleChange: propOnMo
       title: 'Quản Lý Kho',
       description: 'Theo dõi và quản lý hàng tồn kho',
       icon: Package,
-      color: 'bg-purple-100 text-purple-600',
+      color: 'berry-secondary-light',
       action: () => handleModuleChange('inventory'),
       available: currentUser.permissions.modules.includes('inventory')
     }
@@ -98,22 +101,22 @@ export function ERPHome({ currentUser: propCurrentUser, onModuleChange: propOnMo
 
   return (
     <div className="space-y-6">
-      {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 text-white">
+      {/* Welcome Header - Updated to use theme gradient */}
+      <div className="theme-gradient rounded-lg p-6 text-white">
         <div className="flex items-center space-x-4">
           <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
             <Building2 className="w-8 h-8 text-white" />
           </div>
           <div>
             <h1 className="text-2xl font-bold">Chào mừng, {currentUser.fullName}!</h1>
-            <p className="text-blue-100">
+            <p className="text-white/90">
               Hệ thống ERP - Quản lý toàn diện doanh nghiệp
             </p>
           </div>
         </div>
       </div>
 
-      {/* Quick Actions */}
+      {/* Quick Actions - Updated to use theme colors */}
       <div>
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Thao Tác Nhanh</h2>
         {availableActions.length > 0 ? (
@@ -150,7 +153,7 @@ export function ERPHome({ currentUser: propCurrentUser, onModuleChange: propOnMo
         )}
       </div>
 
-      {/* System Status */}
+      {/* System Status - Updated card colors */}
       <div>
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Trạng Thái Hệ Thống</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -159,7 +162,7 @@ export function ERPHome({ currentUser: propCurrentUser, onModuleChange: propOnMo
               <CardTitle className="text-sm font-medium text-gray-600">Trạng Thái Module</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-2xl font-bold theme-text-success">
                 {currentUser.permissions.modules.length}
               </div>
               <p className="text-sm text-gray-600">Module được phép truy cập</p>
@@ -171,7 +174,7 @@ export function ERPHome({ currentUser: propCurrentUser, onModuleChange: propOnMo
               <CardTitle className="text-sm font-medium text-gray-600">Vai Trò</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-2xl font-bold theme-text-primary">
                 {currentUser.role === 'erp-admin' ? 'Admin' : 
                  currentUser.role === 'voucher-admin' ? 'Quản Lý' : 
                  'Nhân Viên'}
@@ -185,18 +188,18 @@ export function ERPHome({ currentUser: propCurrentUser, onModuleChange: propOnMo
               <CardTitle className="text-sm font-medium text-gray-600">Kết Nối</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">Trực Tuyến</div>
+              <div className="text-2xl font-bold theme-text-success">Trực Tuyến</div>
               <p className="text-sm text-gray-600">Trạng thái kết nối</p>
             </CardContent>
           </Card>
         </div>
       </div>
 
-      {/* Empty State Notice */}
+      {/* Empty State Notice - Updated icon color */}
       <Card>
         <CardContent className="p-6">
           <div className="flex items-start space-x-3">
-            <AlertCircle className="w-5 h-5 text-blue-500 mt-0.5" />
+            <AlertCircle className="w-5 h-5 theme-text-info mt-0.5" />
             <div>
               <h3 className="font-medium text-gray-900">Lưu Ý Về Dữ Liệu</h3>
               <p className="text-sm text-gray-600 mt-1">

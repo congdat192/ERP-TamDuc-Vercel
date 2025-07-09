@@ -13,27 +13,27 @@ export function UserManagementDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg p-6 text-white">
+      {/* Page Header - Updated to use theme gradient */}
+      <div className="theme-gradient rounded-lg p-6 text-white">
         <div className="flex items-center space-x-4">
           <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
             <Users className="w-8 h-8 text-white" />
           </div>
           <div>
             <h1 className="text-2xl font-bold">Quản Lý Người Dùng</h1>
-            <p className="text-blue-100">
+            <p className="text-white/90">
               Quản lý thành viên, phòng ban, vai trò và nhóm người dùng trong hệ thống ERP
             </p>
           </div>
         </div>
       </div>
 
-      {/* Statistics Overview */}
+      {/* Statistics Overview - Updated to use theme colors */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Tổng Thành Viên</CardTitle>
-            <Users className="w-4 h-4 text-muted-foreground" />
+            <Users className="w-4 h-4 theme-text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">-</div>
@@ -44,7 +44,7 @@ export function UserManagementDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Phòng Ban</CardTitle>
-            <Building2 className="w-4 h-4 text-muted-foreground" />
+            <Building2 className="w-4 h-4 theme-text-secondary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">-</div>
@@ -55,7 +55,7 @@ export function UserManagementDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Vai Trò</CardTitle>
-            <Shield className="w-4 h-4 text-muted-foreground" />
+            <Shield className="w-4 h-4 theme-text-success" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">-</div>
@@ -66,7 +66,7 @@ export function UserManagementDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Nhóm Người Dùng</CardTitle>
-            <UserCog className="w-4 h-4 text-muted-foreground" />
+            <UserCog className="w-4 h-4 theme-text-info" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">-</div>
@@ -75,22 +75,22 @@ export function UserManagementDashboard() {
         </Card>
       </div>
 
-      {/* Main Tabs */}
+      {/* Main Tabs - Updated to use theme tab styling */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="members" className="flex items-center space-x-2">
+          <TabsTrigger value="members" className="voucher-tabs-trigger flex items-center space-x-2">
             <Users className="w-4 h-4" />
             <span>Thành Viên</span>
           </TabsTrigger>
-          <TabsTrigger value="departments" className="flex items-center space-x-2">
+          <TabsTrigger value="departments" className="voucher-tabs-trigger flex items-center space-x-2">
             <Building2 className="w-4 h-4" />
             <span>Phòng Ban</span>
           </TabsTrigger>
-          <TabsTrigger value="roles" className="flex items-center space-x-2">
+          <TabsTrigger value="roles" className="voucher-tabs-trigger flex items-center space-x-2">
             <Shield className="w-4 h-4" />
             <span>Vai Trò</span>
           </TabsTrigger>
-          <TabsTrigger value="groups" className="flex items-center space-x-2">
+          <TabsTrigger value="groups" className="voucher-tabs-trigger flex items-center space-x-2">
             <UserCog className="w-4 h-4" />
             <span>Nhóm</span>
           </TabsTrigger>

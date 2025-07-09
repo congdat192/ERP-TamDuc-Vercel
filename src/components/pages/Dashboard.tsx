@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -25,10 +24,10 @@ const dailyData = [
 ];
 
 const statusData = [
-  { name: 'Đang Hoạt Động', value: 1245, color: '#22c55e' },
-  { name: 'Đã Sử Dụng', value: 892, color: '#3b82f6' },
-  { name: 'Hết Hạn', value: 156, color: '#ef4444' },
-  { name: 'Đã Hủy', value: 43, color: '#6b7280' },
+  { name: 'Đang Hoạt Động', value: 1245, color: 'hsl(var(--berry-success-500))' },
+  { name: 'Đã Sử Dụng', value: 892, color: 'hsl(var(--voucher-primary-500))' },
+  { name: 'Hết Hạn', value: 156, color: 'hsl(var(--berry-error-500))' },
+  { name: 'Đã Hủy', value: 43, color: 'hsl(var(--theme-text-muted))' },
 ];
 
 const recentVouchers = [
@@ -41,58 +40,58 @@ const recentVouchers = [
 export function Dashboard() {
   return (
     <div className="space-y-6">
-      {/* Summary Cards */}
+      {/* Summary Cards - Updated to use theme colors */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border-l-4 border-l-blue-500">
+        <Card className="border-l-4 theme-border-primary">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">Voucher Hôm Nay</CardTitle>
-            <Receipt className="h-4 w-4 text-blue-500" />
+            <Receipt className="h-4 w-4 theme-text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">58</div>
-            <div className="flex items-center text-sm text-green-600">
+            <div className="flex items-center text-sm theme-text-success">
               <ArrowUp className="w-4 h-4 mr-1" />
               <span>+12% so với hôm qua</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-green-500">
+        <Card className="border-l-4 theme-border-secondary">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">Voucher Đã Dùng</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-500" />
+            <TrendingUp className="h-4 w-4 theme-text-secondary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">42</div>
-            <div className="flex items-center text-sm text-green-600">
+            <div className="flex items-center text-sm theme-text-success">
               <ArrowUp className="w-4 h-4 mr-1" />
               <span>Tỷ lệ sử dụng 72%</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-purple-500">
+        <Card className="border-l-4 berry-success">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">Khách Hàng Mới</CardTitle>
-            <Users className="h-4 w-4 text-purple-500" />
+            <Users className="h-4 w-4 theme-text-success" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">23</div>
-            <div className="flex items-center text-sm text-purple-600">
+            <div className="flex items-center text-sm theme-text-success">
               <ArrowUp className="w-4 h-4 mr-1" />
               <span>+8% tuần này</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-orange-500">
+        <Card className="border-l-4 berry-warning">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">Sắp Hết Hạn</CardTitle>
-            <Clock className="h-4 w-4 text-orange-500" />
+            <Clock className="h-4 w-4 berry-warning" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900">12</div>
-            <div className="flex items-center text-sm text-orange-600">
+            <div className="flex items-center text-sm berry-warning">
               <AlertTriangle className="w-4 h-4 mr-1" />
               <span>Trong 7 ngày tới</span>
             </div>
@@ -113,8 +112,8 @@ export function Dashboard() {
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="vouchers" fill="#3b82f6" name="Đã Phát" />
-                <Bar dataKey="used" fill="#22c55e" name="Đã Dùng" />
+                <Bar dataKey="vouchers" fill="hsl(var(--voucher-primary-500))" name="Đã Phát" />
+                <Bar dataKey="used" fill="hsl(var(--berry-success-500))" name="Đã Dùng" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -189,27 +188,27 @@ export function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-start space-x-3 p-3 border rounded-lg bg-red-50 border-red-200">
-                <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5" />
+              <div className="flex items-start space-x-3 p-3 border rounded-lg berry-error-light">
+                <AlertTriangle className="w-5 h-5 berry-error mt-0.5" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-red-800">12 voucher sắp hết hạn</p>
-                  <p className="text-xs text-red-600">Cần xử lý trong 7 ngày tới</p>
+                  <p className="text-sm font-medium">12 voucher sắp hết hạn</p>
+                  <p className="text-xs text-gray-600">Cần xử lý trong 7 ngày tới</p>
                 </div>
               </div>
               
-              <div className="flex items-start space-x-3 p-3 border rounded-lg bg-blue-50 border-blue-200">
-                <TrendingUp className="w-5 h-5 text-blue-500 mt-0.5" />
+              <div className="flex items-start space-x-3 p-3 border rounded-lg berry-primary-light">
+                <TrendingUp className="w-5 h-5 theme-text-primary mt-0.5" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-blue-800">Đạt chỉ tiêu hàng ngày</p>
-                  <p className="text-xs text-blue-600">58/50 voucher đã phát hôm nay</p>
+                  <p className="text-sm font-medium">Đạt chỉ tiêu hàng ngày</p>
+                  <p className="text-xs text-gray-600">58/50 voucher đã phát hôm nay</p>
                 </div>
               </div>
               
-              <div className="flex items-start space-x-3 p-3 border rounded-lg bg-green-50 border-green-200">
-                <Users className="w-5 h-5 text-green-500 mt-0.5" />
+              <div className="flex items-start space-x-3 p-3 border rounded-lg berry-success-light">
+                <Users className="w-5 h-5 theme-text-success mt-0.5" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-green-800">Kỷ lục khách hàng mới</p>
-                  <p className="text-xs text-green-600">23 khách hàng mới tuần này</p>
+                  <p className="text-sm font-medium">Kỷ lục khách hàng mới</p>
+                  <p className="text-xs text-gray-600">23 khách hàng mới tuần này</p>
                 </div>
               </div>
             </div>
