@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Building2, CheckCircle2, AlertCircle, Loader2, Wifi, WifiOff } from 'lucide-react';
 import { createPipeline, updatePipeline, testKiotVietConnection } from '@/services/pipelineService';
-import type { Pipeline, KiotVietConfig, isKiotVietConfig } from '@/types/pipeline';
+import type { Pipeline, KiotVietConfig } from '@/types/pipeline';
+import { isKiotVietConfig } from '@/types/pipeline';
 
 interface SimpleKiotVietIntegrationProps {
   integration?: Pipeline;
