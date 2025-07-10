@@ -188,6 +188,7 @@ export function ThirdPartyIntegrations() {
     if (selectedIntegration.id === 'kiotviet') {
       return (
         <KiotVietIntegrationComponent
+          integration={kiotVietConfig || undefined}
           onSave={handleKiotVietSave}
           onDisconnect={handleKiotVietDisconnect}
         />

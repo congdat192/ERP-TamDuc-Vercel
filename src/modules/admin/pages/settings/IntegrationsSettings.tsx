@@ -20,9 +20,9 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { KiotVietIntegration } from '../../components/KiotVietIntegration';
+import { SimpleKiotVietIntegration } from '../../components/SimpleKiotVietIntegration';
 import { VihatIntegration } from '../../components/VihatIntegration';
-import type { Pipeline, KiotVietConfig, VihatConfig } from '@/types/pipeline';
+import type { Pipeline } from '@/types/pipeline';
 
 interface Integration {
   id: string;
@@ -240,18 +240,16 @@ export function IntegrationsSettings() {
         : integration
     ));
 
-    // Save KiotViet specific config
-    const kiotVietPipelineConfig: KiotVietConfig = {
-      retailer: config.retailer || '',
-      client_id: config.clientId || '',
-      client_secret: ''
-    };
-
+    // Save KiotViet specific config (mock pipeline structure)
     setKiotVietConfig({
       id: 'kiotviet-pipeline',
       type: 'KIOT_VIET',
       status: 'ACTIVE',
-      config: kiotVietPipelineConfig,
+      config: {
+        retailer: config.retailer || '',
+        client_id: config.clientId || '',
+        client_secret: ''
+      },
       access_token: {
         token: '',
         refresh_token: ''
@@ -294,17 +292,15 @@ export function IntegrationsSettings() {
         : integration
     ));
 
-    // Create Vihat pipeline config
-    const vihatPipelineConfig: VihatConfig = {
-      api_key: config.apiKey || '',
-      secret_key: '***'
-    };
-
+    // Create a mock pipeline object for UI display
     const mockPipeline: Pipeline = {
       id: 'vihat-pipeline-1',
       type: 'VIHAT',
       status: 'ACTIVE',
-      config: vihatPipelineConfig,
+      config: {
+        api_key: config.apiKey || '',
+        secret_key: '***'
+      },
       access_token: { token: '', refresh_token: '' },
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -514,7 +510,8 @@ export function IntegrationsSettings() {
           </DialogHeader>
           <div className="mt-4">
             {selectedIntegration === 'kiotviet' && (
-              <KiotVietIntegration
+              <SimpleKiotVietIntegration
+                integration={kiotVietConfig}
                 onSave={handleKiotVietSave}
                 onDisconnect={handleKiotVietDisconnect}
               />
