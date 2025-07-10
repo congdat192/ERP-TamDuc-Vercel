@@ -1,3 +1,4 @@
+
 import {
   Dialog,
   DialogContent,
@@ -10,9 +11,10 @@ interface UserDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   user: User | null;
+  onUserUpdated?: (updatedUser: User) => void;
 }
 
-export function UserDetailModal({ isOpen, onClose, user }: UserDetailModalProps) {
+export function UserDetailModal({ isOpen, onClose, user, onUserUpdated }: UserDetailModalProps) {
   if (!user) return null;
 
   return (
