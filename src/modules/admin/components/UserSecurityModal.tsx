@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, Key, Clock, AlertTriangle } from 'lucide-react';
+import { Shield, Key, AlertTriangle } from 'lucide-react';
 import { User, UserSecuritySettings } from '@/types/auth';
 
 interface UserSecurityModalProps {
@@ -20,8 +20,7 @@ export function UserSecurityModal({ isOpen, onClose, user, onSecurityUpdated }: 
   const [settings, setSettings] = useState<UserSecuritySettings>({
     twoFactorEnabled: false,
     loginAttemptLimit: 3,
-    passwordChangeRequired: false,
-    sessionTimeoutMinutes: 240
+    passwordChangeRequired: false
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -136,45 +135,10 @@ export function UserSecurityModal({ isOpen, onClose, user, onSecurityUpdated }: 
             </CardContent>
           </Card>
 
-          {/* Session Management */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center">
-                <Clock className="w-4 h-4 mr-2" />
-                Quản Lý Phiên Đăng Nhập
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <Label htmlFor="sessionTimeout">Thời gian hết hạn phiên (phút)</Label>
-                <Select 
-                  value={settings.sessionTimeoutMinutes.toString()} 
-                  onValueChange={(value) => handleSettingChange('sessionTimeoutMinutes', parseInt(value))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="30">30 phút</SelectItem>
-                    <SelectItem value="60">1 giờ</SelectItem>
-                    <SelectItem value="120">2 giờ</SelectItem>
-                    <SelectItem value="240">4 giờ</SelectItem>
-                    <SelectItem value="480">8 giờ</SelectItem>
-                    <SelectItem value="720">12 giờ</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-gray-600">
-                  Người dùng sẽ bị đăng xuất tự động sau thời gian không hoạt động này.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Security Warning */}
           {(settings.twoFactorEnabled !== user.securitySettings.twoFactorEnabled ||
             settings.loginAttemptLimit !== user.securitySettings.loginAttemptLimit ||
-            settings.passwordChangeRequired !== user.securitySettings.passwordChangeRequired ||
-            settings.sessionTimeoutMinutes !== user.securitySettings.sessionTimeoutMinutes) && (
+            settings.passwordChangeRequired !== user.securitySettings.passwordChangeRequired) && (
             <Card className="border-yellow-200 bg-yellow-50">
               <CardContent className="p-4">
                 <div className="flex items-start space-x-3">

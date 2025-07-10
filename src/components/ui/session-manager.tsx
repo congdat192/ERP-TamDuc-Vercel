@@ -54,30 +54,11 @@ export const SessionManager = ({ sessions, onTerminateSession }: SessionManagerP
     }).format(date);
   };
 
-  const getTimeRemaining = (expiresAt: Date) => {
-    const now = new Date();
-    const remaining = Math.max(0, expiresAt.getTime() - now.getTime());
-    const hours = Math.floor(remaining / (1000 * 60 * 60));
-    const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-    
-    if (hours > 0) {
-      return `${hours}h ${minutes}m`;
-    }
-    return `${minutes}m`;
-  };
-
-  const isExpired = (expiresAt: Date) => {
-    return new Date() > expiresAt;
-  };
-
   const handleTerminateSession = (sessionId: string) => {
     setTerminatingSession(sessionId);
     onTerminateSession(sessionId);
     setTimeout(() => setTerminatingSession(null), 1000);
   };
-
-  const activeSessions = sessions.filter(session => !isExpired(session.expiresAt));
-  const expiredSessions = sessions.filter(session => isExpired(session.expiresAt));
 
   return (
     <div className="space-y-6">
@@ -90,7 +71,7 @@ export const SessionManager = ({ sessions, onTerminateSession }: SessionManagerP
         </div>
         <div className="flex items-center space-x-2">
           <Badge variant="outline">
-            {activeSessions.length} phiên hoạt động
+            {sessions.length} phiên hoạt động
           </Badge>
         </div>
       </div>
@@ -107,7 +88,7 @@ export const SessionManager = ({ sessions, onTerminateSession }: SessionManagerP
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {activeSessions.length === 0 ? (
+          {sessions.length === 0 ? (
             <EmptyState
               icon={<Monitor className="w-12 h-12 text-gray-400" />}
               title="Không Có Phiên Hoạt Động"
@@ -115,7 +96,7 @@ export const SessionManager = ({ sessions, onTerminateSession }: SessionManagerP
             />
           ) : (
             <div className="space-y-4">
-              {activeSessions.map((session) => (
+              {sessions.map((session) => (
                 <div
                   key={session.id}
                   className={`p-4 border rounded-lg ${
@@ -162,10 +143,6 @@ export const SessionManager = ({ sessions, onTerminateSession }: SessionManagerP
                             <div className="flex items-center space-x-1">
                               <Clock className="w-3 h-3" />
                               <span>Hoạt động cuối: {formatDateTime(session.lastActivity)}</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Clock className="w-3 h-3" />
-                              <span>Hết hạn: {getTimeRemaining(session.expiresAt)}</span>
                             </div>
                           </div>
                         </div>
@@ -215,49 +192,6 @@ export const SessionManager = ({ sessions, onTerminateSession }: SessionManagerP
           )}
         </CardContent>
       </Card>
-
-      {/* Expired Sessions */}
-      {expiredSessions.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Clock className="w-5 h-5" />
-              <span>Phiên Đã Hết Hạn</span>
-            </CardTitle>
-            <CardDescription>
-              Các phiên đăng nhập đã hết hạn gần đây
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {expiredSessions.slice(0, 3).map((session) => (
-                <div
-                  key={session.id}
-                  className="p-4 border border-gray-200 rounded-lg bg-gray-50"
-                >
-                  <div className="flex items-start space-x-4">
-                    <div className="p-2 rounded-full bg-gray-200">
-                      {getDeviceIcon(session.deviceName)}
-                    </div>
-                    
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <h3 className="font-medium text-gray-700">{session.deviceName}</h3>
-                        <Badge variant="secondary">Đã Hết Hạn</Badge>
-                      </div>
-                      
-                      <div className="text-sm text-gray-500">
-                        <p>{session.browser} • {session.location}</p>
-                        <p>Hết hạn: {formatDateTime(session.expiresAt)}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };

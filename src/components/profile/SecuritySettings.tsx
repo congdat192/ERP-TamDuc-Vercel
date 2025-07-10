@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Shield, Clock, Lock, Eye } from 'lucide-react';
+import { Shield, Lock, Eye } from 'lucide-react';
 import { User as UserType } from '@/types/auth';
 
 interface SecuritySettingsProps {
@@ -79,36 +79,24 @@ export function SecuritySettings({ user }: SecuritySettingsProps) {
         </CardContent>
       </Card>
 
-      {/* Session Settings */}
+      {/* Current Session */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <Clock className="w-5 h-5" />
-            <span>Cài Đặt Phiên</span>
+            <Shield className="w-5 h-5" />
+            <span>Phiên Hiện Tại</span>
           </CardTitle>
           <CardDescription>
-            Quản lý phiên đăng nhập của bạn
+            Thông tin phiên đăng nhập hiện tại
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 border rounded-lg">
               <div>
-                <h4 className="font-medium">Thời Gian Hết Hạn Phiên</h4>
+                <h4 className="font-medium">Đăng Nhập Lần Cuối</h4>
                 <p className="text-sm text-gray-600">
-                  Phiên làm việc sẽ tự động hết hạn sau {user.securitySettings.sessionTimeoutMinutes} phút không hoạt động
-                </p>
-              </div>
-              <Badge variant="outline">
-                {user.securitySettings.sessionTimeoutMinutes} phút
-              </Badge>
-            </div>
-
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div>
-                <h4 className="font-medium">Phiên Hiện Tại</h4>
-                <p className="text-sm text-gray-600">
-                  Đăng nhập lần cuối: {user.lastLogin 
+                  {user.lastLogin 
                     ? new Date(user.lastLogin).toLocaleString('vi-VN')
                     : 'Chưa có thông tin'
                   }

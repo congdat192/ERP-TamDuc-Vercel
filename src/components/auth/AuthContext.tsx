@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@/types/auth';
 import { loginUser, logoutUser, getUserProfile } from '@/services/authService';
@@ -94,7 +95,6 @@ const convertApiUserToUser = (apiUser: any): User => {
       twoFactorEnabled: false,
       loginAttemptLimit: 3,
       passwordChangeRequired: false,
-      sessionTimeoutMinutes: 60,
     },
     activities: [],
   };
@@ -249,11 +249,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('✅ [AuthContext] User profile refreshed:', updatedUser.username);
     } catch (error) {
       console.warn('❌ [AuthContext] Failed to refresh user profile:', error);
-      
-      if (error instanceof Error && error.message.includes('Token hết hạn')) {
-        console.log('🔒 [AuthContext] Token expired, forcing logout');
-        await logout();
-      }
     }
   };
 

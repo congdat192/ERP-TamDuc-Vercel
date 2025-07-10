@@ -1,4 +1,3 @@
-
 // Authentication service for API calls
 import { User } from '@/types/auth';
 
@@ -146,7 +145,6 @@ const convertApiUserToUser = (apiUser: any): User => {
       twoFactorEnabled: false,
       loginAttemptLimit: 3,
       passwordChangeRequired: false,
-      sessionTimeoutMinutes: 60,
     },
     activities: [],
   };
@@ -512,9 +510,9 @@ export const updatePassword = async (currentPassword: string, newPassword: strin
 
   if (!response.ok) {
     if (response.status === 401) {
-      console.error('❌ [authService] Token expired during password update');
+      console.error('❌ [authService] Authentication failed during password update');
       removeToken();
-      throw new Error('Token hết hạn, vui lòng đăng nhập lại');
+      throw new Error('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại');
     }
     const errorData = await response.json();
     console.error('❌ [authService] Password update failed:', errorData);
@@ -589,9 +587,9 @@ export const getUserProfile = async (): Promise<UserProfile> => {
 
   if (!response.ok) {
     if (response.status === 401) {
-      console.error('❌ [authService] Token expired during profile request');
+      console.error('❌ [authService] Authentication failed during profile request');
       removeToken();
-      throw new Error('Token hết hạn, vui lòng đăng nhập lại');
+      throw new Error('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại');
     }
     const errorData = await response.json();
     console.error('❌ [authService] Profile request failed:', errorData);
@@ -624,9 +622,9 @@ export const updateUserProfile = async (data: UpdateProfileRequest): Promise<Use
 
   if (!response.ok) {
     if (response.status === 401) {
-      console.error('❌ [authService] Token expired during profile update');
+      console.error('❌ [authService] Authentication failed during profile update');
       removeToken();
-      throw new Error('Token hết hạn, vui lòng đăng nhập lại');
+      throw new Error('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại');
     }
     const errorData = await response.json();
     console.error('❌ [authService] Profile update failed:', errorData);

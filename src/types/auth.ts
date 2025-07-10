@@ -42,7 +42,6 @@ export interface UserSecuritySettings {
   twoFactorEnabled: boolean;
   loginAttemptLimit: number;
   passwordChangeRequired: boolean;
-  sessionTimeoutMinutes: number;
   lastPasswordChange?: string;
 }
 
