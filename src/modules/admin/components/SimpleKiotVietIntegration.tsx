@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/ui/loading';
 import { useToast } from '@/hooks/use-toast';
-import { Building2, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { Building2, CheckCircle2, AlertCircle, Loader2, Wifi, WifiOff } from 'lucide-react';
 import { createPipeline, updatePipeline, testKiotVietConnection } from '@/services/pipelineService';
 import type { Pipeline, PipelineConfig } from '@/types/pipeline';
 
@@ -85,14 +85,16 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
       
     } catch (error) {
       console.error('Connection test error:', error);
+      const errorMessage = 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng và thử lại.';
+      
       setTestResult({
         success: false,
-        message: 'Lỗi không xác định khi kiểm tra kết nối'
+        message: errorMessage
       });
       
       toast({
-        title: 'Lỗi',
-        description: 'Lỗi không xác định khi kiểm tra kết nối',
+        title: 'Lỗi kết nối',
+        description: errorMessage,
         variant: 'destructive'
       });
     } finally {
@@ -260,9 +262,15 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
               : 'bg-red-50 border border-red-200'
           }`}>
             {testResult.success ? (
-              <CheckCircle2 className="w-4 h-4 text-green-500" />
+              <>
+                <Wifi className="w-4 h-4 text-green-500" />
+                <CheckCircle2 className="w-4 h-4 text-green-500" />
+              </>
             ) : (
-              <AlertCircle className="w-4 h-4 text-red-500" />
+              <>
+                <WifiOff className="w-4 h-4 text-red-500" />
+                <AlertCircle className="w-4 h-4 text-red-500" />
+              </>
             )}
             <span className={`text-sm ${
               testResult.success ? 'text-green-700' : 'text-red-700'
@@ -271,6 +279,14 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
             </span>
           </div>
         )}
+
+        {/* Connection Status Info */}
+        <div className="flex items-center space-x-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <AlertCircle className="w-4 h-4 text-blue-500" />
+          <span className="text-sm text-blue-700">
+            Kết nối thông qua server bảo mật để đảm bảo thông tin của bạn được bảo vệ
+          </span>
+        </div>
 
         {/* Form Fields */}
         <div className="space-y-4">
@@ -332,7 +348,10 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
                 Đang kiểm tra...
               </>
             ) : (
-              'Kiểm tra kết nối'
+              <>
+                <Wifi className="w-4 h-4 mr-2" />
+                Kiểm tra kết nối
+              </>
             )}
           </Button>
           

@@ -50,59 +50,32 @@ export interface TestConnectionResponse {
   data?: any;
 }
 
-// Test KiotViet connection by calling KiotViet API directly
+// Test KiotViet connection using backend proxy
 export const testKiotVietConnection = async (config: PipelineConfig): Promise<TestConnectionResponse> => {
-  console.log('🔄 [pipelineService] Testing KiotViet connection for retailer:', config.retailer);
+  console.log('🔄 [pipelineService] Testing KiotViet connection via backend proxy for retailer:', config.retailer);
   
   try {
-    // Call KiotViet API directly to validate credentials
-    const kiotVietResponse = await fetch('https://public.kiotapi.com/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        retailer: config.retailer,
-        clientId: config.client_id,
-        clientSecret: config.client_secret
-      })
+    // Call backend proxy endpoint instead of direct KiotViet API
+    const response = await api.post<TestConnectionResponse>('/integrations/kiotviet/test-connection', {
+      retailer: config.retailer,
+      client_id: config.client_id,
+      client_secret: config.client_secret
+    }, {
+      requiresBusinessId: true,
     });
 
-    if (!kiotVietResponse.ok) {
-      const errorData = await kiotVietResponse.json().catch(() => ({}));
-      console.error('❌ [pipelineService] KiotViet API error:', kiotVietResponse.status, errorData);
-      
-      if (kiotVietResponse.status === 401) {
-        return {
-          success: false,
-          message: 'Client ID hoặc Client Secret không hợp lệ'
-        };
-      } else if (kiotVietResponse.status === 404) {
-        return {
-          success: false,
-          message: 'Không tìm thấy cửa hàng với tên này'
-        };
-      } else {
-        return {
-          success: false,
-          message: errorData.message || 'Thông tin kết nối không chính xác'
-        };
-      }
-    }
-
-    const responseData = await kiotVietResponse.json();
-    console.log('✅ [pipelineService] KiotViet connection test successful');
+    console.log('✅ [pipelineService] KiotViet connection test successful via backend proxy');
     
     return {
       success: true,
       message: 'Kết nối KiotViet thành công! Thông tin xác thực hợp lệ.',
-      data: responseData
+      data: response.data
     };
     
   } catch (error: any) {
-    console.error('❌ [pipelineService] Connection test failed:', error);
+    console.error('❌ [pipelineService] KiotViet connection test failed:', error);
     
-    // Handle different error scenarios based on actual API responses
+    // Handle API errors from backend
     if (error.response?.status === 401) {
       return {
         success: false,
