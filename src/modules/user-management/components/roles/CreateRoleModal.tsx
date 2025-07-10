@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { RoleCreationData, CustomRole, ModuleInfo, ModulePermissions } from '../../types/role-management';
 import { RoleService } from '../../services/roleService';
 import { ModuleService } from '../../services/moduleService';
-import { PermissionMatrix } from './PermissionMatrix';
+import { ModuleSidebar } from './ModuleSidebar';
 
 interface CreateRoleModalProps {
   isOpen: boolean;
@@ -119,82 +119,105 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
     }, 0);
   };
 
+  const getSelectedModulesCount = () => {
+    return Object.values(permissions).filter(perms => 
+      Object.values(perms).some(Boolean)
+    ).length;
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle>Tạo Vai Trò Mới</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Basic Information */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Thông Tin Cơ Bản</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Tên Vai Trò *</Label>
-                <Input
-                  id="name"
-                  {...register('name', { required: 'Tên vai trò là bắt buộc' })}
-                  placeholder="Nhập tên vai trò"
-                />
-                {errors.name && (
-                  <p className="text-sm text-red-500">{errors.name.message}</p>
-                )}
-              </div>
-              
-              <div className="space-y-2">
-                <Label>Số Quyền Đã Chọn</Label>
-                <div className="px-3 py-2 bg-gray-50 rounded-md text-sm">
-                  {getSelectedPermissionsCount()} quyền
+        <div className="flex gap-6 h-[600px]">
+          {/* Left Column - Role Form */}
+          <div className="flex-1 space-y-6 overflow-y-auto pr-2">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              {/* Basic Information */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium border-b pb-2">Thông Tin Cơ Bản</h3>
+                
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Tên Vai Trò *</Label>
+                    <Input
+                      id="name"
+                      {...register('name', { required: 'Tên vai trò là bắt buộc' })}
+                      placeholder="Nhập tên vai trò"
+                    />
+                    {errors.name && (
+                      <p className="text-sm text-red-500">{errors.name.message}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Mô Tả</Label>
+                    <Textarea
+                      id="description"
+                      {...register('description')}
+                      placeholder="Mô tả vai trò và trách nhiệm"
+                      rows={3}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Mô Tả</Label>
-              <Textarea
-                id="description"
-                {...register('description')}
-                placeholder="Mô tả vai trò và trách nhiệm"
-                rows={3}
-              />
-            </div>
+              {/* Permission Summary */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium border-b pb-2">Tổng Quan Quyền</h3>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <div className="text-2xl font-bold text-blue-600">
+                      {getSelectedModulesCount()}
+                    </div>
+                    <div className="text-sm text-blue-600">Modules được chọn</div>
+                  </div>
+                  
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <div className="text-2xl font-bold text-green-600">
+                      {getSelectedPermissionsCount()}
+                    </div>
+                    <div className="text-sm text-green-600">Tổng số quyền</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center justify-end space-x-3 pt-4 border-t">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={handleClose}
+                  disabled={isLoading}
+                >
+                  Hủy
+                </Button>
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? 'Đang tạo...' : 'Tạo Vai Trò'}
+                </Button>
+              </div>
+            </form>
           </div>
 
-          {/* Permissions Matrix */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Phân Quyền Theo Module</h3>
-            
+          {/* Right Column - Modules Sidebar */}
+          <div className="w-80 border-l pl-6 overflow-y-auto">
             {isLoadingModules ? (
               <div className="flex items-center justify-center py-8">
                 <div className="text-gray-500">Đang tải modules...</div>
               </div>
             ) : (
-              <PermissionMatrix
+              <ModuleSidebar
                 modules={modules}
                 permissions={permissions}
                 onPermissionChange={handlePermissionChange}
               />
             )}
           </div>
-
-          {/* Actions */}
-          <div className="flex items-center justify-end space-x-3 pt-4 border-t">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={handleClose}
-              disabled={isLoading}
-            >
-              Hủy
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Đang tạo...' : 'Tạo Vai Trò'}
-            </Button>
-          </div>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   );

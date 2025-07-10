@@ -136,10 +136,6 @@ export function RolesTab() {
               icon={<Shield className="w-12 h-12 text-gray-400" />}
               title="Chưa có vai trò nào"
               description="Tạo vai trò đầu tiên để bắt đầu quản lý quyền hạn người dùng"
-              action={{
-                label: "Tạo Vai Trò Mới",
-                onClick: () => setIsCreateModalOpen(true)
-              }}
             />
           ) : (
             <div className="border rounded-lg">
