@@ -20,7 +20,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { SimpleKiotVietIntegration } from '../../components/SimpleKiotVietIntegration';
+import { KiotVietIntegration } from '../../components/KiotVietIntegration';
 import { VihatIntegration } from '../../components/VihatIntegration';
 import type { Pipeline, KiotVietConfig, VihatConfig } from '@/types/pipeline';
 
@@ -514,8 +514,7 @@ export function IntegrationsSettings() {
           </DialogHeader>
           <div className="mt-4">
             {selectedIntegration === 'kiotviet' && (
-              <SimpleKiotVietIntegration
-                integration={kiotVietConfig}
+              <KiotVietIntegration
                 onSave={handleKiotVietSave}
                 onDisconnect={handleKiotVietDisconnect}
               />
