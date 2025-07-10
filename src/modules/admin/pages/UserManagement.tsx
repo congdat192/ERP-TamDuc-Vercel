@@ -25,7 +25,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { MoreVertical, Edit, Copy, Trash, UserPlus, UserCog, Download, Upload, FileText, Filter, RefreshCcw } from "lucide-react";
+import { MoreVertical, Edit, Copy, Trash, UserPlus, UserCog, Download, Upload, FileText, Filter, RefreshCcw, Calendar as CalendarIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -47,13 +47,12 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer"
 import { Calendar } from "@/components/ui/calendar"
-import { CalendarIcon } from "@radix-ui/react-icons"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { UserCreateModal } from './components/UserCreateModal';
-import { UserDetailModal } from './components/UserDetailModal';
-import { UserSecurityModal } from './components/UserSecurityModal';
+import { UserCreateModal } from '../components/UserCreateModal';
+import { UserDetailModal } from '../components/UserDetailModal';
+import { UserSecurityModal } from '../components/UserSecurityModal';
 import { Department, Role, UserGroup, EnhancedUser, UserManagementFilters, BulkOperation } from '@/modules/user-management/types';
 import { User, UserStatus, UserRole, UserSecuritySettings } from '@/types/auth';
 import { EmptyState } from '@/components/ui/empty-states';
