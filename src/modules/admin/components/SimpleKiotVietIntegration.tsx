@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { LoadingSpinner } from '@/components/ui/loading';
 import { useToast } from '@/hooks/use-toast';
 import { Building2, CheckCircle2, AlertCircle, Loader2, Wifi, WifiOff } from 'lucide-react';
 import { createPipeline, updatePipeline, testKiotVietConnection } from '@/services/pipelineService';
@@ -21,8 +20,8 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
   const { toast } = useToast();
   
   const [formData, setFormData] = useState({
-    retailer: (integration?.config && 'retailer' in integration.config) ? integration.config.retailer : '',
-    clientId: (integration?.config && 'client_id' in integration.config) ? integration.config.client_id : '',
+    retailer: integration?.config?.retailer || '',
+    clientId: integration?.config?.client_id || '',
     clientSecret: ''
   });
   
@@ -195,7 +194,7 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
             </div>
             <div>
               <h3 className="text-lg font-semibold theme-text">
-                KiotViet - {(integration.config && 'retailer' in integration.config) ? integration.config.retailer : 'Unknown'}
+                KiotViet - {integration.config?.retailer || 'Unknown'}
               </h3>
               <div className="flex items-center space-x-2 mt-1">
                 <Badge variant="success" className="flex items-center gap-1">
@@ -203,7 +202,7 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
                   Đã kết nối
                 </Badge>
                 <span className="text-sm theme-text-muted">
-                  Client ID: {(integration.config && 'client_id' in integration.config) ? integration.config.client_id : 'Unknown'}
+                  Client ID: {integration.config?.client_id || 'Unknown'}
                 </span>
               </div>
             </div>
@@ -284,7 +283,7 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
         <div className="flex items-center space-x-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
           <AlertCircle className="w-4 h-4 text-blue-500" />
           <span className="text-sm text-blue-700">
-            Kết nối thông qua server bảo mật để đảm bảo thông tin của bạn được bảo vệ
+            Kết nối trực tiếp đến KiotViet API qua proxy bảo mật
           </span>
         </div>
 

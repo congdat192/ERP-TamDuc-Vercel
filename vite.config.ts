@@ -1,3 +1,4 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -8,6 +9,18 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    proxy: {
+      // Proxy KiotViet API calls to avoid CORS issues
+      '/api/kiotviet': {
+        target: 'https://public.kiotapi.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/kiotviet/, ''),
+        secure: true,
+        headers: {
+          'User-Agent': 'ERP-System/1.0'
+        }
+      }
+    }
   },
   plugins: [
     react(),

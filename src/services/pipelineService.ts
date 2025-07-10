@@ -39,69 +39,64 @@ export interface PipelineListResponse {
   data: Pipeline[];
 }
 
-export interface TestConnectionRequest {
-  type: 'KIOT_VIET';
-  config: PipelineConfig;
-}
-
 export interface TestConnectionResponse {
   success: boolean;
   message: string;
   data?: any;
 }
 
-// Test KiotViet connection using backend proxy
+// Test KiotViet connection using direct API call via Vite proxy
 export const testKiotVietConnection = async (config: PipelineConfig): Promise<TestConnectionResponse> => {
-  console.log('🔄 [pipelineService] Testing KiotViet connection via backend proxy for retailer:', config.retailer);
+  console.log('🔄 [pipelineService] Testing KiotViet connection via proxy for retailer:', config.retailer);
   
   try {
-    // Call backend proxy endpoint instead of direct KiotViet API
-    const response = await api.post<TestConnectionResponse>('/integrations/kiotviet/test-connection', {
-      retailer: config.retailer,
-      client_id: config.client_id,
-      client_secret: config.client_secret
-    }, {
-      requiresBusinessId: true,
+    // Call KiotViet API directly through Vite proxy
+    const response = await fetch('/api/kiotviet/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        retailer: config.retailer,
+        username: config.client_id,
+        password: config.client_secret
+      })
     });
 
-    console.log('✅ [pipelineService] KiotViet connection test successful via backend proxy');
-    
-    return {
-      success: true,
-      message: 'Kết nối KiotViet thành công! Thông tin xác thực hợp lệ.',
-      data: response.data
-    };
+    const data = await response.json();
+
+    if (response.ok && data.access_token) {
+      console.log('✅ [pipelineService] KiotViet connection test successful via proxy');
+      
+      return {
+        success: true,
+        message: 'Kết nối KiotViet thành công! Thông tin xác thực hợp lệ.',
+        data: data
+      };
+    } else {
+      console.error('❌ [pipelineService] KiotViet connection test failed:', data);
+      
+      return {
+        success: false,
+        message: data.message || 'Thông tin đăng nhập không hợp lệ'
+      };
+    }
     
   } catch (error: any) {
     console.error('❌ [pipelineService] KiotViet connection test failed:', error);
     
-    // Handle API errors from backend
-    if (error.response?.status === 401) {
+    // Handle network errors
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
       return {
         success: false,
-        message: 'Client ID hoặc Client Secret không hợp lệ'
-      };
-    } else if (error.response?.status === 404) {
-      return {
-        success: false,
-        message: 'Không tìm thấy cửa hàng với tên này'
-      };
-    } else if (error.response?.status === 422) {
-      return {
-        success: false,
-        message: error.response.data?.message || 'Thông tin kết nối không hợp lệ'
-      };
-    } else if (error.response?.status >= 500) {
-      return {
-        success: false,
-        message: 'Lỗi máy chủ, vui lòng thử lại sau'
-      };
-    } else {
-      return {
-        success: false,
-        message: error.response?.data?.message || 'Không thể kết nối đến KiotViet. Vui lòng kiểm tra lại thông tin.'
+        message: 'Không thể kết nối đến KiotViet. Vui lòng kiểm tra kết nối mạng.'
       };
     }
+    
+    return {
+      success: false,
+      message: 'Không thể kết nối đến KiotViet. Vui lòng kiểm tra lại thông tin.'
+    };
   }
 };
 
