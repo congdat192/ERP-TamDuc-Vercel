@@ -7,34 +7,43 @@ export interface SessionInfo {
   operatingSystem: string;
   ipAddress: string;
   location: string;
+  isCurrentSession: boolean;
   createdAt: Date;
   lastActivity: Date;
-  isCurrentSession: boolean;
 }
 
-export interface SecurityAuditLog {
+export interface LoginAttempt {
   id: string;
-  userId: string;
-  action: string;
-  details: string;
+  userId?: string;
+  username: string;
   ipAddress: string;
-  userAgent: string;
+  location: string;
+  deviceInfo: string;
+  browser: string;
+  success: boolean;
   timestamp: Date;
-  riskLevel: 'low' | 'medium' | 'high';
+  failureReason?: string;
 }
+
+export type SecurityAlertType = 'suspicious_login' | 'multiple_failed_attempts' | 'new_device' | 'unusual_activity';
+export type SecurityAlertSeverity = 'critical' | 'warning' | 'info';
 
 export interface SecurityAlert {
   id: string;
-  type: 'suspicious_login' | 'multiple_failed_attempts' | 'new_device' | 'unusual_activity';
-  message: string;
+  type: SecurityAlertType;
+  severity: SecurityAlertSeverity;
+  title: string;
+  description: string;
   timestamp: Date;
   isRead: boolean;
-  severity: 'info' | 'warning' | 'critical';
+  actionRequired: boolean;
+  userId: string;
 }
 
-export interface TwoFactorSetup {
-  isEnabled: boolean;
+export interface TwoFactorAuth {
+  enabled: boolean;
+  qrCodeUrl: string;
   backupCodes: string[];
-  qrCodeUrl?: string;
-  secret?: string;
+  setupComplete: boolean;
+  lastVerified?: Date;
 }

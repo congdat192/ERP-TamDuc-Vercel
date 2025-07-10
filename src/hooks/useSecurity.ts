@@ -14,8 +14,7 @@ const mockSessions: SessionInfo[] = [
     location: 'Hồ Chí Minh, Việt Nam',
     isCurrentSession: true,
     createdAt: new Date('2024-05-29T08:00:00'),
-    lastActivity: new Date('2024-05-29T16:30:00'),
-    expiresAt: new Date('2024-05-30T08:00:00')
+    lastActivity: new Date('2024-05-29T16:30:00')
   },
   {
     id: '2',
@@ -27,8 +26,7 @@ const mockSessions: SessionInfo[] = [
     location: 'Hồ Chí Minh, Việt Nam',
     isCurrentSession: false,
     createdAt: new Date('2024-05-28T14:20:00'),
-    lastActivity: new Date('2024-05-29T12:15:00'),
-    expiresAt: new Date('2024-05-29T14:20:00')
+    lastActivity: new Date('2024-05-29T12:15:00')
   }
 ];
 
@@ -71,8 +69,8 @@ const mockLoginAttempts: LoginAttempt[] = [
 const mockSecurityAlerts: SecurityAlert[] = [
   {
     id: '1',
-    type: 'unusual_login',
-    severity: 'medium',
+    type: 'suspicious_login',
+    severity: 'warning',
     title: 'Đăng Nhập Từ Thiết Bị Mới',
     description: 'Phát hiện đăng nhập từ thiết bị mới tại Hà Nội, Việt Nam',
     timestamp: new Date('2024-05-29T03:15:00'),
@@ -82,8 +80,8 @@ const mockSecurityAlerts: SecurityAlert[] = [
   },
   {
     id: '2',
-    type: 'failed_attempts',
-    severity: 'high',
+    type: 'multiple_failed_attempts',
+    severity: 'critical',
     title: 'Nhiều Lần Đăng Nhập Thất Bại',
     description: '3 lần thử đăng nhập thất bại liên tiếp từ IP 103.45.67.89',
     timestamp: new Date('2024-05-29T03:15:00'),

@@ -37,9 +37,8 @@ export const SecurityAlerts = ({ alerts, onMarkAsRead }: SecurityAlertsProps) =>
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'critical': return 'bg-red-100 text-red-800 border-red-200';
-      case 'high': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'low': return 'bg-green-100 text-green-800 border-green-200';
+      case 'warning': return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'info': return 'bg-blue-100 text-blue-800 border-blue-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
@@ -47,20 +46,18 @@ export const SecurityAlerts = ({ alerts, onMarkAsRead }: SecurityAlertsProps) =>
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
       case 'critical': return <AlertTriangle className="w-4 h-4 text-red-600" />;
-      case 'high': return <AlertTriangle className="w-4 h-4 text-orange-600" />;
-      case 'medium': return <AlertTriangle className="w-4 h-4 text-yellow-600" />;
-      case 'low': return <Shield className="w-4 h-4 text-green-600" />;
+      case 'warning': return <AlertTriangle className="w-4 h-4 text-orange-600" />;
+      case 'info': return <Shield className="w-4 h-4 text-blue-600" />;
       default: return <Shield className="w-4 h-4 text-gray-600" />;
     }
   };
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'unusual_login': return <MapPin className="w-4 h-4" />;
-      case 'failed_attempts': return <X className="w-4 h-4" />;
+      case 'suspicious_login': return <MapPin className="w-4 h-4" />;
+      case 'multiple_failed_attempts': return <X className="w-4 h-4" />;
       case 'new_device': return <Monitor className="w-4 h-4" />;
-      case 'password_change': return <Shield className="w-4 h-4" />;
-      case 'account_locked': return <AlertTriangle className="w-4 h-4" />;
+      case 'unusual_activity': return <Shield className="w-4 h-4" />;
       default: return <Shield className="w-4 h-4" />;
     }
   };
@@ -124,8 +121,7 @@ export const SecurityAlerts = ({ alerts, onMarkAsRead }: SecurityAlertsProps) =>
                 <div className="flex items-start space-x-4">
                   <div className={`p-2 rounded-full ${
                     alert.severity === 'critical' ? 'bg-red-100' :
-                    alert.severity === 'high' ? 'bg-orange-100' :
-                    alert.severity === 'medium' ? 'bg-yellow-100' : 'bg-green-100'
+                    alert.severity === 'warning' ? 'bg-orange-100' : 'bg-blue-100'
                   }`}>
                     {getTypeIcon(alert.type)}
                   </div>
@@ -140,8 +136,7 @@ export const SecurityAlerts = ({ alerts, onMarkAsRead }: SecurityAlertsProps) =>
                         </h3>
                         <Badge className={getSeverityColor(alert.severity)}>
                           {alert.severity === 'critical' ? 'Nghiêm Trọng' :
-                           alert.severity === 'high' ? 'Cao' :
-                           alert.severity === 'medium' ? 'Trung Bình' : 'Thấp'}
+                           alert.severity === 'warning' ? 'Cảnh Báo' : 'Thông Tin'}
                         </Badge>
                         {alert.actionRequired && (
                           <Badge variant="destructive">Cần Hành Động</Badge>
@@ -161,11 +156,10 @@ export const SecurityAlerts = ({ alerts, onMarkAsRead }: SecurityAlertsProps) =>
                       <div className="flex items-center space-x-2">
                         {getSeverityIcon(alert.severity)}
                         <span className="text-xs text-gray-500">
-                          {alert.type === 'unusual_login' ? 'Đăng nhập bất thường' :
-                           alert.type === 'failed_attempts' ? 'Thất bại đăng nhập' :
+                          {alert.type === 'suspicious_login' ? 'Đăng nhập khả nghi' :
+                           alert.type === 'multiple_failed_attempts' ? 'Thất bại đăng nhập' :
                            alert.type === 'new_device' ? 'Thiết bị mới' :
-                           alert.type === 'password_change' ? 'Đổi mật khẩu' :
-                           alert.type === 'account_locked' ? 'Tài khoản bị khóa' : 'Khác'}
+                           alert.type === 'unusual_activity' ? 'Hoạt động bất thường' : 'Khác'}
                         </span>
                       </div>
                       
@@ -200,8 +194,7 @@ export const SecurityAlerts = ({ alerts, onMarkAsRead }: SecurityAlertsProps) =>
               <div className="flex items-center space-x-2">
                 <Badge className={getSeverityColor(selectedAlert.severity)}>
                   {selectedAlert.severity === 'critical' ? 'Nghiêm Trọng' :
-                   selectedAlert.severity === 'high' ? 'Cao' :
-                   selectedAlert.severity === 'medium' ? 'Trung Bình' : 'Thấp'}
+                   selectedAlert.severity === 'warning' ? 'Cảnh Báo' : 'Thông Tin'}
                 </Badge>
                 {selectedAlert.actionRequired && (
                   <Badge variant="destructive">Cần Hành Động</Badge>
@@ -223,11 +216,10 @@ export const SecurityAlerts = ({ alerts, onMarkAsRead }: SecurityAlertsProps) =>
                 <div>
                   <span className="font-medium text-gray-500">Loại:</span>
                   <p>
-                    {selectedAlert.type === 'unusual_login' ? 'Đăng nhập bất thường' :
-                     selectedAlert.type === 'failed_attempts' ? 'Thất bại đăng nhập' :
+                    {selectedAlert.type === 'suspicious_login' ? 'Đăng nhập khả nghi' :
+                     selectedAlert.type === 'multiple_failed_attempts' ? 'Thất bại đăng nhập' :
                      selectedAlert.type === 'new_device' ? 'Thiết bị mới' :
-                     selectedAlert.type === 'password_change' ? 'Đổi mật khẩu' :
-                     selectedAlert.type === 'account_locked' ? 'Tài khoản bị khóa' : 'Khác'}
+                     selectedAlert.type === 'unusual_activity' ? 'Hoạt động bất thường' : 'Khác'}
                   </p>
                 </div>
               </div>

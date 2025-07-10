@@ -1,610 +1,434 @@
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import React, { useState, useCallback } from 'react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  UserPlus, 
-  Search, 
-  Edit, 
-  Trash2, 
-  Eye, 
-  EyeOff, 
-  Key,
-  Users,
-  Shield,
-  AlertCircle,
-  Settings,
-  LogOut,
-  Clock,
-  Mail
-} from 'lucide-react';
-import { User, UserStatus, UserRole } from '@/types/auth';
-import { UserCreateModal } from '../components/UserCreateModal';
-import { UserEditModal } from '../components/UserEditModal';
-import { UserDetailModal } from '../components/UserDetailModal';
-import { ConfirmationDialog } from '../components/ConfirmationDialog';
-import { UserSecurityModal } from '../components/UserSecurityModal';
-
-// Mock data for demonstration
-const mockUsers: User[] = [
-  {
-    id: '1',
-    username: 'admin_nguyen',
-    fullName: 'Nguyễn Văn An',
-    role: 'erp-admin',
-    email: 'admin@company.com',
-    phone: '0901234567',
-    status: 'active',
-    notes: 'System Administrator',
-    createdAt: '2024-01-15T00:00:00.000Z',
-    lastLogin: '2024-05-29T14:30:00.000Z',
-    emailVerified: true,
-    isActive: true,
-    permissions: {
-      modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'system-settings', 'user-management'],
-      voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
-      canManageUsers: true,
-      canViewAllVouchers: true
-    },
-    securitySettings: {
-      twoFactorEnabled: true,
-      loginAttemptLimit: 5,
-      passwordChangeRequired: false,
-      sessionTimeoutMinutes: 480,
-      lastPasswordChange: '2024-01-15T00:00:00.000Z'
-    },
-    activities: []
-  },
-  {
-    id: '2',
-    username: 'voucher_manager',
-    fullName: 'Trần Thị Bình',
-    role: 'voucher-admin',
-    email: 'voucher.manager@company.com',
-    phone: '0901234568',
-    status: 'active',
-    notes: 'Voucher Module Manager',
-    createdAt: '2024-02-10T00:00:00.000Z',
-    lastLogin: '2024-05-29T16:45:00.000Z',
-    emailVerified: true,
-    isActive: true,
-    permissions: {
-      modules: ['dashboard', 'voucher'],
-      voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
-      canManageUsers: false,
-      canViewAllVouchers: true
-    },
-    securitySettings: {
-      twoFactorEnabled: false,
-      loginAttemptLimit: 3,
-      passwordChangeRequired: false,
-      sessionTimeoutMinutes: 240
-    },
-    activities: []
-  },
-  {
-    id: '3',
-    username: 'telesales_01',
-    fullName: 'Lê Văn Cường',
-    role: 'telesales',
-    email: 'telesales01@company.com',
-    phone: '0901234569',
-    status: 'locked',
-    notes: 'Telesales Staff - Temporary Lock',
-    createdAt: '2024-03-05T00:00:00.000Z',
-    lastLogin: '2024-05-25T09:15:00.000Z',
-    emailVerified: true,
-    isActive: true,
-    permissions: {
-      modules: ['dashboard', 'voucher'],
-      voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list', 'voucher-leaderboard'],
-      canManageUsers: false,
-      canViewAllVouchers: false
-    },
-    securitySettings: {
-      twoFactorEnabled: false,
-      loginAttemptLimit: 3,
-      passwordChangeRequired: true,
-      sessionTimeoutMinutes: 120
-    },
-    activities: []
-  },
-  {
-    id: '4',
-    username: 'new_user',
-    fullName: 'Phạm Thị Dung',
-    role: 'telesales',
-    email: 'newuser@company.com',
-    phone: '0901234570',
-    status: 'pending_verification',
-    notes: 'New employee - pending email verification',
-    createdAt: '2024-05-28T00:00:00.000Z',
-    lastLogin: undefined,
-    emailVerified: false,
-    isActive: true,
-    permissions: {
-      modules: ['dashboard', 'voucher'],
-      voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list'],
-      canManageUsers: false,
-      canViewAllVouchers: false
-    },
-    securitySettings: {
-      twoFactorEnabled: false,
-      loginAttemptLimit: 3,
-      passwordChangeRequired: true,
-      sessionTimeoutMinutes: 120
-    },
-    activities: []
-  }
-];
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { MoreVertical, Edit, Copy, Trash, UserPlus, UserCog, Download, Upload, FileText, Filter, RefreshCcw } from "lucide-react";
+import { Badge } from "@/components/ui/badge"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer"
+import { Calendar } from "@/components/ui/calendar"
+import { CalendarIcon } from "@radix-ui/react-icons"
+import { format } from "date-fns"
+import { cn } from "@/lib/utils"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { UserCreateModal } from './components/UserCreateModal';
+import { UserDetailModal } from './components/UserDetailModal';
+import { UserSecurityModal } from './components/UserSecurityModal';
+import { Department, Role, UserGroup, EnhancedUser, UserManagementFilters, BulkOperation } from '@/modules/user-management/types';
+import { User, UserStatus, UserRole, UserSecuritySettings } from '@/types/auth';
+import { EmptyState } from '@/components/ui/empty-states';
+import { DepartmentsTab } from '@/modules/user-management/components/departments/DepartmentsTab';
+import { RolesTab } from '@/modules/user-management/components/roles/RolesTab';
+import { GroupsTab } from '@/modules/user-management/components/groups/GroupsTab';
 
 export function UserManagement() {
-  const [users, setUsers] = useState<User[]>(mockUsers);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedRole, setSelectedRole] = useState<string>('all');
-  const [selectedStatus, setSelectedStatus] = useState<string>('all');
-  
-  // Modal states
+  const [users, setUsers] = useState<User[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isSecurityModalOpen, setIsSecurityModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  
-  // Confirmation dialog states
-  const [confirmDialog, setConfirmDialog] = useState<{
-    isOpen: boolean;
-    title: string;
-    message: string;
-    onConfirm: () => void;
-  }>({
-    isOpen: false,
-    title: '',
-    message: '',
-    onConfirm: () => {}
+  const [filters, setFilters] = useState<UserManagementFilters>({});
+  const [bulkOperation, setBulkOperation] = useState<BulkOperation | null>(null);
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+
+  const mockUsers: User[] = [
+    {
+      id: '1',
+      fullName: 'Nguyễn Văn Admin',
+      username: 'admin',
+      email: 'admin@company.com',
+      phone: '+84901234567',
+      role: 'erp-admin',
+      permissions: {
+        modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'marketing', 'system-settings', 'user-management'],
+        voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
+        canManageUsers: true,
+        canViewAllVouchers: true
+      },
+      isActive: true,
+      status: 'active',
+      createdAt: '2024-01-15T08:00:00Z',
+      lastLogin: '2024-05-29T16:30:00Z',
+      avatar: undefined,
+      emailVerified: true,
+      securitySettings: {
+        twoFactorEnabled: true,
+        loginAttemptLimit: 5,
+        passwordChangeRequired: false,
+        lastPasswordChange: '2024-05-01T10:00:00Z'
+      },
+      activities: [],
+      notes: 'Quản trị viên hệ thống chính'
+    },
+    {
+      id: '2',
+      fullName: 'Trần Thị Voucher Manager',
+      username: 'voucher_manager',
+      email: 'voucher@company.com',
+      phone: '+84901234568',
+      role: 'voucher-admin',
+      permissions: {
+        modules: ['dashboard', 'voucher'],
+        voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
+        canManageUsers: false,
+        canViewAllVouchers: true
+      },
+      isActive: true,
+      status: 'active',
+      createdAt: '2024-02-01T08:00:00Z',
+      lastLogin: '2024-05-29T14:20:00Z',
+      avatar: undefined,
+      emailVerified: true,
+      securitySettings: {
+        twoFactorEnabled: false,
+        loginAttemptLimit: 3,
+        passwordChangeRequired: true
+      },
+      activities: [],
+      notes: 'Chuyên viên quản lý voucher'
+    },
+    {
+      id: '3',
+      fullName: 'Lê Văn Telesales',
+      username: 'telesales01',
+      email: 'telesales@company.com',
+      phone: '+84901234569',
+      role: 'telesales',
+      permissions: {
+        modules: ['dashboard', 'customers', 'voucher'],
+        voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list'],
+        canManageUsers: false,
+        canViewAllVouchers: false
+      },
+      isActive: true,
+      status: 'active',
+      createdAt: '2024-03-01T08:00:00Z',
+      lastLogin: '2024-05-29T12:00:00Z',
+      avatar: undefined,
+      emailVerified: true,
+      securitySettings: {
+        twoFactorEnabled: false,
+        loginAttemptLimit: 3,
+        passwordChangeRequired: false
+      },
+      activities: [],
+      notes: 'Nhân viên telesales'
+    },
+    {
+      id: '4',
+      fullName: 'Phạm Thị Inactive',
+      username: 'inactive_user',
+      email: 'inactive@company.com',
+      phone: '+84901234570',
+      role: 'custom',
+      permissions: {
+        modules: ['dashboard'],
+        voucherFeatures: [],
+        canManageUsers: false,
+        canViewAllVouchers: false
+      },
+      isActive: false,
+      status: 'inactive',
+      createdAt: '2024-04-01T08:00:00Z',
+      avatar: undefined,
+      emailVerified: false,
+      securitySettings: {
+        twoFactorEnabled: false,
+        loginAttemptLimit: 3,
+        passwordChangeRequired: true
+      },
+      activities: [],
+      notes: 'Tài khoản tạm thời không hoạt động'
+    }
+  ];
+
+  const [allUsers, setAllUsers] = useState<User[]>(mockUsers);
+
+  const handleCreateUser = (newUser: User) => {
+    setAllUsers(prevUsers => [...prevUsers, newUser]);
+    setIsCreateModalOpen(false);
+  };
+
+  const handleUpdateUser = (updatedUser: User) => {
+    setAllUsers(prevUsers =>
+      prevUsers.map(user => (user.id === updatedUser.id ? updatedUser : user))
+    );
+    setIsDetailModalOpen(false);
+  };
+
+  const handleSecurityUpdated = (userId: string, newSettings: UserSecuritySettings) => {
+    setAllUsers(prevUsers =>
+      prevUsers.map(user =>
+        user.id === userId ? { ...user, securitySettings: newSettings } : user
+      )
+    );
+    setIsSecurityModalOpen(false);
+  };
+
+  const handleDeleteUser = (userId: string) => {
+    setAllUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
+  };
+
+  const filteredUsers = allUsers.filter(user => {
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      if (!user.fullName.toLowerCase().includes(searchLower) &&
+        !user.username.toLowerCase().includes(searchLower) &&
+        !user.email.toLowerCase().includes(searchLower)) {
+        return false;
+      }
+    }
+
+    if (filters.status && filters.status.length > 0 && !filters.status.includes(user.status)) {
+      return false;
+    }
+
+    return true;
   });
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (user.phone && user.phone.includes(searchTerm));
-    const matchesRole = selectedRole === 'all' || user.role === selectedRole;
-    const matchesStatus = selectedStatus === 'all' || user.status === selectedStatus;
-    
-    return matchesSearch && matchesRole && matchesStatus;
-  });
+  const handleBulkOperation = () => {
+    if (!bulkOperation) return;
 
-  const getStatusBadge = (status: UserStatus) => {
-    const statusConfig = {
-      active: { className: "bg-green-100 text-green-800", label: "Hoạt Động" },
-      inactive: { className: "bg-gray-100 text-gray-800", label: "Không Hoạt Động" },
-      locked: { className: "bg-red-100 text-red-800", label: "Bị Khóa" },
-      pending: { className: "bg-yellow-100 text-yellow-800", label: "Chờ Xác Thực" },
-      pending_verification: { className: "bg-yellow-100 text-yellow-800", label: "Chờ Xác Thực" }
-    };
-    
-    const config = statusConfig[status];
-    return <Badge className={config.className}>{config.label}</Badge>;
+    let updatedUsers = [...allUsers];
+
+    switch (bulkOperation.type) {
+      case 'activate':
+        updatedUsers = updatedUsers.map(user =>
+          bulkOperation.userIds.includes(user.id) ? { ...user, isActive: true, status: 'active' } : user
+        );
+        break;
+      case 'deactivate':
+        updatedUsers = updatedUsers.map(user =>
+          bulkOperation.userIds.includes(user.id) ? { ...user, isActive: false, status: 'inactive' } : user
+        );
+        break;
+      case 'delete':
+        updatedUsers = updatedUsers.filter(user => !bulkOperation.userIds.includes(user.id));
+        break;
+    }
+
+    setAllUsers(updatedUsers);
+    setBulkOperation(null);
+    setSelectedUserIds([]);
   };
 
-  const getRoleBadge = (role: UserRole) => {
-    const roleConfig = {
-      'erp-admin': { className: "bg-purple-100 text-purple-800", label: "Quản Trị ERP" },
-      'voucher-admin': { className: "bg-blue-100 text-blue-800", label: "Quản Lý Voucher" },
-      'telesales': { className: "bg-orange-100 text-orange-800", label: "Telesales" },
-      'custom': { className: "bg-gray-100 text-gray-800", label: "Tùy Chỉnh" }
-    };
-    
-    const config = roleConfig[role];
-    return <Badge className={config.className}>{config.label}</Badge>;
-  };
+  const isAllSelected = filteredUsers.length > 0 && selectedUserIds.length === filteredUsers.length;
+  const isIndeterminate = selectedUserIds.length > 0 && selectedUserIds.length < filteredUsers.length;
 
-  const handleToggleUserStatus = (user: User) => {
-    const newStatus = user.status === 'active' ? 'locked' : 'active';
-    const action = newStatus === 'active' ? 'mở khóa' : 'khóa';
-    
-    setConfirmDialog({
-      isOpen: true,
-      title: `${action.charAt(0).toUpperCase() + action.slice(1)} Tài Khoản`,
-      message: `Bạn có chắc chắn muốn ${action} tài khoản "${user.fullName}"?`,
-      onConfirm: () => {
-        setUsers(users.map(u => u.id === user.id ? { ...u, status: newStatus } : u));
-        setConfirmDialog({ ...confirmDialog, isOpen: false });
-      }
-    });
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedUserIds(filteredUsers.map(user => user.id));
+    } else {
+      setSelectedUserIds([]);
+    }
   };
-
-  const handleDeleteUser = (user: User) => {
-    setConfirmDialog({
-      isOpen: true,
-      title: 'Xóa Người Dùng',
-      message: `Bạn có chắc chắn muốn xóa người dùng "${user.fullName}"? Hành động này không thể hoàn tác.`,
-      onConfirm: () => {
-        setUsers(users.filter(u => u.id !== user.id));
-        setConfirmDialog({ ...confirmDialog, isOpen: false });
-      }
-    });
-  };
-
-  const handleResetPassword = (user: User) => {
-    setConfirmDialog({
-      isOpen: true,
-      title: 'Đặt Lại Mật Khẩu',
-      message: `Gửi email đặt lại mật khẩu cho "${user.fullName}"?`,
-      onConfirm: () => {
-        // Here you would implement password reset logic
-        console.log('Password reset email sent to:', user.email);
-        setConfirmDialog({ ...confirmDialog, isOpen: false });
-      }
-    });
-  };
-
-  const handleForceLogout = (user: User) => {
-    setConfirmDialog({
-      isOpen: true,
-      title: 'Đăng Xuất Cưỡng Chế',
-      message: `Đăng xuất tất cả phiên đăng nhập của "${user.fullName}"?`,
-      onConfirm: () => {
-        // Here you would implement force logout logic
-        console.log('Force logout user:', user.id);
-        setConfirmDialog({ ...confirmDialog, isOpen: false });
-      }
-    });
-  };
-
-  const getStats = () => {
-    const total = users.length;
-    const active = users.filter(u => u.status === 'active').length;
-    const locked = users.filter(u => u.status === 'locked').length;
-    const pending = users.filter(u => u.status === 'pending_verification').length;
-    const admins = users.filter(u => u.role === 'erp-admin').length;
-    
-    return { total, active, locked, pending, admins };
-  };
-
-  const stats = getStats();
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg p-6 text-white">
-        <div className="flex items-center space-x-4">
-          <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-            <Users className="w-8 h-8 text-white" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold">Quản Lý Người Dùng ERP</h1>
-            <p className="text-blue-100">
-              Quản lý tài khoản và phân quyền toàn hệ thống
-            </p>
-          </div>
+    <div className="container mx-auto py-10">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-3xl font-semibold theme-text">Quản Lý Người Dùng</h1>
+          <p className="text-gray-500 theme-text-muted">Quản lý và cấu hình người dùng hệ thống</p>
         </div>
+        <Button onClick={() => setIsCreateModalOpen(true)} className="voucher-button-primary">
+          <UserPlus className="w-4 h-4 mr-2" />
+          Thêm Người Dùng
+        </Button>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <Card>
-          <CardContent className="flex items-center p-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Users className="w-5 h-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-xs text-gray-600">Tổng Số</p>
-                <p className="text-xl font-bold text-gray-900">{stats.total}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center p-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <Eye className="w-5 h-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-xs text-gray-600">Hoạt Động</p>
-                <p className="text-xl font-bold text-gray-900">{stats.active}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center p-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                <EyeOff className="w-5 h-5 text-red-600" />
-              </div>
-              <div>
-                <p className="text-xs text-gray-600">Bị Khóa</p>
-                <p className="text-xl font-bold text-gray-900">{stats.locked}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center p-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <Clock className="w-5 h-5 text-yellow-600" />
-              </div>
-              <div>
-                <p className="text-xs text-gray-600">Chờ Xác Thực</p>
-                <p className="text-xl font-bold text-gray-900">{stats.pending}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center p-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Shield className="w-5 h-5 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-xs text-gray-600">Quản Trị</p>
-                <p className="text-xl font-bold text-gray-900">{stats.admins}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Filters */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+        <Input
+          type="text"
+          placeholder="Tìm kiếm theo tên, email..."
+          className="voucher-input"
+          onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+        />
+        <Select onValueChange={(value) => setFilters(prev => ({ ...prev, status: value === 'all' ? undefined : [value] }))} defaultValue="all">
+          <SelectTrigger className="voucher-input">
+            <SelectValue placeholder="Chọn trạng thái" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tất cả trạng thái</SelectItem>
+            <SelectItem value="active">Hoạt động</SelectItem>
+            <SelectItem value="inactive">Không hoạt động</SelectItem>
+            <SelectItem value="pending_verification">Chờ xác thực</SelectItem>
+            <SelectItem value="locked">Đã khóa</SelectItem>
+          </SelectContent>
+        </Select>
+        <div></div>
+        <Button variant="outline" className="h-10">
+          <Filter className="w-4 h-4 mr-2" />
+          Lọc
+        </Button>
       </div>
 
-      {/* Actions and Filters */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-            <div className="flex flex-col sm:flex-row gap-4 flex-1">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder="Tìm kiếm theo tên, email, SĐT, username..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              
-              <Select value={selectedRole} onValueChange={setSelectedRole}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Lọc theo vai trò" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tất cả vai trò</SelectItem>
-                  <SelectItem value="erp-admin">Quản Trị ERP</SelectItem>
-                  <SelectItem value="voucher-admin">Quản Lý Voucher</SelectItem>
-                  <SelectItem value="telesales">Telesales</SelectItem>
-                  <SelectItem value="custom">Tùy Chỉnh</SelectItem>
-                </SelectContent>
-              </Select>
+      {/* Bulk Actions */}
+      {selectedUserIds.length > 0 && (
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-sm text-gray-600">
+            Đã chọn {selectedUserIds.length} người dùng
+          </p>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="h-8">
+                Hành động hàng loạt
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Chọn hành động</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => setBulkOperation({ type: 'activate', userIds: selectedUserIds })}>
+                Kích hoạt
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setBulkOperation({ type: 'deactivate', userIds: selectedUserIds })}>
+                Vô hiệu hóa
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setBulkOperation({ type: 'delete', userIds: selectedUserIds })}>
+                Xóa
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleBulkOperation}>
+                Xác nhận
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
 
-              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Lọc theo trạng thái" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tất cả trạng thái</SelectItem>
-                  <SelectItem value="active">Hoạt động</SelectItem>
-                  <SelectItem value="locked">Bị khóa</SelectItem>
-                  <SelectItem value="pending">Chờ xác thực</SelectItem>
-                  <SelectItem value="pending_verification">Chờ xác thực</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <Button 
-              onClick={() => setIsCreateModalOpen(true)}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              <UserPlus className="w-4 h-4 mr-2" />
-              Thêm Người Dùng
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Users Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Danh Sách Người Dùng ({filteredUsers.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
+      {/* User Table */}
+      {filteredUsers.length === 0 ? (
+        <EmptyState 
+          icon={<UserCog className="w-12 h-12 text-gray-400" />}
+          title="Không có người dùng"
+          description="Không tìm thấy người dùng nào phù hợp với bộ lọc hiện tại."
+        />
+      ) : (
+        <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Người Dùng</TableHead>
-                <TableHead>Vai Trò</TableHead>
-                <TableHead>Trạng Thái</TableHead>
-                <TableHead>Xác Thực Email</TableHead>
-                <TableHead>Lần Đăng Nhập Cuối</TableHead>
-                <TableHead>2FA</TableHead>
-                <TableHead className="text-right">Thao Tác</TableHead>
+                <TableHead className="w-[50px]">
+                  <Checkbox
+                    checked={isAllSelected}
+                    onCheckedChange={handleSelectAll}
+                    aria-label="Select all"
+                    disabled={filteredUsers.length === 0}
+                    aria-describedby="select-all-description"
+                    data-indeterminate={isIndeterminate}
+                  />
+                </TableHead>
+                <TableHead>Tên</TableHead>
+                <TableHead>Tên đăng nhập</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Vai trò</TableHead>
+                <TableHead>Trạng thái</TableHead>
+                <TableHead className="text-right">Hành động</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredUsers.map((user) => (
                 <TableRow key={user.id}>
-                  <TableCell>
-                    <div className="flex items-center space-x-3">
-                      <Avatar className="w-10 h-10">
-                        <AvatarImage src="/placeholder.svg" />
-                        <AvatarFallback className="bg-blue-100 text-blue-600">
-                          {user.fullName.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium text-gray-900">{user.fullName}</p>
-                        <p className="text-sm text-gray-500">@{user.username}</p>
-                        <p className="text-sm text-gray-500">{user.email}</p>
-                        {user.phone && (
-                          <p className="text-sm text-gray-500">{user.phone}</p>
-                        )}
-                      </div>
-                    </div>
+                  <TableCell className="font-medium">
+                    <Checkbox
+                      checked={selectedUserIds.includes(user.id)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedUserIds([...selectedUserIds, user.id]);
+                        } else {
+                          setSelectedUserIds(selectedUserIds.filter(id => id !== user.id));
+                        }
+                      }}
+                      aria-label={`Select user ${user.fullName}`}
+                    />
                   </TableCell>
+                  <TableCell className="font-medium">{user.fullName}</TableCell>
+                  <TableCell>{user.username}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.role}</TableCell>
                   <TableCell>
-                    {getRoleBadge(user.role)}
-                  </TableCell>
-                  <TableCell>
-                    {getStatusBadge(user.status)}
-                  </TableCell>
-                  <TableCell>
-                    {user.emailVerified ? (
-                      <Badge className="bg-green-100 text-green-800">Đã Xác Thực</Badge>
-                    ) : (
-                      <Badge className="bg-red-100 text-red-800">Chưa Xác Thực</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-sm text-gray-600">
-                    {user.lastLogin ? new Date(user.lastLogin).toLocaleString('vi-VN') : 'Chưa đăng nhập'}
-                  </TableCell>
-                  <TableCell>
-                    {user.securitySettings.twoFactorEnabled ? (
-                      <Badge className="bg-green-100 text-green-800">Bật</Badge>
-                    ) : (
-                      <Badge className="bg-gray-100 text-gray-800">Tắt</Badge>
-                    )}
+                    <Badge variant={user.isActive ? "default" : "destructive"}>
+                      {user.isActive ? "Hoạt động" : "Không hoạt động"}
+                    </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end space-x-1">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => {
-                          setSelectedUser(user);
-                          setIsDetailModalOpen(true);
-                        }}
-                        title="Xem chi tiết"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => {
-                          setSelectedUser(user);
-                          setIsEditModalOpen(true);
-                        }}
-                        title="Chỉnh sửa"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => {
-                          setSelectedUser(user);
-                          setIsSecurityModalOpen(true);
-                        }}
-                        title="Cài đặt bảo mật"
-                      >
-                        <Settings className="w-4 h-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleResetPassword(user)}
-                        title="Đặt lại mật khẩu"
-                      >
-                        <Key className="w-4 h-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleForceLogout(user)}
-                        title="Đăng xuất cưỡng chế"
-                      >
-                        <LogOut className="w-4 h-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleToggleUserStatus(user)}
-                        className={user.status === 'active' ? 'text-red-600 hover:text-red-700' : 'text-green-600 hover:text-green-700'}
-                        title={user.status === 'active' ? 'Khóa tài khoản' : 'Mở khóa tài khoản'}
-                      >
-                        {user.status === 'active' ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleDeleteUser(user)}
-                        className="text-red-600 hover:text-red-700"
-                        title="Xóa người dùng"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <span className="sr-only">Open menu</span>
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Hành động</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => { setSelectedUser(user); setIsDetailModalOpen(true); }}>
+                          <Edit className="w-4 h-4 mr-2" />
+                          Chỉnh sửa
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => { setSelectedUser(user); setIsSecurityModalOpen(true); }}>
+                          <UserCog className="w-4 h-4 mr-2" />
+                          Bảo mật
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDeleteUser(user.id)}>
+                          <Trash className="w-4 h-4 mr-2" />
+                          Xóa
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
+        </div>
+      )}
 
-      {/* Modals */}
-      <UserCreateModal 
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onUserCreated={(newUser) => {
-          setUsers([...users, newUser]);
-          setIsCreateModalOpen(false);
-        }}
-      />
-
-      <UserEditModal 
-        isOpen={isEditModalOpen}
-        onClose={() => {
-          setIsEditModalOpen(false);
-          setSelectedUser(null);
-        }}
-        user={selectedUser}
-        onUserUpdated={(updatedUser) => {
-          setUsers(users.map(u => u.id === updatedUser.id ? updatedUser : u));
-          setIsEditModalOpen(false);
-          setSelectedUser(null);
-        }}
-      />
-
-      <UserDetailModal 
-        isOpen={isDetailModalOpen}
-        onClose={() => {
-          setIsDetailModalOpen(false);
-          setSelectedUser(null);
-        }}
-        user={selectedUser}
-      />
-
-      <UserSecurityModal 
+      <UserCreateModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} onUserCreated={handleCreateUser} />
+      <UserDetailModal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)} user={selectedUser} onUserUpdated={handleUpdateUser} />
+      <UserSecurityModal
         isOpen={isSecurityModalOpen}
-        onClose={() => {
-          setIsSecurityModalOpen(false);
-          setSelectedUser(null);
-        }}
+        onClose={() => setIsSecurityModalOpen(false)}
         user={selectedUser}
-        onSecurityUpdated={(userId, settings) => {
-          setUsers(users.map(u => u.id === userId ? { ...u, securitySettings: settings } : u));
-          setIsSecurityModalOpen(false);
-          setSelectedUser(null);
-        }}
-      />
-
-      <ConfirmationDialog 
-        isOpen={confirmDialog.isOpen}
-        onClose={() => setConfirmDialog({ ...confirmDialog, isOpen: false })}
-        title={confirmDialog.title}
-        message={confirmDialog.message}
-        onConfirm={confirmDialog.onConfirm}
+        onSecurityUpdated={handleSecurityUpdated}
       />
     </div>
   );
