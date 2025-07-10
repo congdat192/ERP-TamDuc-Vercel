@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Users, Building2, Shield, UserCog, ArrowLeft } from 'lucide-react';
@@ -15,6 +15,7 @@ import {
 
 export function UserManagementLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
 
   const navItems = [
     {
@@ -46,6 +47,10 @@ export function UserManagementLayout() {
     return currentItem ? currentItem.label : 'Quản Lý Người Dùng';
   };
 
+  const handleBackClick = () => {
+    navigate('/ERP/UserManagement');
+  };
+
   const isOnSubPage = location.pathname !== '/ERP/UserManagement';
 
   return (
@@ -56,7 +61,10 @@ export function UserManagementLayout() {
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbLink href="/ERP/UserManagement">
+                <BreadcrumbLink 
+                  onClick={() => navigate('/ERP/UserManagement')}
+                  className="cursor-pointer"
+                >
                   Quản Lý Người Dùng
                 </BreadcrumbLink>
               </BreadcrumbItem>
@@ -70,7 +78,7 @@ export function UserManagementLayout() {
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => window.history.back()}
+            onClick={handleBackClick}
             className="flex items-center space-x-2"
           >
             <ArrowLeft className="w-4 h-4" />
