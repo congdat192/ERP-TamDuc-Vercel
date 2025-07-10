@@ -10,7 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 import { RoleCreationData, CustomRole, ModuleInfo, ModulePermissions } from '../../types/role-management';
 import { RoleService } from '../../services/roleService';
 import { ModuleService } from '../../services/moduleService';
-import { ModuleSidebar } from './ModuleSidebar';
+import { SimpleModuleList } from './SimpleModuleList';
+import { PermissionDetailArea } from './PermissionDetailArea';
 
 interface CreateRoleModalProps {
   isOpen: boolean;
@@ -26,6 +27,7 @@ interface FormData {
 export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleModalProps) {
   const [modules, setModules] = useState<ModuleInfo[]>([]);
   const [permissions, setPermissions] = useState<ModulePermissions>({});
+  const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingModules, setIsLoadingModules] = useState(false);
   const { toast } = useToast();
@@ -100,6 +102,7 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
   const handleClose = () => {
     reset();
     setPermissions({});
+    setSelectedModuleId(null);
     onClose();
   };
 
@@ -111,6 +114,10 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
         [permission]: value
       }
     }));
+  };
+
+  const handleModuleSelect = (moduleId: string) => {
+    setSelectedModuleId(moduleId);
   };
 
   const getSelectedPermissionsCount = () => {
@@ -125,22 +132,24 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
     ).length;
   };
 
+  const selectedModule = selectedModuleId ? modules.find(m => m.id === selectedModuleId) : null;
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
+      <DialogContent className="max-w-7xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle>Tạo Vai Trò Mới</DialogTitle>
         </DialogHeader>
 
         <div className="flex gap-6 h-[600px]">
-          {/* Left Column - Role Form */}
-          <div className="flex-1 space-y-6 overflow-y-auto pr-2">
+          {/* Left Column 70% - Form + Permission Detail */}
+          <div className="flex-[7] space-y-6 overflow-y-auto pr-2">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              {/* Basic Information */}
+              {/* Basic Information - Compact Form */}
               <div className="space-y-4">
                 <h3 className="text-lg font-medium border-b pb-2">Thông Tin Cơ Bản</h3>
                 
-                <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Tên Vai Trò *</Label>
                     <Input
@@ -155,11 +164,10 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
 
                   <div className="space-y-2">
                     <Label htmlFor="description">Mô Tả</Label>
-                    <Textarea
+                    <Input
                       id="description"
                       {...register('description')}
-                      placeholder="Mô tả vai trò và trách nhiệm"
-                      rows={3}
+                      placeholder="Mô tả vai trò"
                     />
                   </div>
                 </div>
@@ -201,19 +209,32 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
                 </Button>
               </div>
             </form>
+
+            {/* Permission Detail Area */}
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-medium mb-4">Chi Tiết Quyền</h3>
+              <div className="min-h-[300px]">
+                <PermissionDetailArea
+                  selectedModule={selectedModule}
+                  permissions={permissions}
+                  onPermissionChange={handlePermissionChange}
+                />
+              </div>
+            </div>
           </div>
 
-          {/* Right Column - Modules Sidebar */}
-          <div className="w-80 border-l pl-6 overflow-y-auto">
+          {/* Right Column 30% - Modules List */}
+          <div className="flex-[3] border-l pl-6 overflow-y-auto">
             {isLoadingModules ? (
               <div className="flex items-center justify-center py-8">
                 <div className="text-gray-500">Đang tải modules...</div>
               </div>
             ) : (
-              <ModuleSidebar
+              <SimpleModuleList
                 modules={modules}
                 permissions={permissions}
-                onPermissionChange={handlePermissionChange}
+                selectedModuleId={selectedModuleId}
+                onModuleSelect={handleModuleSelect}
               />
             )}
           </div>
