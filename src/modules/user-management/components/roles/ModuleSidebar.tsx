@@ -90,12 +90,18 @@ export function ModuleSidebar({ modules, permissions, onPermissionChange }: Modu
                 >
                   <div className="flex items-center space-x-3 text-left">
                     <div className="flex items-center space-x-2">
-                      <Checkbox
-                        checked={selectionState === 'full'}
-                        indeterminate={selectionState === 'partial'}
-                        onCheckedChange={(checked) => handleSelectAllModule(module.id, !!checked)}
-                        onClick={(e) => e.stopPropagation()}
-                      />
+                      <div className="relative">
+                        <Checkbox
+                          checked={selectionState === 'full'}
+                          onCheckedChange={(checked) => handleSelectAllModule(module.id, !!checked)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        {selectionState === 'partial' && (
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <div className="w-2 h-2 bg-blue-600 rounded-sm" />
+                          </div>
+                        )}
+                      </div>
                       <div>
                         <div className="font-medium text-gray-900">{module.label}</div>
                         <div className="text-xs text-gray-500">{module.name}</div>
