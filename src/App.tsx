@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -32,7 +31,7 @@ import { InvoiceDetailPage } from "./pages/InvoiceDetailPage";
 import { UserProfilePage } from "./pages/UserProfilePage";
 import { PlatformAdmin } from "./modules/platform-admin";
 import { Settings } from "./modules/admin/pages/Settings";
-import { UserManagementModule } from "./modules/user-management";
+import { UserManagementLayout, MembersPage, DepartmentsPage, RolesPage, GroupsPage } from "./modules/user-management";
 import { ERPLayout } from "@/components/layout/ERPLayout";
 import { useAuth } from "@/components/auth/AuthContext";
 import { useBusiness } from "@/contexts/BusinessContext";
@@ -229,14 +228,23 @@ const App = () => (
                       </ProtectedERPRoute>
                     } 
                   />
+                  
+                  {/* User Management Nested Routes */}
                   <Route 
                     path="/ERP/UserManagement" 
                     element={
                       <ProtectedERPRoute module="user-management">
-                        <UserManagementModule />
+                        <UserManagementLayout />
                       </ProtectedERPRoute>
-                    } 
-                  />
+                    }
+                  >
+                    <Route index element={<Navigate to="/ERP/UserManagement/Members" replace />} />
+                    <Route path="Members" element={<MembersPage />} />
+                    <Route path="Departments" element={<DepartmentsPage />} />
+                    <Route path="Roles" element={<RolesPage />} />
+                    <Route path="Groups" element={<GroupsPage />} />
+                  </Route>
+                  
                   <Route 
                     path="/ERP/Setting/*" 
                     element={
