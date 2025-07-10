@@ -26,6 +26,7 @@ export const testKiotVietConnection = async (config: KiotVietConfig): Promise<Te
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
       body: JSON.stringify({
         retailer: config.retailer,
@@ -34,7 +35,26 @@ export const testKiotVietConnection = async (config: KiotVietConfig): Promise<Te
       })
     });
 
-    const data = await response.json();
+    console.log('📡 [pipelineService] Response status:', response.status);
+    console.log('📡 [pipelineService] Response headers:', Object.fromEntries(response.headers.entries()));
+    
+    // Check content type before parsing
+    const contentType = response.headers.get('content-type');
+    console.log('📡 [pipelineService] Content-Type:', contentType);
+    
+    const responseText = await response.text();
+    console.log('📡 [pipelineService] Raw response:', responseText.substring(0, 500));
+
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('❌ [pipelineService] JSON parsing failed:', parseError);
+      return {
+        success: false,
+        message: `Lỗi phản hồi từ server: ${responseText.substring(0, 100)}...`
+      };
+    }
 
     if (response.ok && data.access_token) {
       console.log('✅ [pipelineService] KiotViet connection test successful via proxy');
