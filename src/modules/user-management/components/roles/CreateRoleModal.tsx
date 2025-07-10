@@ -1,0 +1,201 @@
+
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { useForm } from 'react-hook-form';
+import { useToast } from '@/hooks/use-toast';
+import { RoleCreationData, CustomRole, ModuleInfo, ModulePermissions } from '../../types/role-management';
+import { RoleService } from '../../services/roleService';
+import { ModuleService } from '../../services/moduleService';
+import { PermissionMatrix } from './PermissionMatrix';
+
+interface CreateRoleModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onRoleCreated: (role: CustomRole) => void;
+}
+
+interface FormData {
+  name: string;
+  description: string;
+}
+
+export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleModalProps) {
+  const [modules, setModules] = useState<ModuleInfo[]>([]);
+  const [permissions, setPermissions] = useState<ModulePermissions>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingModules, setIsLoadingModules] = useState(false);
+  const { toast } = useToast();
+
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>();
+
+  useEffect(() => {
+    if (isOpen) {
+      loadModules();
+    }
+  }, [isOpen]);
+
+  const loadModules = async () => {
+    try {
+      setIsLoadingModules(true);
+      const modulesData = await ModuleService.getActiveModules();
+      setModules(modulesData);
+      
+      // Initialize permissions
+      const initialPermissions: ModulePermissions = {};
+      modulesData.forEach(module => {
+        initialPermissions[module.id] = {
+          view: false,
+          add: false,
+          edit: false,
+          delete: false
+        };
+      });
+      setPermissions(initialPermissions);
+    } catch (error) {
+      console.error('Error loading modules:', error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể tải danh sách modules",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoadingModules(false);
+    }
+  };
+
+  const onSubmit = async (data: FormData) => {
+    try {
+      setIsLoading(true);
+      
+      const roleData: RoleCreationData = {
+        name: data.name,
+        description: data.description,
+        permissions
+      };
+
+      const newRole = await RoleService.createRole(roleData);
+      onRoleCreated(newRole);
+      handleClose();
+      
+      toast({
+        title: "Thành công",
+        description: "Tạo vai trò mới thành công"
+      });
+    } catch (error) {
+      console.error('Error creating role:', error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể tạo vai trò",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleClose = () => {
+    reset();
+    setPermissions({});
+    onClose();
+  };
+
+  const handlePermissionChange = (moduleId: string, permission: keyof typeof permissions[string], value: boolean) => {
+    setPermissions(prev => ({
+      ...prev,
+      [moduleId]: {
+        ...prev[moduleId],
+        [permission]: value
+      }
+    }));
+  };
+
+  const getSelectedPermissionsCount = () => {
+    return Object.values(permissions).reduce((count, perms) => {
+      return count + Object.values(perms).filter(Boolean).length;
+    }, 0);
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Tạo Vai Trò Mới</DialogTitle>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {/* Basic Information */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Thông Tin Cơ Bản</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Tên Vai Trò *</Label>
+                <Input
+                  id="name"
+                  {...register('name', { required: 'Tên vai trò là bắt buộc' })}
+                  placeholder="Nhập tên vai trò"
+                />
+                {errors.name && (
+                  <p className="text-sm text-red-500">{errors.name.message}</p>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Số Quyền Đã Chọn</Label>
+                <div className="px-3 py-2 bg-gray-50 rounded-md text-sm">
+                  {getSelectedPermissionsCount()} quyền
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Mô Tả</Label>
+              <Textarea
+                id="description"
+                {...register('description')}
+                placeholder="Mô tả vai trò và trách nhiệm"
+                rows={3}
+              />
+            </div>
+          </div>
+
+          {/* Permissions Matrix */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Phân Quyền Theo Module</h3>
+            
+            {isLoadingModules ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="text-gray-500">Đang tải modules...</div>
+              </div>
+            ) : (
+              <PermissionMatrix
+                modules={modules}
+                permissions={permissions}
+                onPermissionChange={handlePermissionChange}
+              />
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center justify-end space-x-3 pt-4 border-t">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={handleClose}
+              disabled={isLoading}
+            >
+              Hủy
+            </Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? 'Đang tạo...' : 'Tạo Vai Trò'}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}

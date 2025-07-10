@@ -13,28 +13,28 @@ export function UserManagementDashboard() {
       title: 'Thành Viên',
       icon: Users,
       path: '/ERP/UserManagement/Members',
-      stats: '42',
+      stats: '0',
       color: 'text-blue-600'
     },
     {
       title: 'Phòng Ban',
       icon: Building2,
       path: '/ERP/UserManagement/Departments',
-      stats: '8',
+      stats: '0',
       color: 'text-green-600'
     },
     {
       title: 'Vai Trò',
       icon: Shield,
       path: '/ERP/UserManagement/Roles',
-      stats: '12',
+      stats: '0',
       color: 'text-purple-600'
     },
     {
       title: 'Nhóm',
       icon: UserCog,
       path: '/ERP/UserManagement/Groups',
-      stats: '6',
+      stats: '0',
       color: 'text-orange-600'
     }
   ];
@@ -49,7 +49,7 @@ export function UserManagementDashboard() {
         </p>
       </div>
 
-      {/* Features Grid - Changed to 1x4 layout */}
+      {/* Features Grid - 1x4 layout */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 max-w-6xl mx-auto">
         {features.map((feature) => {
           const Icon = feature.icon;
