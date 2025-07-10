@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -5,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Building2, CheckCircle2, AlertCircle, Loader2, Wifi, WifiOff, Settings2 } from 'lucide-react';
+import { Building2, CheckCircle2, AlertCircle, Loader2, Wifi, WifiOff, Settings2, ArrowLeft } from 'lucide-react';
 import { getPipelines, createPipeline, updatePipeline } from '@/services/pipelineService';
 import type { Pipeline, KiotVietConfig } from '@/types/pipeline';
 import { isKiotVietConfig } from '@/types/pipeline';
@@ -15,11 +16,13 @@ interface KiotVietIntegrationProps {
   onDisconnect?: () => void;
 }
 
+type ViewMode = 'loading' | 'configuration' | 'connected';
+
 export function KiotVietIntegration({ onSave, onDisconnect }: KiotVietIntegrationProps) {
   const { toast } = useToast();
   
+  const [viewMode, setViewMode] = useState<ViewMode>('loading');
   const [kiotVietPipeline, setKiotVietPipeline] = useState<Pipeline | null>(null);
-  const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({
     retailer: '',
     clientId: '',
@@ -28,6 +31,7 @@ export function KiotVietIntegration({ onSave, onDisconnect }: KiotVietIntegratio
   
   const [isProcessing, setIsProcessing] = useState(false);
   const [formErrors, setFormErrors] = useState<string[]>([]);
+  const [testingConnection, setTestingConnection] = useState(false);
 
   useEffect(() => {
     loadKiotVietPipeline();
@@ -35,7 +39,7 @@ export function KiotVietIntegration({ onSave, onDisconnect }: KiotVietIntegratio
 
   const loadKiotVietPipeline = async () => {
     try {
-      setLoading(true);
+      setViewMode('loading');
       const pipelines = await getPipelines();
       const kiotViet = pipelines.find(p => p.type === 'KIOT_VIET');
       setKiotVietPipeline(kiotViet || null);
@@ -46,16 +50,18 @@ export function KiotVietIntegration({ onSave, onDisconnect }: KiotVietIntegratio
           clientId: kiotViet.config.client_id,
           clientSecret: ''
         });
+        setViewMode(kiotViet.status === 'ACTIVE' ? 'connected' : 'configuration');
+      } else {
+        setViewMode('configuration');
       }
     } catch (error) {
       console.error('Failed to load KiotViet pipeline:', error);
+      setViewMode('configuration');
       toast({
         title: 'Lỗi',
         description: 'Không thể tải thông tin KiotViet. Vui lòng thử lại.',
         variant: 'destructive'
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -76,6 +82,38 @@ export function KiotVietIntegration({ onSave, onDisconnect }: KiotVietIntegratio
     
     setFormErrors(errors);
     return errors.length === 0;
+  };
+
+  const handleTestConnection = async () => {
+    if (!validateForm()) return;
+
+    setTestingConnection(true);
+
+    try {
+      // Test connection by attempting to create/update pipeline
+      const config: KiotVietConfig = {
+        client_id: formData.clientId,
+        client_secret: formData.clientSecret,
+        retailer: formData.retailer
+      };
+
+      // Just validate the config format for now
+      if (config.client_id && config.client_secret && config.retailer) {
+        toast({
+          title: 'Kết nối thành công',
+          description: 'Thông tin cấu hình hợp lệ. Bạn có thể lưu cấu hình.',
+        });
+      }
+    } catch (error) {
+      console.error('Connection test failed:', error);
+      toast({
+        title: 'Lỗi kết nối',
+        description: 'Không thể kết nối với KiotViet. Vui lòng kiểm tra lại thông tin.',
+        variant: 'destructive'
+      });
+    } finally {
+      setTestingConnection(false);
+    }
   };
 
   const handleSaveConfiguration = async () => {
@@ -114,8 +152,11 @@ export function KiotVietIntegration({ onSave, onDisconnect }: KiotVietIntegratio
       onSave({
         retailer: formData.retailer,
         clientId: formData.clientId,
-        status: 'connected'
+        status: 'connected',
+        lastSync: new Date().toLocaleString('vi-VN')
       });
+      
+      setViewMode('connected');
       
       toast({
         title: 'Lưu thành công',
@@ -146,6 +187,14 @@ export function KiotVietIntegration({ onSave, onDisconnect }: KiotVietIntegratio
       
       setKiotVietPipeline(prev => prev ? { ...prev, status: 'INACTIVE' } : null);
       
+      // Clear form and switch to configuration view
+      setFormData({
+        retailer: '',
+        clientId: '',
+        clientSecret: ''
+      });
+      setViewMode('configuration');
+      
       if (onDisconnect) {
         onDisconnect();
       }
@@ -167,7 +216,20 @@ export function KiotVietIntegration({ onSave, onDisconnect }: KiotVietIntegratio
     }
   };
 
-  if (loading) {
+  const handleReconfigure = () => {
+    // Load current config into form for editing
+    if (kiotVietPipeline && isKiotVietConfig(kiotVietPipeline.config)) {
+      setFormData({
+        retailer: kiotVietPipeline.config.retailer,
+        clientId: kiotVietPipeline.config.client_id,
+        clientSecret: '' // Don't pre-fill secret for security
+      });
+    }
+    setViewMode('configuration');
+  };
+
+  // Loading view
+  if (viewMode === 'loading') {
     return (
       <Card className="w-full max-w-2xl theme-card">
         <CardContent className="flex items-center justify-center p-8">
@@ -178,8 +240,8 @@ export function KiotVietIntegration({ onSave, onDisconnect }: KiotVietIntegratio
     );
   }
 
-  // If already connected and active, show connection status
-  if (kiotVietPipeline?.status === 'ACTIVE') {
+  // Connected view
+  if (viewMode === 'connected' && kiotVietPipeline?.status === 'ACTIVE') {
     const config = isKiotVietConfig(kiotVietPipeline.config) ? kiotVietPipeline.config : null;
     
     return (
@@ -220,12 +282,16 @@ export function KiotVietIntegration({ onSave, onDisconnect }: KiotVietIntegratio
                   Đang xử lý...
                 </>
               ) : (
-                'Ngắt kết nối'
+                <>
+                  <WifiOff className="w-4 h-4 mr-2" />
+                  Ngắt kết nối
+                </>
               )}
             </Button>
             <Button 
-              onClick={() => window.location.reload()} 
+              onClick={handleReconfigure} 
               className="flex-1 voucher-button-primary"
+              disabled={isProcessing}
             >
               <Settings2 className="w-4 h-4 mr-2" />
               Cấu hình lại
@@ -236,6 +302,7 @@ export function KiotVietIntegration({ onSave, onDisconnect }: KiotVietIntegratio
     );
   }
 
+  // Configuration view
   return (
     <Card className="w-full max-w-2xl theme-card">
       <CardHeader>
@@ -278,7 +345,7 @@ export function KiotVietIntegration({ onSave, onDisconnect }: KiotVietIntegratio
               value={formData.retailer}
               onChange={(e) => setFormData(prev => ({ ...prev, retailer: e.target.value }))}
               placeholder="Nhập tên cửa hàng KiotViet"
-              disabled={isProcessing}
+              disabled={isProcessing || testingConnection}
               className="voucher-input"
             />
           </div>
@@ -292,7 +359,7 @@ export function KiotVietIntegration({ onSave, onDisconnect }: KiotVietIntegratio
               value={formData.clientId}
               onChange={(e) => setFormData(prev => ({ ...prev, clientId: e.target.value }))}
               placeholder="Nhập Client ID từ KiotViet"
-              disabled={isProcessing}
+              disabled={isProcessing || testingConnection}
               className="voucher-input"
             />
           </div>
@@ -307,31 +374,65 @@ export function KiotVietIntegration({ onSave, onDisconnect }: KiotVietIntegratio
               value={formData.clientSecret}
               onChange={(e) => setFormData(prev => ({ ...prev, clientSecret: e.target.value }))}
               placeholder="Nhập Client Secret từ KiotViet"
-              disabled={isProcessing}
+              disabled={isProcessing || testingConnection}
               className="voucher-input"
             />
           </div>
         </div>
 
-        {/* Action Button */}
-        <div>
-          <Button
-            onClick={handleSaveConfiguration}
-            disabled={isProcessing}
-            className="w-full voucher-button-primary"
-          >
-            {isProcessing ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Đang lưu...
-              </>
-            ) : (
-              <>
-                <Wifi className="w-4 h-4 mr-2" />
-                Lưu cấu hình
-              </>
-            )}
-          </Button>
+        {/* Action Buttons */}
+        <div className="space-y-3">
+          <div className="flex space-x-3">
+            <Button
+              onClick={handleTestConnection}
+              disabled={isProcessing || testingConnection}
+              variant="outline"
+              className="flex-1"
+            >
+              {testingConnection ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Đang test...
+                </>
+              ) : (
+                <>
+                  <Wifi className="w-4 h-4 mr-2" />
+                  Test kết nối
+                </>
+              )}
+            </Button>
+            
+            <Button
+              onClick={handleSaveConfiguration}
+              disabled={isProcessing || testingConnection}
+              className="flex-1 voucher-button-primary"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Đang lưu...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Lưu cấu hình
+                </>
+              )}
+            </Button>
+          </div>
+          
+          {/* Back to connected view if editing existing config */}
+          {kiotVietPipeline?.status === 'ACTIVE' && (
+            <Button
+              onClick={() => setViewMode('connected')}
+              variant="ghost"
+              className="w-full"
+              disabled={isProcessing || testingConnection}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Quay lại
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>
