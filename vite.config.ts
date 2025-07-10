@@ -18,13 +18,14 @@ export default defineConfig(({ mode }) => ({
         secure: true,
         configure: (proxy, options) => {
           proxy.on('error', (err, req, res) => {
-            console.log('proxy error', err);
+            console.log('🔴 [proxy] Error:', err.message);
           });
           proxy.on('proxyReq', (proxyReq, req, res) => {
-            console.log('Sending Request to the Target:', req.method, req.url);
+            console.log('🚀 [proxy] Request:', req.method, req.url, '→', proxyReq.path);
           });
           proxy.on('proxyRes', (proxyRes, req, res) => {
-            console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
+            console.log('📨 [proxy] Response:', proxyRes.statusCode, 'for', req.url);
+            console.log('📨 [proxy] Headers:', proxyRes.headers);
           });
         },
         headers: {
