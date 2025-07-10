@@ -1,39 +1,10 @@
-
 import { api } from './apiService';
-
-export interface PipelineConfig {
-  client_id: string;
-  client_secret: string;
-  retailer: string;
-}
-
-export interface PipelineAccessToken {
-  token: string;
-  refresh_token: string;
-}
-
-export interface Pipeline {
-  id: string;
-  type: 'KIOT_VIET';
-  status: 'ACTIVE' | 'INACTIVE';
-  config: PipelineConfig;
-  access_token: PipelineAccessToken;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface CreatePipelineRequest {
-  type: 'KIOT_VIET';
-  status: 'ACTIVE' | 'INACTIVE';
-  config: PipelineConfig;
-  access_token: PipelineAccessToken;
-}
-
-export interface UpdatePipelineRequest {
-  status?: 'ACTIVE' | 'INACTIVE';
-  config?: PipelineConfig;
-  access_token?: PipelineAccessToken;
-}
+import type { 
+  Pipeline, 
+  CreatePipelineRequest, 
+  UpdatePipelineRequest, 
+  KiotVietConfig 
+} from '@/types/pipeline';
 
 export interface PipelineListResponse {
   data: Pipeline[];
@@ -46,7 +17,7 @@ export interface TestConnectionResponse {
 }
 
 // Test KiotViet connection using direct API call via Vite proxy
-export const testKiotVietConnection = async (config: PipelineConfig): Promise<TestConnectionResponse> => {
+export const testKiotVietConnection = async (config: KiotVietConfig): Promise<TestConnectionResponse> => {
   console.log('🔄 [pipelineService] Testing KiotViet connection via proxy for retailer:', config.retailer);
   
   try {

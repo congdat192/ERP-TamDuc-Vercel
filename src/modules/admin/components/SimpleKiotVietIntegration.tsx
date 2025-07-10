@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Building2, CheckCircle2, AlertCircle, Loader2, Wifi, WifiOff } from 'lucide-react';
 import { createPipeline, updatePipeline, testKiotVietConnection } from '@/services/pipelineService';
-import type { Pipeline, PipelineConfig } from '@/types/pipeline';
+import type { Pipeline, KiotVietConfig, isKiotVietConfig } from '@/types/pipeline';
 
 interface SimpleKiotVietIntegrationProps {
   integration?: Pipeline;
@@ -19,9 +18,19 @@ interface SimpleKiotVietIntegrationProps {
 export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }: SimpleKiotVietIntegrationProps) {
   const { toast } = useToast();
   
+  // Type-safe config extraction
+  const getKiotVietConfig = (integration?: Pipeline): KiotVietConfig => {
+    if (integration?.config && isKiotVietConfig(integration.config)) {
+      return integration.config;
+    }
+    return { retailer: '', client_id: '', client_secret: '' };
+  };
+
+  const kiotVietConfig = getKiotVietConfig(integration);
+  
   const [formData, setFormData] = useState({
-    retailer: integration?.config?.retailer || '',
-    clientId: integration?.config?.client_id || '',
+    retailer: kiotVietConfig.retailer,
+    clientId: kiotVietConfig.client_id,
     clientSecret: ''
   });
   
@@ -56,7 +65,7 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
     setTestResult(null);
 
     try {
-      const config: PipelineConfig = {
+      const config: KiotVietConfig = {
         client_id: formData.clientId,
         client_secret: formData.clientSecret,
         retailer: formData.retailer
@@ -116,7 +125,7 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
     setIsSaving(true);
 
     try {
-      const config: PipelineConfig = {
+      const config: KiotVietConfig = {
         client_id: formData.clientId,
         client_secret: formData.clientSecret,
         retailer: formData.retailer
@@ -194,7 +203,7 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
             </div>
             <div>
               <h3 className="text-lg font-semibold theme-text">
-                KiotViet - {integration.config?.retailer || 'Unknown'}
+                KiotViet - {kiotVietConfig.retailer || 'Unknown'}
               </h3>
               <div className="flex items-center space-x-2 mt-1">
                 <Badge variant="success" className="flex items-center gap-1">
@@ -202,7 +211,7 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
                   Đã kết nối
                 </Badge>
                 <span className="text-sm theme-text-muted">
-                  Client ID: {integration.config?.client_id || 'Unknown'}
+                  Client ID: {kiotVietConfig.client_id || 'Unknown'}
                 </span>
               </div>
             </div>

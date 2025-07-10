@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,7 +15,8 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { testVihatConnection, createVihatPipeline, updateVihatPipeline } from '@/services/vihatService';
-import type { Pipeline, VihatConfig, isVihatConfig } from '@/types/pipeline';
+import type { Pipeline, VihatConfig } from '@/types/pipeline';
+import { isVihatConfig } from '@/types/pipeline';
 
 interface VihatIntegrationProps {
   integration?: Pipeline;
