@@ -22,7 +22,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { SimpleKiotVietIntegration } from '../../components/SimpleKiotVietIntegration';
 import { VihatIntegration } from '../../components/VihatIntegration';
-import type { Pipeline } from '@/types/pipeline';
+import type { Pipeline, KiotVietConfig, VihatConfig } from '@/types/pipeline';
 
 interface Integration {
   id: string;
@@ -240,16 +240,18 @@ export function IntegrationsSettings() {
         : integration
     ));
 
-    // Save KiotViet specific config (mock pipeline structure)
+    // Save KiotViet specific config
+    const kiotVietPipelineConfig: KiotVietConfig = {
+      retailer: config.retailer || '',
+      client_id: config.clientId || '',
+      client_secret: ''
+    };
+
     setKiotVietConfig({
       id: 'kiotviet-pipeline',
       type: 'KIOT_VIET',
       status: 'ACTIVE',
-      config: {
-        retailer: config.retailer || '',
-        client_id: config.clientId || '',
-        client_secret: ''
-      },
+      config: kiotVietPipelineConfig,
       access_token: {
         token: '',
         refresh_token: ''
@@ -292,15 +294,17 @@ export function IntegrationsSettings() {
         : integration
     ));
 
-    // Create a mock pipeline object for UI display
+    // Create Vihat pipeline config
+    const vihatPipelineConfig: VihatConfig = {
+      api_key: config.apiKey || '',
+      secret_key: '***'
+    };
+
     const mockPipeline: Pipeline = {
       id: 'vihat-pipeline-1',
       type: 'VIHAT',
       status: 'ACTIVE',
-      config: {
-        api_key: config.apiKey || '',
-        secret_key: '***'
-      },
+      config: vihatPipelineConfig,
       access_token: { token: '', refresh_token: '' },
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()

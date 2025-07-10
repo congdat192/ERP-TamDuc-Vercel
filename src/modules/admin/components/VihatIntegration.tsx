@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { testVihatConnection, createVihatPipeline, updateVihatPipeline } from '@/services/vihatService';
-import type { Pipeline } from '@/types/pipeline';
+import type { Pipeline, VihatConfig, isVihatConfig } from '@/types/pipeline';
 
 interface VihatIntegrationProps {
   integration?: Pipeline;
@@ -27,9 +27,19 @@ interface VihatIntegrationProps {
 export function VihatIntegration({ integration, onSave, onDisconnect }: VihatIntegrationProps) {
   const { toast } = useToast();
   
+  // Type-safe config extraction
+  const getVihatConfig = (integration?: Pipeline): VihatConfig => {
+    if (integration?.config && isVihatConfig(integration.config)) {
+      return integration.config;
+    }
+    return { api_key: '', secret_key: '' };
+  };
+
+  const vihatConfig = getVihatConfig(integration);
+  
   const [config, setConfig] = useState({
-    apiKey: (integration?.config && 'api_key' in integration.config) ? integration.config.api_key : '',
-    secretKey: (integration?.config && 'secret_key' in integration.config) ? integration.config.secret_key : ''
+    apiKey: vihatConfig.api_key,
+    secretKey: vihatConfig.secret_key
   });
   
   const [isTestingConnection, setIsTestingConnection] = useState(false);
@@ -99,7 +109,7 @@ export function VihatIntegration({ integration, onSave, onDisconnect }: VihatInt
     setIsSaving(true);
     
     try {
-      const vihatConfig = {
+      const vihatConfig: VihatConfig = {
         api_key: config.apiKey,
         secret_key: config.secretKey
       };
