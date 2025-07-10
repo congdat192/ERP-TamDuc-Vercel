@@ -21,8 +21,11 @@ export const testKiotVietConnection = async (config: KiotVietConfig): Promise<Te
   console.log('🔄 [pipelineService] Testing KiotViet connection via proxy for retailer:', config.retailer);
   
   try {
+    console.log('🔧 [pipelineService] Testing KiotViet connection via proxy...');
+    console.log('🔧 [pipelineService] Config:', { retailer: config.retailer, client_id: config.client_id });
+    
     // Call KiotViet API directly through Vite proxy
-    const response = await fetch('/api/kiotviet/login', {
+    const response = await fetch('/api/kiotviet/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
