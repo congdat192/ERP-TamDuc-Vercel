@@ -74,6 +74,7 @@ export function VihatIntegration({ integration, onSave, onDisconnect }: VihatInt
         });
       }
     } catch (error) {
+      console.error('🔴 [VihatIntegration] Test connection error:', error);
       setTestResult({ success: false, message: 'Lỗi kết nối. Vui lòng thử lại.' });
       setCanSave(false);
       toast({
@@ -104,23 +105,39 @@ export function VihatIntegration({ integration, onSave, onDisconnect }: VihatInt
         secret_key: config.secretKey
       };
 
+      console.log('🟡 [VihatIntegration] Saving config:', {
+        hasIntegration: !!integration,
+        integrationId: integration?.id,
+        configKeys: Object.keys(vihatConfig)
+      });
+
       if (integration) {
         // Update existing pipeline
-        await updateVihatPipeline(integration.id, {
-          status: 'ACTIVE',
+        console.log('🔄 [VihatIntegration] Updating existing pipeline:', integration.id);
+        const updatePayload = {
+          status: 'ACTIVE' as const,
           config: vihatConfig
-        });
+        };
+        console.log('📤 [VihatIntegration] Update payload:', updatePayload);
+        
+        await updateVihatPipeline(integration.id, updatePayload);
+        console.log('✅ [VihatIntegration] Pipeline updated successfully');
       } else {
         // Create new pipeline
-        await createVihatPipeline({
-          type: 'VIHAT',
-          status: 'ACTIVE',
+        console.log('🆕 [VihatIntegration] Creating new pipeline');
+        const createPayload = {
+          type: 'VIHAT' as const,
+          status: 'ACTIVE' as const,
           config: vihatConfig,
           access_token: {
             token: '',
             refresh_token: ''
           }
-        });
+        };
+        console.log('📤 [VihatIntegration] Create payload:', createPayload);
+        
+        await createVihatPipeline(createPayload);
+        console.log('✅ [VihatIntegration] Pipeline created successfully');
       }
 
       onSave({
@@ -134,11 +151,29 @@ export function VihatIntegration({ integration, onSave, onDisconnect }: VihatInt
         description: 'Đã cấu hình tích hợp eSMS.vn thành công.',
       });
       
-    } catch (error) {
-      console.error('Failed to save ViHat configuration:', error);
+    } catch (error: any) {
+      console.error('🔴 [VihatIntegration] Failed to save configuration:', error);
+      
+      // Enhanced error handling
+      let errorMessage = 'Không thể lưu cấu hình. Vui lòng thử lại.';
+      
+      if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      // Log detailed error for debugging
+      console.error('🔴 [VihatIntegration] Error details:', {
+        status: error?.response?.status,
+        statusText: error?.response?.statusText,
+        data: error?.response?.data,
+        message: error?.message
+      });
+      
       toast({
-        title: 'Lỗi',
-        description: 'Không thể lưu cấu hình. Vui lòng thử lại.',
+        title: 'Lỗi lưu cấu hình',
+        description: errorMessage,
         variant: 'destructive'
       });
     } finally {
@@ -149,11 +184,13 @@ export function VihatIntegration({ integration, onSave, onDisconnect }: VihatInt
   const handleDisconnect = async () => {
     if (integration) {
       try {
+        console.log('🔄 [VihatIntegration] Disconnecting pipeline:', integration.id);
         await updateVihatPipeline(integration.id, {
           status: 'INACTIVE'
         });
+        console.log('✅ [VihatIntegration] Pipeline disconnected successfully');
       } catch (error) {
-        console.error('Failed to disconnect:', error);
+        console.error('🔴 [VihatIntegration] Failed to disconnect:', error);
         toast({
           title: 'Lỗi',
           description: 'Không thể ngắt kết nối. Vui lòng thử lại.',
