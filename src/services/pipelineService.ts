@@ -50,85 +50,58 @@ export interface TestConnectionResponse {
   data?: any;
 }
 
-// Test KiotViet connection by calling KiotViet API directly
+// Test KiotViet connection via backend API
 export const testKiotVietConnection = async (config: PipelineConfig): Promise<TestConnectionResponse> => {
-  console.log('🔄 [pipelineService] Testing KiotViet connection for retailer:', config.retailer);
+  console.log('🔄 [pipelineService] Testing KiotViet connection via backend for retailer:', config.retailer);
   
   try {
-    // Call KiotViet API directly to validate credentials
-    const kiotVietResponse = await fetch('https://public.kiotapi.com/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        retailer: config.retailer,
-        clientId: config.client_id,
-        clientSecret: config.client_secret
-      })
+    // Call backend API to test KiotViet connection
+    const response = await api.post<TestConnectionResponse>('/integrations/kiotviet/test', {
+      type: 'KIOT_VIET',
+      config: {
+        client_id: config.client_id,
+        client_secret: config.client_secret,
+        retailer: config.retailer
+      }
+    }, {
+      requiresBusinessId: true,
+      requiresAuth: true
     });
 
-    if (!kiotVietResponse.ok) {
-      const errorData = await kiotVietResponse.json().catch(() => ({}));
-      console.error('❌ [pipelineService] KiotViet API error:', kiotVietResponse.status, errorData);
-      
-      if (kiotVietResponse.status === 401) {
-        return {
-          success: false,
-          message: 'Client ID hoặc Client Secret không hợp lệ'
-        };
-      } else if (kiotVietResponse.status === 404) {
-        return {
-          success: false,
-          message: 'Không tìm thấy cửa hàng với tên này'
-        };
-      } else {
-        return {
-          success: false,
-          message: errorData.message || 'Thông tin kết nối không chính xác'
-        };
-      }
-    }
-
-    const responseData = await kiotVietResponse.json();
-    console.log('✅ [pipelineService] KiotViet connection test successful');
+    console.log('✅ [pipelineService] KiotViet connection test successful via backend');
     
     return {
       success: true,
-      message: 'Kết nối KiotViet thành công! Thông tin xác thực hợp lệ.',
-      data: responseData
+      message: response.message || 'Kết nối KiotViet thành công! Thông tin xác thực hợp lệ.',
+      data: response.data
     };
     
   } catch (error: any) {
-    console.error('❌ [pipelineService] Connection test failed:', error);
+    console.error('❌ [pipelineService] KiotViet connection test failed:', error);
     
-    // Handle different error scenarios based on actual API responses
-    if (error.response?.status === 401) {
-      return {
-        success: false,
-        message: 'Client ID hoặc Client Secret không hợp lệ'
-      };
-    } else if (error.response?.status === 404) {
-      return {
-        success: false,
-        message: 'Không tìm thấy cửa hàng với tên này'
-      };
-    } else if (error.response?.status === 422) {
-      return {
-        success: false,
-        message: error.response.data?.message || 'Thông tin kết nối không hợp lệ'
-      };
-    } else if (error.response?.status >= 500) {
-      return {
-        success: false,
-        message: 'Lỗi máy chủ, vui lòng thử lại sau'
-      };
-    } else {
-      return {
-        success: false,
-        message: error.response?.data?.message || 'Không thể kết nối đến KiotViet. Vui lòng kiểm tra lại thông tin.'
-      };
+    // Handle different error scenarios based on backend API responses
+    let errorMessage = 'Không thể kết nối đến KiotViet. Vui lòng kiểm tra lại thông tin.';
+    
+    if (error.message) {
+      const message = error.message.toLowerCase();
+      
+      if (message.includes('client id') || message.includes('client secret')) {
+        errorMessage = 'Client ID hoặc Client Secret không hợp lệ';
+      } else if (message.includes('retailer') || message.includes('cửa hàng')) {
+        errorMessage = 'Không tìm thấy cửa hàng với tên này';
+      } else if (message.includes('unauthorized') || message.includes('401')) {
+        errorMessage = 'Thông tin xác thực không hợp lệ';
+      } else if (message.includes('server') || message.includes('500')) {
+        errorMessage = 'Lỗi máy chủ, vui lòng thử lại sau';
+      } else {
+        errorMessage = error.message;
+      }
     }
+    
+    return {
+      success: false,
+      message: errorMessage
+    };
   }
 };
 
