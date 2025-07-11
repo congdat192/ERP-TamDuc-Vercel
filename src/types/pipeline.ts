@@ -13,7 +13,7 @@ export interface PipelineAccessToken {
 export interface Pipeline {
   id: string;
   type: 'KIOT_VIET' | 'VIHAT';
-  status: 'ACTIVE' | 'INACTIVE';
+  status: 'ACTIVE' | 'INACTIVE' | 'TESTING';
   config: PipelineConfig | VihatConfig;
   access_token: PipelineAccessToken;
   created_at: string;
@@ -27,13 +27,13 @@ export interface VihatConfig {
 
 export interface CreatePipelineRequest {
   type: 'KIOT_VIET' | 'VIHAT';
-  status: 'ACTIVE' | 'INACTIVE';
+  status: 'ACTIVE' | 'INACTIVE' | 'TESTING';
   config: PipelineConfig | VihatConfig;
   access_token: PipelineAccessToken;
 }
 
 export interface UpdatePipelineRequest {
-  status?: 'ACTIVE' | 'INACTIVE';
+  status?: 'ACTIVE' | 'INACTIVE' | 'TESTING';
   config?: PipelineConfig | VihatConfig;
   access_token?: PipelineAccessToken;
 }

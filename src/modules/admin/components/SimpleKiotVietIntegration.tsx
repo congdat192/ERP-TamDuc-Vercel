@@ -8,7 +8,13 @@ import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/ui/loading';
 import { useToast } from '@/hooks/use-toast';
 import { Building2, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
-import { createPipeline, updatePipeline, testKiotVietConnection } from '@/services/pipelineService';
+import { 
+  createPipeline, 
+  updatePipeline, 
+  testKiotVietConnection, 
+  convertTestPipelineToActive, 
+  cleanupTestPipelines 
+} from '@/services/pipelineService';
 import type { Pipeline, PipelineConfig } from '@/types/pipeline';
 
 interface SimpleKiotVietIntegrationProps {
@@ -28,7 +34,7 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
   
   const [isTestingConnection, setIsTestingConnection] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string; testPipelineId?: string } | null>(null);
   const [formErrors, setFormErrors] = useState<string[]>([]);
 
   const validateForm = (): boolean => {
@@ -67,7 +73,8 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
       
       setTestResult({
         success: result.success,
-        message: result.message
+        message: result.message,
+        testPipelineId: result.testPipelineId
       });
       
       if (result.success) {
@@ -115,24 +122,31 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
     setIsSaving(true);
 
     try {
-      const config: PipelineConfig = {
-        client_id: formData.clientId,
-        client_secret: formData.clientSecret,
-        retailer: formData.retailer
-      };
+      let savedPipeline: Pipeline;
 
-      if (integration) {
+      if (testResult.testPipelineId) {
+        // Convert test pipeline to active pipeline
+        savedPipeline = await convertTestPipelineToActive(testResult.testPipelineId);
+      } else if (integration) {
         // Update existing pipeline
-        await updatePipeline(integration.id, {
+        savedPipeline = await updatePipeline(integration.id, {
           status: 'ACTIVE',
-          config
+          config: {
+            client_id: formData.clientId,
+            client_secret: formData.clientSecret,
+            retailer: formData.retailer
+          }
         });
       } else {
-        // Create new pipeline
-        await createPipeline({
+        // Create new pipeline (fallback)
+        savedPipeline = await createPipeline({
           type: 'KIOT_VIET',
           status: 'ACTIVE',
-          config,
+          config: {
+            client_id: formData.clientId,
+            client_secret: formData.clientSecret,
+            retailer: formData.retailer
+          },
           access_token: {
             token: '',
             refresh_token: ''
@@ -144,13 +158,17 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
         retailer: formData.retailer,
         clientId: formData.clientId,
         lastSync: new Date().toLocaleString('vi-VN'),
-        status: 'connected'
+        status: 'connected',
+        pipelineId: savedPipeline.id
       });
       
       toast({
         title: 'Lưu thành công',
         description: `Đã cấu hình tích hợp KiotViet cho cửa hàng "${formData.retailer}".`,
       });
+      
+      // Clear test result after successful save
+      setTestResult(null);
       
     } catch (error) {
       console.error('Failed to save KiotViet configuration:', error);
@@ -170,6 +188,10 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
         await updatePipeline(integration.id, {
           status: 'INACTIVE'
         });
+        
+        // Cleanup any remaining test pipelines when disconnecting
+        await cleanupTestPipelines();
+        
         onDisconnect();
       } catch (error) {
         console.error('Failed to disconnect:', error);
@@ -180,6 +202,23 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
         });
       }
     }
+  };
+
+  // Cleanup test pipelines when component unmounts or form is reset
+  const handleFormReset = async () => {
+    if (testResult?.testPipelineId && !testResult.success) {
+      try {
+        await cleanupTestPipelines();
+      } catch (error) {
+        console.error('Failed to cleanup test pipelines:', error);
+      }
+    }
+    setTestResult(null);
+    setFormData({
+      retailer: '',
+      clientId: '',
+      clientSecret: ''
+    });
   };
 
   // If already connected, show connection status
@@ -218,7 +257,7 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
               Ngắt kết nối
             </Button>
             <Button 
-              onClick={() => window.location.reload()} 
+              onClick={handleFormReset} 
               className="flex-1 voucher-button-primary"
             >
               Cấu hình lại
@@ -351,6 +390,20 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
             )}
           </Button>
         </div>
+
+        {/* Reset Form Button */}
+        {(formData.retailer || formData.clientId || formData.clientSecret || testResult) && (
+          <div className="pt-2 border-t theme-border">
+            <Button
+              onClick={handleFormReset}
+              variant="ghost"
+              className="w-full text-sm theme-text-muted hover:theme-text"
+              disabled={isTestingConnection || isSaving}
+            >
+              Xóa form và làm lại
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

@@ -15,7 +15,7 @@ export interface PipelineAccessToken {
 export interface Pipeline {
   id: string;
   type: 'KIOT_VIET';
-  status: 'ACTIVE' | 'INACTIVE';
+  status: 'ACTIVE' | 'INACTIVE' | 'TESTING';
   config: PipelineConfig;
   access_token: PipelineAccessToken;
   created_at: string;
@@ -24,13 +24,13 @@ export interface Pipeline {
 
 export interface CreatePipelineRequest {
   type: 'KIOT_VIET';
-  status: 'ACTIVE' | 'INACTIVE';
+  status: 'ACTIVE' | 'INACTIVE' | 'TESTING';
   config: PipelineConfig;
   access_token: PipelineAccessToken;
 }
 
 export interface UpdatePipelineRequest {
-  status?: 'ACTIVE' | 'INACTIVE';
+  status?: 'ACTIVE' | 'INACTIVE' | 'TESTING';
   config?: PipelineConfig;
   access_token?: PipelineAccessToken;
 }
@@ -48,32 +48,45 @@ export interface TestConnectionResponse {
   success: boolean;
   message: string;
   data?: any;
+  testPipelineId?: string;
 }
 
-// Test KiotViet connection via backend API
+// Store test pipeline IDs for cleanup
+const testPipelineIds = new Set<string>();
+
+// Test KiotViet connection by creating a temporary pipeline
 export const testKiotVietConnection = async (config: PipelineConfig): Promise<TestConnectionResponse> => {
-  console.log('🔄 [pipelineService] Testing KiotViet connection via backend for retailer:', config.retailer);
+  console.log('🔄 [pipelineService] Testing KiotViet connection by creating temporary pipeline for retailer:', config.retailer);
   
   try {
-    // Call backend API to test KiotViet connection
-    const response = await api.post<TestConnectionResponse>('/integrations/kiotviet/test', {
+    // Create a temporary pipeline for testing
+    const testPipeline = await api.post<Pipeline>('/pipelines', {
       type: 'KIOT_VIET',
+      status: 'TESTING',
       config: {
         client_id: config.client_id,
         client_secret: config.client_secret,
         retailer: config.retailer
+      },
+      access_token: {
+        token: '',
+        refresh_token: ''
       }
     }, {
       requiresBusinessId: true,
       requiresAuth: true
     });
 
-    console.log('✅ [pipelineService] KiotViet connection test successful via backend');
+    console.log('✅ [pipelineService] Test pipeline created successfully:', testPipeline.id);
+    
+    // Store the test pipeline ID for potential cleanup
+    testPipelineIds.add(testPipeline.id);
     
     return {
       success: true,
-      message: response.message || 'Kết nối KiotViet thành công! Thông tin xác thực hợp lệ.',
-      data: response.data
+      message: 'Kết nối KiotViet thành công! Thông tin xác thực hợp lệ.',
+      data: testPipeline,
+      testPipelineId: testPipeline.id
     };
     
   } catch (error: any) {
@@ -103,6 +116,44 @@ export const testKiotVietConnection = async (config: PipelineConfig): Promise<Te
       message: errorMessage
     };
   }
+};
+
+// Convert test pipeline to active pipeline when user saves configuration
+export const convertTestPipelineToActive = async (testPipelineId: string): Promise<Pipeline> => {
+  console.log('🔄 [pipelineService] Converting test pipeline to active:', testPipelineId);
+  
+  const pipeline = await api.put<Pipeline>(`/pipelines/${testPipelineId}`, {
+    status: 'ACTIVE'
+  }, {
+    requiresBusinessId: true,
+  });
+  
+  // Remove from test pipeline tracking
+  testPipelineIds.delete(testPipelineId);
+  
+  console.log('✅ [pipelineService] Test pipeline converted to active:', pipeline.id);
+  return pipeline;
+};
+
+// Cleanup test pipelines that weren't saved
+export const cleanupTestPipelines = async (): Promise<void> => {
+  console.log('🧹 [pipelineService] Cleaning up test pipelines:', testPipelineIds.size);
+  
+  const cleanupPromises = Array.from(testPipelineIds).map(async (pipelineId) => {
+    try {
+      await api.put(`/pipelines/${pipelineId}`, {
+        status: 'INACTIVE'
+      }, {
+        requiresBusinessId: true,
+      });
+      console.log('🗑️ [pipelineService] Cleaned up test pipeline:', pipelineId);
+    } catch (error) {
+      console.error('❌ [pipelineService] Failed to cleanup test pipeline:', pipelineId, error);
+    }
+  });
+  
+  await Promise.allSettled(cleanupPromises);
+  testPipelineIds.clear();
 };
 
 // Get all pipelines for current business
