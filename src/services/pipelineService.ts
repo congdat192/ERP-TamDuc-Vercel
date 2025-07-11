@@ -59,10 +59,10 @@ export const testKiotVietConnection = async (config: PipelineConfig): Promise<Te
   console.log('🔄 [pipelineService] Testing KiotViet connection by creating temporary pipeline for retailer:', config.retailer);
   
   try {
-    // Create a temporary pipeline for testing
-    const testPipeline = await api.post<Pipeline>('/pipelines', {
-      type: 'KIOT_VIET',
-      status: 'TESTING',
+    // Create a temporary pipeline for testing - try different type values
+    const createPayload = {
+      type: 'KIOTVIET', // Try without underscore first
+      status: 'TESTING' as const,
       config: {
         client_id: config.client_id,
         client_secret: config.client_secret,
@@ -72,7 +72,11 @@ export const testKiotVietConnection = async (config: PipelineConfig): Promise<Te
         token: '',
         refresh_token: ''
       }
-    }, {
+    };
+
+    console.log('🚀 [pipelineService] Creating test pipeline with payload:', createPayload);
+
+    const testPipeline = await api.post<Pipeline>('/pipelines', createPayload, {
       requiresBusinessId: true,
       requiresAuth: true
     });
@@ -92,13 +96,59 @@ export const testKiotVietConnection = async (config: PipelineConfig): Promise<Te
   } catch (error: any) {
     console.error('❌ [pipelineService] KiotViet connection test failed:', error);
     
+    // If first attempt fails with "KIOTVIET", try with "KIOT_VIET"
+    if (error.message?.includes('selected type is invalid')) {
+      console.log('🔄 [pipelineService] Retrying with KIOT_VIET type...');
+      
+      try {
+        const retryPayload = {
+          type: 'KIOT_VIET' as const,
+          status: 'TESTING' as const,
+          config: {
+            client_id: config.client_id,
+            client_secret: config.client_secret,
+            retailer: config.retailer
+          },
+          access_token: {
+            token: '',
+            refresh_token: ''
+          }
+        };
+
+        console.log('🚀 [pipelineService] Retrying with payload:', retryPayload);
+
+        const testPipeline = await api.post<Pipeline>('/pipelines', retryPayload, {
+          requiresBusinessId: true,
+          requiresAuth: true
+        });
+
+        console.log('✅ [pipelineService] Test pipeline created successfully on retry:', testPipeline.id);
+        
+        // Store the test pipeline ID for potential cleanup
+        testPipelineIds.add(testPipeline.id);
+        
+        return {
+          success: true,
+          message: 'Kết nối KiotViet thành công! Thông tin xác thực hợp lệ.',
+          data: testPipeline,
+          testPipelineId: testPipeline.id
+        };
+        
+      } catch (retryError: any) {
+        console.error('❌ [pipelineService] Retry also failed:', retryError);
+        error = retryError; // Use the retry error for further processing
+      }
+    }
+    
     // Handle different error scenarios based on backend API responses
     let errorMessage = 'Không thể kết nối đến KiotViet. Vui lòng kiểm tra lại thông tin.';
     
     if (error.message) {
       const message = error.message.toLowerCase();
       
-      if (message.includes('client id') || message.includes('client secret')) {
+      if (message.includes('selected type is invalid')) {
+        errorMessage = 'Loại tích hợp không hợp lệ. Vui lòng liên hệ hỗ trợ kỹ thuật.';
+      } else if (message.includes('client id') || message.includes('client secret')) {
         errorMessage = 'Client ID hoặc Client Secret không hợp lệ';
       } else if (message.includes('retailer') || message.includes('cửa hàng')) {
         errorMessage = 'Không tìm thấy cửa hàng với tên này';
