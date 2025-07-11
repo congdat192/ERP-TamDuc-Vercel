@@ -3,8 +3,8 @@ import { ModuleInfo } from '../types/role-management';
 import { api } from '../../../services/apiService';
 
 interface ModuleApiResponse {
-  data?: any[];
-  modules?: any[];
+  data?: any;
+  modules?: any;
   [key: string]: any; // Allow for flexible API response structure
 }
 
@@ -20,12 +20,14 @@ export class ModuleService {
       
       // Check if response.data is an array or has nested data property
       let modulesList: any[] = [];
-      if (Array.isArray(response.data)) {
-        modulesList = response.data;
-      } else if (response?.data && Array.isArray(response.data.data)) {
-        modulesList = response.data.data;
-      } else if (response?.data && response.data.modules && Array.isArray(response.data.modules)) {
-        modulesList = response.data.modules;
+      const responseData = response.data as any;
+      
+      if (Array.isArray(responseData)) {
+        modulesList = responseData;
+      } else if (responseData && Array.isArray(responseData.data)) {
+        modulesList = responseData.data;
+      } else if (responseData && responseData.modules && Array.isArray(responseData.modules)) {
+        modulesList = responseData.modules;
       } else {
         console.error('🔧 [ModuleService] Unexpected response structure:', response);
         throw new Error('Unexpected API response structure');
