@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useForm } from 'react-hook-form';
 import { useToast } from '@/hooks/use-toast';
 import { RoleCreationData, CustomRole, ModuleInfo, ModulePermissions } from '../../types/role-management';
@@ -11,6 +12,7 @@ import { RoleService } from '../../services/roleService';
 import { ModuleService } from '../../services/moduleService';
 import { SimpleModuleList } from './SimpleModuleList';
 import { PermissionDetailArea } from './PermissionDetailArea';
+import { AlertTriangle, Info } from 'lucide-react';
 
 interface CreateRoleModalProps {
   isOpen: boolean;
@@ -29,6 +31,7 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingModules, setIsLoadingModules] = useState(false);
+  const [moduleLoadError, setModuleLoadError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>();
@@ -42,7 +45,12 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
   const loadModules = async () => {
     try {
       setIsLoadingModules(true);
+      setModuleLoadError(null);
+      console.log('🔧 [CreateRoleModal] Loading modules...');
+      
       const modulesData = await ModuleService.getActiveModules();
+      console.log('🔧 [CreateRoleModal] Loaded modules:', modulesData);
+      
       setModules(modulesData);
       
       // Initialize permissions for all modules
@@ -56,13 +64,50 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
         };
       });
       setPermissions(initialPermissions);
+      
+      // Select first module by default if available
+      if (modulesData.length > 0 && !selectedModuleId) {
+        setSelectedModuleId(modulesData[0].id);
+      }
     } catch (error) {
-      console.error('Error loading modules:', error);
-      toast({
-        title: "Lỗi",
-        description: "Không thể tải danh sách modules từ server",
-        variant: "destructive"
+      console.error('❌ [CreateRoleModal] Error loading modules:', error);
+      setModuleLoadError('Không thể tải danh sách modules. Sử dụng modules mặc định.');
+      
+      // Use fallback modules
+      const fallbackModules: ModuleInfo[] = [
+        {
+          id: 'voucher',
+          name: 'voucher',
+          label: 'Quản Lý Voucher',
+          icon: 'Ticket',
+          features: [],
+          status: 'active'
+        },
+        {
+          id: 'customer',
+          name: 'customer',
+          label: 'Quản Lý Khách Hàng',
+          icon: 'Users',
+          features: [],
+          status: 'active'
+        }
+      ];
+      
+      setModules(fallbackModules);
+      const initialPermissions: ModulePermissions = {};
+      fallbackModules.forEach(module => {
+        initialPermissions[module.id] = {
+          view: false,
+          add: false,
+          edit: false,
+          delete: false
+        };
       });
+      setPermissions(initialPermissions);
+      
+      if (fallbackModules.length > 0) {
+        setSelectedModuleId(fallbackModules[0].id);
+      }
     } finally {
       setIsLoadingModules(false);
     }
@@ -78,6 +123,7 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
         permissions
       };
 
+      console.log('🔧 [CreateRoleModal] Submitting role data:', roleData);
       const newRole = await RoleService.createRole(roleData);
       onRoleCreated(newRole);
       handleClose();
@@ -87,7 +133,7 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
         description: "Tạo vai trò mới thành công"
       });
     } catch (error) {
-      console.error('Error creating role:', error);
+      console.error('❌ [CreateRoleModal] Error creating role:', error);
       toast({
         title: "Lỗi",
         description: error instanceof Error ? error.message : "Không thể tạo vai trò",
@@ -102,6 +148,7 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
     reset();
     setPermissions({});
     setSelectedModuleId(null);
+    setModuleLoadError(null);
     onClose();
   };
 
@@ -143,6 +190,13 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
         <div className="flex gap-6 h-[600px]">
           {/* Left Column 70% - Form + Permission Detail */}
           <div className="flex-[7] space-y-6 overflow-y-auto pr-2">
+            {moduleLoadError && (
+              <Alert>
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>{moduleLoadError}</AlertDescription>
+              </Alert>
+            )}
+
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               {/* Basic Information */}
               <div className="space-y-4">
@@ -191,6 +245,15 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
                     <div className="text-sm text-green-600">Tổng số quyền</div>
                   </div>
                 </div>
+
+                {getSelectedPermissionsCount() === 0 && (
+                  <Alert>
+                    <Info className="h-4 w-4" />
+                    <AlertDescription>
+                      Bạn chưa chọn quyền nào. Vai trò sẽ được tạo với quyền rỗng và có thể cập nhật sau.
+                    </AlertDescription>
+                  </Alert>
+                )}
               </div>
 
               {/* Actions */}
