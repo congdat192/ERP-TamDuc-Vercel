@@ -1,6 +1,11 @@
 
-import { ModuleInfo, CustomRole, RoleCreationData } from '../types/role-management';
+import { ModuleInfo, CustomRole, RoleCreationData, ModulePermissions } from '../types/role-management';
 import { api } from '../../../services/apiService';
+
+interface RoleApiResponse {
+  data: any;
+  [key: string]: any;
+}
 
 export class RoleService {
   static async getActiveModules(): Promise<ModuleInfo[]> {
@@ -33,18 +38,18 @@ export class RoleService {
     try {
       console.log('🔧 [RoleService] Creating role with data:', roleData);
       
-      // Prepare permissions - ensure it's not empty
-      let processedPermissions = roleData.permissions;
+      // Prepare permissions - ensure it's properly formatted
+      let processedPermissions: ModulePermissions | any[] = roleData.permissions;
       
-      // If permissions is empty, provide at least one permission to satisfy backend
+      // If permissions is empty object, check if we should send empty array or empty object
       const hasAnyPermissions = Object.values(roleData.permissions).some(perms => 
         Object.values(perms).some(Boolean)
       );
       
       if (!hasAnyPermissions) {
-        console.log('🔧 [RoleService] No permissions selected, using empty array');
-        // Try sending empty array first, if that fails, we'll provide minimal permission
-        processedPermissions = [];
+        console.log('🔧 [RoleService] No permissions selected, using empty object');
+        // Send empty object instead of empty array
+        processedPermissions = {};
       }
       
       const payload = {
@@ -55,13 +60,13 @@ export class RoleService {
       
       console.log('🔧 [RoleService] Final payload:', payload);
       
-      const response = await api.post<{ data: any }>('/roles', payload);
+      const response = await api.post<RoleApiResponse>('/roles', payload);
 
       return {
         id: response.data.id.toString(),
         name: response.data.name,
         description: response.data.description,
-        permissions: response.data.permissions,
+        permissions: response.data.permissions || {},
         userCount: response.data.user_count || 0,
         isSystem: response.data.is_system || false,
         created_at: response.data.created_at,
@@ -82,13 +87,13 @@ export class RoleService {
           };
           
           console.log('🔧 [RoleService] Retry payload:', retryPayload);
-          const response = await api.post<{ data: any }>('/roles', retryPayload);
+          const response = await api.post<RoleApiResponse>('/roles', retryPayload);
           
           return {
             id: response.data.id.toString(),
             name: response.data.name,
             description: response.data.description,
-            permissions: response.data.permissions,
+            permissions: response.data.permissions || {},
             userCount: response.data.user_count || 0,
             isSystem: response.data.is_system || false,
             created_at: response.data.created_at,
@@ -106,13 +111,13 @@ export class RoleService {
 
   static async updateRole(roleId: string, roleData: Partial<RoleCreationData>): Promise<CustomRole> {
     try {
-      const response = await api.put<{ data: any }>(`/roles/${roleId}`, roleData);
+      const response = await api.put<RoleApiResponse>(`/roles/${roleId}`, roleData);
       
       return {
         id: response.data.id.toString(),
         name: response.data.name,
         description: response.data.description,
-        permissions: response.data.permissions,
+        permissions: response.data.permissions || {},
         userCount: response.data.user_count || 0,
         isSystem: response.data.is_system || false,
         created_at: response.data.created_at,

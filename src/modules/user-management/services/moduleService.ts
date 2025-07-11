@@ -2,10 +2,16 @@
 import { ModuleInfo } from '../types/role-management';
 import { api } from '../../../services/apiService';
 
+interface ModuleApiResponse {
+  data?: any[];
+  modules?: any[];
+  [key: string]: any; // Allow for flexible API response structure
+}
+
 export class ModuleService {
   static async getActiveModules(): Promise<ModuleInfo[]> {
     try {
-      const response = await api.get<{ data: any[] }>('/modules', {
+      const response = await api.get<ModuleApiResponse>('/modules', {
         requiresBusinessId: false // Modules API không cần business ID
       });
       
@@ -13,12 +19,12 @@ export class ModuleService {
       console.log('🔧 [ModuleService] Response data:', response.data);
       
       // Check if response.data is an array or has nested data property
-      let modulesList = [];
+      let modulesList: any[] = [];
       if (Array.isArray(response.data)) {
         modulesList = response.data;
-      } else if (response.data && Array.isArray(response.data.data)) {
+      } else if (response?.data && Array.isArray(response.data.data)) {
         modulesList = response.data.data;
-      } else if (response.data && response.data.modules && Array.isArray(response.data.modules)) {
+      } else if (response?.data && response.data.modules && Array.isArray(response.data.modules)) {
         modulesList = response.data.modules;
       } else {
         console.error('🔧 [ModuleService] Unexpected response structure:', response);
@@ -29,7 +35,7 @@ export class ModuleService {
       
       // Transform API response to ModuleInfo format
       const transformedModules = modulesList.map((module: any) => {
-        const transformed = {
+        const transformed: ModuleInfo = {
           id: module.id ? module.id.toString() : Math.random().toString(),
           name: module.name || module.module_name || 'Unknown Module',
           label: module.display_name || module.label || module.name || 'Unknown Module',
