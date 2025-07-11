@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Business, BusinessContextType, CreateBusinessRequest, UpdateBusinessRequest } from '@/types/business';
 import { getBusinesses, createBusiness as createBusinessAPI, getBusiness, updateBusiness as updateBusinessAPI } from '@/services/businessService';
 import { setSelectedBusinessId, clearSelectedBusinessId, getSelectedBusinessId } from '@/services/apiService';
@@ -88,6 +88,7 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [currentBusiness, setCurrentBusiness] = useState<Business | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(false); // Add fetching state to prevent multiple calls
   const { toast } = useToast();
 
   // Calculate if user has own business
@@ -126,8 +127,16 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, []);
 
-  const fetchBusinesses = async () => {
+  const fetchBusinesses = useCallback(async () => {
+    // Prevent multiple simultaneous calls
+    if (isFetching) {
+      console.log('⚠️ [BusinessContext] Already fetching businesses, skipping...');
+      return;
+    }
+
+    setIsFetching(true);
     setIsLoading(true);
+    
     try {
       console.log('🔄 [BusinessContext] Fetching businesses...');
       const businessList = await getBusinesses();
@@ -146,10 +155,11 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       throw error;
     } finally {
       setIsLoading(false);
+      setIsFetching(false);
     }
-  };
+  }, [toast, isFetching]);
 
-  const createBusiness = async (data: CreateBusinessRequest): Promise<Business> => {
+  const createBusiness = useCallback(async (data: CreateBusinessRequest): Promise<Business> => {
     console.log('🏗️ [BusinessContext] Creating business:', data.name);
     
     setIsLoading(true);
@@ -181,9 +191,9 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [businesses, toast]);
 
-  const selectBusiness = async (businessId: number) => {
+  const selectBusiness = useCallback(async (businessId: number) => {
     setIsLoading(true);
     try {
       const business = await getBusiness(businessId);
@@ -205,9 +215,9 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
 
-  const updateBusiness = async (businessId: number, data: UpdateBusinessRequest): Promise<Business> => {
+  const updateBusiness = useCallback(async (businessId: number, data: UpdateBusinessRequest): Promise<Business> => {
     setIsLoading(true);
     try {
       const updatedBusiness = await updateBusinessAPI(businessId, data);
@@ -243,9 +253,9 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [businesses, currentBusiness, toast]);
 
-  const refreshCurrentBusiness = async () => {
+  const refreshCurrentBusiness = useCallback(async () => {
     if (!currentBusiness) return;
     
     try {
@@ -257,15 +267,15 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } catch (error) {
       console.error('❌ [BusinessContext] Failed to refresh current business:', error);
     }
-  };
+  }, [currentBusiness]);
 
   // Clear business data when logout or error
-  const clearBusinessData = () => {
+  const clearBusinessData = useCallback(() => {
     console.log('🧹 [BusinessContext] Clearing business data');
     setBusinesses([]);
     setCurrentBusiness(null);
     clearAllBusinessData();
-  };
+  }, []);
 
   return (
     <BusinessContext.Provider

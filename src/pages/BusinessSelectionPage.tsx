@@ -38,7 +38,7 @@ export function BusinessSelectionPage() {
     };
 
     initializePage();
-  }, [isAuthenticated, currentUser, navigate, fetchBusinesses]);
+  }, [isAuthenticated, currentUser, navigate]); // Remove fetchBusinesses from dependencies
 
   const handleBusinessSelect = async (business: Business) => {
     if (selectedBusinessId === business.id) return;
