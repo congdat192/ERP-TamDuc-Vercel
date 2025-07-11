@@ -189,11 +189,6 @@ export const apiCall = async <T>(
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ message: 'API request failed' }));
       
-      if (response.status === 401) {
-        console.error('❌ [apiService] Unauthorized - token may be expired');
-        throw new Error('Token hết hạn, vui lòng đăng nhập lại');
-      }
-
       // Check for business-related errors
       if (isBusinessError(errorData)) {
         console.error('❌ [apiService] Business error detected:', errorData);

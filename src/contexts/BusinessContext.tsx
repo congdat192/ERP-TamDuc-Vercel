@@ -138,11 +138,6 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     } catch (error) {
       console.error('❌ [BusinessContext] Failed to fetch businesses:', error);
       
-      // Clear data on 401 error
-      if (error instanceof Error && error.message.includes('Token hết hạn')) {
-        clearBusinessData();
-      }
-      
       toast({
         title: "Lỗi",
         description: error instanceof Error ? error.message : "Không thể tải danh sách doanh nghiệp",

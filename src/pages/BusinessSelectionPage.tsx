@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,18 +32,13 @@ export function BusinessSelectionPage() {
         await fetchBusinesses();
       } catch (error) {
         console.error('❌ [BusinessSelectionPage] Failed to fetch businesses:', error);
-        // If token expired, redirect to login
-        if (error instanceof Error && error.message.includes('Token hết hạn')) {
-          navigate('/login');
-          return;
-        }
       } finally {
         setIsInitializing(false);
       }
     };
 
     initializePage();
-  }, []); // Remove fetchBusinesses from dependencies to avoid loop
+  }, [isAuthenticated, currentUser, navigate, fetchBusinesses]);
 
   const handleBusinessSelect = async (business: Business) => {
     if (selectedBusinessId === business.id) return;
@@ -56,11 +52,6 @@ export function BusinessSelectionPage() {
     } catch (error) {
       console.error('❌ [BusinessSelectionPage] Failed to select business:', error);
       setSelectedBusinessId(null);
-      
-      // If token expired, redirect to login
-      if (error instanceof Error && error.message.includes('Token hết hạn')) {
-        navigate('/login');
-      }
     }
   };
 
