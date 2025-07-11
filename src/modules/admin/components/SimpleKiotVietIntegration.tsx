@@ -11,8 +11,7 @@ import { Building2, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { 
   createPipeline, 
   updatePipeline, 
-  testKiotVietConnection, 
-  convertTestPipelineToActive, 
+  syncPipeline,
   cleanupTestPipelines 
 } from '@/services/pipelineService';
 import type { Pipeline, PipelineConfig } from '@/types/pipeline';
@@ -32,10 +31,10 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
     clientSecret: ''
   });
   
-  const [isTestingConnection, setIsTestingConnection] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [testResult, setTestResult] = useState<{ success: boolean; message: string; testPipelineId?: string } | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [formErrors, setFormErrors] = useState<string[]>([]);
+  const [syncResult, setSyncResult] = useState<{ success: boolean; message: string; details?: any } | null>(null);
 
   const validateForm = (): boolean => {
     const errors: string[] = [];
@@ -56,67 +55,7 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
     return errors.length === 0;
   };
 
-  const handleTestConnection = async () => {
-    if (!validateForm()) return;
-    
-    setIsTestingConnection(true);
-    setTestResult(null);
-
-    try {
-      const config: PipelineConfig = {
-        client_id: formData.clientId,
-        client_secret: formData.clientSecret,
-        retailer: formData.retailer
-      };
-
-      const result = await testKiotVietConnection(config);
-      
-      setTestResult({
-        success: result.success,
-        message: result.message,
-        testPipelineId: result.testPipelineId
-      });
-      
-      if (result.success) {
-        toast({
-          title: 'Kết nối thành công',
-          description: result.message || 'Thông tin xác thực KiotViet hợp lệ. Bạn có thể lưu cấu hình.',
-        });
-      } else {
-        toast({
-          title: 'Kết nối thất bại',
-          description: result.message,
-          variant: 'destructive'
-        });
-      }
-      
-    } catch (error) {
-      console.error('Connection test error:', error);
-      setTestResult({
-        success: false,
-        message: 'Lỗi không xác định khi kiểm tra kết nối'
-      });
-      
-      toast({
-        title: 'Lỗi',
-        description: 'Lỗi không xác định khi kiểm tra kết nối',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsTestingConnection(false);
-    }
-  };
-
   const handleSaveConfiguration = async () => {
-    if (!testResult?.success) {
-      toast({
-        title: 'Lỗi',
-        description: 'Vui lòng kiểm tra kết nối thành công trước khi lưu.',
-        variant: 'destructive'
-      });
-      return;
-    }
-
     if (!validateForm()) return;
 
     setIsSaving(true);
@@ -124,10 +63,7 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
     try {
       let savedPipeline: Pipeline;
 
-      if (testResult.testPipelineId) {
-        // Convert test pipeline to active pipeline
-        savedPipeline = await convertTestPipelineToActive(testResult.testPipelineId);
-      } else if (integration) {
+      if (integration) {
         // Update existing pipeline
         savedPipeline = await updatePipeline(integration.id, {
           status: 'ACTIVE',
@@ -138,7 +74,7 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
           }
         });
       } else {
-        // Create new pipeline (fallback)
+        // Create new pipeline
         savedPipeline = await createPipeline({
           type: 'KIOT_VIET',
           status: 'ACTIVE',
@@ -157,18 +93,14 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
       onSave({
         retailer: formData.retailer,
         clientId: formData.clientId,
-        lastSync: new Date().toLocaleString('vi-VN'),
         status: 'connected',
         pipelineId: savedPipeline.id
       });
       
       toast({
         title: 'Lưu thành công',
-        description: `Đã cấu hình tích hợp KiotViet cho cửa hàng "${formData.retailer}".`,
+        description: `Đã cấu hình tích hợp KiotViet cho cửa hàng "${formData.retailer}". Bạn có thể đồng bộ dữ liệu khi sẵn sàng.`,
       });
-      
-      // Clear test result after successful save
-      setTestResult(null);
       
     } catch (error) {
       console.error('Failed to save KiotViet configuration:', error);
@@ -182,6 +114,66 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
     }
   };
 
+  const handleSyncData = async () => {
+    if (!integration?.id) {
+      toast({
+        title: 'Lỗi',
+        description: 'Không tìm thấy pipeline để đồng bộ. Vui lòng lưu cấu hình trước.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setIsSyncing(true);
+    setSyncResult(null);
+
+    try {
+      await syncPipeline(integration.id);
+      
+      const successMessage = 'Đồng bộ dữ liệu thành công! Dữ liệu từ KiotViet đã được cập nhật vào hệ thống.';
+      
+      setSyncResult({
+        success: true,
+        message: successMessage,
+        details: {
+          syncTime: new Date().toLocaleString('vi-VN'),
+          status: 'completed'
+        }
+      });
+      
+      toast({
+        title: 'Đồng bộ thành công',
+        description: successMessage,
+      });
+      
+    } catch (error: any) {
+      console.error('Failed to sync data:', error);
+      
+      let errorMessage = 'Không thể đồng bộ dữ liệu. Vui lòng kiểm tra kết nối và thử lại.';
+      
+      if (error.message) {
+        if (error.message.includes('unauthorized') || error.message.includes('401')) {
+          errorMessage = 'Thông tin xác thực không hợp lệ. Vui lòng cập nhật cấu hình.';
+        } else if (error.message.includes('server') || error.message.includes('500')) {
+          errorMessage = 'Lỗi máy chủ KiotViet. Vui lòng thử lại sau.';
+        }
+      }
+      
+      setSyncResult({
+        success: false,
+        message: errorMessage
+      });
+      
+      toast({
+        title: 'Đồng bộ thất bại',
+        description: errorMessage,
+        variant: 'destructive'
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const handleDisconnect = async () => {
     if (integration && onDisconnect) {
       try {
@@ -189,8 +181,8 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
           status: 'INACTIVE'
         });
         
-        // Cleanup any remaining test pipelines when disconnecting
-        await cleanupTestPipelines();
+        // Clear sync result when disconnecting
+        setSyncResult(null);
         
         onDisconnect();
       } catch (error) {
@@ -204,16 +196,8 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
     }
   };
 
-  // Cleanup test pipelines when component unmounts or form is reset
-  const handleFormReset = async () => {
-    if (testResult?.testPipelineId && !testResult.success) {
-      try {
-        await cleanupTestPipelines();
-      } catch (error) {
-        console.error('Failed to cleanup test pipelines:', error);
-      }
-    }
-    setTestResult(null);
+  const handleFormReset = () => {
+    setSyncResult(null);
     setFormData({
       retailer: '',
       clientId: '',
@@ -248,17 +232,59 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
         </CardHeader>
         
         <CardContent className="space-y-4">
-          <div className="flex space-x-3">
+          {/* Sync Result */}
+          {syncResult && (
+            <div className={`flex items-center space-x-2 p-3 rounded-lg ${
+              syncResult.success 
+                ? 'bg-green-50 border border-green-200' 
+                : 'bg-red-50 border border-red-200'
+            }`}>
+              {syncResult.success ? (
+                <CheckCircle2 className="w-4 h-4 text-green-500" />
+              ) : (
+                <AlertCircle className="w-4 h-4 text-red-500" />
+              )}
+              <div className="flex-1">
+                <span className={`text-sm ${
+                  syncResult.success ? 'text-green-700' : 'text-red-700'
+                }`}>
+                  {syncResult.message}
+                </span>
+                {syncResult.details?.syncTime && (
+                  <div className="text-xs text-green-600 mt-1">
+                    Thời gian đồng bộ: {syncResult.details.syncTime}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <Button 
+              onClick={handleSyncData}
+              disabled={isSyncing}
+              className="voucher-button-primary"
+            >
+              {isSyncing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Đang đồng bộ...
+                </>
+              ) : (
+                'Đồng bộ dữ liệu'
+              )}
+            </Button>
+            
             <Button 
               variant="outline" 
               onClick={handleDisconnect}
-              className="flex-1"
             >
               Ngắt kết nối
             </Button>
+            
             <Button 
               onClick={handleFormReset} 
-              className="flex-1 voucher-button-primary"
+              variant="outline"
             >
               Cấu hình lại
             </Button>
@@ -291,25 +317,6 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
           </div>
         )}
         
-        {/* Test Result */}
-        {testResult && (
-          <div className={`flex items-center space-x-2 p-3 rounded-lg ${
-            testResult.success 
-              ? 'bg-green-50 border border-green-200' 
-              : 'bg-red-50 border border-red-200'
-          }`}>
-            {testResult.success ? (
-              <CheckCircle2 className="w-4 h-4 text-green-500" />
-            ) : (
-              <AlertCircle className="w-4 h-4 text-red-500" />
-            )}
-            <span className={`text-sm ${
-              testResult.success ? 'text-green-700' : 'text-red-700'
-            }`}>
-              {testResult.message}
-            </span>
-          </div>
-        )}
 
         {/* Form Fields */}
         <div className="space-y-4">
@@ -322,7 +329,7 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
               value={formData.retailer}
               onChange={(e) => setFormData(prev => ({ ...prev, retailer: e.target.value }))}
               placeholder="Nhập tên cửa hàng KiotViet"
-              disabled={isTestingConnection || isSaving}
+              disabled={isSaving}
               className="voucher-input"
             />
           </div>
@@ -336,7 +343,7 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
               value={formData.clientId}
               onChange={(e) => setFormData(prev => ({ ...prev, clientId: e.target.value }))}
               placeholder="Nhập Client ID từ KiotViet"
-              disabled={isTestingConnection || isSaving}
+              disabled={isSaving}
               className="voucher-input"
             />
           </div>
@@ -351,39 +358,23 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
               value={formData.clientSecret}
               onChange={(e) => setFormData(prev => ({ ...prev, clientSecret: e.target.value }))}
               placeholder="Nhập Client Secret từ KiotViet"
-              disabled={isTestingConnection || isSaving}
+              disabled={isSaving}
               className="voucher-input"
             />
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex space-x-3">
-          <Button
-            onClick={handleTestConnection}
-            disabled={isTestingConnection || isSaving}
-            variant="outline"
-            className="flex-1"
-          >
-            {isTestingConnection ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Đang kiểm tra...
-              </>
-            ) : (
-              'Kiểm tra kết nối'
-            )}
-          </Button>
-          
+        {/* Action Button */}
+        <div>
           <Button
             onClick={handleSaveConfiguration}
-            disabled={!testResult?.success || isTestingConnection || isSaving}
-            className="flex-1 voucher-button-primary"
+            disabled={isSaving}
+            className="w-full voucher-button-primary"
           >
             {isSaving ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Đang lưu...
+                Đang lưu cấu hình...
               </>
             ) : (
               'Lưu cấu hình'
@@ -392,13 +383,13 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
         </div>
 
         {/* Reset Form Button */}
-        {(formData.retailer || formData.clientId || formData.clientSecret || testResult) && (
+        {(formData.retailer || formData.clientId || formData.clientSecret) && (
           <div className="pt-2 border-t theme-border">
             <Button
               onClick={handleFormReset}
               variant="ghost"
               className="w-full text-sm theme-text-muted hover:theme-text"
-              disabled={isTestingConnection || isSaving}
+              disabled={isSaving}
             >
               Xóa form và làm lại
             </Button>
