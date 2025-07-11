@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -37,21 +36,30 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
   const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>();
 
   useEffect(() => {
+    console.log('🎯 [CreateRoleModal] useEffect triggered, isOpen:', isOpen);
+    
     if (isOpen) {
+      console.log('🎯 [CreateRoleModal] Modal is open, calling loadModules');
       loadModules();
+    } else {
+      console.log('🎯 [CreateRoleModal] Modal is closed, skipping loadModules');
     }
   }, [isOpen]);
 
   const loadModules = async () => {
+    console.log('🔄 [CreateRoleModal] loadModules() called');
+    
     try {
       setIsLoadingModules(true);
       setModuleLoadError(null);
-      console.log('🔧 [CreateRoleModal] Loading modules...');
+      console.log('🔄 [CreateRoleModal] Starting to load modules...');
       
       const modulesData = await ModuleService.getActiveModules();
-      console.log('🔧 [CreateRoleModal] Loaded modules:', modulesData);
+      console.log('✅ [CreateRoleModal] Received modules data:', modulesData);
+      console.log('✅ [CreateRoleModal] Modules count:', modulesData.length);
       
       setModules(modulesData);
+      console.log('✅ [CreateRoleModal] Modules state updated');
       
       // Initialize permissions for all modules
       const initialPermissions: ModulePermissions = {};
@@ -64,13 +72,16 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
         };
       });
       setPermissions(initialPermissions);
+      console.log('✅ [CreateRoleModal] Permissions initialized:', initialPermissions);
       
       // Select first module by default if available
       if (modulesData.length > 0 && !selectedModuleId) {
         setSelectedModuleId(modulesData[0].id);
+        console.log('✅ [CreateRoleModal] Selected first module:', modulesData[0].id);
       }
+      
     } catch (error) {
-      console.error('❌ [CreateRoleModal] Error loading modules:', error);
+      console.error('💥 [CreateRoleModal] Error in loadModules:', error);
       setModuleLoadError('Không thể tải danh sách modules. Sử dụng modules mặc định.');
       
       // Use fallback modules
@@ -93,7 +104,9 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
         }
       ];
       
+      console.log('🔄 [CreateRoleModal] Using fallback modules:', fallbackModules);
       setModules(fallbackModules);
+      
       const initialPermissions: ModulePermissions = {};
       fallbackModules.forEach(module => {
         initialPermissions[module.id] = {
@@ -110,6 +123,7 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
       }
     } finally {
       setIsLoadingModules(false);
+      console.log('✅ [CreateRoleModal] loadModules() completed');
     }
   };
 
@@ -179,6 +193,14 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
   };
 
   const selectedModule = selectedModuleId ? modules.find(m => m.id === selectedModuleId) : null;
+
+  console.log('🎨 [CreateRoleModal] Rendering with:', {
+    isOpen,
+    modules: modules.length,
+    isLoadingModules,
+    moduleLoadError,
+    selectedModuleId
+  });
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>

@@ -13,6 +13,14 @@ interface SimpleModuleListProps {
 }
 
 export function SimpleModuleList({ modules, permissions, selectedModuleId, onModuleSelect }: SimpleModuleListProps) {
+  console.log('🎨 [SimpleModuleList] Rendering with:', {
+    modulesCount: modules.length,
+    selectedModuleId,
+    permissions: Object.keys(permissions).length
+  });
+  
+  console.log('🎨 [SimpleModuleList] Modules data:', modules);
+
   const getModulePermissionCount = (moduleId: string) => {
     const modulePerms = permissions[moduleId];
     if (!modulePerms) return 0;
@@ -24,6 +32,8 @@ export function SimpleModuleList({ modules, permissions, selectedModuleId, onMod
   };
 
   if (modules.length === 0) {
+    console.log('⚠️ [SimpleModuleList] No modules to display');
+    
     return (
       <div className="space-y-4">
         <div className="text-sm font-medium text-gray-700 mb-4 px-2">Danh Sách Modules</div>
@@ -48,13 +58,17 @@ export function SimpleModuleList({ modules, permissions, selectedModuleId, onMod
     );
   }
 
+  console.log('✅ [SimpleModuleList] Displaying', modules.length, 'modules');
+
   return (
     <div className="space-y-1">
       <div className="text-sm font-medium text-gray-700 mb-4 px-2">
         Danh Sách Modules ({modules.length})
       </div>
       
-      {modules.map((module) => {
+      {modules.map((module, index) => {
+        console.log(`🎨 [SimpleModuleList] Rendering module ${index}:`, module);
+        
         const isSelected = selectedModuleId === module.id;
         const permissionCount = getModulePermissionCount(module.id);
         const hasPerms = hasAnyPermissions(module.id);
@@ -66,7 +80,10 @@ export function SimpleModuleList({ modules, permissions, selectedModuleId, onMod
             className={`w-full justify-start p-3 h-auto text-left hover:bg-gray-50 ${
               isSelected ? 'bg-blue-50 border-blue-200 border' : ''
             }`}
-            onClick={() => onModuleSelect(module.id)}
+            onClick={() => {
+              console.log('🎯 [SimpleModuleList] Module selected:', module.id);
+              onModuleSelect(module.id);
+            }}
           >
             <div className="flex items-center justify-between w-full">
               <div className="flex-1">
