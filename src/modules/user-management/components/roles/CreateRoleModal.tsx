@@ -4,7 +4,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { useForm } from 'react-hook-form';
 import { useToast } from '@/hooks/use-toast';
 import { RoleCreationData, CustomRole, ModuleInfo, ModulePermissions } from '../../types/role-management';
@@ -46,7 +45,7 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
       const modulesData = await ModuleService.getActiveModules();
       setModules(modulesData);
       
-      // Initialize permissions
+      // Initialize permissions for all modules
       const initialPermissions: ModulePermissions = {};
       modulesData.forEach(module => {
         initialPermissions[module.id] = {
@@ -61,7 +60,7 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
       console.error('Error loading modules:', error);
       toast({
         title: "Lỗi",
-        description: "Không thể tải danh sách modules",
+        description: "Không thể tải danh sách modules từ server",
         variant: "destructive"
       });
     } finally {
@@ -91,7 +90,7 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
       console.error('Error creating role:', error);
       toast({
         title: "Lỗi",
-        description: "Không thể tạo vai trò",
+        description: error instanceof Error ? error.message : "Không thể tạo vai trò",
         variant: "destructive"
       });
     } finally {
@@ -145,7 +144,7 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
           {/* Left Column 70% - Form + Permission Detail */}
           <div className="flex-[7] space-y-6 overflow-y-auto pr-2">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              {/* Basic Information - Compact Form */}
+              {/* Basic Information */}
               <div className="space-y-4">
                 <h3 className="text-lg font-medium border-b pb-2">Thông Tin Cơ Bản</h3>
                 

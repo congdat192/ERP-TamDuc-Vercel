@@ -1,58 +1,84 @@
 
 import { ModuleInfo, CustomRole, RoleCreationData } from '../types/role-management';
+import { api } from '../../../services/apiService';
 
 export class RoleService {
-  // Sẽ được thay thế bằng API call thực tế
   static async getActiveModules(): Promise<ModuleInfo[]> {
-    // TODO: Replace with actual API call
-    // return await fetch('/api/modules/active').then(res => res.json());
-    
-    // Placeholder - sẽ return empty array cho đến khi có API
-    return [];
+    // Sử dụng ModuleService thay vì implement riêng
+    const { ModuleService } = await import('./moduleService');
+    return ModuleService.getActiveModules();
   }
 
   static async getRoles(): Promise<CustomRole[]> {
-    // TODO: Replace with actual API call
-    // return await fetch('/api/roles').then(res => res.json());
-    
-    // Placeholder - sẽ return empty array cho đến khi có API
-    return [];
+    try {
+      const response = await api.get<{ data: any[] }>('/roles');
+      
+      return response.data.map((role: any) => ({
+        id: role.id.toString(),
+        name: role.name,
+        description: role.description || '',
+        permissions: role.permissions || {},
+        userCount: role.user_count || 0,
+        isSystem: role.is_system || false,
+        created_at: role.created_at,
+        updated_at: role.updated_at
+      }));
+    } catch (error) {
+      console.error('Error fetching roles:', error);
+      throw new Error('Không thể tải danh sách vai trò');
+    }
   }
 
   static async createRole(roleData: RoleCreationData): Promise<CustomRole> {
-    // TODO: Replace with actual API call
-    // return await fetch('/api/roles', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(roleData)
-    // }).then(res => res.json());
-    
-    console.log('Creating role:', roleData);
-    
-    // Placeholder return
-    return {
-      id: Date.now().toString(),
-      name: roleData.name,
-      description: roleData.description,
-      permissions: roleData.permissions,
-      userCount: 0,
-      isSystem: false,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
+    try {
+      const response = await api.post<{ data: any }>('/roles', {
+        name: roleData.name,
+        description: roleData.description,
+        permissions: roleData.permissions
+      });
+
+      return {
+        id: response.data.id.toString(),
+        name: response.data.name,
+        description: response.data.description,
+        permissions: response.data.permissions,
+        userCount: response.data.user_count || 0,
+        isSystem: response.data.is_system || false,
+        created_at: response.data.created_at,
+        updated_at: response.data.updated_at
+      };
+    } catch (error) {
+      console.error('Error creating role:', error);
+      throw new Error('Không thể tạo vai trò');
+    }
   }
 
   static async updateRole(roleId: string, roleData: Partial<RoleCreationData>): Promise<CustomRole> {
-    // TODO: Replace with actual API call
-    console.log('Updating role:', roleId, roleData);
-    
-    throw new Error('Update role functionality will be implemented with API');
+    try {
+      const response = await api.put<{ data: any }>(`/roles/${roleId}`, roleData);
+      
+      return {
+        id: response.data.id.toString(),
+        name: response.data.name,
+        description: response.data.description,
+        permissions: response.data.permissions,
+        userCount: response.data.user_count || 0,
+        isSystem: response.data.is_system || false,
+        created_at: response.data.created_at,
+        updated_at: response.data.updated_at
+      };
+    } catch (error) {
+      console.error('Error updating role:', error);
+      throw new Error('Không thể cập nhật vai trò');
+    }
   }
 
   static async deleteRole(roleId: string): Promise<void> {
-    // TODO: Replace with actual API call
-    console.log('Deleting role:', roleId);
-    
-    throw new Error('Delete role functionality will be implemented with API');
+    try {
+      await api.delete(`/roles/${roleId}`);
+    } catch (error) {
+      console.error('Error deleting role:', error);
+      throw new Error('Không thể xóa vai trò');
+    }
   }
 }
