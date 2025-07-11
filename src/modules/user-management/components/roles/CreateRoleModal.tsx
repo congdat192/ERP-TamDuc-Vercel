@@ -80,47 +80,22 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
         console.log('✅ [CreateRoleModal] Selected first module:', modulesData[0].id);
       }
       
+      // Show success message
+      if (modulesData.length > 0) {
+        console.log('🎉 [CreateRoleModal] Successfully loaded', modulesData.length, 'modules');
+      } else {
+        console.warn('⚠️ [CreateRoleModal] No modules loaded - this might be expected if none are configured');
+        setModuleLoadError('Không tìm thấy modules nào. Có thể hệ thống chưa được cấu hình modules hoặc bạn không có quyền truy cập.');
+      }
+      
     } catch (error) {
       console.error('💥 [CreateRoleModal] Error in loadModules:', error);
-      setModuleLoadError('Không thể tải danh sách modules. Sử dụng modules mặc định.');
+      const errorMessage = error instanceof Error ? error.message : 'Lỗi không xác định';
+      setModuleLoadError(`Không thể tải danh sách modules: ${errorMessage}`);
       
-      // Use fallback modules
-      const fallbackModules: ModuleInfo[] = [
-        {
-          id: 'voucher',
-          name: 'voucher',
-          label: 'Quản Lý Voucher',
-          icon: 'Ticket',
-          features: [],
-          status: 'active'
-        },
-        {
-          id: 'customer',
-          name: 'customer',
-          label: 'Quản Lý Khách Hàng',
-          icon: 'Users',
-          features: [],
-          status: 'active'
-        }
-      ];
+      // Don't use fallback here, let the service handle it
+      console.log('🔄 [CreateRoleModal] Error occurred, service should provide fallback modules');
       
-      console.log('🔄 [CreateRoleModal] Using fallback modules:', fallbackModules);
-      setModules(fallbackModules);
-      
-      const initialPermissions: ModulePermissions = {};
-      fallbackModules.forEach(module => {
-        initialPermissions[module.id] = {
-          view: false,
-          add: false,
-          edit: false,
-          delete: false
-        };
-      });
-      setPermissions(initialPermissions);
-      
-      if (fallbackModules.length > 0) {
-        setSelectedModuleId(fallbackModules[0].id);
-      }
     } finally {
       setIsLoadingModules(false);
       console.log('✅ [CreateRoleModal] loadModules() completed');
@@ -199,7 +174,8 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
     modules: modules.length,
     isLoadingModules,
     moduleLoadError,
-    selectedModuleId
+    selectedModuleId,
+    hasModules: modules.length > 0
   });
 
   return (
@@ -215,7 +191,17 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
             {moduleLoadError && (
               <Alert>
                 <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>{moduleLoadError}</AlertDescription>
+                <AlertDescription>
+                  <div className="space-y-2">
+                    <div className="font-medium">Thông báo về Modules</div>
+                    <div className="text-sm">{moduleLoadError}</div>
+                    {modules.length > 0 && (
+                      <div className="text-sm text-blue-600">
+                        Đang sử dụng {modules.length} modules mặc định để bạn có thể tiếp tục tạo vai trò.
+                      </div>
+                    )}
+                  </div>
+                </AlertDescription>
               </Alert>
             )}
 
@@ -268,11 +254,25 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
                   </div>
                 </div>
 
-                {getSelectedPermissionsCount() === 0 && (
+                {getSelectedPermissionsCount() === 0 && modules.length > 0 && (
                   <Alert>
                     <Info className="h-4 w-4" />
                     <AlertDescription>
                       Bạn chưa chọn quyền nào. Vai trò sẽ được tạo với quyền rỗng và có thể cập nhật sau.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {modules.length === 0 && !isLoadingModules && (
+                  <Alert>
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      <div className="space-y-2">
+                        <div className="font-medium">Không có modules để cấu hình quyền</div>
+                        <div className="text-sm">
+                          Vai trò sẽ được tạo mà không có quyền cụ thể. Bạn có thể cập nhật quyền sau khi modules được cấu hình trong hệ thống.
+                        </div>
+                      </div>
                     </AlertDescription>
                   </Alert>
                 )}
@@ -295,16 +295,18 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
             </form>
 
             {/* Permission Detail Area */}
-            <div className="border-t pt-6">
-              <h3 className="text-lg font-medium mb-4">Chi Tiết Quyền</h3>
-              <div className="min-h-[300px]">
-                <PermissionDetailArea
-                  selectedModule={selectedModule}
-                  permissions={permissions}
-                  onPermissionChange={handlePermissionChange}
-                />
+            {modules.length > 0 && (
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-medium mb-4">Chi Tiết Quyền</h3>
+                <div className="min-h-[300px]">
+                  <PermissionDetailArea
+                    selectedModule={selectedModule}
+                    permissions={permissions}
+                    onPermissionChange={handlePermissionChange}
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Right Column 30% - Modules List */}

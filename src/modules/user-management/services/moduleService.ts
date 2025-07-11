@@ -42,11 +42,89 @@ export class ModuleService {
         console.error('❌ [ModuleService] Unexpected response structure:', response);
         console.error('❌ [ModuleService] responseData:', responseData);
         console.error('❌ [ModuleService] responseData keys:', Object.keys(responseData || {}));
-        throw new Error('Unexpected API response structure');
+        
+        // If empty response, we'll use fallback but also log this issue
+        console.warn('⚠️ [ModuleService] Empty modules response from API, using fallback modules');
+        modulesList = [];
       }
       
       console.log('📊 [ModuleService] Final modules list:', modulesList);
       console.log('📊 [ModuleService] Modules count:', modulesList.length);
+      
+      // If API returns empty array, let's try with business ID
+      if (modulesList.length === 0) {
+        console.log('🔄 [ModuleService] Empty response, trying with business ID...');
+        
+        try {
+          const responseWithBusiness = await api.get<ModuleApiResponse>('/modules', {
+            requiresBusinessId: true // Try with business ID
+          });
+          
+          console.log('🔄 [ModuleService] Response with business ID:', responseWithBusiness);
+          
+          const businessResponseData = responseWithBusiness.data as any;
+          if (Array.isArray(businessResponseData) && businessResponseData.length > 0) {
+            console.log('✅ [ModuleService] Found modules with business ID');
+            modulesList = businessResponseData;
+          } else if (businessResponseData && Array.isArray(businessResponseData.data) && businessResponseData.data.length > 0) {
+            console.log('✅ [ModuleService] Found nested modules with business ID');
+            modulesList = businessResponseData.data;
+          }
+        } catch (businessError) {
+          console.error('❌ [ModuleService] Error trying with business ID:', businessError);
+        }
+      }
+      
+      // If still empty, use fallback modules for development
+      if (modulesList.length === 0) {
+        console.warn('⚠️ [ModuleService] No modules found from API, using fallback modules for development');
+        
+        const fallbackModules: ModuleInfo[] = [
+          {
+            id: 'voucher',
+            name: 'voucher',
+            label: 'Quản Lý Voucher',
+            icon: 'Ticket',
+            features: ['create', 'read', 'update', 'delete'],
+            status: 'active'
+          },
+          {
+            id: 'customer',
+            name: 'customer',
+            label: 'Quản Lý Khách Hàng',
+            icon: 'Users',
+            features: ['create', 'read', 'update', 'delete'],
+            status: 'active'
+          },
+          {
+            id: 'admin',
+            name: 'admin',
+            label: 'Quản Trị Hệ Thống',
+            icon: 'Shield',
+            features: ['create', 'read', 'update', 'delete'],
+            status: 'active'
+          },
+          {
+            id: 'inventory',
+            name: 'inventory',
+            label: 'Quản Lý Kho',
+            icon: 'Package',
+            features: ['create', 'read', 'update', 'delete'],
+            status: 'active'
+          },
+          {
+            id: 'sales',
+            name: 'sales', 
+            label: 'Quản Lý Bán Hàng',
+            icon: 'ShoppingCart',
+            features: ['create', 'read', 'update', 'delete'],
+            status: 'active'
+          }
+        ];
+        
+        console.log('🔄 [ModuleService] Using fallback modules:', fallbackModules);
+        return fallbackModules;
+      }
       
       // Transform API response to ModuleInfo format
       const transformedModules = modulesList.map((module: any, index: number) => {
@@ -57,7 +135,7 @@ export class ModuleService {
           name: module.name || module.module_name || 'Unknown Module',
           label: module.display_name || module.label || module.name || 'Unknown Module',
           icon: module.icon || 'Settings',
-          features: module.features || [],
+          features: module.features || ['create', 'read', 'update', 'delete'],
           status: (module.status || 'active') as 'active' | 'inactive'
         };
         
@@ -83,7 +161,7 @@ export class ModuleService {
           name: 'voucher',
           label: 'Quản Lý Voucher',
           icon: 'Ticket',
-          features: [],
+          features: ['create', 'read', 'update', 'delete'],
           status: 'active'
         },
         {
@@ -91,7 +169,7 @@ export class ModuleService {
           name: 'customer',
           label: 'Quản Lý Khách Hàng',
           icon: 'Users',
-          features: [],
+          features: ['create', 'read', 'update', 'delete'],
           status: 'active'
         },
         {
@@ -99,12 +177,28 @@ export class ModuleService {
           name: 'admin',
           label: 'Quản Trị Hệ Thống',
           icon: 'Shield',
-          features: [],
+          features: ['create', 'read', 'update', 'delete'],
+          status: 'active'
+        },
+        {
+          id: 'inventory',
+          name: 'inventory',
+          label: 'Quản Lý Kho',
+          icon: 'Package',
+          features: ['create', 'read', 'update', 'delete'],
+          status: 'active'
+        },
+        {
+          id: 'sales',
+          name: 'sales',
+          label: 'Quản Lý Bán Hàng', 
+          icon: 'ShoppingCart',
+          features: ['create', 'read', 'update', 'delete'],
           status: 'active'
         }
       ];
       
-      console.log('🔄 [ModuleService] Using fallback modules:', fallbackModules);
+      console.log('🔄 [ModuleService] Using fallback modules due to error:', fallbackModules);
       return fallbackModules;
     }
   }
