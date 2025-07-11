@@ -58,65 +58,61 @@ const testPipelineIds = new Set<string>();
 export const testKiotVietConnection = async (config: PipelineConfig): Promise<TestConnectionResponse> => {
   console.log('🔄 [pipelineService] Testing KiotViet connection by creating temporary pipeline for retailer:', config.retailer);
   
-  try {
-    // Create a temporary pipeline for testing - API only accepts type and config
-    const createPayload = {
-      type: 'KIOT_VIET',
-      config: {
-        client_id: config.client_id,
-        client_secret: config.client_secret,
-        retailer: config.retailer
-      }
-    };
+  // Try different type variants that might be accepted by the backend
+  const typeVariants = ['KIOT_VIET', 'KIOTVIET', 'KiotViet', 'kiot_viet'];
+  
+  for (const typeVariant of typeVariants) {
+    try {
+      // Create a temporary pipeline for testing - API only accepts type and config
+      const createPayload = {
+        type: typeVariant,
+        config: {
+          client_id: config.client_id,
+          client_secret: config.client_secret,
+          retailer: config.retailer
+        }
+      };
 
-    console.log('🚀 [pipelineService] Creating test pipeline with payload:', createPayload);
+      console.log(`🚀 [pipelineService] Trying type "${typeVariant}" with payload:`, JSON.stringify(createPayload, null, 2));
 
-    const testPipeline = await api.post<Pipeline>('/pipelines', createPayload, {
-      requiresBusinessId: true,
-      requiresAuth: true
-    });
+      const testPipeline = await api.post<Pipeline>('/pipelines', createPayload, {
+        requiresBusinessId: true,
+        requiresAuth: true
+      });
 
-    console.log('✅ [pipelineService] Test pipeline created successfully:', testPipeline.id);
-    
-    // Store the test pipeline ID for potential cleanup
-    testPipelineIds.add(testPipeline.id);
-    
-    return {
-      success: true,
-      message: 'Kết nối KiotViet thành công! Thông tin xác thực hợp lệ.',
-      data: testPipeline,
-      testPipelineId: testPipeline.id
-    };
-    
-  } catch (error: any) {
-    console.error('❌ [pipelineService] KiotViet connection test failed:', error);
-    
-    // Handle different error scenarios based on backend API responses
-    let errorMessage = 'Không thể kết nối đến KiotViet. Vui lòng kiểm tra lại thông tin.';
-    
-    if (error.message) {
-      const message = error.message.toLowerCase();
+      console.log('✅ [pipelineService] Test pipeline created successfully with type:', typeVariant, 'ID:', testPipeline.id);
       
-      if (message.includes('selected type is invalid')) {
-        errorMessage = 'Loại tích hợp không hợp lệ. Vui lòng liên hệ hỗ trợ kỹ thuật.';
-      } else if (message.includes('client id') || message.includes('client secret')) {
-        errorMessage = 'Client ID hoặc Client Secret không hợp lệ';
-      } else if (message.includes('retailer') || message.includes('cửa hàng')) {
-        errorMessage = 'Không tìm thấy cửa hàng với tên này';
-      } else if (message.includes('unauthorized') || message.includes('401')) {
-        errorMessage = 'Thông tin xác thực không hợp lệ';
-      } else if (message.includes('server') || message.includes('500')) {
-        errorMessage = 'Lỗi máy chủ, vui lòng thử lại sau';
-      } else {
-        errorMessage = error.message;
+      // Store the test pipeline ID for potential cleanup
+      testPipelineIds.add(testPipeline.id);
+      
+      return {
+        success: true,
+        message: 'Kết nối KiotViet thành công! Thông tin xác thực hợp lệ.',
+        data: testPipeline,
+        testPipelineId: testPipeline.id
+      };
+      
+    } catch (error: any) {
+      console.error(`❌ [pipelineService] Type "${typeVariant}" failed:`, error.message);
+      
+      // If it's not a type validation error, break the loop
+      if (!error.message?.includes('selected type is invalid')) {
+        console.error('❌ [pipelineService] Non-type error encountered:', error);
+        break;
       }
+      
+      // Continue to next type variant
+      continue;
     }
-    
-    return {
-      success: false,
-      message: errorMessage
-    };
   }
+  
+  // If all type variants failed, return generic error
+  console.error('❌ [pipelineService] All type variants failed');
+  
+  return {
+    success: false,
+    message: 'Loại tích hợp không hợp lệ. Vui lòng liên hệ hỗ trợ kỹ thuật.'
+  };
 };
 
 // Convert test pipeline to active pipeline when user saves configuration
