@@ -32,6 +32,7 @@ export interface UserProfile {
 export interface UpdateProfileRequest {
   name: string;
   email: string;
+  avatar?: string;
 }
 
 export interface ForgotPasswordRequest {

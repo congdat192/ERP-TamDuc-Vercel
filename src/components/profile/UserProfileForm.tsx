@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User, Upload, Loader2 } from 'lucide-react';
 import { User as UserType } from '@/types/auth';
 import { updateUserProfile } from '@/services/authService';
+import { uploadAvatar, validateImageFile, createImagePreview, revokeImagePreview } from '@/services/imageService';
 import { useAuth } from '@/components/auth/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
@@ -18,7 +19,12 @@ interface UserProfileFormProps {
 export function UserProfileForm({ user }: UserProfileFormProps) {
   const { refreshUserProfile } = useAuth();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  
   const [formData, setFormData] = useState({
     name: user.fullName,
     email: user.email,
@@ -27,6 +33,69 @@ export function UserProfileForm({ user }: UserProfileFormProps) {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file
+    const validation = validateImageFile(file);
+    if (!validation.isValid) {
+      toast({
+        title: "File không hợp lệ",
+        description: validation.error,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Create preview
+    const preview = createImagePreview(file);
+    setPreviewUrl(preview);
+
+    // Upload avatar
+    setIsUploadingAvatar(true);
+    try {
+      const uploadResult = await uploadAvatar(file);
+      
+      // Update user profile with new avatar URL
+      await updateUserProfile({
+        name: formData.name,
+        email: formData.email,
+        avatar: uploadResult.url, // Add avatar URL to profile update
+      });
+
+      await refreshUserProfile();
+
+      toast({
+        title: "Cập nhật ảnh đại diện thành công",
+        description: "Ảnh đại diện đã được cập nhật",
+      });
+    } catch (error) {
+      console.error('Failed to upload avatar:', error);
+      toast({
+        title: "Upload thất bại",
+        description: error instanceof Error ? error.message : "Có lỗi xảy ra khi upload ảnh",
+        variant: "destructive",
+      });
+      
+      // Revert preview on error
+      if (previewUrl) {
+        revokeImagePreview(previewUrl);
+        setPreviewUrl(null);
+      }
+    } finally {
+      setIsUploadingAvatar(false);
+      // Clear file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -62,6 +131,15 @@ export function UserProfileForm({ user }: UserProfileFormProps) {
     formData.email !== user.email ||
     formData.phone !== (user.phone || '');
 
+  // Clean up preview URL on unmount
+  React.useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        revokeImagePreview(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
   return (
     <div className="space-y-6">
       {/* Avatar Section */}
@@ -74,21 +152,43 @@ export function UserProfileForm({ user }: UserProfileFormProps) {
         </CardHeader>
         <CardContent>
           <div className="flex items-center space-x-6">
-            <Avatar className="w-20 h-20">
-              <AvatarImage src={user.avatar} />
+            <Avatar className="w-20 h-20 cursor-pointer" onClick={handleAvatarClick}>
+              <AvatarImage src={previewUrl || user.avatar} />
               <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-lg">
                 {user.fullName.charAt(0)}
               </AvatarFallback>
             </Avatar>
             <div>
-              <Button variant="outline" className="flex items-center space-x-2">
-                <Upload className="w-4 h-4" />
-                <span>Tải Ảnh Lên</span>
+              <Button 
+                variant="outline" 
+                className="flex items-center space-x-2"
+                onClick={handleAvatarClick}
+                disabled={isUploadingAvatar}
+              >
+                {isUploadingAvatar ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Upload className="w-4 h-4" />
+                )}
+                <span>{isUploadingAvatar ? 'Đang tải...' : 'Tải Ảnh Lên'}</span>
               </Button>
               <p className="text-sm text-gray-500 mt-2">
                 JPG, PNG hoặc GIF. Tối đa 2MB.
               </p>
+              {isUploadingAvatar && (
+                <p className="text-sm text-blue-600 mt-1">
+                  Đang upload và cập nhật...
+                </p>
+              )}
             </div>
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/gif"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
           </div>
         </CardContent>
       </Card>

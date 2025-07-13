@@ -57,7 +57,7 @@ export interface User {
   status: UserStatus;
   createdAt: string;
   lastLogin?: string;
-  avatar?: string;
+  avatar?: string; // This field already exists
   emailVerified: boolean;
   securitySettings: UserSecuritySettings;
   activities: any[];
