@@ -6,7 +6,7 @@ import { useAuth } from '@/components/auth/AuthContext';
 import { useEffect } from 'react';
 
 export function LoginPage() {
-  const { isAuthenticated, currentUser, login, loginAttempts } = useAuth();
+  const { isAuthenticated, currentUser, login } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,7 +31,6 @@ export function LoginPage() {
   return (
     <LoginComponent 
       onLogin={handleLogin}
-      loginAttempts={loginAttempts}
     />
   );
 }

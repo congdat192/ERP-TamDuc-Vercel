@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Building2, Eye, EyeOff, Lock, AlertTriangle, Mail } from 'lucide-react';
+import { Building2, Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
   Dialog,
@@ -19,10 +19,9 @@ import { resendVerificationEmail } from '@/services/authService';
 
 interface LoginPageProps {
   onLogin: (email: string, password: string, rememberMe?: boolean) => void;
-  loginAttempts?: number;
 }
 
-export function LoginPage({ onLogin, loginAttempts = 0 }: LoginPageProps) {
+export function LoginPage({ onLogin }: LoginPageProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -32,25 +31,12 @@ export function LoginPage({ onLogin, loginAttempts = 0 }: LoginPageProps) {
   const [isLoadingResend, setIsLoadingResend] = useState(false);
   const { toast } = useToast();
 
-  const isAccountLocked = loginAttempts >= 3;
-  const remainingAttempts = Math.max(0, 3 - loginAttempts);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isAccountLocked) {
-      toast({
-        title: "Tài khoản bị khóa",
-        description: "Tài khoản đã bị khóa do quá nhiều lần đăng nhập thất bại. Vui lòng thử lại sau 15 phút.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
     if (email && password) {
       onLogin(email, password, rememberMe);
     }
   };
-
 
   const handleResendVerification = async () => {
     if (!resendEmail) {
@@ -68,6 +54,7 @@ export function LoginPage({ onLogin, loginAttempts = 0 }: LoginPageProps) {
       toast({
         title: "Email xác thực đã được gửi",
         description: `Email xác thực đã được gửi đến ${resendEmail}`,
+        duration: 6000,
       });
       setShowResendVerification(false);
       setResendEmail('');
@@ -130,26 +117,6 @@ export function LoginPage({ onLogin, loginAttempts = 0 }: LoginPageProps) {
               <CardDescription className="text-center">
                 Nhập thông tin đăng nhập của bạn
               </CardDescription>
-              
-              {/* Account Lockout Warning */}
-              {isAccountLocked && (
-                <div className="flex items-center space-x-2 p-3 bg-red-50 border border-red-200 rounded-md">
-                  <AlertTriangle className="w-4 h-4 text-red-500" />
-                  <span className="text-sm text-red-700">
-                    Tài khoản đã bị khóa tạm thời
-                  </span>
-                </div>
-              )}
-              
-              {/* Failed Attempts Warning */}
-              {loginAttempts > 0 && !isAccountLocked && (
-                <div className="flex items-center space-x-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                  <AlertTriangle className="w-4 h-4 text-yellow-500" />
-                  <span className="text-sm text-yellow-700">
-                    Còn lại {remainingAttempts} lần thử đăng nhập
-                  </span>
-                </div>
-              )}
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Login Form */}
@@ -165,7 +132,6 @@ export function LoginPage({ onLogin, loginAttempts = 0 }: LoginPageProps) {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="pl-10"
-                      disabled={isAccountLocked}
                       required
                     />
                   </div>
@@ -182,7 +148,6 @@ export function LoginPage({ onLogin, loginAttempts = 0 }: LoginPageProps) {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="pl-10 pr-10"
-                      disabled={isAccountLocked}
                       required
                     />
                     <Button
@@ -191,7 +156,6 @@ export function LoginPage({ onLogin, loginAttempts = 0 }: LoginPageProps) {
                       size="sm"
                       className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                       onClick={() => setShowPassword(!showPassword)}
-                      disabled={isAccountLocked}
                     >
                       {showPassword ? (
                         <EyeOff className="h-4 w-4" />
@@ -208,18 +172,13 @@ export function LoginPage({ onLogin, loginAttempts = 0 }: LoginPageProps) {
                     id="remember"
                     checked={rememberMe}
                     onCheckedChange={(checked) => setRememberMe(checked === true)}
-                    disabled={isAccountLocked}
                   />
                   <Label htmlFor="remember" className="text-sm font-normal">
                     Duy trì đăng nhập
                   </Label>
                 </div>
 
-                <Button 
-                  type="submit" 
-                  className="w-full"
-                  disabled={isAccountLocked}
-                >
+                <Button type="submit" className="w-full">
                   Đăng Nhập
                 </Button>
               </form>
@@ -268,7 +227,6 @@ export function LoginPage({ onLogin, loginAttempts = 0 }: LoginPageProps) {
           </Card>
         </div>
       </div>
-
 
       {/* Resend Verification Dialog */}
       <Dialog open={showResendVerification} onOpenChange={setShowResendVerification}>

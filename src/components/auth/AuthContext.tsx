@@ -10,7 +10,6 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
-  loginAttempts: number;
   refreshUserProfile: () => Promise<void>;
   isLoading: boolean;
 }
@@ -29,7 +28,6 @@ export const useAuth = () => {
 const STORAGE_KEYS = {
   TOKEN: 'auth_token',
   USER: 'erp_current_user',
-  LOGIN_ATTEMPTS: 'erp_login_attempts',
 };
 
 // Utility functions for localStorage
@@ -102,7 +100,6 @@ const convertApiUserToUser = (apiUser: any): User => {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [loginAttempts, setLoginAttempts] = useState(0);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -115,7 +112,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       try {
         const storedUser = loadFromStorage(STORAGE_KEYS.USER);
-        const storedAttempts = loadFromStorage(STORAGE_KEYS.LOGIN_ATTEMPTS) || 0;
         
         // Only restore user if token exists and user email is verified
         if (checkAuthentication() && storedUser && storedUser.emailVerified) {
@@ -126,8 +122,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           removeFromStorage(STORAGE_KEYS.USER);
           removeFromStorage(STORAGE_KEYS.TOKEN);
         }
-        
-        setLoginAttempts(storedAttempts);
       } catch (error) {
         console.warn('❌ [AuthContext] Failed to initialize auth:', error);
       } finally {
@@ -156,34 +150,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           title: "Email chưa xác thực",
           description: "Vui lòng kiểm tra email và xác thực tài khoản trước khi đăng nhập.",
           variant: "destructive",
+          duration: 6000,
         });
         
-        // Don't set current user, don't save to storage
-        setLoginAttempts(prev => prev + 1);
-        saveToStorage(STORAGE_KEYS.LOGIN_ATTEMPTS, loginAttempts + 1);
         return false;
       }
       
       setCurrentUser(user);
-      setLoginAttempts(0);
       
       // Save to localStorage
       saveToStorage(STORAGE_KEYS.USER, user);
-      saveToStorage(STORAGE_KEYS.LOGIN_ATTEMPTS, 0);
       
       console.log('✅ [AuthContext] User logged in successfully:', email);
       
       toast({
         title: "Đăng nhập thành công",
         description: `Chào mừng ${user.fullName}!`,
+        duration: 4000,
       });
       
       return true;
     } catch (error) {
-      const newAttempts = loginAttempts + 1;
-      setLoginAttempts(newAttempts);
-      saveToStorage(STORAGE_KEYS.LOGIN_ATTEMPTS, newAttempts);
-      
       console.log('❌ [AuthContext] Login failed for:', email, error);
       
       let errorMessage = "Thông tin đăng nhập không chính xác";
@@ -195,6 +182,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         title: "Đăng nhập thất bại",
         description: errorMessage,
         variant: "destructive",
+        duration: 5000,
       });
       
       return false;
@@ -214,11 +202,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.warn('⚠️ [AuthContext] Logout error:', error);
     } finally {
       setCurrentUser(null);
-      setLoginAttempts(0);
       
       // Clear localStorage
       removeFromStorage(STORAGE_KEYS.USER);
-      removeFromStorage(STORAGE_KEYS.LOGIN_ATTEMPTS);
       
       // Clear business context including cbi
       clearSelectedBusinessId();
@@ -231,6 +217,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast({
         title: "Đăng xuất thành công",
         description: "Bạn đã đăng xuất khỏi hệ thống",
+        duration: 4000,
       });
     }
   };
@@ -271,7 +258,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthenticated: checkAuthentication() && !!currentUser && currentUser.emailVerified,
         login,
         logout,
-        loginAttempts,
         refreshUserProfile,
         isLoading,
       }}
