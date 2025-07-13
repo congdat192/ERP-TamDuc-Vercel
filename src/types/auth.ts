@@ -57,12 +57,18 @@ export interface User {
   status: UserStatus;
   createdAt: string;
   lastLogin?: string;
-  avatar?: string; // This field already exists
+  avatarPath?: string; // Changed from avatar to avatarPath to match API
   emailVerified: boolean;
   securitySettings: UserSecuritySettings;
   activities: any[];
   notes?: string;
 }
+
+// Helper function to construct full avatar URL
+export const getAvatarUrl = (avatarPath?: string): string | undefined => {
+  if (!avatarPath) return undefined;
+  return `https://matkinhtamducxyz.sgp1.digitaloceanspaces.com/${avatarPath}`;
+};
 
 export interface AuthState {
   isAuthenticated: boolean;

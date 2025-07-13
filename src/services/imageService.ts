@@ -2,10 +2,8 @@
 import { apiCall } from './apiService';
 
 export interface ImageUploadResponse {
+  path: string;
   url: string;
-  filename: string;
-  size: number;
-  type: string;
 }
 
 export interface ImageUploadError {
@@ -77,7 +75,12 @@ export const uploadAvatar = async (file: File): Promise<ImageUploadResponse> => 
 
     const data = await response.json();
     console.log('✅ [imageService] Upload successful:', data);
-    return data;
+    
+    // Ensure we return the correct format
+    return {
+      path: data.path,
+      url: data.url
+    };
   } catch (error) {
     console.error('❌ [imageService] Upload error:', error);
     throw error;

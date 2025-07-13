@@ -1,5 +1,5 @@
 // Authentication service for API calls
-import { User } from '@/types/auth';
+import { User, getAvatarUrl } from '@/types/auth';
 
 export interface LoginRequest {
   email: string;
@@ -24,6 +24,8 @@ export interface UserProfile {
   id: string;
   name: string;
   email: string;
+  phone: string;
+  avatar_path: string | null;
   email_verified_at: string | null;
   created_at: string;
   updated_at: string;
@@ -32,7 +34,7 @@ export interface UserProfile {
 export interface UpdateProfileRequest {
   name: string;
   email: string;
-  avatar?: string;
+  avatar_path?: string; // Changed to match backend API
 }
 
 export interface ForgotPasswordRequest {
@@ -131,11 +133,13 @@ const convertApiUserToUser = (apiUser: any): User => {
     fullName: apiUser.name,
     role: 'erp-admin',
     email: apiUser.email,
+    phone: apiUser.phone,
     status: 'active',
     createdAt: apiUser.created_at,
     lastLogin: new Date().toISOString(),
     emailVerified: !!apiUser.email_verified_at,
     isActive: true,
+    avatarPath: apiUser.avatar_path, // Map avatar_path correctly
     permissions: {
       modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'marketing', 'system-settings', 'user-management'],
       voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],

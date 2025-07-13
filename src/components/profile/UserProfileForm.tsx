@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User, Upload, Loader2 } from 'lucide-react';
-import { User as UserType } from '@/types/auth';
+import { User as UserType, getAvatarUrl } from '@/types/auth';
 import { updateUserProfile } from '@/services/authService';
 import { uploadAvatar, validateImageFile, createImagePreview, revokeImagePreview } from '@/services/imageService';
 import { useAuth } from '@/components/auth/AuthContext';
@@ -63,11 +63,11 @@ export function UserProfileForm({ user }: UserProfileFormProps) {
     try {
       const uploadResult = await uploadAvatar(file);
       
-      // Update user profile with new avatar URL
+      // Update user profile with new avatar path
       await updateUserProfile({
         name: formData.name,
         email: formData.email,
-        avatar: uploadResult.url, // Add avatar URL to profile update
+        avatar_path: uploadResult.path, // Use path, not url
       });
 
       await refreshUserProfile();
@@ -140,6 +140,9 @@ export function UserProfileForm({ user }: UserProfileFormProps) {
     };
   }, [previewUrl]);
 
+  // Get current avatar URL
+  const currentAvatarUrl = getAvatarUrl(user.avatarPath);
+
   return (
     <div className="space-y-6">
       {/* Avatar Section */}
@@ -153,7 +156,7 @@ export function UserProfileForm({ user }: UserProfileFormProps) {
         <CardContent>
           <div className="flex items-center space-x-6">
             <Avatar className="w-20 h-20 cursor-pointer" onClick={handleAvatarClick}>
-              <AvatarImage src={previewUrl || user.avatar} />
+              <AvatarImage src={previewUrl || currentAvatarUrl} />
               <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-lg">
                 {user.fullName.charAt(0)}
               </AvatarFallback>
