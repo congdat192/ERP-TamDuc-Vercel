@@ -88,7 +88,7 @@ export function UserManagement() {
       status: 'active',
       createdAt: '2024-01-15T08:00:00Z',
       lastLogin: '2024-05-29T16:30:00Z',
-      avatar: undefined,
+      avatarPath: undefined,
       emailVerified: true,
       securitySettings: {
         twoFactorEnabled: true,
@@ -116,7 +116,7 @@ export function UserManagement() {
       status: 'active',
       createdAt: '2024-02-01T08:00:00Z',
       lastLogin: '2024-05-29T14:20:00Z',
-      avatar: undefined,
+      avatarPath: undefined,
       emailVerified: true,
       securitySettings: {
         twoFactorEnabled: false,
@@ -143,7 +143,7 @@ export function UserManagement() {
       status: 'active',
       createdAt: '2024-03-01T08:00:00Z',
       lastLogin: '2024-05-29T12:00:00Z',
-      avatar: undefined,
+      avatarPath: undefined,
       emailVerified: true,
       securitySettings: {
         twoFactorEnabled: false,
@@ -169,7 +169,7 @@ export function UserManagement() {
       isActive: false,
       status: 'inactive',
       createdAt: '2024-04-01T08:00:00Z',
-      avatar: undefined,
+      avatarPath: undefined,
       emailVerified: false,
       securitySettings: {
         twoFactorEnabled: false,

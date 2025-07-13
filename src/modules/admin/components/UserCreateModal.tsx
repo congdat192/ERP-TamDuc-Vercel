@@ -58,7 +58,7 @@ export function UserCreateModal({ isOpen, onClose, onUserCreated }: UserCreateMo
       isActive: true,
       status: 'pending_verification',
       createdAt: new Date().toISOString(),
-      avatar: undefined,
+      avatarPath: undefined,
       emailVerified: false,
       securitySettings: {
         twoFactorEnabled: false,
