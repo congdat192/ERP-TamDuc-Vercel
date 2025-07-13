@@ -24,7 +24,7 @@ export function RegisterPage() {
       
       toast({
         title: "Đăng ký thành công!",
-        description: "Tài khoản của bạn đã được tạo. Vui lòng đăng nhập để tiếp tục.",
+        description: "Vui lòng kiểm tra email và nhấn vào link xác thực để kích hoạt tài khoản của bạn.",
       });
       
       console.log('Registration successful:', response);
@@ -32,7 +32,7 @@ export function RegisterPage() {
       // Redirect to login page after successful registration
       setTimeout(() => {
         navigate('/login');
-      }, 2000);
+      }, 3000);
       
     } catch (error) {
       console.error('Registration failed:', error);
