@@ -67,7 +67,8 @@ export function UserProfileForm({ user }: UserProfileFormProps) {
       await updateUserProfile({
         name: formData.name,
         email: formData.email,
-        avatar_path: uploadResult.path, // Use path, not url
+        phone: formData.phone,
+        avatar_path: uploadResult.path,
       });
 
       // Refresh user profile to get the updated avatar
@@ -113,6 +114,7 @@ export function UserProfileForm({ user }: UserProfileFormProps) {
       await updateUserProfile({
         name: formData.name,
         email: formData.email,
+        phone: formData.phone,
       });
 
       await refreshUserProfile();
@@ -238,12 +240,14 @@ export function UserProfileForm({ user }: UserProfileFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phone">Số Điện Thoại</Label>
+              <Label htmlFor="phone">Số Điện Thoại *</Label>
               <Input
                 id="phone"
+                type="tel"
                 value={formData.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
-                placeholder="Nhập số điện thoại"
+                placeholder="Nhập số điện thoại (+84...)"
+                required
               />
             </div>
 

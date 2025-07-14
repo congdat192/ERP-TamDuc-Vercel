@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Building2, Eye, EyeOff, User, Mail, Lock } from 'lucide-react';
+import { Building2, Eye, EyeOff, User, Mail, Lock, Phone } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { registerUser } from '@/services/registerService';
@@ -14,6 +14,7 @@ export function RegisterPage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
     password: '',
     confirmPassword: '',
   });
@@ -56,6 +57,7 @@ export function RegisterPage() {
       await registerUser({
         name: formData.name,
         email: formData.email,
+        phone: formData.phone,
         password: formData.password,
         password_confirmation: formData.confirmPassword,
       });
@@ -63,10 +65,9 @@ export function RegisterPage() {
       toast({
         title: "Đăng ký thành công! 🎉",
         description: "Vui lòng kiểm tra email và nhấp vào liên kết xác thực để hoàn tất đăng ký. Sau đó quay lại đăng nhập.",
-        duration: 8000, // Tăng thời gian hiển thị lên 8 giây
+        duration: 8000,
       });
 
-      // Chuyển hướng về trang đăng nhập sau 2 giây
       setTimeout(() => {
         navigate('/login');
       }, 2000);
@@ -169,6 +170,24 @@ export function RegisterPage() {
                     placeholder="Nhập địa chỉ email"
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
+                    className="pl-10"
+                    disabled={isLoading}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Phone Field */}
+              <div className="space-y-2">
+                <Label htmlFor="phone">Số Điện Thoại</Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="Nhập số điện thoại (+84...)"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
                     className="pl-10"
                     disabled={isLoading}
                     required
