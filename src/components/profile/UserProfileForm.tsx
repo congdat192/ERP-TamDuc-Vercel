@@ -68,20 +68,26 @@ export function UserProfileForm({ user }: UserProfileFormProps) {
       console.log('✅ Image uploaded, path:', uploadResult.path);
       
       // Step 2: Update user profile with avatar_path
-      await updateUserProfile({
+      const updatedUser = await updateUserProfile({
         name: user.fullName, // Keep current name
         email: user.email,   // Keep current email  
         avatar_path: uploadResult.path // Set new avatar path
       });
-      console.log('✅ Profile updated with avatar path');
+      console.log('✅ Profile updated with avatar path:', updatedUser);
 
-      // Step 3: Refresh user profile to get updated data
+      // Step 3: Refresh user profile to get updated data with proper avatar handling
       await refreshUserProfile();
 
       toast({
         title: "Cập nhật ảnh đại diện thành công",
         description: "Ảnh đại diện đã được cập nhật",
       });
+
+      // Clear preview after successful upload
+      if (previewUrl) {
+        revokeImagePreview(previewUrl);
+        setPreviewUrl(null);
+      }
     } catch (error) {
       console.error('❌ Avatar upload failed:', error);
       toast({
@@ -149,6 +155,8 @@ export function UserProfileForm({ user }: UserProfileFormProps) {
 
   // Get current avatar URL
   const currentAvatarUrl = getAvatarUrl(user.avatarPath);
+  console.log('🖼️ [UserProfileForm] Current avatar URL:', currentAvatarUrl);
+  console.log('🖼️ [UserProfileForm] User avatar path:', user.avatarPath);
 
   return (
     <div className="space-y-6">
@@ -163,7 +171,11 @@ export function UserProfileForm({ user }: UserProfileFormProps) {
         <CardContent>
           <div className="flex items-center space-x-6">
             <Avatar className="w-20 h-20 cursor-pointer" onClick={handleAvatarClick}>
-              <AvatarImage src={previewUrl || currentAvatarUrl} />
+              <AvatarImage 
+                src={previewUrl || currentAvatarUrl} 
+                onError={() => console.log('❌ Avatar image failed to load:', previewUrl || currentAvatarUrl)}
+                onLoad={() => console.log('✅ Avatar image loaded successfully:', previewUrl || currentAvatarUrl)}
+              />
               <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-lg">
                 {user.fullName.charAt(0)}
               </AvatarFallback>
