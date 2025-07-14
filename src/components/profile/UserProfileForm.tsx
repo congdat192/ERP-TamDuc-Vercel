@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { User, Upload, Loader2 } from 'lucide-react';
+import { User, Upload, Loader2, Lock } from 'lucide-react';
 import { User as UserType, getAvatarUrl } from '@/types/auth';
 import { updateUserProfile } from '@/services/authService';
 import { uploadAvatar, validateImageFile, createImagePreview, revokeImagePreview } from '@/services/imageService';
@@ -27,7 +27,6 @@ export function UserProfileForm({ user }: UserProfileFormProps) {
   
   const [formData, setFormData] = useState({
     name: user.fullName,
-    email: user.email,
     phone: user.phone || '',
   });
 
@@ -66,7 +65,7 @@ export function UserProfileForm({ user }: UserProfileFormProps) {
       // Update user profile with new avatar path
       await updateUserProfile({
         name: formData.name,
-        email: formData.email,
+        email: user.email, // Keep current email
         phone: formData.phone,
         avatar_path: uploadResult.path,
       });
@@ -113,7 +112,7 @@ export function UserProfileForm({ user }: UserProfileFormProps) {
     try {
       await updateUserProfile({
         name: formData.name,
-        email: formData.email,
+        email: user.email, // Keep current email, don't allow changes
         phone: formData.phone,
       });
 
@@ -137,7 +136,6 @@ export function UserProfileForm({ user }: UserProfileFormProps) {
 
   const hasChanges = 
     formData.name !== user.fullName || 
-    formData.email !== user.email ||
     formData.phone !== (user.phone || '');
 
   // Clean up preview URL on unmount
@@ -227,15 +225,21 @@ export function UserProfileForm({ user }: UserProfileFormProps) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email *</Label>
+                <Label htmlFor="email" className="flex items-center space-x-2">
+                  <span>Email (Không thể thay đổi)</span>
+                  <Lock className="w-3 h-3 text-gray-500" />
+                </Label>
                 <Input
                   id="email"
                   type="email"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  placeholder="Nhập địa chỉ email"
-                  required
+                  value={user.email}
+                  readOnly
+                  disabled
+                  className="bg-gray-100 text-gray-600 cursor-not-allowed"
                 />
+                <p className="text-xs text-gray-500">
+                  Email là tài khoản đăng nhập, không thể thay đổi
+                </p>
               </div>
             </div>
 
@@ -257,7 +261,6 @@ export function UserProfileForm({ user }: UserProfileFormProps) {
                 variant="outline"
                 onClick={() => setFormData({
                   name: user.fullName,
-                  email: user.email,
                   phone: user.phone || '',
                 })}
                 disabled={!hasChanges || isLoading}

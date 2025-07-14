@@ -51,23 +51,6 @@ export function UserProfilePage() {
           </div>
         </div>
 
-        {/* Profile Card */}
-        <Card className="mb-6">
-          <CardHeader>
-            <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                <User className="w-8 h-8 text-white" />
-              </div>
-              <div>
-                <CardTitle className="text-xl">{currentUser.fullName}</CardTitle>
-                <CardDescription className="text-base">
-                  {currentUser.email} • {currentUser.role === 'erp-admin' ? 'Quản Trị ERP' : 'Người Dùng'}
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
-
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-6">
