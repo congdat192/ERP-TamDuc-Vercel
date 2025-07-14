@@ -1,7 +1,8 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Menu, Ticket, LogOut, User, Bell, Settings, Globe } from 'lucide-react';
+import { Search, Menu, LogOut, User, Bell, Settings, Globe } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
@@ -18,9 +19,8 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { NotificationCenter } from '@/components/ui/notification-center';
 import { BusinessSwitcher } from '@/components/ui/business-switcher';
-import { User as UserType } from '@/types/auth';
+import { User as UserType, getAvatarUrl } from '@/types/auth';
 import { useNavigate } from 'react-router-dom';
 
 interface HeaderProps {
@@ -34,7 +34,6 @@ interface HeaderProps {
 export function Header({ onSidebarToggle, currentPage, onPageChange, onLogout, currentUser }: HeaderProps) {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const [showQuickVoucher, setShowQuickVoucher] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
@@ -65,6 +64,9 @@ export function Header({ onSidebarToggle, currentPage, onPageChange, onLogout, c
     console.log('📋 [Header] Navigating to profile page');
     navigate('/ERP/Profile');
   };
+
+  // Get current avatar URL using the same structure as UserProfileForm
+  const currentAvatarUrl = getAvatarUrl(currentUser.avatarPath);
 
   return (
     <>
@@ -117,18 +119,6 @@ export function Header({ onSidebarToggle, currentPage, onPageChange, onLogout, c
             <Search className="w-4 h-4" />
           </Button>
 
-          {/* Quick Voucher Button - only show if user has voucher access */}
-          {currentUser.permissions.modules.includes('voucher') && (
-            <Button 
-              className="theme-bg-secondary text-white shadow-lg hidden sm:flex hover:opacity-90"
-              size="sm"
-              onClick={() => setShowQuickVoucher(true)}
-            >
-              <Ticket className="w-4 h-4 mr-2" />
-              Phát Hành Nhanh
-            </Button>
-          )}
-
           {/* Notifications */}
           <div className="relative">
             <Button variant="ghost" size="sm" className="p-2 hover:bg-sidebar-accent">
@@ -161,7 +151,7 @@ export function Header({ onSidebarToggle, currentPage, onPageChange, onLogout, c
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0">
                 <Avatar className="h-9 w-9">
-                  <AvatarImage src="/placeholder.svg" />
+                  <AvatarImage src={currentAvatarUrl} />
                   <AvatarFallback className="theme-bg-secondary text-white text-sm">
                     {currentUser.fullName.charAt(0)}
                   </AvatarFallback>
@@ -242,21 +232,6 @@ export function Header({ onSidebarToggle, currentPage, onPageChange, onLogout, c
               onClick={confirmLogout}
             >
               Đăng Xuất
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Quick Voucher Dialog */}
-      <Dialog open={showQuickVoucher} onOpenChange={setShowQuickVoucher}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Phát Hành Voucher Nhanh</DialogTitle>
-          </DialogHeader>
-          <div className="p-4">
-            <p className="text-gray-600">Tính năng phát hành voucher nhanh sẽ được triển khai.</p>
-            <Button className="mt-4" onClick={() => setShowQuickVoucher(false)}>
-              Đóng
             </Button>
           </div>
         </DialogContent>
