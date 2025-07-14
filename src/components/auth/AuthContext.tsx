@@ -78,11 +78,13 @@ const convertApiUserToUser = (apiUser: any): User => {
     fullName: apiUser.name,
     role: 'erp-admin',
     email: apiUser.email,
+    phone: apiUser.phone,
     status: 'active',
     createdAt: apiUser.created_at,
     lastLogin: new Date().toISOString(),
     emailVerified: !!apiUser.email_verified_at,
     isActive: true,
+    avatarPath: apiUser.avatar_path, // Ensure avatarPath is mapped correctly
     permissions: {
       modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'marketing', 'system-settings', 'user-management'],
       voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],

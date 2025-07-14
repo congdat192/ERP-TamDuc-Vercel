@@ -70,12 +70,19 @@ export function UserProfileForm({ user }: UserProfileFormProps) {
         avatar_path: uploadResult.path, // Use path, not url
       });
 
+      // Refresh user profile to get the updated avatar
       await refreshUserProfile();
 
       toast({
         title: "Cập nhật ảnh đại diện thành công",
         description: "Ảnh đại diện đã được cập nhật",
       });
+      
+      // Clear preview since we now have the actual avatar
+      if (previewUrl) {
+        revokeImagePreview(previewUrl);
+        setPreviewUrl(null);
+      }
     } catch (error) {
       console.error('Failed to upload avatar:', error);
       toast({
@@ -140,8 +147,8 @@ export function UserProfileForm({ user }: UserProfileFormProps) {
     };
   }, [previewUrl]);
 
-  // Get current avatar URL
-  const currentAvatarUrl = getAvatarUrl(user.avatarPath);
+  // Get current avatar URL - use preview if available, otherwise use user's avatar
+  const currentAvatarUrl = previewUrl || getAvatarUrl(user.avatarPath);
 
   return (
     <div className="space-y-6">
@@ -156,7 +163,7 @@ export function UserProfileForm({ user }: UserProfileFormProps) {
         <CardContent>
           <div className="flex items-center space-x-6">
             <Avatar className="w-20 h-20 cursor-pointer" onClick={handleAvatarClick}>
-              <AvatarImage src={previewUrl || currentAvatarUrl} />
+              <AvatarImage src={currentAvatarUrl} />
               <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-lg">
                 {user.fullName.charAt(0)}
               </AvatarFallback>
