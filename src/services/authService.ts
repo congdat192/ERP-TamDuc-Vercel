@@ -17,7 +17,7 @@ export const register = async (data: CreateUserData): Promise<User> => {
   try {
     const response = await apiCall<User>('/register', {
       method: 'POST',
-      data: data,
+      body: data,
       requiresBusinessId: false,
     });
     return response;
@@ -30,7 +30,7 @@ export const login = async (credentials: LoginCredentials): Promise<AuthResponse
   try {
     const response = await apiCall<AuthResponse>('/login', {
       method: 'POST',
-      data: credentials,
+      body: credentials,
       requiresBusinessId: false,
     });
     localStorage.setItem('auth_token', response.token);
@@ -80,7 +80,7 @@ export const updateUserProfile = async (data: UpdateProfileRequest): Promise<Use
   try {
     const response = await apiCall<User>('/me', {
       method: 'PUT',
-      data: {
+      body: {
         name: data.name,
         email: data.email,
         ...(data.avatar_path && { avatar_path: data.avatar_path })
@@ -111,7 +111,7 @@ export const resendVerificationEmail = async (email: string): Promise<void> => {
   try {
     await apiCall('/email/resend', {
       method: 'POST',
-      data: { email },
+      body: { email },
       requiresBusinessId: false,
     });
   } catch (error) {
@@ -123,7 +123,7 @@ export const forgotPassword = async (email: string): Promise<void> => {
   try {
     await apiCall('/password/email', {
       method: 'POST',
-      data: { email },
+      body: { email },
       requiresBusinessId: false,
     });
   } catch (error) {
@@ -135,7 +135,7 @@ export const resetPassword = async (email: string, password: string, password_co
   try {
     await apiCall('/password/reset', {
       method: 'POST',
-      data: { 
+      body: { 
         email, 
         password, 
         password_confirmation, 
@@ -152,7 +152,7 @@ export const changePassword = async (data: { currentPassword?: string; password?
   try {
     await apiCall('/change-password', {
       method: 'PUT',
-      data: data,
+      body: data,
       requiresBusinessId: false,
     });
   } catch (error) {
@@ -165,7 +165,7 @@ export const updatePassword = async (currentPassword: string, newPassword: strin
   try {
     await apiCall('/change-password', {
       method: 'PUT',
-      data: {
+      body: {
         currentPassword,
         password: newPassword,
       },
@@ -180,7 +180,7 @@ export const updateUser = async (id: string, data: UpdateUserData): Promise<User
   try {
     const response = await apiCall<User>(`/users/${id}`, {
       method: 'PUT',
-      data: data,
+      body: data,
     });
     return response;
   } catch (error) {
@@ -192,7 +192,7 @@ export const createUser = async (data: CreateUserData): Promise<User> => {
   try {
     const response = await apiCall<User>('/users', {
       method: 'POST',
-      data: data,
+      body: data,
     });
     return response;
   } catch (error) {
