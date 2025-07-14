@@ -2,7 +2,7 @@
 export interface RegisterRequest {
   name: string;
   email: string;
-  phone: string;
+  phone?: string; // Made optional since the form doesn't collect phone
   password: string;
   password_confirmation: string;
 }
