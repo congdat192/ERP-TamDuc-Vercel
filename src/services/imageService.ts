@@ -44,20 +44,17 @@ export const uploadAvatar = async (file: File): Promise<ImageUploadResponse> => 
     throw new Error(validation.error);
   }
 
-  // Create FormData with required type field
+  // Create FormData
   const formData = new FormData();
   formData.append('image', file);
-  formData.append('type', 'avatar'); // Required field for avatar upload
 
   try {
-    // Use fetch directly for FormData upload
+    // Use fetch directly for FormData upload (don't use apiCall as it adds JSON headers)
     const token = localStorage.getItem('auth_token');
     if (!token) {
       throw new Error('Không tìm thấy token xác thực');
     }
 
-    console.log('📤 [imageService] Uploading with type=avatar');
-    
     const response = await fetch('https://api.matkinhtamduc.xyz/api/v1/images', {
       method: 'POST',
       headers: {

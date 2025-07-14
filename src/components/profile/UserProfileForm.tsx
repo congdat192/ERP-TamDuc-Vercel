@@ -58,45 +58,33 @@ export function UserProfileForm({ user }: UserProfileFormProps) {
     const preview = createImagePreview(file);
     setPreviewUrl(preview);
 
-    // Upload avatar and update profile
+    // Upload avatar
     setIsUploadingAvatar(true);
     try {
-      console.log('🔄 Starting avatar upload process...');
-      
-      // Step 1: Upload image to get path
       const uploadResult = await uploadAvatar(file);
-      console.log('✅ Image uploaded, path:', uploadResult.path);
       
-      // Step 2: Update user profile with avatar_path
-      const updatedUser = await updateUserProfile({
-        name: user.fullName, // Keep current name
-        email: user.email,   // Keep current email  
-        avatar_path: uploadResult.path // Set new avatar path
+      // Update user profile with new avatar path
+      await updateUserProfile({
+        name: formData.name,
+        email: formData.email,
+        avatar_path: uploadResult.path, // Use path, not url
       });
-      console.log('✅ Profile updated with avatar path:', updatedUser);
 
-      // Step 3: Refresh user profile to get updated data with proper avatar handling
       await refreshUserProfile();
 
       toast({
         title: "Cập nhật ảnh đại diện thành công",
         description: "Ảnh đại diện đã được cập nhật",
       });
-
-      // Clear preview after successful upload
-      if (previewUrl) {
-        revokeImagePreview(previewUrl);
-        setPreviewUrl(null);
-      }
     } catch (error) {
-      console.error('❌ Avatar upload failed:', error);
+      console.error('Failed to upload avatar:', error);
       toast({
         title: "Upload thất bại",
         description: error instanceof Error ? error.message : "Có lỗi xảy ra khi upload ảnh",
         variant: "destructive",
       });
       
-      // Revert preview on error  
+      // Revert preview on error
       if (previewUrl) {
         revokeImagePreview(previewUrl);
         setPreviewUrl(null);
@@ -115,7 +103,6 @@ export function UserProfileForm({ user }: UserProfileFormProps) {
     setIsLoading(true);
 
     try {
-      // Only update name and email, don't touch avatar_path
       await updateUserProfile({
         name: formData.name,
         email: formData.email,
@@ -128,7 +115,7 @@ export function UserProfileForm({ user }: UserProfileFormProps) {
         description: "Thông tin cá nhân đã được cập nhật",
       });
     } catch (error) {
-      console.error('❌ Profile update failed:', error);
+      console.error('Failed to update profile:', error);
       toast({
         title: "Cập nhật thất bại",
         description: error instanceof Error ? error.message : "Có lỗi xảy ra khi cập nhật thông tin",
@@ -155,8 +142,6 @@ export function UserProfileForm({ user }: UserProfileFormProps) {
 
   // Get current avatar URL
   const currentAvatarUrl = getAvatarUrl(user.avatarPath);
-  console.log('🖼️ [UserProfileForm] Current avatar URL:', currentAvatarUrl);
-  console.log('🖼️ [UserProfileForm] User avatar path:', user.avatarPath);
 
   return (
     <div className="space-y-6">
@@ -171,11 +156,7 @@ export function UserProfileForm({ user }: UserProfileFormProps) {
         <CardContent>
           <div className="flex items-center space-x-6">
             <Avatar className="w-20 h-20 cursor-pointer" onClick={handleAvatarClick}>
-              <AvatarImage 
-                src={previewUrl || currentAvatarUrl} 
-                onError={() => console.log('❌ Avatar image failed to load:', previewUrl || currentAvatarUrl)}
-                onLoad={() => console.log('✅ Avatar image loaded successfully:', previewUrl || currentAvatarUrl)}
-              />
+              <AvatarImage src={previewUrl || currentAvatarUrl} />
               <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-lg">
                 {user.fullName.charAt(0)}
               </AvatarFallback>

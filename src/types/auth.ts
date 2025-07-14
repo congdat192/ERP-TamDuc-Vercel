@@ -1,7 +1,7 @@
 
 export type UserRole = 'erp-admin' | 'voucher-admin' | 'telesales' | 'custom' | 'platform-admin';
 
-export type UserStatus = 'active' | 'inactive' | 'suspended' | 'locked' | 'pending' | 'pending_verification';
+export type UserStatus = 'active' | 'inactive' | 'locked' | 'pending' | 'pending_verification';
 
 export type ERPModule = 
   | 'dashboard'
@@ -45,14 +45,6 @@ export interface UserSecuritySettings {
   lastPasswordChange?: string;
 }
 
-export interface UserActivity {
-  id: string;
-  userId: string;
-  activityType: string;
-  description: string;
-  timestamp: string;
-}
-
 export interface User {
   id: string;
   fullName: string;
@@ -65,10 +57,10 @@ export interface User {
   status: UserStatus;
   createdAt: string;
   lastLogin?: string;
-  avatarPath?: string;
+  avatarPath?: string; // Changed from avatar to avatarPath to match API
   emailVerified: boolean;
   securitySettings: UserSecuritySettings;
-  activities: UserActivity[];
+  activities: any[];
   notes?: string;
 }
 
@@ -85,31 +77,26 @@ export interface AuthState {
 }
 
 export interface LoginCredentials {
-  email: string;
+  username: string;
   password: string;
 }
 
 export interface CreateUserData {
-  name?: string;
+  username: string;
+  fullName: string;
   email: string;
-  password?: string;
-  password_confirmation?: string;
-  username?: string;
-  fullName?: string;
   phone?: string;
-  role?: UserRole;
-  permissions?: UserPermissions;
+  role: UserRole;
+  permissions: UserPermissions;
   notes?: string;
-  sendVerificationEmail?: boolean;
-  requirePasswordReset?: boolean;
+  password: string;
+  sendVerificationEmail: boolean;
+  requirePasswordReset: boolean;
 }
 
 export interface UpdateUserData {
-  name?: string;
-  email?: string;
-  password?: string;
-  password_confirmation?: string;
   fullName?: string;
+  email?: string;
   phone?: string;
   role?: UserRole;
   permissions?: UserPermissions;

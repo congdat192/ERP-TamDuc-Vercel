@@ -71,7 +71,7 @@ const checkAuthentication = () => {
 
 // Convert API user to internal User type
 const convertApiUserToUser = (apiUser: any): User => {
-  console.log('🔄 [AuthContext] Converting API user to internal User type:', apiUser);
+  console.log('🔄 [AuthContext] Converting API user to internal User type');
   return {
     id: apiUser.id,
     username: apiUser.email,
@@ -83,7 +83,6 @@ const convertApiUserToUser = (apiUser: any): User => {
     lastLogin: new Date().toISOString(),
     emailVerified: !!apiUser.email_verified_at,
     isActive: true,
-    avatarPath: apiUser.avatar_path, // Ensure avatar path is preserved
     permissions: {
       modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'marketing', 'system-settings', 'user-management'],
       voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
@@ -229,10 +228,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('🔄 [AuthContext] Refreshing user profile');
     try {
       const apiUser = await getUserProfile();
-      console.log('📨 [AuthContext] API user response:', apiUser);
-      
       const updatedUser = convertApiUserToUser(apiUser);
-      console.log('✅ [AuthContext] Updated user with avatar:', updatedUser.avatarPath);
       
       setCurrentUser(updatedUser);
       saveToStorage(STORAGE_KEYS.USER, updatedUser);
