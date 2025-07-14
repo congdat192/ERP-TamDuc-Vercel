@@ -1,106 +1,57 @@
-
-export type UserRole = 'erp-admin' | 'voucher-admin' | 'telesales' | 'custom' | 'platform-admin';
-
-export type UserStatus = 'active' | 'inactive' | 'locked' | 'pending' | 'pending_verification';
-
-export type ERPModule = 
-  | 'dashboard'
-  | 'customers'
-  | 'sales'
-  | 'inventory'
-  | 'accounting'
-  | 'hr'
-  | 'voucher'
-  | 'marketing'
-  | 'system-settings'
-  | 'user-management';
-
-export type VoucherFeature = 
-  | 'voucher-dashboard'
-  | 'campaign-management'
-  | 'issue-voucher'
-  | 'voucher-list'
-  | 'voucher-analytics'
-  | 'voucher-leaderboard'
-  | 'voucher-settings';
-
-export interface ModulePermission {
-  module: ERPModule;
-  label: string;
-  icon: string;
-  allowedRoles: UserRole[];
-}
-
-export interface UserPermissions {
-  modules: ERPModule[];
-  voucherFeatures: VoucherFeature[];
-  canManageUsers: boolean;
-  canViewAllVouchers: boolean;
-}
-
-export interface UserSecuritySettings {
-  twoFactorEnabled: boolean;
-  loginAttemptLimit: number;
-  passwordChangeRequired: boolean;
-  lastPasswordChange?: string;
-}
-
 export interface User {
   id: string;
-  fullName: string;
   username: string;
+  fullName: string;
+  role: string;
   email: string;
-  phone?: string;
-  role: UserRole;
-  permissions: UserPermissions;
-  isActive: boolean;
-  status: UserStatus;
+  status: 'active' | 'inactive' | 'suspended';
   createdAt: string;
-  lastLogin?: string;
-  avatarPath?: string; // Changed from avatar to avatarPath to match API
+  lastLogin: string;
   emailVerified: boolean;
-  securitySettings: UserSecuritySettings;
-  activities: any[];
-  notes?: string;
-}
-
-// Helper function to construct full avatar URL
-export const getAvatarUrl = (avatarPath?: string): string | undefined => {
-  if (!avatarPath) return undefined;
-  return `https://matkinhtamducxyz.sgp1.digitaloceanspaces.com/${avatarPath}`;
-};
-
-export interface AuthState {
-  isAuthenticated: boolean;
-  currentUser: User | null;
-  isLoading: boolean;
+  isActive: boolean;
+  permissions: {
+    modules: string[];
+    voucherFeatures: string[];
+    canManageUsers: boolean;
+    canViewAllVouchers: boolean;
+  };
+  securitySettings: {
+    twoFactorEnabled: boolean;
+    loginAttemptLimit: number;
+    passwordChangeRequired: boolean;
+  };
+  activities: UserActivity[];
 }
 
 export interface LoginCredentials {
-  username: string;
+  email: string;
   password: string;
+}
+
+export interface AuthState {
+  currentUser: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+}
+
+export interface UserActivity {
+  id: string;
+  userId: string;
+  activityType: string;
+  description: string;
+  timestamp: string;
 }
 
 export interface CreateUserData {
-  username: string;
-  fullName: string;
+  name?: string;
   email: string;
-  phone?: string;
-  role: UserRole;
-  permissions: UserPermissions;
-  notes?: string;
-  password: string;
-  sendVerificationEmail: boolean;
-  requirePasswordReset: boolean;
+  password?: string;
+  password_confirmation?: string;
 }
 
 export interface UpdateUserData {
-  fullName?: string;
+  name?: string;
   email?: string;
-  phone?: string;
-  role?: UserRole;
-  permissions?: UserPermissions;
-  notes?: string;
-  isActive?: boolean;
-  status?: UserStatus;
+  password?: string;
+  password_confirmation?: string;
 }

@@ -1,4 +1,3 @@
-
 import { apiCall } from './apiService';
 import { User, LoginCredentials, AuthState, CreateUserData, UpdateUserData } from '@/types/auth';
 
@@ -98,9 +97,9 @@ export const updateUserProfile = async (data: UpdateProfileRequest): Promise<Use
   }
 };
 
-export const verifyEmail = async (token: string): Promise<void> => {
+export const verifyEmail = async (id: string, hash: string): Promise<void> => {
   try {
-    await apiCall(`/email/verify/${token}`, { method: 'GET' });
+    await apiCall(`/email/verify/${id}/${hash}`, { method: 'GET' });
   } catch (error) {
     throw error;
   }
