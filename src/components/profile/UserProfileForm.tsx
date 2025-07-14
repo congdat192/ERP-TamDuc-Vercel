@@ -58,18 +58,24 @@ export function UserProfileForm({ user }: UserProfileFormProps) {
     const preview = createImagePreview(file);
     setPreviewUrl(preview);
 
-    // Upload avatar
+    // Upload avatar and update profile
     setIsUploadingAvatar(true);
     try {
-      const uploadResult = await uploadAvatar(file);
+      console.log('🔄 Starting avatar upload process...');
       
-      // Update user profile with new avatar path
+      // Step 1: Upload image to get path
+      const uploadResult = await uploadAvatar(file);
+      console.log('✅ Image uploaded, path:', uploadResult.path);
+      
+      // Step 2: Update user profile with avatar_path
       await updateUserProfile({
-        name: formData.name,
-        email: formData.email,
-        avatar_path: uploadResult.path, // Use path, not url
+        name: user.fullName, // Keep current name
+        email: user.email,   // Keep current email  
+        avatar_path: uploadResult.path // Set new avatar path
       });
+      console.log('✅ Profile updated with avatar path');
 
+      // Step 3: Refresh user profile to get updated data
       await refreshUserProfile();
 
       toast({
@@ -77,14 +83,14 @@ export function UserProfileForm({ user }: UserProfileFormProps) {
         description: "Ảnh đại diện đã được cập nhật",
       });
     } catch (error) {
-      console.error('Failed to upload avatar:', error);
+      console.error('❌ Avatar upload failed:', error);
       toast({
         title: "Upload thất bại",
         description: error instanceof Error ? error.message : "Có lỗi xảy ra khi upload ảnh",
         variant: "destructive",
       });
       
-      // Revert preview on error
+      // Revert preview on error  
       if (previewUrl) {
         revokeImagePreview(previewUrl);
         setPreviewUrl(null);
@@ -103,6 +109,7 @@ export function UserProfileForm({ user }: UserProfileFormProps) {
     setIsLoading(true);
 
     try {
+      // Only update name and email, don't touch avatar_path
       await updateUserProfile({
         name: formData.name,
         email: formData.email,
@@ -115,7 +122,7 @@ export function UserProfileForm({ user }: UserProfileFormProps) {
         description: "Thông tin cá nhân đã được cập nhật",
       });
     } catch (error) {
-      console.error('Failed to update profile:', error);
+      console.error('❌ Profile update failed:', error);
       toast({
         title: "Cập nhật thất bại",
         description: error instanceof Error ? error.message : "Có lỗi xảy ra khi cập nhật thông tin",
