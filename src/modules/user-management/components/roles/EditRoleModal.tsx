@@ -237,19 +237,19 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden flex flex-col bg-background border-border">
         <DialogHeader className="flex-shrink-0">
-          <DialogTitle>Chỉnh Sửa Vai Trò: {role.name}</DialogTitle>
+          <DialogTitle className="text-foreground">Chỉnh Sửa Vai Trò: {role.name}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
           {/* Basic Information */}
-          <div className="flex-shrink-0 space-y-4 pb-4 border-b">
-            <h3 className="text-lg font-medium">Thông Tin Cơ Bản</h3>
+          <div className="flex-shrink-0 space-y-4 pb-4 border-b border-border">
+            <h3 className="text-lg font-medium text-foreground">Thông Tin Cơ Bản</h3>
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Tên Vai Trò *</Label>
+                <Label htmlFor="name" className="text-foreground">Tên Vai Trò *</Label>
                 <Input
                   id="name"
                   {...register('name', { 
@@ -258,26 +258,28 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
                   })}
                   placeholder="Nhập tên vai trò"
                   disabled={role.isSystem}
+                  className="bg-background border-border text-foreground focus:border-primary"
                 />
                 {errors.name && (
-                  <p className="text-sm text-red-500">{errors.name.message}</p>
+                  <p className="text-sm text-destructive">{errors.name.message}</p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Mô Tả</Label>
+                <Label htmlFor="description" className="text-foreground">Mô Tả</Label>
                 <Input
                   id="description"
                   {...register('description')}
                   placeholder="Mô tả vai trò"
                   disabled={role.isSystem}
+                  className="bg-background border-border text-foreground focus:border-primary"
                 />
               </div>
             </div>
 
             {role.isSystem && (
-              <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                <p className="text-sm text-orange-700">
+              <div className="bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg p-3">
+                <p className="text-sm text-orange-700 dark:text-orange-300">
                   Vai trò hệ thống không thể chỉnh sửa để đảm bảo tính bảo mật.
                 </p>
               </div>
@@ -285,14 +287,14 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
           </div>
 
           {/* Permission Selection - Sidebar Layout with scrolling */}
-          <div className="flex-1 flex border rounded-lg overflow-hidden min-h-0 my-4">
+          <div className="flex-1 flex border border-border rounded-lg overflow-hidden min-h-0 my-4">
             {isLoadingModules ? (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="text-gray-500">Đang tải modules...</div>
+              <div className="flex-1 flex items-center justify-center bg-background">
+                <div className="text-muted-foreground">Đang tải modules...</div>
               </div>
             ) : !isInitialized ? (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="text-gray-500">Đang khởi tạo permissions...</div>
+              <div className="flex-1 flex items-center justify-center bg-background">
+                <div className="text-muted-foreground">Đang khởi tạo permissions...</div>
               </div>
             ) : (
               <>
@@ -313,26 +315,28 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
           </div>
 
           {/* Summary */}
-          <div className="flex-shrink-0 bg-blue-50 p-4 rounded-lg">
-            <div className="text-sm text-blue-700">
+          <div className="flex-shrink-0 bg-primary/10 border border-primary/20 p-4 rounded-lg">
+            <div className="text-sm text-primary">
               <div className="font-medium">Tổng quan:</div>
               <div>Đã chọn {getSelectedPermissionsCount()} quyền từ {modules.length} modules</div>
             </div>
           </div>
 
           {/* Actions */}
-          <div className="flex-shrink-0 flex items-center justify-end space-x-3 pt-4 border-t mt-4">
+          <div className="flex-shrink-0 flex items-center justify-end space-x-3 pt-4 border-t border-border mt-4">
             <Button 
               type="button" 
               variant="outline" 
               onClick={handleClose}
               disabled={isLoading}
+              className="border-border text-foreground hover:bg-accent"
             >
               Hủy
             </Button>
             <Button 
               type="submit" 
               disabled={isLoading || isLoadingModules || role.isSystem || !isInitialized}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               {isLoading ? 'Đang cập nhật...' : 'Cập Nhật Vai Trò'}
             </Button>

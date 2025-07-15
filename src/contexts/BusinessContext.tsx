@@ -20,12 +20,13 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
   const { toast } = useToast();
 
   // Calculate hasOwnBusiness based on businesses array
   const hasOwnBusiness = businesses.some(business => business.is_owner);
 
-  // FIX: Improve business context recovery từ localStorage
+  // FIX: Improve business context recovery với better persistence
   const initializeBusinessContext = async () => {
     try {
       setIsLoading(true);
@@ -38,9 +39,13 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       console.log('✅ [BusinessProvider] Businesses loaded:', businessesData);
       setBusinesses(businessesData);
       
-      // Try to recover selected business từ localStorage
+      // Try to recover selected business từ localStorage or URL
       const storedBusinessId = getSelectedBusinessId();
       console.log('🔄 [BusinessProvider] Stored business ID:', storedBusinessId);
+      
+      // Check if we're on an ERP route that requires business context
+      const currentPath = window.location.pathname;
+      const isERPRoute = currentPath.startsWith('/ERP/') && !currentPath.includes('/Profile');
       
       if (storedBusinessId && businessesData.length > 0) {
         // Find business by stored ID
@@ -51,15 +56,34 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (selectedBusiness) {
           console.log('✅ [BusinessProvider] Recovered business from storage:', selectedBusiness.name);
           setCurrentBusinessState(selectedBusiness);
+          
+          // Save current path để restore sau khi context ready
+          const currentRoute = sessionStorage.getItem('currentRoute');
+          if (currentRoute && isERPRoute) {
+            console.log('🔄 [BusinessProvider] Will restore route:', currentRoute);
+          }
+          
         } else {
           console.log('⚠️ [BusinessProvider] Stored business not found, clearing storage');
           // Clear invalid business ID
           localStorage.removeItem('selectedBusinessId');
           setCurrentBusinessState(null);
+          
+          // Only redirect if we're on ERP route
+          if (isERPRoute) {
+            // Save current route before redirect
+            sessionStorage.setItem('intendedRoute', currentPath);
+          }
         }
       } else {
         console.log('⚠️ [BusinessProvider] No valid stored business found');
         setCurrentBusinessState(null);
+        
+        // Only redirect if we're on ERP route
+        if (isERPRoute) {
+          // Save current route before redirect
+          sessionStorage.setItem('intendedRoute', currentPath);
+        }
       }
       
     } catch (error: any) {
@@ -77,10 +101,17 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       });
     } finally {
       setIsLoading(false);
+      setIsInitialized(true);
     }
   };
 
   useEffect(() => {
+    // Save current route để restore later
+    const currentPath = window.location.pathname;
+    if (currentPath.startsWith('/ERP/') && !currentPath.includes('/Profile')) {
+      sessionStorage.setItem('currentRoute', currentPath);
+    }
+    
     initializeBusinessContext();
   }, []);
 
@@ -88,6 +119,14 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     console.log('🏢 [BusinessProvider] Setting current business:', business.name);
     setCurrentBusinessState(business);
     setSelectedBusinessId(business.id.toString());
+    
+    // Check for intended route after setting business
+    const intendedRoute = sessionStorage.getItem('intendedRoute');
+    if (intendedRoute && intendedRoute !== '/ERP/Dashboard') {
+      console.log('🔄 [BusinessProvider] Restoring intended route:', intendedRoute);
+      sessionStorage.removeItem('intendedRoute');
+      // Don't navigate here, let the calling component handle it
+    }
   };
 
   const fetchBusinesses = async () => {
@@ -246,6 +285,9 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     console.log('🏢 [BusinessProvider] Clearing current business');
     setCurrentBusinessState(null);
     localStorage.removeItem('selectedBusinessId');
+    // Clear intended route as well
+    sessionStorage.removeItem('intendedRoute');
+    sessionStorage.removeItem('currentRoute');
   };
 
   const clearBusinessData = () => {
@@ -253,7 +295,10 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setCurrentBusinessState(null);
     setBusinesses([]);
     setError(null);
+    setIsInitialized(false);
     localStorage.removeItem('selectedBusinessId');
+    sessionStorage.removeItem('intendedRoute');
+    sessionStorage.removeItem('currentRoute');
   };
 
   const value: BusinessContextType = {

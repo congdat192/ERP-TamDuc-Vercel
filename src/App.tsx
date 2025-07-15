@@ -52,12 +52,13 @@ const queryClient = new QueryClient({
 // Protected Route wrapper component
 const ProtectedERPRoute = ({ children, module }: { children: React.ReactNode; module: string }) => {
   const { currentUser, isAuthenticated, logout } = useAuth();
-  const { currentBusiness } = useBusiness();
+  const { currentBusiness, isLoading: businessLoading } = useBusiness();
   const navigate = useNavigate();
 
   console.log('🔐 [ProtectedERPRoute] Checking access for module:', module);
   console.log('🔐 [ProtectedERPRoute] User authenticated:', isAuthenticated);
   console.log('🔐 [ProtectedERPRoute] Current business:', currentBusiness?.id);
+  console.log('🔐 [ProtectedERPRoute] Business loading:', businessLoading);
 
   const handleModuleChange = (newModule: string) => {
     switch (newModule) {
@@ -114,10 +115,28 @@ const ProtectedERPRoute = ({ children, module }: { children: React.ReactNode; mo
     );
   }
 
+  // Show loading while business context is being initialized
+  if (businessLoading) {
+    console.log('⏳ [ProtectedERPRoute] Business context still loading...');
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Đang tải doanh nghiệp...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Check if business context is valid for other modules
   const storedBusinessId = getSelectedBusinessId();
   if (!storedBusinessId || !currentBusiness) {
     console.log('⚠️ [ProtectedERPRoute] Missing business context, redirecting to business selection');
+    // Save current route để restore later
+    const currentPath = window.location.pathname;
+    if (currentPath.startsWith('/ERP/') && currentPath !== '/ERP/Dashboard') {
+      sessionStorage.setItem('intendedRoute', currentPath);
+    }
     return <Navigate to="/business-selection" replace />;
   }
 

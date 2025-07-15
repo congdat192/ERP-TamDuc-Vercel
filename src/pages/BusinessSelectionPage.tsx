@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -47,8 +46,17 @@ export function BusinessSelectionPage() {
     try {
       console.log('🏢 [BusinessSelectionPage] Selecting business:', business.name);
       await selectBusiness(business.id);
-      // Navigate to ERP Dashboard without business ID in URL
-      navigate('/ERP/Dashboard');
+      
+      // Check for intended route to restore
+      const intendedRoute = sessionStorage.getItem('intendedRoute');
+      if (intendedRoute && intendedRoute !== '/business-selection') {
+        console.log('🔄 [BusinessSelectionPage] Restoring intended route:', intendedRoute);
+        sessionStorage.removeItem('intendedRoute');
+        navigate(intendedRoute);
+      } else {
+        // Navigate to ERP Dashboard by default
+        navigate('/ERP/Dashboard');
+      }
     } catch (error) {
       console.error('❌ [BusinessSelectionPage] Failed to select business:', error);
       setSelectedBusinessId(null);
@@ -125,6 +133,15 @@ export function BusinessSelectionPage() {
           <p className="text-sm text-gray-500">
             Bạn có thể chuyển đổi giữa các doanh nghiệp bất kỳ lúc nào
           </p>
+          
+          {/* Show intended route message if exists */}
+          {sessionStorage.getItem('intendedRoute') && (
+            <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-sm text-blue-700">
+                Bạn sẽ được chuyển về trang đã truy cập trước đó sau khi chọn doanh nghiệp.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* User Info & Logout */}
