@@ -32,7 +32,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
   const restoreBusinessContext = () => {
     const savedBusinessId = localStorage.getItem('selectedBusinessId');
     if (savedBusinessId && businesses.length > 0) {
-      const savedBusiness = businesses.find(b => b.id === savedBusinessId);
+      const savedBusiness = businesses.find(b => b.id.toString() === savedBusinessId);
       if (savedBusiness) {
         setSelectedBusiness(savedBusiness);
         return true;
@@ -61,14 +61,14 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
       if (!restoreBusinessContext() && businessList.length > 0) {
         // Nếu không có saved business và có businesses, chọn business đầu tiên
         setSelectedBusiness(businessList[0]);
-        saveBusinessContext(businessList[0].id);
+        saveBusinessContext(businessList[0].id.toString());
       }
     } catch (error: any) {
       console.error('❌ [BusinessProvider] Error loading businesses:', error);
       setError(error.message || 'Không thể tải danh sách doanh nghiệp');
       
-      // CHỈ hiển thị toast error nếu user đã authenticated
-      if (isAuthenticated) {
+      // CHỈ hiển thị toast error nếu user đã authenticated và đang ở trang cần business context
+      if (isAuthenticated && window.location.pathname.startsWith('/ERP/')) {
         toast({
           title: "Lỗi",
           description: "Không thể tải thông tin doanh nghiệp",
@@ -101,10 +101,13 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     await initializeBusinessContext();
   };
 
-  const selectBusiness = (business: Business, intendedRoute?: string) => {
-    console.log('🏢 [BusinessProvider] Selecting business:', business.name, 'route:', intendedRoute);
-    setSelectedBusiness(business);
-    saveBusinessContext(business.id, intendedRoute);
+  const selectBusiness = async (businessId: number) => {
+    const business = businesses.find(b => b.id === businessId);
+    if (business) {
+      console.log('🏢 [BusinessProvider] Selecting business:', business.name);
+      setSelectedBusiness(business);
+      saveBusinessContext(business.id.toString());
+    }
   };
 
   const createBusiness = async (businessData: { name: string; description?: string }) => {
@@ -114,13 +117,16 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
 
     try {
       setIsLoading(true);
-      const newBusiness = await createBusinessAPI(businessData);
+      const newBusiness = await createBusinessAPI({
+        name: businessData.name,
+        description: businessData.description || ''
+      });
       
       // Refresh businesses list
       await fetchBusinesses();
       
       // Select the new business
-      selectBusiness(newBusiness);
+      await selectBusiness(newBusiness.id);
       
       return newBusiness;
     } catch (error: any) {
@@ -131,17 +137,36 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const hasOwnBusiness = businesses.length > 0;
+  const hasOwnBusiness = businesses.some(b => b.is_owner);
 
   const value: BusinessContextType = {
     businesses,
-    selectedBusiness,
+    currentBusiness: selectedBusiness,
     isLoading,
     error,
     hasOwnBusiness,
-    selectBusiness,
+    setCurrentBusiness: setSelectedBusiness,
     fetchBusinesses,
+    selectBusiness,
     createBusiness,
+    updateBusiness: async () => { throw new Error('Not implemented'); },
+    refreshBusinesses: fetchBusinesses,
+    refreshCurrentBusiness: async () => {
+      if (selectedBusiness) {
+        await selectBusiness(selectedBusiness.id);
+      }
+    },
+    clearCurrentBusiness: () => {
+      setSelectedBusiness(null);
+      localStorage.removeItem('selectedBusinessId');
+    },
+    clearBusinessData: () => {
+      setBusinesses([]);
+      setSelectedBusiness(null);
+      setError(null);
+      localStorage.removeItem('selectedBusinessId');
+      localStorage.removeItem('intendedRoute');
+    }
   };
 
   return (

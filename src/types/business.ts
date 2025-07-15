@@ -33,7 +33,7 @@ export interface BusinessContextType {
   setCurrentBusiness: (business: Business) => void;
   fetchBusinesses: () => Promise<void>;
   selectBusiness: (businessId: number) => Promise<void>;
-  createBusiness: (data: CreateBusinessRequest) => Promise<Business>;
+  createBusiness: (data: { name: string; description?: string }) => Promise<Business>;
   updateBusiness: (businessId: number, data: UpdateBusinessRequest) => Promise<Business>;
   refreshBusinesses: () => Promise<void>;
   refreshCurrentBusiness: () => Promise<void>;
