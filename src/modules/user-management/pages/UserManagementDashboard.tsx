@@ -2,17 +2,18 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, Building2, Shield, UserCog, Loader2 } from 'lucide-react';
+import { Users, Building2, Shield, UserCog, Mail, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardService, UserManagementCounts } from '../services/dashboardService';
 
 export function UserManagementDashboard() {
   const navigate = useNavigate();
-  const [counts, setCounts] = useState<UserManagementCounts>({
+  const [counts, setCounts] = useState<UserManagementCounts & { invitations: number }>({
     members: 0,
     departments: 0,
     roles: 0,
-    groups: 0
+    groups: 0,
+    invitations: 0
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -24,7 +25,11 @@ export function UserManagementDashboard() {
     try {
       setIsLoading(true);
       const countsData = await DashboardService.getCounts();
-      setCounts(countsData);
+      // Add mock invitation count - replace with actual API call
+      setCounts({
+        ...countsData,
+        invitations: 5 // Mock data
+      });
     } catch (error) {
       console.error('Error loading counts:', error);
     } finally {
@@ -60,6 +65,13 @@ export function UserManagementDashboard() {
       path: '/ERP/UserManagement/Groups',
       stats: counts.groups.toString(),
       color: 'text-orange-600'
+    },
+    {
+      title: 'Lời Mời',
+      icon: Mail,
+      path: '/ERP/UserManagement/Invitations',
+      stats: counts.invitations.toString(),
+      color: 'text-pink-600'
     }
   ];
 
@@ -73,8 +85,8 @@ export function UserManagementDashboard() {
         </p>
       </div>
 
-      {/* Features Grid - 1x4 layout */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 max-w-6xl mx-auto">
+      {/* Features Grid - 1x5 layout */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 max-w-7xl mx-auto">
         {features.map((feature) => {
           const Icon = feature.icon;
           return (
