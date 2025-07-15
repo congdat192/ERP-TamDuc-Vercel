@@ -54,6 +54,18 @@ export interface PermissionSelection {
   };
 }
 
+// Legacy types for backward compatibility with existing components
+export interface CustomPermission {
+  view: boolean;
+  add: boolean;
+  edit: boolean;
+  delete: boolean;
+}
+
+export interface ModulePermissions {
+  [moduleId: string]: CustomPermission;
+}
+
 // Role creation data - permissions là array các feature IDs
 export interface RoleCreationData {
   name: string;
