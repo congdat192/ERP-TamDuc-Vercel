@@ -1,5 +1,5 @@
 
-import { ModuleInfo, CustomRole, RoleCreationData, ModulePermissions } from '../types/role-management';
+import { CustomRole, RoleCreationData } from '../types/role-management';
 import { api } from '../../../services/apiService';
 
 interface RoleApiResponse {
@@ -8,12 +8,6 @@ interface RoleApiResponse {
 }
 
 export class RoleService {
-  static async getActiveModules(): Promise<ModuleInfo[]> {
-    // Sử dụng ModuleService thay vì implement riêng
-    const { ModuleService } = await import('./moduleService');
-    return ModuleService.getActiveModules();
-  }
-
   static async getRoles(): Promise<CustomRole[]> {
     try {
       console.log('🔍 [RoleService] Fetching roles...');
@@ -24,7 +18,7 @@ export class RoleService {
         id: role.id.toString(),
         name: role.name,
         description: role.description || '',
-        permissions: role.permissions || {},
+        permissions: role.permissions || [],
         userCount: role.user_count || 0,
         isSystem: role.is_system || false,
         created_at: role.created_at,
@@ -40,15 +34,16 @@ export class RoleService {
     try {
       console.log('🔧 [RoleService] Creating role with data:', roleData);
       
-      // Match exact API format from documentation
+      // Send exactly what API expects: array of feature IDs
       const payload = {
         name: roleData.name,
         description: roleData.description,
-        permissions: [] // Backend expects empty array, not object
+        permissions: roleData.permissions // Array of feature IDs: [1,2,3,4]
       };
       
       console.log('🔧 [RoleService] Sending payload to backend:', JSON.stringify(payload, null, 2));
       console.log('🔧 [RoleService] API endpoint: POST /roles');
+      console.log('🔧 [RoleService] Permissions array:', roleData.permissions);
       
       const response = await api.post<RoleApiResponse>('/roles', payload);
       console.log('✅ [RoleService] Backend response:', response);
@@ -58,7 +53,7 @@ export class RoleService {
         id: response.data.id.toString(),
         name: response.data.name,
         description: response.data.description,
-        permissions: response.data.permissions || {},
+        permissions: response.data.permissions || [],
         userCount: response.data.user_count || 0,
         isSystem: response.data.is_system || false,
         created_at: response.data.created_at,
@@ -103,11 +98,10 @@ export class RoleService {
     try {
       console.log('🔧 [RoleService] Updating role:', roleId, roleData);
       
-      // Match API format for update
       const payload = {
         name: roleData.name,
         description: roleData.description,
-        permissions: [] // Keep as empty array for now
+        permissions: roleData.permissions || [] // Array of feature IDs
       };
       
       console.log('🔧 [RoleService] Update payload:', payload);
@@ -118,7 +112,7 @@ export class RoleService {
         id: response.data.id.toString(),
         name: response.data.name,
         description: response.data.description,
-        permissions: response.data.permissions || {},
+        permissions: response.data.permissions || [],
         userCount: response.data.user_count || 0,
         isSystem: response.data.is_system || false,
         created_at: response.data.created_at,

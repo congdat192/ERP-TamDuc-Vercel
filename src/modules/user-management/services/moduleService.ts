@@ -1,12 +1,6 @@
 
-import { ModuleInfo } from '../types/role-management';
+import { ModuleInfo, ApiModulesResponse, FeatureInfo, getFeatureType } from '../types/role-management';
 import { api } from '../../../services/apiService';
-
-interface ModuleApiResponse {
-  data?: any;
-  modules?: any;
-  [key: string]: any; // Allow for flexible API response structure
-}
 
 export class ModuleService {
   static async getActiveModules(): Promise<ModuleInfo[]> {
@@ -14,140 +8,56 @@ export class ModuleService {
     
     try {
       console.log('🚀 [ModuleService] Making API call to /modules');
-      const response = await api.get<ModuleApiResponse>('/modules', {
+      const response = await api.get<ApiModulesResponse>('/modules', {
         requiresBusinessId: false // Modules API không cần business ID
       });
       
       console.log('✅ [ModuleService] Raw API response:', response);
       console.log('✅ [ModuleService] Response data:', response.data);
-      console.log('✅ [ModuleService] Response type:', typeof response.data);
-      console.log('✅ [ModuleService] Is response.data array?', Array.isArray(response.data));
       
-      // Check if response.data is an array or has nested data property
-      let modulesList: any[] = [];
-      const responseData = response.data as any;
-      
-      console.log('🔍 [ModuleService] Processing responseData:', responseData);
-      
-      if (Array.isArray(responseData)) {
-        console.log('📋 [ModuleService] Direct array found, using responseData');
-        modulesList = responseData;
-      } else if (responseData && Array.isArray(responseData.data)) {
-        console.log('📋 [ModuleService] Nested data array found, using responseData.data');
-        modulesList = responseData.data;
-      } else if (responseData && responseData.modules && Array.isArray(responseData.modules)) {
-        console.log('📋 [ModuleService] Nested modules array found, using responseData.modules');
-        modulesList = responseData.modules;
-      } else {
-        console.error('❌ [ModuleService] Unexpected response structure:', response);
-        console.error('❌ [ModuleService] responseData:', responseData);
-        console.error('❌ [ModuleService] responseData keys:', Object.keys(responseData || {}));
-        
-        // If empty response, we'll use fallback but also log this issue
-        console.warn('⚠️ [ModuleService] Empty modules response from API, using fallback modules');
-        modulesList = [];
+      // Validate response structure
+      if (!response.data || !Array.isArray(response.data)) {
+        console.error('❌ [ModuleService] Invalid response structure:', response);
+        throw new Error('Invalid API response structure');
       }
       
-      console.log('📊 [ModuleService] Final modules list:', modulesList);
+      const modulesList = response.data;
+      console.log('📊 [ModuleService] Modules from API:', modulesList);
       console.log('📊 [ModuleService] Modules count:', modulesList.length);
       
-      // If API returns empty array or fails, use comprehensive fallback modules
-      if (modulesList.length === 0) {
-        console.log('🔄 [ModuleService] No data from API, using comprehensive fallback modules');
-        
-        const fallbackModules: ModuleInfo[] = [
-          {
-            id: 'voucher',
-            name: 'voucher',
-            label: 'Quản Lý Voucher',
-            icon: 'Ticket',
-            features: ['view', 'add', 'edit', 'delete'],
-            status: 'active'
-          },
-          {
-            id: 'customer',
-            name: 'customer',
-            label: 'Quản Lý Khách Hàng',
-            icon: 'Users',
-            features: ['view', 'add', 'edit', 'delete'],
-            status: 'active'
-          },
-          {
-            id: 'admin',
-            name: 'admin',
-            label: 'Quản Trị Hệ Thống',
-            icon: 'Shield',
-            features: ['view', 'add', 'edit', 'delete'],
-            status: 'active'
-          },
-          {
-            id: 'inventory',
-            name: 'inventory',
-            label: 'Quản Lý Kho',
-            icon: 'Package',
-            features: ['view', 'add', 'edit', 'delete'],
-            status: 'active'
-          },
-          {
-            id: 'sales',
-            name: 'sales', 
-            label: 'Quản Lý Bán Hàng',
-            icon: 'ShoppingCart',
-            features: ['view', 'add', 'edit', 'delete'],
-            status: 'active'
-          },
-          {
-            id: 'marketing',
-            name: 'marketing',
-            label: 'Marketing',
-            icon: 'Target',
-            features: ['view', 'add', 'edit', 'delete'],
-            status: 'active'
-          },
-          {
-            id: 'analytics',
-            name: 'analytics',
-            label: 'Báo Cáo & Phân Tích',
-            icon: 'BarChart3',
-            features: ['view', 'add', 'edit', 'delete'],
-            status: 'active'
-          },
-          {
-            id: 'settings',
-            name: 'settings',
-            label: 'Cài Đặt Hệ Thống',
-            icon: 'Settings',
-            features: ['view', 'add', 'edit', 'delete'],
-            status: 'active'
-          }
-        ];
-        
-        console.log('🔄 [ModuleService] Using fallback modules:', fallbackModules);
-        return fallbackModules;
-      }
-      
       // Transform API response to ModuleInfo format
-      const transformedModules = modulesList.map((module: any, index: number) => {
-        console.log(`🔄 [ModuleService] Transforming module ${index}:`, module);
+      const transformedModules = modulesList.map((apiModule, index) => {
+        console.log(`🔄 [ModuleService] Transforming module ${index}:`, apiModule);
         
-        // Extract features/permissions from module data
-        let features = ['view', 'add', 'edit', 'delete']; // Default features
+        // Transform features
+        const features: FeatureInfo[] = (apiModule.features || []).map(feature => ({
+          id: feature.id,
+          code: feature.code,
+          name: feature.name,
+          description: feature.description,
+          type: getFeatureType(feature.code)
+        }));
         
-        if (module.features && Array.isArray(module.features)) {
-          features = module.features;
-        } else if (module.permissions && Array.isArray(module.permissions)) {
-          features = module.permissions;
-        } else if (module.actions && Array.isArray(module.actions)) {
-          features = module.actions;
-        }
+        // Map module code to appropriate icon
+        const getModuleIcon = (code: string): string => {
+          switch (code) {
+            case 'customer_management': return 'Users';
+            case 'pipeline_management': return 'GitBranch';
+            case 'member_management': return 'UserCheck';
+            case 'role_management': return 'Shield';
+            default: return 'Settings';
+          }
+        };
         
         const transformed: ModuleInfo = {
-          id: module.id ? module.id.toString() : `module_${index}`,
-          name: module.name || module.module_name || module.code || `module_${index}`,
-          label: module.display_name || module.label || module.title || module.name || 'Unknown Module',
-          icon: module.icon || 'Settings',
+          id: apiModule.id.toString(),
+          code: apiModule.code,
+          name: apiModule.name,
+          label: apiModule.name,
+          description: apiModule.description,
+          icon: getModuleIcon(apiModule.code),
           features: features,
-          status: (module.status || module.is_active !== false ? 'active' : 'inactive') as 'active' | 'inactive'
+          status: 'active' // Assume all returned modules are active
         };
         
         console.log(`✅ [ModuleService] Transformed module ${index}:`, transformed);
@@ -166,75 +76,42 @@ export class ModuleService {
         response: (error as any).response?.data
       });
       
-      // Enhanced fallback: Return comprehensive modules if API fails
+      // For development: return fallback if API fails
+      console.warn('⚠️ [ModuleService] Using fallback modules due to API error');
+      
       const fallbackModules: ModuleInfo[] = [
         {
-          id: 'voucher',
-          name: 'voucher',
-          label: 'Quản Lý Voucher',
-          icon: 'Ticket',
-          features: ['view', 'add', 'edit', 'delete'],
-          status: 'active'
-        },
-        {
-          id: 'customer',
-          name: 'customer',
-          label: 'Quản Lý Khách Hàng',
+          id: '1',
+          code: 'customer_management',
+          name: 'Quản lý khách hàng',
+          label: 'Quản lý khách hàng',
+          description: 'Quản lý khách hàng và thông tin khách hàng',
           icon: 'Users',
-          features: ['view', 'add', 'edit', 'delete'],
+          features: [
+            { id: 1, code: 'view_customers', name: 'Xem danh sách khách hàng', description: 'Xem danh sách khách hàng', type: 'view' },
+            { id: 2, code: 'create_customers', name: 'Tạo khách hàng mới', description: 'Tạo khách hàng mới', type: 'create' },
+            { id: 3, code: 'edit_customers', name: 'Sửa thông tin khách hàng', description: 'Sửa thông tin khách hàng', type: 'edit' },
+            { id: 4, code: 'delete_customers', name: 'Xóa khách hàng', description: 'Xóa khách hàng', type: 'delete' }
+          ],
           status: 'active'
         },
         {
-          id: 'admin',
-          name: 'admin',
-          label: 'Quản Trị Hệ Thống',
-          icon: 'Shield',
-          features: ['view', 'add', 'edit', 'delete'],
-          status: 'active'
-        },
-        {
-          id: 'inventory',
-          name: 'inventory',
-          label: 'Quản Lý Kho',
-          icon: 'Package',
-          features: ['view', 'add', 'edit', 'delete'],
-          status: 'active'
-        },
-        {
-          id: 'sales',
-          name: 'sales',
-          label: 'Quản Lý Bán Hàng',
-          icon: 'ShoppingCart',
-          features: ['view', 'add', 'edit', 'delete'],
-          status: 'active'
-        },
-        {
-          id: 'marketing',
-          name: 'marketing',
-          label: 'Marketing',
-          icon: 'Target',
-          features: ['view', 'add', 'edit', 'delete'],
-          status: 'active'
-        },
-        {
-          id: 'analytics',
-          name: 'analytics',
-          label: 'Báo Cáo & Phân Tích',
-          icon: 'BarChart3',
-          features: ['view', 'add', 'edit', 'delete'],
-          status: 'active'
-        },
-        {
-          id: 'settings',
-          name: 'settings',
-          label: 'Cài Đặt Hệ Thống',
-          icon: 'Settings',
-          features: ['view', 'add', 'edit', 'delete'],
+          id: '2',
+          code: 'pipeline_management',
+          name: 'Quản lý pipeline',
+          label: 'Quản lý pipeline',
+          description: 'Quản lý pipeline và quy trình bán hàng',
+          icon: 'GitBranch',
+          features: [
+            { id: 5, code: 'view_pipelines', name: 'Xem danh sách pipeline', description: 'Xem danh sách pipeline', type: 'view' },
+            { id: 6, code: 'create_pipelines', name: 'Tạo pipeline mới', description: 'Tạo pipeline mới', type: 'create' },
+            { id: 7, code: 'edit_pipelines', name: 'Sửa thông tin pipeline', description: 'Sửa thông tin pipeline', type: 'edit' },
+            { id: 8, code: 'delete_pipelines', name: 'Xóa pipeline', description: 'Xóa pipeline', type: 'delete' }
+          ],
           status: 'active'
         }
       ];
       
-      console.log('🔄 [ModuleService] Using enhanced fallback modules due to error:', fallbackModules);
       return fallbackModules;
     }
   }
