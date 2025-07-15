@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,24 +30,38 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
   const [permissionSelections, setPermissionSelections] = useState<PermissionSelection>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingModules, setIsLoadingModules] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   const { toast } = useToast();
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<FormData>();
 
-  useEffect(() => {
-    console.log('🎯 [EditRoleModal] useEffect triggered, isOpen:', isOpen, 'role:', role);
+  // Memoize the initialization function để prevent unnecessary re-runs
+  const initializePermissions = useCallback((modulesData: ModuleInfo[], roleData: CustomRole) => {
+    console.log('🔧 [EditRoleModal] Initializing permissions for role:', roleData.name);
+    console.log('🔧 [EditRoleModal] Role permissions (IDs):', roleData.permissions);
+    console.log('🔧 [EditRoleModal] Available modules:', modulesData.map(m => ({ id: m.id, name: m.name })));
     
-    if (isOpen && role) {
-      loadModules();
-      // Set form values
-      setValue('name', role.name);
-      setValue('description', role.description);
-      
-      console.log('🔧 [EditRoleModal] Role permissions to initialize:', role.permissions);
-    }
-  }, [isOpen, role, setValue]);
+    const initialSelections: PermissionSelection = {};
+    modulesData.forEach(module => {
+      initialSelections[module.id] = {};
+      module.features.forEach(feature => {
+        // Check if this feature permission exists in role's permissions (array of IDs)
+        const isSelected = Array.isArray(roleData.permissions) && roleData.permissions.includes(feature.id);
+        initialSelections[module.id][feature.id] = isSelected;
+        
+        if (isSelected) {
+          console.log(`✅ [EditRoleModal] Feature ${feature.id} (${feature.name}) is selected for module ${module.name}`);
+        }
+      });
+    });
+    
+    console.log('🔧 [EditRoleModal] Initial permission selections:', initialSelections);
+    setPermissionSelections(initialSelections);
+    setIsInitialized(true);
+  }, []);
 
-  const loadModules = async () => {
+  // Load modules only once when modal opens
+  const loadModules = useCallback(async () => {
     try {
       setIsLoadingModules(true);
       console.log('🔄 [EditRoleModal] Loading modules...');
@@ -61,29 +75,7 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
         setSelectedModuleId(modulesData[0].id);
       }
       
-      // Initialize permission selections based on existing role permissions
-      if (role) {
-        console.log('🔧 [EditRoleModal] Initializing permissions for role:', role.name);
-        console.log('🔧 [EditRoleModal] Role permissions (IDs):', role.permissions);
-        
-        const initialSelections: PermissionSelection = {};
-        modulesData.forEach(module => {
-          initialSelections[module.id] = {};
-          module.features.forEach(feature => {
-            // Check if this feature permission exists in role's permissions (array of IDs)
-            const isSelected = Array.isArray(role.permissions) && role.permissions.includes(feature.id);
-            initialSelections[module.id][feature.id] = isSelected;
-            
-            if (isSelected) {
-              console.log(`✅ [EditRoleModal] Feature ${feature.id} (${feature.name}) is selected for module ${module.name}`);
-            }
-          });
-        });
-        
-        console.log('🔧 [EditRoleModal] Initial permission selections:', initialSelections);
-        setPermissionSelections(initialSelections);
-      }
-      
+      return modulesData;
     } catch (error) {
       console.error('❌ [EditRoleModal] Error loading modules:', error);
       toast({
@@ -91,16 +83,59 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
         description: "Không thể tải danh sách modules",
         variant: "destructive"
       });
+      return [];
     } finally {
       setIsLoadingModules(false);
     }
-  };
+  }, [toast]);
+
+  // Main effect - chỉ chạy khi modal mở và có role
+  useEffect(() => {
+    console.log('🎯 [EditRoleModal] Main useEffect triggered, isOpen:', isOpen, 'role:', role?.name);
+    
+    if (isOpen && role) {
+      // Reset state
+      setIsInitialized(false);
+      setPermissionSelections({});
+      
+      // Set form values
+      setValue('name', role.name);
+      setValue('description', role.description);
+      
+      // Load modules and initialize permissions
+      loadModules().then((modulesData) => {
+        if (modulesData.length > 0) {
+          initializePermissions(modulesData, role);
+        }
+      });
+    } else if (!isOpen) {
+      // Reset khi modal đóng
+      setIsInitialized(false);
+      setPermissionSelections({});
+      setSelectedModuleId(null);
+      setModules([]);
+    }
+  }, [isOpen, role, setValue, loadModules, initializePermissions]);
 
   const onSubmit = async (data: FormData) => {
     if (!role) return;
 
     try {
       setIsLoading(true);
+      
+      // Validate permissions before submit
+      const hasPermissions = Object.values(permissionSelections).some(moduleSelections =>
+        Object.values(moduleSelections).some(selected => selected)
+      );
+      
+      if (!hasPermissions) {
+        toast({
+          title: "Cảnh báo",
+          description: "Vui lòng chọn ít nhất một quyền cho vai trò",
+          variant: "destructive"
+        });
+        return;
+      }
       
       // Build permissions array từ selections
       const permissions: number[] = [];
@@ -113,12 +148,16 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
       });
 
       console.log('🔧 [EditRoleModal] Submitting update with permissions:', permissions);
+      console.log('🔧 [EditRoleModal] Permission selections state:', permissionSelections);
+      console.log('🔧 [EditRoleModal] Form data:', data);
 
       const roleData: Partial<RoleCreationData> = {
         name: data.name,
         description: data.description,
         permissions
       };
+      
+      console.log('🔧 [EditRoleModal] Final payload for update:', roleData);
       
       const updatedRole = await RoleService.updateRole(role.id, roleData);
       console.log('✅ [EditRoleModal] Role updated successfully:', updatedRole);
@@ -152,6 +191,7 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
     reset();
     setPermissionSelections({});
     setSelectedModuleId(null);
+    setIsInitialized(false);
     onClose();
   };
 
@@ -165,6 +205,13 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
         [featureId]: selected
       }
     }));
+  };
+
+  // Safe module selection handler - không reset permissions
+  const handleModuleSelect = (moduleId: string) => {
+    console.log('🔄 [EditRoleModal] Module selected:', moduleId);
+    setSelectedModuleId(moduleId);
+    // KHÔNG reset permissionSelections ở đây
   };
 
   const getSelectedPermissionsCount = () => {
@@ -183,7 +230,9 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
     role: role.name,
     modules: modules.length,
     selectedPermissions: getSelectedPermissionsCount(),
-    isLoadingModules
+    isLoadingModules,
+    isInitialized,
+    selectedModuleId
   });
 
   return (
@@ -241,12 +290,16 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
               <div className="flex-1 flex items-center justify-center">
                 <div className="text-gray-500">Đang tải modules...</div>
               </div>
+            ) : !isInitialized ? (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="text-gray-500">Đang khởi tạo permissions...</div>
+              </div>
             ) : (
               <>
                 <CreateRoleModuleSidebar
                   modules={modules}
                   selectedModuleId={selectedModuleId}
-                  onModuleSelect={setSelectedModuleId}
+                  onModuleSelect={handleModuleSelect}
                   permissionSelections={permissionSelections}
                 />
                 <CreateRolePermissionDetail
@@ -279,7 +332,7 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
             </Button>
             <Button 
               type="submit" 
-              disabled={isLoading || isLoadingModules || role.isSystem}
+              disabled={isLoading || isLoadingModules || role.isSystem || !isInitialized}
             >
               {isLoading ? 'Đang cập nhật...' : 'Cập Nhật Vai Trò'}
             </Button>
