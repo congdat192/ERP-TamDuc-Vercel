@@ -29,10 +29,14 @@ export interface BusinessContextType {
   currentBusiness: Business | null;
   isLoading: boolean;
   hasOwnBusiness: boolean;
+  error: string | null;
+  setCurrentBusiness: (business: Business) => void;
   fetchBusinesses: () => Promise<void>;
-  createBusiness: (data: CreateBusinessRequest) => Promise<Business>;
   selectBusiness: (businessId: number) => Promise<void>;
+  createBusiness: (data: CreateBusinessRequest) => Promise<Business>;
   updateBusiness: (businessId: number, data: UpdateBusinessRequest) => Promise<Business>;
+  refreshBusinesses: () => Promise<void>;
   refreshCurrentBusiness: () => Promise<void>;
+  clearCurrentBusiness: () => void;
   clearBusinessData: () => void;
 }

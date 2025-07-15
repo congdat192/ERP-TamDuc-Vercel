@@ -1,19 +1,9 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Business } from '../types/business';
-import { businessService } from '../services/businessService';
+import { Business, BusinessContextType } from '../types/business';
+import { getBusinesses, getBusiness, createBusiness as createBusinessService, updateBusiness as updateBusinessService } from '../services/businessService';
 import { getSelectedBusinessId, setSelectedBusinessId } from '../services/apiService';
 import { useToast } from '@/hooks/use-toast';
-
-interface BusinessContextType {
-  currentBusiness: Business | null;
-  businesses: Business[];
-  isLoading: boolean;
-  error: string | null;
-  setCurrentBusiness: (business: Business) => void;
-  refreshBusinesses: () => Promise<void>;
-  clearCurrentBusiness: () => void;
-}
 
 const BusinessContext = createContext<BusinessContextType | undefined>(undefined);
 
@@ -32,6 +22,9 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
+  // Calculate hasOwnBusiness based on businesses array
+  const hasOwnBusiness = businesses.some(business => business.is_owner);
+
   // FIX: Improve business context recovery từ localStorage
   const initializeBusinessContext = async () => {
     try {
@@ -41,7 +34,7 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       console.log('🏢 [BusinessProvider] Initializing business context...');
       
       // Load all businesses first
-      const businessesData = await businessService.getBusinesses();
+      const businessesData = await getBusinesses();
       console.log('✅ [BusinessProvider] Businesses loaded:', businessesData);
       setBusinesses(businessesData);
       
@@ -97,13 +90,37 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setSelectedBusinessId(business.id.toString());
   };
 
+  const fetchBusinesses = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      console.log('🔄 [BusinessProvider] Fetching businesses...');
+      const businessesData = await getBusinesses();
+      console.log('✅ [BusinessProvider] Businesses fetched:', businessesData);
+      setBusinesses(businessesData);
+      
+    } catch (error: any) {
+      console.error('❌ [BusinessProvider] Error fetching businesses:', error);
+      setError(error.message || 'Không thể tải danh sách doanh nghiệp');
+      
+      toast({
+        title: "Lỗi",
+        description: "Không thể tải danh sách doanh nghiệp",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const refreshBusinesses = async () => {
     try {
       setIsLoading(true);
       setError(null);
       
       console.log('🔄 [BusinessProvider] Refreshing businesses...');
-      const businessesData = await businessService.getBusinesses();
+      const businessesData = await getBusinesses();
       console.log('✅ [BusinessProvider] Businesses refreshed:', businessesData);
       setBusinesses(businessesData);
       
@@ -131,9 +148,111 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
+  const selectBusiness = async (businessId: number) => {
+    try {
+      setIsLoading(true);
+      console.log('🏢 [BusinessProvider] Selecting business ID:', businessId);
+      
+      // Get fresh business data
+      const business = await getBusiness(businessId);
+      console.log('✅ [BusinessProvider] Business selected:', business.name);
+      
+      setCurrentBusinessState(business);
+      setSelectedBusinessId(business.id.toString());
+      
+      // Update businesses array if needed
+      setBusinesses(prev => 
+        prev.map(b => b.id === business.id ? business : b)
+      );
+      
+    } catch (error: any) {
+      console.error('❌ [BusinessProvider] Error selecting business:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const createBusiness = async (data: { name: string; description: string }) => {
+    try {
+      setIsLoading(true);
+      console.log('🏗️ [BusinessProvider] Creating business:', data.name);
+      
+      const newBusiness = await createBusinessService(data);
+      console.log('✅ [BusinessProvider] Business created:', newBusiness.name);
+      
+      // Add to businesses list and set as current
+      setBusinesses(prev => [...prev, newBusiness]);
+      setCurrentBusinessState(newBusiness);
+      setSelectedBusinessId(newBusiness.id.toString());
+      
+      return newBusiness;
+      
+    } catch (error: any) {
+      console.error('❌ [BusinessProvider] Error creating business:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updateBusiness = async (businessId: number, data: { name: string; description: string }) => {
+    try {
+      setIsLoading(true);
+      console.log('📝 [BusinessProvider] Updating business ID:', businessId);
+      
+      const updatedBusiness = await updateBusinessService(businessId, data);
+      console.log('✅ [BusinessProvider] Business updated:', updatedBusiness.name);
+      
+      // Update businesses array
+      setBusinesses(prev => 
+        prev.map(b => b.id === businessId ? updatedBusiness : b)
+      );
+      
+      // Update current business if it's the one being updated
+      if (currentBusiness?.id === businessId) {
+        setCurrentBusinessState(updatedBusiness);
+      }
+      
+      return updatedBusiness;
+      
+    } catch (error: any) {
+      console.error('❌ [BusinessProvider] Error updating business:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const refreshCurrentBusiness = async () => {
+    if (!currentBusiness) return;
+    
+    try {
+      console.log('🔄 [BusinessProvider] Refreshing current business');
+      const refreshedBusiness = await getBusiness(currentBusiness.id);
+      setCurrentBusinessState(refreshedBusiness);
+      
+      // Update in businesses array too
+      setBusinesses(prev => 
+        prev.map(b => b.id === refreshedBusiness.id ? refreshedBusiness : b)
+      );
+      
+    } catch (error: any) {
+      console.error('❌ [BusinessProvider] Error refreshing current business:', error);
+    }
+  };
+
   const clearCurrentBusiness = () => {
     console.log('🏢 [BusinessProvider] Clearing current business');
     setCurrentBusinessState(null);
+    localStorage.removeItem('selectedBusinessId');
+  };
+
+  const clearBusinessData = () => {
+    console.log('🧹 [BusinessProvider] Clearing all business data');
+    setCurrentBusinessState(null);
+    setBusinesses([]);
+    setError(null);
     localStorage.removeItem('selectedBusinessId');
   };
 
@@ -141,10 +260,17 @@ export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     currentBusiness,
     businesses,
     isLoading,
+    hasOwnBusiness,
     error,
     setCurrentBusiness,
+    fetchBusinesses,
+    selectBusiness,
+    createBusiness,
+    updateBusiness,
     refreshBusinesses,
-    clearCurrentBusiness
+    refreshCurrentBusiness,
+    clearCurrentBusiness,
+    clearBusinessData
   };
 
   return (
