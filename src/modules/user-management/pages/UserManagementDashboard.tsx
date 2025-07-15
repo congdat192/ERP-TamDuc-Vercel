@@ -1,40 +1,64 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, Building2, Shield, UserCog } from 'lucide-react';
+import { Users, Building2, Shield, UserCog, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { DashboardService, UserManagementCounts } from '../services/dashboardService';
 
 export function UserManagementDashboard() {
   const navigate = useNavigate();
+  const [counts, setCounts] = useState<UserManagementCounts>({
+    members: 0,
+    departments: 0,
+    roles: 0,
+    groups: 0
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadCounts();
+  }, []);
+
+  const loadCounts = async () => {
+    try {
+      setIsLoading(true);
+      const countsData = await DashboardService.getCounts();
+      setCounts(countsData);
+    } catch (error) {
+      console.error('Error loading counts:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const features = [
     {
       title: 'Thành Viên',
       icon: Users,
       path: '/ERP/UserManagement/Members',
-      stats: '0',
+      stats: counts.members.toString(),
       color: 'text-blue-600'
     },
     {
       title: 'Phòng Ban',
       icon: Building2,
       path: '/ERP/UserManagement/Departments',
-      stats: '0',
+      stats: counts.departments.toString(),
       color: 'text-green-600'
     },
     {
       title: 'Vai Trò',
       icon: Shield,
       path: '/ERP/UserManagement/Roles',
-      stats: '0',
+      stats: counts.roles.toString(),
       color: 'text-purple-600'
     },
     {
       title: 'Nhóm',
       icon: UserCog,
       path: '/ERP/UserManagement/Groups',
-      stats: '0',
+      stats: counts.groups.toString(),
       color: 'text-orange-600'
     }
   ];
@@ -66,7 +90,13 @@ export function UserManagementDashboard() {
                       <Icon className={`w-6 h-6 ${feature.color} group-hover:scale-110 transition-transform`} />
                     </div>
                     <div>
-                      <div className="text-2xl font-bold text-gray-900">{feature.stats}</div>
+                      <div className="text-2xl font-bold text-gray-900 flex items-center justify-center">
+                        {isLoading ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          feature.stats
+                        )}
+                      </div>
                       <div className="text-xs text-gray-500">Tổng số</div>
                     </div>
                   </div>
@@ -83,6 +113,7 @@ export function UserManagementDashboard() {
                     onClick={() => navigate(feature.path)}
                     className="w-full h-10 text-sm font-medium"
                     size="sm"
+                    disabled={isLoading}
                   >
                     Truy cập
                   </Button>

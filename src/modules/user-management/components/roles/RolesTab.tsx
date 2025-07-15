@@ -6,10 +6,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { EmptyState } from '@/components/ui/empty-states';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Shield, Plus, Search, Edit, Trash2, Users } from 'lucide-react';
 import { CustomRole, RoleFilters } from '../../types/role-management';
 import { RoleService } from '../../services/roleService';
 import { CreateRoleModal } from './CreateRoleModal';
+import { EditRoleModal } from './EditRoleModal';
 import { useToast } from '@/hooks/use-toast';
 
 export function RolesTab() {
@@ -17,6 +28,10 @@ export function RolesTab() {
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState<RoleFilters>({});
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<CustomRole | null>(null);
+  const [roleToDelete, setRoleToDelete] = useState<CustomRole | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -49,20 +64,48 @@ export function RolesTab() {
     });
   };
 
-  const handleDeleteRole = async (roleId: string) => {
+  const handleEditRole = (role: CustomRole) => {
+    setSelectedRole(role);
+    setIsEditModalOpen(true);
+  };
+
+  const handleRoleUpdated = (updatedRole: CustomRole) => {
+    setRoles(prev => prev.map(role => 
+      role.id === updatedRole.id ? updatedRole : role
+    ));
+    setIsEditModalOpen(false);
+    setSelectedRole(null);
+    toast({
+      title: "Thành công",
+      description: "Cập nhật vai trò thành công"
+    });
+  };
+
+  const handleDeleteRole = async (role: CustomRole) => {
+    setRoleToDelete(role);
+  };
+
+  const confirmDeleteRole = async () => {
+    if (!roleToDelete) return;
+
     try {
-      await RoleService.deleteRole(roleId);
-      setRoles(prev => prev.filter(role => role.id !== roleId));
+      setIsDeleting(true);
+      await RoleService.deleteRole(roleToDelete.id);
+      setRoles(prev => prev.filter(role => role.id !== roleToDelete.id));
       toast({
         title: "Thành công", 
         description: "Xóa vai trò thành công"
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error deleting role:', error);
       toast({
         title: "Lỗi",
-        description: "Không thể xóa vai trò",
+        description: error.message || "Không thể xóa vai trò",
         variant: "destructive"
       });
+    } finally {
+      setIsDeleting(false);
+      setRoleToDelete(null);
     }
   };
 
@@ -81,9 +124,7 @@ export function RolesTab() {
   });
 
   const getPermissionCount = (role: CustomRole) => {
-    return Object.values(role.permissions).reduce((count, perms) => {
-      return count + Object.values(perms).filter(Boolean).length;
-    }, 0);
+    return Array.isArray(role.permissions) ? role.permissions.length : 0;
   };
 
   if (isLoading) {
@@ -173,14 +214,19 @@ export function RolesTab() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end space-x-2">
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => handleEditRole(role)}
+                          >
                             <Edit className="w-4 h-4" />
                           </Button>
                           {!role.isSystem && (
                             <Button 
                               variant="ghost" 
                               size="sm"
-                              onClick={() => handleDeleteRole(role.id)}
+                              onClick={() => handleDeleteRole(role)}
+                              className="text-red-600 hover:text-red-700"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -196,11 +242,46 @@ export function RolesTab() {
         </CardContent>
       </Card>
 
+      {/* Create Role Modal */}
       <CreateRoleModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onRoleCreated={handleCreateRole}
       />
+
+      {/* Edit Role Modal */}
+      <EditRoleModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedRole(null);
+        }}
+        role={selectedRole}
+        onRoleUpdated={handleRoleUpdated}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!roleToDelete} onOpenChange={() => setRoleToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận xóa vai trò</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn xóa vai trò "{roleToDelete?.name}" không? 
+              Hành động này không thể hoàn tác.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Hủy</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDeleteRole}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? 'Đang xóa...' : 'Xóa'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
