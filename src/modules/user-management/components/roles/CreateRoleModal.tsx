@@ -12,7 +12,7 @@ import { RoleService } from '../../services/roleService';
 import { ModuleService } from '../../services/moduleService';
 import { SimpleModuleList } from './SimpleModuleList';
 import { PermissionDetailArea } from './PermissionDetailArea';
-import { AlertTriangle, Info, XCircle } from 'lucide-react';
+import { AlertTriangle, Info, XCircle, CheckCircle } from 'lucide-react';
 
 interface CreateRoleModalProps {
   isOpen: boolean;
@@ -88,16 +88,13 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
         console.log('🎉 [CreateRoleModal] Successfully loaded', modulesData.length, 'modules');
       } else {
         console.warn('⚠️ [CreateRoleModal] No modules loaded - this might be expected if none are configured');
-        setModuleLoadError('Không tìm thấy modules nào. Có thể hệ thống chưa được cấu hình modules hoặc bạn không có quyền truy cập.');
+        setModuleLoadError('Không tìm thấy modules nào. Hệ thống sẽ tạo vai trò với quyền cơ bản.');
       }
       
     } catch (error) {
       console.error('💥 [CreateRoleModal] Error in loadModules:', error);
       const errorMessage = error instanceof Error ? error.message : 'Lỗi không xác định';
-      setModuleLoadError(`Không thể tải danh sách modules: ${errorMessage}`);
-      
-      // Don't use fallback here, let the service handle it
-      console.log('🔄 [CreateRoleModal] Error occurred, service should provide fallback modules');
+      setModuleLoadError(`Không thể tải danh sách modules: ${errorMessage}. Vai trò sẽ được tạo với quyền cơ bản.`);
       
     } finally {
       setIsLoadingModules(false);
@@ -110,14 +107,15 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
       setIsLoading(true);
       setCreateError(null);
       
+      // For now, create role with basic info only (permissions will be empty array)
       const roleData: RoleCreationData = {
         name: data.name,
         description: data.description,
-        permissions
+        permissions // This will be sent as empty array to match API
       };
 
       console.log('🔧 [CreateRoleModal] Submitting role data:', roleData);
-      console.log('🔧 [CreateRoleModal] Permissions structure:', JSON.stringify(permissions, null, 2));
+      console.log('🔧 [CreateRoleModal] API will receive permissions as: []');
       
       const newRole = await RoleService.createRole(roleData);
       console.log('✅ [CreateRoleModal] Role created successfully:', newRole);
@@ -127,7 +125,8 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
       
       toast({
         title: "Thành công",
-        description: "Tạo vai trò mới thành công"
+        description: `Tạo vai trò "${data.name}" thành công. Quyền chi tiết có thể được cập nhật sau.`,
+        variant: "default"
       });
     } catch (error: any) {
       console.error('❌ [CreateRoleModal] Error creating role:', error);
@@ -207,6 +206,20 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
         <div className="flex gap-6 h-[600px]">
           {/* Left Column 70% - Form + Permission Detail */}
           <div className="flex-[7] space-y-6 overflow-y-auto pr-2">
+            {/* API Info Alert */}
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                <div className="space-y-2">
+                  <div className="font-medium">Thông báo về API</div>
+                  <div className="text-sm">
+                    Vai trò sẽ được tạo với cấu trúc cơ bản theo API backend. 
+                    Quyền chi tiết có thể được cập nhật trong phiên bản tương lai khi API hỗ trợ đầy đủ.
+                  </div>
+                </div>
+              </AlertDescription>
+            </Alert>
+
             {/* Module Loading Error */}
             {moduleLoadError && (
               <Alert>
@@ -215,11 +228,6 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
                   <div className="space-y-2">
                     <div className="font-medium">Thông báo về Modules</div>
                     <div className="text-sm">{moduleLoadError}</div>
-                    {modules.length > 0 && (
-                      <div className="text-sm text-blue-600">
-                        Đang sử dụng {modules.length} modules mặc định để bạn có thể tiếp tục tạo vai trò.
-                      </div>
-                    )}
                   </div>
                 </AlertDescription>
               </Alert>
@@ -251,7 +259,10 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
                     <Label htmlFor="name">Tên Vai Trò *</Label>
                     <Input
                       id="name"
-                      {...register('name', { required: 'Tên vai trò là bắt buộc' })}
+                      {...register('name', { 
+                        required: 'Tên vai trò là bắt buộc',
+                        minLength: { value: 2, message: 'Tên vai trò phải có ít nhất 2 ký tự' }
+                      })}
                       placeholder="Nhập tên vai trò"
                     />
                     {errors.name && (
@@ -274,44 +285,15 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
               <div className="space-y-4">
                 <h3 className="text-lg font-medium border-b pb-2">Tổng Quan Quyền</h3>
                 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {getSelectedModulesCount()}
-                    </div>
-                    <div className="text-sm text-blue-600">Modules được chọn</div>
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <CheckCircle className="h-5 w-5 text-blue-600" />
+                    <div className="font-medium text-blue-800">Trạng thái API</div>
                   </div>
-                  
-                  <div className="bg-green-50 p-4 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">
-                      {getSelectedPermissionsCount()}
-                    </div>
-                    <div className="text-sm text-green-600">Tổng số quyền</div>
+                  <div className="text-sm text-blue-700">
+                    Vai trò sẽ được tạo với cấu trúc cơ bản. Quyền chi tiết sẽ được triển khai trong phiên bản tương lai.
                   </div>
                 </div>
-
-                {getSelectedPermissionsCount() === 0 && modules.length > 0 && (
-                  <Alert>
-                    <Info className="h-4 w-4" />
-                    <AlertDescription>
-                      Bạn chưa chọn quyền nào. Vai trò sẽ được tạo với quyền rỗng và có thể cập nhật sau.
-                    </AlertDescription>
-                  </Alert>
-                )}
-
-                {modules.length === 0 && !isLoadingModules && (
-                  <Alert>
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertDescription>
-                      <div className="space-y-2">
-                        <div className="font-medium">Không có modules để cấu hình quyền</div>
-                        <div className="text-sm">
-                          Vai trò sẽ được tạo mà không có quyền cụ thể. Bạn có thể cập nhật quyền sau khi modules được cấu hình trong hệ thống.
-                        </div>
-                      </div>
-                    </AlertDescription>
-                  </Alert>
-                )}
               </div>
 
               {/* Actions */}
@@ -330,16 +312,16 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
               </div>
             </form>
 
-            {/* Permission Detail Area */}
+            {/* Permission Detail Area - For future use */}
             {modules.length > 0 && (
-              <div className="border-t pt-6">
-                <h3 className="text-lg font-medium mb-4">Chi Tiết Quyền</h3>
-                <div className="min-h-[300px]">
-                  <PermissionDetailArea
-                    selectedModule={selectedModule}
-                    permissions={permissions}
-                    onPermissionChange={handlePermissionChange}
-                  />
+              <div className="border-t pt-6 opacity-50">
+                <h3 className="text-lg font-medium mb-4">Chi Tiết Quyền (Sẽ có trong tương lai)</h3>
+                <div className="min-h-[300px] bg-gray-50 rounded-lg p-4 flex items-center justify-center">
+                  <div className="text-center text-gray-500">
+                    <Info className="h-8 w-8 mx-auto mb-2" />
+                    <div className="font-medium">Tính năng đang phát triển</div>
+                    <div className="text-sm">Quyền chi tiết sẽ có sẵn khi API backend hỗ trợ đầy đủ</div>
+                  </div>
                 </div>
               </div>
             )}
@@ -352,12 +334,22 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
                 <div className="text-gray-500">Đang tải modules...</div>
               </div>
             ) : (
-              <SimpleModuleList
-                modules={modules}
-                permissions={permissions}
-                selectedModuleId={selectedModuleId}
-                onModuleSelect={handleModuleSelect}
-              />
+              <div className="space-y-4">
+                <h3 className="font-medium">Modules Hệ Thống</h3>
+                {modules.length > 0 ? (
+                  <SimpleModuleList
+                    modules={modules}
+                    permissions={permissions}
+                    selectedModuleId={selectedModuleId}
+                    onModuleSelect={handleModuleSelect}
+                  />
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <Info className="h-8 w-8 mx-auto mb-2" />
+                    <div className="text-sm">Không có modules để hiển thị</div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>

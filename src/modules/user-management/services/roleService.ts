@@ -1,3 +1,4 @@
+
 import { ModuleInfo, CustomRole, RoleCreationData, ModulePermissions } from '../types/role-management';
 import { api } from '../../../services/apiService';
 
@@ -37,23 +38,21 @@ export class RoleService {
 
   static async createRole(roleData: RoleCreationData): Promise<CustomRole> {
     try {
-      console.log('🔧 [RoleService] Creating role with original data:', roleData);
+      console.log('🔧 [RoleService] Creating role with data:', roleData);
       
-      // Transform permissions to match backend expectations
-      // Based on API docs, backend might expect permissions as an array or different structure
-      const transformedPermissions = this.transformPermissionsForBackend(roleData.permissions);
-      
+      // Match exact API format from documentation
       const payload = {
         name: roleData.name,
         description: roleData.description,
-        permissions: transformedPermissions
+        permissions: [] // Backend expects empty array, not object
       };
       
-      console.log('🔧 [RoleService] Transformed payload for backend:', payload);
-      console.log('🔧 [RoleService] Permissions structure:', JSON.stringify(transformedPermissions, null, 2));
+      console.log('🔧 [RoleService] Sending payload to backend:', JSON.stringify(payload, null, 2));
+      console.log('🔧 [RoleService] API endpoint: POST /roles');
       
       const response = await api.post<RoleApiResponse>('/roles', payload);
       console.log('✅ [RoleService] Backend response:', response);
+      console.log('✅ [RoleService] Response data structure:', JSON.stringify(response.data, null, 2));
 
       return {
         id: response.data.id.toString(),
@@ -67,88 +66,49 @@ export class RoleService {
       };
     } catch (error: any) {
       console.error('❌ [RoleService] Error creating role:', error);
-      console.error('❌ [RoleService] Error response:', error.response?.data);
-      console.error('❌ [RoleService] Error status:', error.response?.status);
+      console.error('❌ [RoleService] Error details:');
+      console.error('  - Status:', error.response?.status);
+      console.error('  - Status Text:', error.response?.statusText);
+      console.error('  - Response Data:', error.response?.data);
+      console.error('  - Request Headers:', error.config?.headers);
+      console.error('  - Request URL:', error.config?.url);
+      console.error('  - Request Data:', error.config?.data);
       
       // Extract detailed error message from backend
       let errorMessage = 'Không thể tạo vai trò';
       
       if (error.response?.data) {
         const errorData = error.response.data;
-        console.log('🔍 [RoleService] Backend error details:', errorData);
+        console.log('🔍 [RoleService] Backend error analysis:', errorData);
         
         if (errorData.message) {
-          errorMessage = errorData.message;
+          errorMessage = `Backend Error: ${errorData.message}`;
         } else if (errorData.error) {
-          errorMessage = errorData.error;
+          errorMessage = `API Error: ${errorData.error}`;
         } else if (errorData.errors) {
           // Handle validation errors
           const validationErrors = Object.values(errorData.errors).flat();
-          errorMessage = validationErrors.join(', ');
+          errorMessage = `Validation Error: ${validationErrors.join(', ')}`;
+        } else {
+          errorMessage = `HTTP ${error.response.status}: ${error.response.statusText}`;
         }
       }
       
+      console.error('❌ [RoleService] Final error message:', errorMessage);
       throw new Error(errorMessage);
     }
-  }
-
-  private static transformPermissionsForBackend(permissions: ModulePermissions): any {
-    console.log('🔄 [RoleService] Transforming permissions:', permissions);
-    
-    // Try different transformation strategies based on common backend patterns
-    
-    // Strategy 1: Keep as object (current approach)
-    const strategyObject = permissions;
-    
-    // Strategy 2: Transform to array of permission strings
-    const strategyArray: string[] = [];
-    Object.entries(permissions).forEach(([moduleId, perms]) => {
-      Object.entries(perms).forEach(([action, allowed]) => {
-        if (allowed) {
-          strategyArray.push(`${moduleId}.${action}`);
-        }
-      });
-    });
-    
-    // Strategy 3: Flat object with dot notation
-    const strategyFlat: { [key: string]: boolean } = {};
-    Object.entries(permissions).forEach(([moduleId, perms]) => {
-      Object.entries(perms).forEach(([action, allowed]) => {
-        strategyFlat[`${moduleId}.${action}`] = allowed;
-      });
-    });
-    
-    // Strategy 4: Nested structure with arrays
-    const strategyNested: { [key: string]: string[] } = {};
-    Object.entries(permissions).forEach(([moduleId, perms]) => {
-      const allowedActions = Object.entries(perms)
-        .filter(([_, allowed]) => allowed)
-        .map(([action, _]) => action);
-      
-      if (allowedActions.length > 0) {
-        strategyNested[moduleId] = allowedActions;
-      }
-    });
-    
-    console.log('🔄 [RoleService] Transformation strategies:');
-    console.log('  - Object:', strategyObject);
-    console.log('  - Array:', strategyArray);
-    console.log('  - Flat:', strategyFlat);
-    console.log('  - Nested:', strategyNested);
-    
-    // Start with the object approach (current), but log all strategies for debugging
-    // If this fails, we can quickly try other approaches
-    return strategyObject;
   }
 
   static async updateRole(roleId: string, roleData: Partial<RoleCreationData>): Promise<CustomRole> {
     try {
       console.log('🔧 [RoleService] Updating role:', roleId, roleData);
       
-      const payload = { ...roleData };
-      if (roleData.permissions) {
-        payload.permissions = this.transformPermissionsForBackend(roleData.permissions);
-      }
+      // Match API format for update
+      const payload = {
+        name: roleData.name,
+        description: roleData.description,
+        permissions: [] // Keep as empty array for now
+      };
       
       console.log('🔧 [RoleService] Update payload:', payload);
       
