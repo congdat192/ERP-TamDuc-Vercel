@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { CreateInvitationRequest } from '../../types/invitation';
 import { RoleService } from '../../services/roleService';
+import { InvitationService } from '../../services/invitationService';
 import { CustomRole } from '../../types/role-management';
 
 interface CreateInvitationModalProps {
@@ -55,17 +56,17 @@ export function CreateInvitationModal({ isOpen, onClose, onInvitationSent }: Cre
 
     setIsLoading(true);
     try {
-      // Simulate API call - replace with actual service call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const invitation = await InvitationService.createInvitation(formData);
       
       toast({
         title: "Thành công",
         description: "Lời mời đã được gửi thành công",
       });
       
-      onInvitationSent?.(formData);
+      onInvitationSent?.(invitation);
       handleClose();
     } catch (error: any) {
+      console.error('Error creating invitation:', error);
       toast({
         title: "Lỗi",
         description: error.message || "Không thể gửi lời mời",
