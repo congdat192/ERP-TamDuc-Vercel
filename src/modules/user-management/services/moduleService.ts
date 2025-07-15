@@ -51,33 +51,9 @@ export class ModuleService {
       console.log('📊 [ModuleService] Final modules list:', modulesList);
       console.log('📊 [ModuleService] Modules count:', modulesList.length);
       
-      // If API returns empty array, let's try with business ID
+      // If API returns empty array or fails, use comprehensive fallback modules
       if (modulesList.length === 0) {
-        console.log('🔄 [ModuleService] Empty response, trying with business ID...');
-        
-        try {
-          const responseWithBusiness = await api.get<ModuleApiResponse>('/modules', {
-            requiresBusinessId: true // Try with business ID
-          });
-          
-          console.log('🔄 [ModuleService] Response with business ID:', responseWithBusiness);
-          
-          const businessResponseData = responseWithBusiness.data as any;
-          if (Array.isArray(businessResponseData) && businessResponseData.length > 0) {
-            console.log('✅ [ModuleService] Found modules with business ID');
-            modulesList = businessResponseData;
-          } else if (businessResponseData && Array.isArray(businessResponseData.data) && businessResponseData.data.length > 0) {
-            console.log('✅ [ModuleService] Found nested modules with business ID');
-            modulesList = businessResponseData.data;
-          }
-        } catch (businessError) {
-          console.error('❌ [ModuleService] Error trying with business ID:', businessError);
-        }
-      }
-      
-      // If still empty, use fallback modules for development
-      if (modulesList.length === 0) {
-        console.warn('⚠️ [ModuleService] No modules found from API, using fallback modules for development');
+        console.log('🔄 [ModuleService] No data from API, using comprehensive fallback modules');
         
         const fallbackModules: ModuleInfo[] = [
           {
@@ -85,7 +61,7 @@ export class ModuleService {
             name: 'voucher',
             label: 'Quản Lý Voucher',
             icon: 'Ticket',
-            features: ['create', 'read', 'update', 'delete'],
+            features: ['view', 'add', 'edit', 'delete'],
             status: 'active'
           },
           {
@@ -93,7 +69,7 @@ export class ModuleService {
             name: 'customer',
             label: 'Quản Lý Khách Hàng',
             icon: 'Users',
-            features: ['create', 'read', 'update', 'delete'],
+            features: ['view', 'add', 'edit', 'delete'],
             status: 'active'
           },
           {
@@ -101,7 +77,7 @@ export class ModuleService {
             name: 'admin',
             label: 'Quản Trị Hệ Thống',
             icon: 'Shield',
-            features: ['create', 'read', 'update', 'delete'],
+            features: ['view', 'add', 'edit', 'delete'],
             status: 'active'
           },
           {
@@ -109,7 +85,7 @@ export class ModuleService {
             name: 'inventory',
             label: 'Quản Lý Kho',
             icon: 'Package',
-            features: ['create', 'read', 'update', 'delete'],
+            features: ['view', 'add', 'edit', 'delete'],
             status: 'active'
           },
           {
@@ -117,7 +93,31 @@ export class ModuleService {
             name: 'sales', 
             label: 'Quản Lý Bán Hàng',
             icon: 'ShoppingCart',
-            features: ['create', 'read', 'update', 'delete'],
+            features: ['view', 'add', 'edit', 'delete'],
+            status: 'active'
+          },
+          {
+            id: 'marketing',
+            name: 'marketing',
+            label: 'Marketing',
+            icon: 'Target',
+            features: ['view', 'add', 'edit', 'delete'],
+            status: 'active'
+          },
+          {
+            id: 'analytics',
+            name: 'analytics',
+            label: 'Báo Cáo & Phân Tích',
+            icon: 'BarChart3',
+            features: ['view', 'add', 'edit', 'delete'],
+            status: 'active'
+          },
+          {
+            id: 'settings',
+            name: 'settings',
+            label: 'Cài Đặt Hệ Thống',
+            icon: 'Settings',
+            features: ['view', 'add', 'edit', 'delete'],
             status: 'active'
           }
         ];
@@ -130,13 +130,24 @@ export class ModuleService {
       const transformedModules = modulesList.map((module: any, index: number) => {
         console.log(`🔄 [ModuleService] Transforming module ${index}:`, module);
         
+        // Extract features/permissions from module data
+        let features = ['view', 'add', 'edit', 'delete']; // Default features
+        
+        if (module.features && Array.isArray(module.features)) {
+          features = module.features;
+        } else if (module.permissions && Array.isArray(module.permissions)) {
+          features = module.permissions;
+        } else if (module.actions && Array.isArray(module.actions)) {
+          features = module.actions;
+        }
+        
         const transformed: ModuleInfo = {
-          id: module.id ? module.id.toString() : Math.random().toString(),
-          name: module.name || module.module_name || 'Unknown Module',
-          label: module.display_name || module.label || module.name || 'Unknown Module',
+          id: module.id ? module.id.toString() : `module_${index}`,
+          name: module.name || module.module_name || module.code || `module_${index}`,
+          label: module.display_name || module.label || module.title || module.name || 'Unknown Module',
           icon: module.icon || 'Settings',
-          features: module.features || ['create', 'read', 'update', 'delete'],
-          status: (module.status || 'active') as 'active' | 'inactive'
+          features: features,
+          status: (module.status || module.is_active !== false ? 'active' : 'inactive') as 'active' | 'inactive'
         };
         
         console.log(`✅ [ModuleService] Transformed module ${index}:`, transformed);
@@ -151,17 +162,18 @@ export class ModuleService {
       console.error('💥 [ModuleService] Error in getActiveModules:', error);
       console.error('💥 [ModuleService] Error details:', {
         message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : 'No stack trace'
+        stack: error instanceof Error ? error.stack : 'No stack trace',
+        response: (error as any).response?.data
       });
       
-      // Fallback: Return some basic modules if API fails
+      // Enhanced fallback: Return comprehensive modules if API fails
       const fallbackModules: ModuleInfo[] = [
         {
           id: 'voucher',
           name: 'voucher',
           label: 'Quản Lý Voucher',
           icon: 'Ticket',
-          features: ['create', 'read', 'update', 'delete'],
+          features: ['view', 'add', 'edit', 'delete'],
           status: 'active'
         },
         {
@@ -169,7 +181,7 @@ export class ModuleService {
           name: 'customer',
           label: 'Quản Lý Khách Hàng',
           icon: 'Users',
-          features: ['create', 'read', 'update', 'delete'],
+          features: ['view', 'add', 'edit', 'delete'],
           status: 'active'
         },
         {
@@ -177,7 +189,7 @@ export class ModuleService {
           name: 'admin',
           label: 'Quản Trị Hệ Thống',
           icon: 'Shield',
-          features: ['create', 'read', 'update', 'delete'],
+          features: ['view', 'add', 'edit', 'delete'],
           status: 'active'
         },
         {
@@ -185,20 +197,44 @@ export class ModuleService {
           name: 'inventory',
           label: 'Quản Lý Kho',
           icon: 'Package',
-          features: ['create', 'read', 'update', 'delete'],
+          features: ['view', 'add', 'edit', 'delete'],
           status: 'active'
         },
         {
           id: 'sales',
           name: 'sales',
-          label: 'Quản Lý Bán Hàng', 
+          label: 'Quản Lý Bán Hàng',
           icon: 'ShoppingCart',
-          features: ['create', 'read', 'update', 'delete'],
+          features: ['view', 'add', 'edit', 'delete'],
+          status: 'active'
+        },
+        {
+          id: 'marketing',
+          name: 'marketing',
+          label: 'Marketing',
+          icon: 'Target',
+          features: ['view', 'add', 'edit', 'delete'],
+          status: 'active'
+        },
+        {
+          id: 'analytics',
+          name: 'analytics',
+          label: 'Báo Cáo & Phân Tích',
+          icon: 'BarChart3',
+          features: ['view', 'add', 'edit', 'delete'],
+          status: 'active'
+        },
+        {
+          id: 'settings',
+          name: 'settings',
+          label: 'Cài Đặt Hệ Thống',
+          icon: 'Settings',
+          features: ['view', 'add', 'edit', 'delete'],
           status: 'active'
         }
       ];
       
-      console.log('🔄 [ModuleService] Using fallback modules due to error:', fallbackModules);
+      console.log('🔄 [ModuleService] Using enhanced fallback modules due to error:', fallbackModules);
       return fallbackModules;
     }
   }
