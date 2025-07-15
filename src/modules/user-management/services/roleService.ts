@@ -1,3 +1,4 @@
+
 import { CustomRole, RoleCreationData } from '../types/role-management';
 import { api } from '../../../services/apiService';
 
@@ -152,20 +153,19 @@ export class RoleService {
     try {
       console.log('🔧 [RoleService] Updating role:', roleId, roleData);
       
-      // Theo API documentation, sử dụng endpoint /roles/ và truyền ID trong payload
+      // FIX: Sử dụng endpoint /roles/{id} và KHÔNG truyền ID trong payload
       const payload = {
-        id: parseInt(roleId), // Truyền ID trong payload
         name: roleData.name,
         description: roleData.description,
         permissions: roleData.permissions || [] // Array of feature IDs
       };
       
-      console.log('🔧 [RoleService] Update payload:', JSON.stringify(payload, null, 2));
-      console.log('🔧 [RoleService] API endpoint: PUT /roles');
+      console.log('🔧 [RoleService] Update payload (without ID):', JSON.stringify(payload, null, 2));
+      console.log('🔧 [RoleService] API endpoint: PUT /roles/' + roleId);
       console.log('🔧 [RoleService] Permissions being sent:', payload.permissions);
       
-      // Sử dụng endpoint /roles thay vì /roles/{id}
-      const response = await api.put<RoleApiResponse>('/roles', payload);
+      // FIX: Sử dụng endpoint /roles/{id} thay vì /roles
+      const response = await api.put<RoleApiResponse>(`/roles/${roleId}`, payload);
       console.log('✅ [RoleService] Update response:', response);
       
       // Parse permissions nếu backend trả về array of objects
@@ -199,7 +199,18 @@ export class RoleService {
       console.error('❌ [RoleService] Error headers:', error.response?.headers);
       
       let errorMessage = 'Không thể cập nhật vai trò';
-      if (error.response?.data?.message) {
+      
+      // Xử lý specific error messages từ backend
+      if (error.response?.status === 422) {
+        errorMessage = 'Dữ liệu không hợp lệ. Vui lòng kiểm tra lại thông tin.';
+        if (error.response.data?.message) {
+          errorMessage = error.response.data.message;
+        }
+      } else if (error.response?.status === 404) {
+        errorMessage = 'Vai trò không tồn tại hoặc đã bị xóa.';
+      } else if (error.response?.status === 500) {
+        errorMessage = 'Lỗi hệ thống. Vui lòng thử lại sau.';
+      } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.response?.data?.error) {
         errorMessage = error.response.data.error;
@@ -215,19 +226,26 @@ export class RoleService {
   static async deleteRole(roleId: string): Promise<void> {
     try {
       console.log('🗑️ [RoleService] Deleting role:', roleId);
+      console.log('🗑️ [RoleService] Using endpoint: DELETE /roles/' + roleId);
       
-      // Theo API documentation, sử dụng endpoint /roles/{id}
+      // Sử dụng endpoint /roles/{id} như API documentation
       await api.delete(`/roles/${roleId}`);
       console.log('✅ [RoleService] Role deleted successfully');
     } catch (error: any) {
       console.error('❌ [RoleService] Error deleting role:', error);
       console.error('❌ [RoleService] Error response:', error.response?.data);
       console.error('❌ [RoleService] Error status:', error.response?.status);
+      console.error('❌ [RoleService] Request URL:', error.config?.url);
+      console.error('❌ [RoleService] Request method:', error.config?.method);
       
       let errorMessage = 'Không thể xóa vai trò';
       
       // Xử lý specific error cases
-      if (error.response?.status === 500) {
+      if (error.response?.status === 404) {
+        errorMessage = 'Vai trò không tồn tại hoặc đã bị xóa.';
+      } else if (error.response?.status === 422) {
+        errorMessage = 'Không thể xóa vai trò này. Có thể vai trò đang được sử dụng bởi người dùng khác.';
+      } else if (error.response?.status === 500) {
         errorMessage = 'Lỗi hệ thống: Có thể database chưa được cấu hình đầy đủ. Vui lòng liên hệ quản trị viên.';
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
