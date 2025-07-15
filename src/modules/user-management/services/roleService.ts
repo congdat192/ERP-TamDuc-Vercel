@@ -1,3 +1,4 @@
+
 import { CustomRole, RoleCreationData } from '../types/role-management';
 import { api } from '../../../services/apiService';
 
@@ -46,26 +47,33 @@ export class RoleService {
       };
       
       console.log('🔧 [RoleService] Sending payload to backend:', JSON.stringify(payload, null, 2));
+      console.log('🔧 [RoleService] API endpoint: POST /roles');
+      console.log('🔧 [RoleService] Permissions array:', payload.permissions);
       
       const response = await api.post<RoleApiResponse>('/roles', payload);
       console.log('✅ [RoleService] Backend response:', response);
       console.log('✅ [RoleService] Response structure:', JSON.stringify(response, null, 2));
 
-      // Parse response - backend trả về direct object, không có wrapper
-      const roleData_response = response as RoleApiResponse;
-      
+      // API trả về direct object, không có wrapper
       return {
-        id: roleData_response.id.toString(),
-        name: roleData_response.name,
-        description: roleData_response.description,
-        permissions: roleData_response.permissions || [],
-        userCount: roleData_response.user_count || 0,
-        isSystem: roleData_response.is_system || false,
-        created_at: roleData_response.created_at,
-        updated_at: roleData_response.updated_at
+        id: response.id.toString(),
+        name: response.name,
+        description: response.description,
+        permissions: response.permissions || [],
+        userCount: response.user_count || 0,
+        isSystem: response.is_system || false,
+        created_at: response.created_at,
+        updated_at: response.updated_at
       };
     } catch (error: any) {
       console.error('❌ [RoleService] Error creating role:', error);
+      console.error('❌ [RoleService] Error details:');
+      console.error('  - Status:', error.response?.status);
+      console.error('  - Status Text:', error.response?.statusText);
+      console.error('  - Response Data:', error.response?.data);
+      console.error('  - Request Headers:', error.config?.headers);
+      console.error('  - Request URL:', error.config?.url);
+      console.error('  - Request Data:', error.config?.data);
       
       // Extract chi tiết error message từ backend
       let errorMessage = 'Không thể tạo vai trò';
@@ -95,15 +103,16 @@ export class RoleService {
       
       const response = await api.put<RoleApiResponse>(`/roles/${roleId}`, payload);
       
+      // API trả về direct object, không có wrapper
       return {
-        id: response.data.id.toString(),
-        name: response.data.name,
-        description: response.data.description,
-        permissions: response.data.permissions || [],
-        userCount: response.data.user_count || 0,
-        isSystem: response.data.is_system || false,
-        created_at: response.data.created_at,
-        updated_at: response.data.updated_at
+        id: response.id.toString(),
+        name: response.name,
+        description: response.description,
+        permissions: response.permissions || [],
+        userCount: response.user_count || 0,
+        isSystem: response.is_system || false,
+        created_at: response.created_at,
+        updated_at: response.updated_at
       };
     } catch (error: any) {
       console.error('❌ [RoleService] Error updating role:', error);
