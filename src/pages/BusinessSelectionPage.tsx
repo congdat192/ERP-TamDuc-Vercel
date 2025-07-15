@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,13 +8,16 @@ import { Building2, Plus, Crown, Users, ArrowRight, Loader2 } from 'lucide-react
 import { useBusiness } from '@/contexts/BusinessContext';
 import { useAuth } from '@/components/auth/AuthContext';
 import { Business } from '@/types/business';
+import { useToast } from '@/hooks/use-toast';
 
 export function BusinessSelectionPage() {
   const { businesses, hasOwnBusiness, fetchBusinesses, selectBusiness, isLoading } = useBusiness();
   const { currentUser, isAuthenticated, logout } = useAuth();
   const [isInitializing, setIsInitializing] = useState(true);
   const [selectedBusinessId, setSelectedBusinessId] = useState<number | null>(null);
+  const [isSelecting, setIsSelecting] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   // Check authentication and fetch businesses on mount
   useEffect(() => {
@@ -31,18 +35,25 @@ export function BusinessSelectionPage() {
         await fetchBusinesses();
       } catch (error) {
         console.error('❌ [BusinessSelectionPage] Failed to fetch businesses:', error);
+        toast({
+          title: "Lỗi",
+          description: "Không thể tải danh sách doanh nghiệp",
+          variant: "destructive",
+        });
       } finally {
         setIsInitializing(false);
       }
     };
 
     initializePage();
-  }, [isAuthenticated, currentUser, navigate]); // Remove fetchBusinesses from dependencies
+  }, [isAuthenticated, currentUser, navigate, fetchBusinesses, toast]);
 
   const handleBusinessSelect = async (business: Business) => {
-    if (selectedBusinessId === business.id) return;
+    if (selectedBusinessId === business.id || isSelecting) return;
     
     setSelectedBusinessId(business.id);
+    setIsSelecting(true);
+    
     try {
       console.log('🏢 [BusinessSelectionPage] Selecting business:', business.name);
       await selectBusiness(business.id);
@@ -57,16 +68,27 @@ export function BusinessSelectionPage() {
         // Navigate to ERP Dashboard by default
         navigate('/ERP/Dashboard');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ [BusinessSelectionPage] Failed to select business:', error);
+      toast({
+        title: "Lỗi",
+        description: error.message || "Không thể chọn doanh nghiệp",
+        variant: "destructive",
+      });
       setSelectedBusinessId(null);
+    } finally {
+      setIsSelecting(false);
     }
   };
 
   const handleCreateBusiness = () => {
     if (hasOwnBusiness) {
       // User already has a business, show limitation message
-      alert('Bạn đã có doanh nghiệp riêng. Mỗi tài khoản chỉ được tạo tối đa 1 doanh nghiệp.');
+      toast({
+        title: "Thông báo",
+        description: "Bạn đã có doanh nghiệp riêng. Mỗi tài khoản chỉ được tạo tối đa 1 doanh nghiệp.",
+        variant: "default",
+      });
       return;
     }
     navigate('/create-business');
@@ -188,7 +210,7 @@ export function BusinessSelectionPage() {
               <CardContent>
                 <Button 
                   className="w-full"
-                  disabled={selectedBusinessId === business.id || isLoading}
+                  disabled={selectedBusinessId === business.id || isLoading || isSelecting}
                 >
                   {selectedBusinessId === business.id ? (
                     <>

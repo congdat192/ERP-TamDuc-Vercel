@@ -22,16 +22,20 @@ const STORAGE_KEYS = {
   SELECTED_BUSINESS_ID: 'cbi', // Changed from 'selected_business_id' to 'cbi'
 };
 
-// Migration function to move from old key to new key
+// Migration function to move from old keys to new keys
 const migrateLegacyBusinessId = (): void => {
   try {
-    const legacyKey = 'selected_business_id';
-    const legacyBusinessId = localStorage.getItem(legacyKey);
+    const legacyKeys = ['selected_business_id', 'selectedBusinessId'];
     
-    if (legacyBusinessId && !localStorage.getItem(STORAGE_KEYS.SELECTED_BUSINESS_ID)) {
-      localStorage.setItem(STORAGE_KEYS.SELECTED_BUSINESS_ID, legacyBusinessId);
-      localStorage.removeItem(legacyKey);
-      console.log('🔄 [apiService] Migrated business ID from legacy key to cbi');
+    for (const legacyKey of legacyKeys) {
+      const legacyBusinessId = localStorage.getItem(legacyKey);
+      
+      if (legacyBusinessId && !localStorage.getItem(STORAGE_KEYS.SELECTED_BUSINESS_ID)) {
+        localStorage.setItem(STORAGE_KEYS.SELECTED_BUSINESS_ID, legacyBusinessId);
+        localStorage.removeItem(legacyKey);
+        console.log(`🔄 [apiService] Migrated business ID from ${legacyKey} to cbi`);
+        break; // Only migrate the first found legacy key
+      }
     }
   } catch (error) {
     console.error('❌ [apiService] Failed to migrate legacy business ID:', error);

@@ -4,6 +4,7 @@ import { Business, BusinessContextType } from '@/types/business';
 import { getBusinesses, createBusiness as createBusinessAPI } from '@/services/businessService';
 import { useAuth } from '@/components/auth/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { setSelectedBusinessId, clearSelectedBusinessId, getSelectedBusinessId } from '@/services/apiService';
 
 const BusinessContext = createContext<BusinessContextType | undefined>(undefined);
 
@@ -15,25 +16,20 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated, currentUser } = useAuth();
   const { toast } = useToast();
 
-  // Lưu business context vào localStorage
-  const saveBusinessContext = (businessId: string | null, intendedRoute?: string) => {
-    if (businessId) {
-      localStorage.setItem('selectedBusinessId', businessId);
-    } else {
-      localStorage.removeItem('selectedBusinessId');
-    }
-    
+  // Lưu business context với intended route
+  const saveIntendedRoute = (intendedRoute?: string) => {
     if (intendedRoute) {
-      localStorage.setItem('intendedRoute', intendedRoute);
+      sessionStorage.setItem('intendedRoute', intendedRoute);
     }
   };
 
   // Khôi phục business context từ localStorage
   const restoreBusinessContext = () => {
-    const savedBusinessId = localStorage.getItem('selectedBusinessId');
+    const savedBusinessId = getSelectedBusinessId();
     if (savedBusinessId && businesses.length > 0) {
       const savedBusiness = businesses.find(b => b.id.toString() === savedBusinessId);
       if (savedBusiness) {
+        console.log('🔄 [BusinessProvider] Restoring business from storage:', savedBusiness.name);
         setSelectedBusiness(savedBusiness);
         return true;
       }
@@ -61,7 +57,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
       if (!restoreBusinessContext() && businessList.length > 0) {
         // Nếu không có saved business và có businesses, chọn business đầu tiên
         setSelectedBusiness(businessList[0]);
-        saveBusinessContext(businessList[0].id.toString());
+        setSelectedBusinessId(businessList[0].id.toString());
       }
     } catch (error: any) {
       console.error('❌ [BusinessProvider] Error loading businesses:', error);
@@ -91,8 +87,8 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
       setBusinesses([]);
       setSelectedBusiness(null);
       setError(null);
-      localStorage.removeItem('selectedBusinessId');
-      localStorage.removeItem('intendedRoute');
+      clearSelectedBusinessId();
+      sessionStorage.removeItem('intendedRoute');
     }
   }, [isAuthenticated, currentUser]);
 
@@ -101,12 +97,20 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     await initializeBusinessContext();
   };
 
-  const selectBusiness = async (businessId: number) => {
+  const selectBusiness = async (businessId: number): Promise<void> => {
     const business = businesses.find(b => b.id === businessId);
-    if (business) {
+    if (!business) {
+      throw new Error(`Business with ID ${businessId} not found`);
+    }
+
+    try {
       console.log('🏢 [BusinessProvider] Selecting business:', business.name);
       setSelectedBusiness(business);
-      saveBusinessContext(business.id.toString());
+      setSelectedBusinessId(business.id.toString());
+      console.log('✅ [BusinessProvider] Business selected successfully');
+    } catch (error: any) {
+      console.error('❌ [BusinessProvider] Failed to select business:', error);
+      throw error;
     }
   };
 
@@ -158,14 +162,14 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     },
     clearCurrentBusiness: () => {
       setSelectedBusiness(null);
-      localStorage.removeItem('selectedBusinessId');
+      clearSelectedBusinessId();
     },
     clearBusinessData: () => {
       setBusinesses([]);
       setSelectedBusiness(null);
       setError(null);
-      localStorage.removeItem('selectedBusinessId');
-      localStorage.removeItem('intendedRoute');
+      clearSelectedBusinessId();
+      sessionStorage.removeItem('intendedRoute');
     }
   };
 
