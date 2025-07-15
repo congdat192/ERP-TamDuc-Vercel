@@ -1,4 +1,3 @@
-
 import { CustomRole, RoleCreationData } from '../types/role-management';
 import { api } from '../../../services/apiService';
 
@@ -217,22 +216,9 @@ export class RoleService {
     try {
       console.log('🗑️ [RoleService] Deleting role:', roleId);
       
-      // Theo API documentation, có thể sử dụng endpoint /roles với ID trong payload
-      // hoặc /roles/{id} - thử cả hai cách
-      try {
-        // Thử cách 1: DELETE /roles/{id}
-        await api.delete(`/roles/${roleId}`);
-        console.log('✅ [RoleService] Role deleted successfully (method 1)');
-      } catch (firstError: any) {
-        console.log('⚠️ [RoleService] Method 1 failed, trying method 2...');
-        console.log('⚠️ [RoleService] Method 1 error:', firstError.response?.data);
-        
-        // Thử cách 2: DELETE /roles với ID trong body (nếu backend support)
-        await api.delete('/roles', { 
-          data: { id: parseInt(roleId) }
-        });
-        console.log('✅ [RoleService] Role deleted successfully (method 2)');
-      }
+      // Theo API documentation, sử dụng endpoint /roles/{id}
+      await api.delete(`/roles/${roleId}`);
+      console.log('✅ [RoleService] Role deleted successfully');
     } catch (error: any) {
       console.error('❌ [RoleService] Error deleting role:', error);
       console.error('❌ [RoleService] Error response:', error.response?.data);
