@@ -35,19 +35,25 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<FormData>();
 
   useEffect(() => {
+    console.log('🎯 [EditRoleModal] useEffect triggered, isOpen:', isOpen, 'role:', role);
+    
     if (isOpen && role) {
       loadModules();
       // Set form values
       setValue('name', role.name);
       setValue('description', role.description);
+      
+      console.log('🔧 [EditRoleModal] Role permissions to initialize:', role.permissions);
     }
   }, [isOpen, role, setValue]);
 
   const loadModules = async () => {
     try {
       setIsLoadingModules(true);
+      console.log('🔄 [EditRoleModal] Loading modules...');
       
       const modulesData = await ModuleService.getActiveModules();
+      console.log('✅ [EditRoleModal] Modules loaded:', modulesData);
       setModules(modulesData);
       
       // Auto-select first module
@@ -56,18 +62,30 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
       }
       
       // Initialize permission selections based on existing role permissions
-      const initialSelections: PermissionSelection = {};
-      modulesData.forEach(module => {
-        initialSelections[module.id] = {};
-        module.features.forEach(feature => {
-          // Check if this feature permission exists in role's permissions
-          initialSelections[module.id][feature.id] = role?.permissions.includes(feature.id) || false;
+      if (role) {
+        console.log('🔧 [EditRoleModal] Initializing permissions for role:', role.name);
+        console.log('🔧 [EditRoleModal] Role permissions (IDs):', role.permissions);
+        
+        const initialSelections: PermissionSelection = {};
+        modulesData.forEach(module => {
+          initialSelections[module.id] = {};
+          module.features.forEach(feature => {
+            // Check if this feature permission exists in role's permissions (array of IDs)
+            const isSelected = Array.isArray(role.permissions) && role.permissions.includes(feature.id);
+            initialSelections[module.id][feature.id] = isSelected;
+            
+            if (isSelected) {
+              console.log(`✅ [EditRoleModal] Feature ${feature.id} (${feature.name}) is selected for module ${module.name}`);
+            }
+          });
         });
-      });
-      setPermissionSelections(initialSelections);
+        
+        console.log('🔧 [EditRoleModal] Initial permission selections:', initialSelections);
+        setPermissionSelections(initialSelections);
+      }
       
     } catch (error) {
-      console.error('Error loading modules:', error);
+      console.error('❌ [EditRoleModal] Error loading modules:', error);
       toast({
         title: "Lỗi",
         description: "Không thể tải danh sách modules",
@@ -94,6 +112,8 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
         });
       });
 
+      console.log('🔧 [EditRoleModal] Submitting update with permissions:', permissions);
+
       const roleData: Partial<RoleCreationData> = {
         name: data.name,
         description: data.description,
@@ -101,6 +121,7 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
       };
       
       const updatedRole = await RoleService.updateRole(role.id, roleData);
+      console.log('✅ [EditRoleModal] Role updated successfully:', updatedRole);
       
       onRoleUpdated(updatedRole);
       
@@ -113,7 +134,7 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
       handleClose();
       
     } catch (error: any) {
-      console.error('Error updating role:', error);
+      console.error('❌ [EditRoleModal] Error updating role:', error);
       
       const errorMessage = error instanceof Error ? error.message : "Không thể cập nhật vai trò";
       
@@ -135,6 +156,8 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
   };
 
   const handlePermissionChange = (moduleId: string, featureId: number, selected: boolean) => {
+    console.log('🔧 [EditRoleModal] Permission change:', { moduleId, featureId, selected });
+    
     setPermissionSelections(prev => ({
       ...prev,
       [moduleId]: {
@@ -155,6 +178,13 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
   const selectedModule = modules.find(m => m.id === selectedModuleId) || null;
 
   if (!role) return null;
+
+  console.log('🎨 [EditRoleModal] Rendering with:', {
+    role: role.name,
+    modules: modules.length,
+    selectedPermissions: getSelectedPermissionsCount(),
+    isLoadingModules
+  });
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>

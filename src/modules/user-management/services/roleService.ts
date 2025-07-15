@@ -13,26 +13,86 @@ interface RoleApiResponse {
   updated_at: string;
 }
 
+// API Permission object từ backend
+interface ApiPermission {
+  id: number;
+  code: string;
+  name: string;
+  description: string;
+}
+
+// API Role response từ backend
+interface ApiRoleResponse {
+  id: number;
+  name: string;
+  description: string;
+  permissions: ApiPermission[]; // Array of permission objects
+  user_count?: number;
+  is_system?: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export class RoleService {
   static async getRoles(): Promise<CustomRole[]> {
     try {
       console.log('🔍 [RoleService] Fetching roles...');
-      const response = await api.get<{ data: any[] }>('/roles');
+      const response = await api.get<{ data: ApiRoleResponse[] }>('/roles');
       console.log('✅ [RoleService] Raw roles response:', response);
       
-      return response.data.map((role: any) => ({
-        id: role.id.toString(),
-        name: role.name,
-        description: role.description || '',
-        permissions: role.permissions || [],
-        userCount: role.user_count || 0,
-        isSystem: role.is_system || false,
-        created_at: role.created_at,
-        updated_at: role.updated_at
-      }));
+      return response.data.map((role: ApiRoleResponse) => {
+        // Parse permissions từ array of objects thành array of IDs
+        const permissionIds = role.permissions ? role.permissions.map(p => p.id) : [];
+        
+        console.log(`🔧 [RoleService] Role "${role.name}" permissions:`, {
+          original: role.permissions,
+          parsed: permissionIds
+        });
+        
+        return {
+          id: role.id.toString(),
+          name: role.name,
+          description: role.description || '',
+          permissions: permissionIds, // Array of permission IDs
+          userCount: role.user_count || 0,
+          isSystem: role.is_system || false,
+          created_at: role.created_at,
+          updated_at: role.updated_at
+        };
+      });
     } catch (error) {
       console.error('❌ [RoleService] Error fetching roles:', error);
       throw new Error('Không thể tải danh sách vai trò');
+    }
+  }
+
+  static async getRoleById(roleId: string): Promise<CustomRole> {
+    try {
+      console.log('🔍 [RoleService] Fetching role by ID:', roleId);
+      const response = await api.get<ApiRoleResponse>(`/roles/${roleId}`);
+      console.log('✅ [RoleService] Raw role response:', response);
+      
+      // Parse permissions từ array of objects thành array of IDs
+      const permissionIds = response.permissions ? response.permissions.map(p => p.id) : [];
+      
+      console.log(`🔧 [RoleService] Role "${response.name}" permissions:`, {
+        original: response.permissions,
+        parsed: permissionIds
+      });
+      
+      return {
+        id: response.id.toString(),
+        name: response.name,
+        description: response.description || '',
+        permissions: permissionIds, // Array of permission IDs
+        userCount: response.user_count || 0,
+        isSystem: response.is_system || false,
+        created_at: response.created_at,
+        updated_at: response.updated_at
+      };
+    } catch (error) {
+      console.error('❌ [RoleService] Error fetching role by ID:', error);
+      throw new Error('Không thể tải thông tin vai trò');
     }
   }
 
