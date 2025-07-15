@@ -6,7 +6,6 @@ export interface UserManagementCounts {
   departments: number;
   roles: number;
   groups: number;
-  invitations: number;
 }
 
 export class DashboardService {
@@ -22,22 +21,16 @@ export class DashboardService {
       const membersResponse = await api.get<{ data: any[] }>('/members');
       const membersCount = membersResponse.data?.length || 0;
       
-      // Fetch invitations count from API
-      const invitationsResponse = await api.get<{ data: any[] }>('/invitations?perPage=1000');
-      const invitationsCount = invitationsResponse.data?.length || 0;
-      
       console.log('✅ [DashboardService] Counts:', { 
         members: membersCount, 
-        roles: rolesCount,
-        invitations: invitationsCount
+        roles: rolesCount 
       });
       
       return {
         members: membersCount,
         departments: 0, // TODO: Implement when departments API is ready
         roles: rolesCount,
-        groups: 0, // TODO: Implement when groups API is ready
-        invitations: invitationsCount
+        groups: 0 // TODO: Implement when groups API is ready
       };
     } catch (error) {
       console.error('❌ [DashboardService] Error fetching counts:', error);
@@ -47,8 +40,7 @@ export class DashboardService {
         members: 0,
         departments: 0,
         roles: 0,
-        groups: 0,
-        invitations: 0
+        groups: 0
       };
     }
   }

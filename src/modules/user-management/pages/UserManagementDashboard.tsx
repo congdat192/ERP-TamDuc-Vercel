@@ -8,7 +8,7 @@ import { DashboardService, UserManagementCounts } from '../services/dashboardSer
 
 export function UserManagementDashboard() {
   const navigate = useNavigate();
-  const [counts, setCounts] = useState<UserManagementCounts>({
+  const [counts, setCounts] = useState<UserManagementCounts & { invitations: number }>({
     members: 0,
     departments: 0,
     roles: 0,
@@ -25,7 +25,11 @@ export function UserManagementDashboard() {
     try {
       setIsLoading(true);
       const countsData = await DashboardService.getCounts();
-      setCounts(countsData);
+      // Add mock invitation count - replace with actual API call
+      setCounts({
+        ...countsData,
+        invitations: 5 // Mock data
+      });
     } catch (error) {
       console.error('Error loading counts:', error);
     } finally {
