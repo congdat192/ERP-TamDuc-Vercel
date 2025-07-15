@@ -1,297 +1,154 @@
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { Business, BusinessContextType, CreateBusinessRequest, UpdateBusinessRequest } from '@/types/business';
-import { getBusinesses, createBusiness as createBusinessAPI, getBusiness, updateBusiness as updateBusinessAPI } from '@/services/businessService';
-import { setSelectedBusinessId, clearSelectedBusinessId, getSelectedBusinessId } from '@/services/apiService';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { Business } from '../types/business';
+import { businessService } from '../services/businessService';
+import { getSelectedBusinessId, setSelectedBusinessId } from '../services/apiService';
 import { useToast } from '@/hooks/use-toast';
+
+interface BusinessContextType {
+  currentBusiness: Business | null;
+  businesses: Business[];
+  isLoading: boolean;
+  error: string | null;
+  setCurrentBusiness: (business: Business) => void;
+  refreshBusinesses: () => Promise<void>;
+  clearCurrentBusiness: () => void;
+}
 
 const BusinessContext = createContext<BusinessContextType | undefined>(undefined);
 
 export const useBusiness = () => {
   const context = useContext(BusinessContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useBusiness must be used within a BusinessProvider');
   }
   return context;
 };
 
-// Storage keys - Updated to use 'cbi' for business ID
-const STORAGE_KEYS = {
-  CURRENT_BUSINESS: 'erp_current_business',
-  BUSINESSES_LIST: 'erp_businesses_list',
-};
-
-// Utility functions for localStorage
-const saveToStorage = (key: string, value: any) => {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-    console.log('💾 [BusinessContext] Saved to storage:', key);
-  } catch (error) {
-    console.warn('❌ [BusinessContext] Failed to save to localStorage:', error);
-  }
-};
-
-const loadFromStorage = (key: string) => {
-  try {
-    const item = localStorage.getItem(key);
-    const result = item ? JSON.parse(item) : null;
-    console.log('📁 [BusinessContext] Loaded from storage:', key, result ? 'Data found' : 'No data');
-    return result;
-  } catch (error) {
-    console.warn('❌ [BusinessContext] Failed to load from localStorage:', error);
-    return null;
-  }
-};
-
-const removeFromStorage = (key: string) => {
-  try {
-    localStorage.removeItem(key);
-    console.log('🗑️ [BusinessContext] Removed from storage:', key);
-  } catch (error) {
-    console.warn('❌ [BusinessContext] Failed to remove from localStorage:', error);
-  }
-};
-
-// Check if business context is valid
-const isBusinessContextValid = (): boolean => {
-  const businessId = getSelectedBusinessId();
-  const currentBusiness = loadFromStorage(STORAGE_KEYS.CURRENT_BUSINESS);
-  
-  if (!businessId || !currentBusiness) {
-    console.log('⚠️ [BusinessContext] Invalid business context - missing cbi or current business');
-    return false;
-  }
-  
-  if (currentBusiness.id.toString() !== businessId) {
-    console.log('⚠️ [BusinessContext] Business context mismatch - cbi vs current business');
-    return false;
-  }
-  
-  return true;
-};
-
-// Clear all business data
-const clearAllBusinessData = () => {
-  console.log('🧹 [BusinessContext] Clearing all business data');
-  clearSelectedBusinessId();
-  removeFromStorage(STORAGE_KEYS.CURRENT_BUSINESS);
-  removeFromStorage(STORAGE_KEYS.BUSINESSES_LIST);
-};
-
-// Redirect to business selection
-const redirectToBusinessSelection = () => {
-  console.log('🔄 [BusinessContext] Redirecting to business selection');
-  window.location.href = '/business-selection';
-};
-
 export const BusinessProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [currentBusiness, setCurrentBusinessState] = useState<Business | null>(null);
   const [businesses, setBusinesses] = useState<Business[]>([]);
-  const [currentBusiness, setCurrentBusiness] = useState<Business | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isFetching, setIsFetching] = useState(false); // Add fetching state to prevent multiple calls
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Calculate if user has own business
-  const hasOwnBusiness = businesses.some(business => business.is_owner);
-
-  // Initialize business context cleanup function for API service
-  useEffect(() => {
-    window.clearBusinessContext = clearBusinessData;
-    return () => {
-      delete window.clearBusinessContext;
-    };
-  }, []);
-
-  // Load businesses from storage on mount and validate business context
-  useEffect(() => {
-    console.log('🚀 [BusinessContext] Initializing...');
-    
-    // Check if business context is valid
-    if (!isBusinessContextValid()) {
-      console.log('⚠️ [BusinessContext] Invalid business context detected, clearing and redirecting');
-      clearAllBusinessData();
-      // Don't redirect immediately, let the route handler decide
-      return;
-    }
-    
-    const storedBusinesses = loadFromStorage(STORAGE_KEYS.BUSINESSES_LIST);
-    const storedCurrentBusiness = loadFromStorage(STORAGE_KEYS.CURRENT_BUSINESS);
-    
-    if (storedBusinesses) {
-      setBusinesses(storedBusinesses);
-    }
-    
-    if (storedCurrentBusiness) {
-      setCurrentBusiness(storedCurrentBusiness);
-      console.log('✅ [BusinessContext] Restored valid business context:', storedCurrentBusiness.name);
-    }
-  }, []);
-
-  const fetchBusinesses = useCallback(async () => {
-    // Prevent multiple simultaneous calls
-    if (isFetching) {
-      console.log('⚠️ [BusinessContext] Already fetching businesses, skipping...');
-      return;
-    }
-
-    setIsFetching(true);
-    setIsLoading(true);
-    
+  // FIX: Improve business context recovery từ localStorage
+  const initializeBusinessContext = async () => {
     try {
-      console.log('🔄 [BusinessContext] Fetching businesses...');
-      const businessList = await getBusinesses();
-      setBusinesses(businessList);
-      saveToStorage(STORAGE_KEYS.BUSINESSES_LIST, businessList);
+      setIsLoading(true);
+      setError(null);
       
-      console.log('✅ [BusinessContext] Fetched businesses:', businessList.length);
-    } catch (error) {
-      console.error('❌ [BusinessContext] Failed to fetch businesses:', error);
+      console.log('🏢 [BusinessProvider] Initializing business context...');
       
-      toast({
-        title: "Lỗi",
-        description: error instanceof Error ? error.message : "Không thể tải danh sách doanh nghiệp",
-        variant: "destructive",
-      });
-      throw error;
-    } finally {
-      setIsLoading(false);
-      setIsFetching(false);
-    }
-  }, [toast, isFetching]);
-
-  const createBusiness = useCallback(async (data: CreateBusinessRequest): Promise<Business> => {
-    console.log('🏗️ [BusinessContext] Creating business:', data.name);
-    
-    setIsLoading(true);
-    try {
-      console.log('🔄 [BusinessContext] Calling createBusinessAPI...');
-      const newBusiness = await createBusinessAPI(data);
+      // Load all businesses first
+      const businessesData = await businessService.getBusinesses();
+      console.log('✅ [BusinessProvider] Businesses loaded:', businessesData);
+      setBusinesses(businessesData);
       
-      // Update businesses list
-      const updatedBusinesses = [...businesses, newBusiness];
-      setBusinesses(updatedBusinesses);
-      saveToStorage(STORAGE_KEYS.BUSINESSES_LIST, updatedBusinesses);
+      // Try to recover selected business từ localStorage
+      const storedBusinessId = getSelectedBusinessId();
+      console.log('🔄 [BusinessProvider] Stored business ID:', storedBusinessId);
       
-      toast({
-        title: "Thành công",
-        description: "Tạo doanh nghiệp thành công!",
-      });
-      
-      console.log('✅ [BusinessContext] Created business:', newBusiness.name);
-      return newBusiness;
-    } catch (error) {
-      console.error('❌ [BusinessContext] Failed to create business:', error);
-      const errorMessage = error instanceof Error ? error.message : "Tạo doanh nghiệp thất bại";
-      toast({
-        title: "Lỗi",
-        description: errorMessage,
-        variant: "destructive",
-      });
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [businesses, toast]);
-
-  const selectBusiness = useCallback(async (businessId: number) => {
-    setIsLoading(true);
-    try {
-      const business = await getBusiness(businessId);
-      setCurrentBusiness(business);
-      saveToStorage(STORAGE_KEYS.CURRENT_BUSINESS, business);
-      
-      // Update cbi storage
-      setSelectedBusinessId(business.id.toString());
-      
-      console.log('✅ [BusinessContext] Selected business:', business.name);
-    } catch (error) {
-      console.error('❌ [BusinessContext] Failed to select business:', error);
-      toast({
-        title: "Lỗi",
-        description: error instanceof Error ? error.message : "Không thể chọn doanh nghiệp",
-        variant: "destructive",
-      });
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
-
-  const updateBusiness = useCallback(async (businessId: number, data: UpdateBusinessRequest): Promise<Business> => {
-    setIsLoading(true);
-    try {
-      const updatedBusiness = await updateBusinessAPI(businessId, data);
-      
-      // Update businesses list
-      const updatedBusinesses = businesses.map(business => 
-        business.id === businessId ? updatedBusiness : business
-      );
-      setBusinesses(updatedBusinesses);
-      saveToStorage(STORAGE_KEYS.BUSINESSES_LIST, updatedBusinesses);
-      
-      // Update current business if it's the one being updated
-      if (currentBusiness?.id === businessId) {
-        setCurrentBusiness(updatedBusiness);
-        saveToStorage(STORAGE_KEYS.CURRENT_BUSINESS, updatedBusiness);
+      if (storedBusinessId && businessesData.length > 0) {
+        // Find business by stored ID
+        const selectedBusiness = businessesData.find(
+          business => business.id.toString() === storedBusinessId
+        );
+        
+        if (selectedBusiness) {
+          console.log('✅ [BusinessProvider] Recovered business from storage:', selectedBusiness.name);
+          setCurrentBusinessState(selectedBusiness);
+        } else {
+          console.log('⚠️ [BusinessProvider] Stored business not found, clearing storage');
+          // Clear invalid business ID
+          localStorage.removeItem('selectedBusinessId');
+          setCurrentBusinessState(null);
+        }
+      } else {
+        console.log('⚠️ [BusinessProvider] No valid stored business found');
+        setCurrentBusinessState(null);
       }
       
-      toast({
-        title: "Thành công",
-        description: "Cập nhật doanh nghiệp thành công!",
-      });
+    } catch (error: any) {
+      console.error('❌ [BusinessProvider] Error initializing business context:', error);
+      setError(error.message || 'Không thể tải thông tin doanh nghiệp');
       
-      console.log('✅ [BusinessContext] Updated business:', updatedBusiness.name);
-      return updatedBusiness;
-    } catch (error) {
-      console.error('❌ [BusinessContext] Failed to update business:', error);
+      // Clear invalid storage data on error
+      localStorage.removeItem('selectedBusinessId');
+      setCurrentBusinessState(null);
+      
       toast({
         title: "Lỗi",
-        description: error instanceof Error ? error.message : "Cập nhật doanh nghiệp thất bại",
-        variant: "destructive",
+        description: "Không thể tải thông tin doanh nghiệp",
+        variant: "destructive"
       });
-      throw error;
     } finally {
       setIsLoading(false);
     }
-  }, [businesses, currentBusiness, toast]);
+  };
 
-  const refreshCurrentBusiness = useCallback(async () => {
-    if (!currentBusiness) return;
-    
-    try {
-      const refreshedBusiness = await getBusiness(currentBusiness.id);
-      setCurrentBusiness(refreshedBusiness);
-      saveToStorage(STORAGE_KEYS.CURRENT_BUSINESS, refreshedBusiness);
-      
-      console.log('✅ [BusinessContext] Refreshed current business:', refreshedBusiness.name);
-    } catch (error) {
-      console.error('❌ [BusinessContext] Failed to refresh current business:', error);
-    }
-  }, [currentBusiness]);
-
-  // Clear business data when logout or error
-  const clearBusinessData = useCallback(() => {
-    console.log('🧹 [BusinessContext] Clearing business data');
-    setBusinesses([]);
-    setCurrentBusiness(null);
-    clearAllBusinessData();
+  useEffect(() => {
+    initializeBusinessContext();
   }, []);
 
+  const setCurrentBusiness = (business: Business) => {
+    console.log('🏢 [BusinessProvider] Setting current business:', business.name);
+    setCurrentBusinessState(business);
+    setSelectedBusinessId(business.id.toString());
+  };
+
+  const refreshBusinesses = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      console.log('🔄 [BusinessProvider] Refreshing businesses...');
+      const businessesData = await businessService.getBusinesses();
+      console.log('✅ [BusinessProvider] Businesses refreshed:', businessesData);
+      setBusinesses(businessesData);
+      
+      // Verify current business still exists
+      if (currentBusiness) {
+        const stillExists = businessesData.find(b => b.id === currentBusiness.id);
+        if (!stillExists) {
+          console.log('⚠️ [BusinessProvider] Current business no longer exists, clearing');
+          setCurrentBusinessState(null);
+          localStorage.removeItem('selectedBusinessId');
+        }
+      }
+      
+    } catch (error: any) {
+      console.error('❌ [BusinessProvider] Error refreshing businesses:', error);
+      setError(error.message || 'Không thể tải lại danh sách doanh nghiệp');
+      
+      toast({
+        title: "Lỗi",
+        description: "Không thể tải lại danh sách doanh nghiệp",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const clearCurrentBusiness = () => {
+    console.log('🏢 [BusinessProvider] Clearing current business');
+    setCurrentBusinessState(null);
+    localStorage.removeItem('selectedBusinessId');
+  };
+
+  const value: BusinessContextType = {
+    currentBusiness,
+    businesses,
+    isLoading,
+    error,
+    setCurrentBusiness,
+    refreshBusinesses,
+    clearCurrentBusiness
+  };
+
   return (
-    <BusinessContext.Provider
-      value={{
-        businesses,
-        currentBusiness,
-        isLoading,
-        hasOwnBusiness,
-        fetchBusinesses,
-        createBusiness,
-        selectBusiness,
-        updateBusiness,
-        refreshCurrentBusiness,
-        clearBusinessData,
-      }}
-    >
+    <BusinessContext.Provider value={value}>
       {children}
     </BusinessContext.Provider>
   );

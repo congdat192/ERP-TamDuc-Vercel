@@ -207,7 +207,7 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
     }));
   };
 
-  // Safe module selection handler - không reset permissions
+  // FIX: Safe module selection handler với preventDefault để tránh form submit
   const handleModuleSelect = (moduleId: string) => {
     console.log('🔄 [EditRoleModal] Module selected:', moduleId);
     setSelectedModuleId(moduleId);

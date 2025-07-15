@@ -26,6 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 export function RolesTab() {
   const [roles, setRoles] = useState<CustomRole[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isReloading, setIsReloading] = useState(false);
   const [filters, setFilters] = useState<RoleFilters>({});
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -41,10 +42,12 @@ export function RolesTab() {
   const loadRoles = async () => {
     try {
       setIsLoading(true);
+      console.log('🔄 [RolesTab] Loading roles...');
       const rolesData = await RoleService.getRoles();
+      console.log('✅ [RolesTab] Roles loaded:', rolesData);
       setRoles(rolesData);
     } catch (error) {
-      console.error('Error loading roles:', error);
+      console.error('❌ [RolesTab] Error loading roles:', error);
       toast({
         title: "Lỗi",
         description: "Không thể tải danh sách vai trò",
@@ -55,9 +58,34 @@ export function RolesTab() {
     }
   };
 
+  // FIX: Reload trang để có trải nghiệm tốt hơn
+  const reloadRoles = async () => {
+    try {
+      setIsReloading(true);
+      console.log('🔄 [RolesTab] Reloading roles after update...');
+      const rolesData = await RoleService.getRoles();
+      console.log('✅ [RolesTab] Roles reloaded:', rolesData);
+      setRoles(rolesData);
+    } catch (error) {
+      console.error('❌ [RolesTab] Error reloading roles:', error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể tải lại danh sách vai trò",
+        variant: "destructive"
+      });
+    } finally {
+      setIsReloading(false);
+    }
+  };
+
   const handleCreateRole = async (newRole: CustomRole) => {
+    // Thêm role mới vào state local trước
     setRoles(prev => [...prev, newRole]);
     setIsCreateModalOpen(false);
+    
+    // Reload để đảm bảo data consistency
+    await reloadRoles();
+    
     toast({
       title: "Thành công",
       description: "Tạo vai trò mới thành công"
@@ -69,12 +97,22 @@ export function RolesTab() {
     setIsEditModalOpen(true);
   };
 
-  const handleRoleUpdated = (updatedRole: CustomRole) => {
+  // FIX: Reload trang sau khi update thành công
+  const handleRoleUpdated = async (updatedRole: CustomRole) => {
+    console.log('✅ [RolesTab] Role updated, reloading page...');
+    
+    // Update local state trước
     setRoles(prev => prev.map(role => 
       role.id === updatedRole.id ? updatedRole : role
     ));
+    
+    // Đóng modal
     setIsEditModalOpen(false);
     setSelectedRole(null);
+    
+    // Reload trang để có data mới nhất
+    await reloadRoles();
+    
     toast({
       title: "Thành công",
       description: "Cập nhật vai trò thành công"
@@ -90,14 +128,21 @@ export function RolesTab() {
 
     try {
       setIsDeleting(true);
+      console.log('🗑️ [RolesTab] Deleting role:', roleToDelete.id);
       await RoleService.deleteRole(roleToDelete.id);
+      
+      // Remove from local state
       setRoles(prev => prev.filter(role => role.id !== roleToDelete.id));
+      
+      // Reload để đảm bảo consistency
+      await reloadRoles();
+      
       toast({
         title: "Thành công", 
         description: "Xóa vai trò thành công"
       });
     } catch (error: any) {
-      console.error('Error deleting role:', error);
+      console.error('❌ [RolesTab] Error deleting role:', error);
       toast({
         title: "Lỗi",
         description: error.message || "Không thể xóa vai trò",
@@ -150,8 +195,9 @@ export function RolesTab() {
             <CardTitle className="flex items-center space-x-2">
               <Shield className="w-5 h-5" />
               <span>Quản Lý Vai Trò</span>
+              {isReloading && <span className="text-sm text-gray-500">(Đang cập nhật...)</span>}
             </CardTitle>
-            <Button onClick={() => setIsCreateModalOpen(true)}>
+            <Button onClick={() => setIsCreateModalOpen(true)} disabled={isReloading}>
               <Plus className="w-4 h-4 mr-2" />
               Tạo Vai Trò Mới
             </Button>
@@ -167,6 +213,7 @@ export function RolesTab() {
                 value={filters.search || ''}
                 onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
                 className="pl-10"
+                disabled={isReloading}
               />
             </div>
           </div>
@@ -193,7 +240,7 @@ export function RolesTab() {
                 </TableHeader>
                 <TableBody>
                   {filteredRoles.map((role) => (
-                    <TableRow key={role.id}>
+                    <TableRow key={role.id} className={isReloading ? 'opacity-50' : ''}>
                       <TableCell className="font-medium">{role.name}</TableCell>
                       <TableCell className="text-gray-600">{role.description}</TableCell>
                       <TableCell>
@@ -218,6 +265,7 @@ export function RolesTab() {
                             variant="ghost" 
                             size="sm"
                             onClick={() => handleEditRole(role)}
+                            disabled={isReloading}
                           >
                             <Edit className="w-4 h-4" />
                           </Button>
@@ -227,6 +275,7 @@ export function RolesTab() {
                               size="sm"
                               onClick={() => handleDeleteRole(role)}
                               className="text-red-600 hover:text-red-700"
+                              disabled={isReloading}
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>

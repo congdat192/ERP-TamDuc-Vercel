@@ -1,22 +1,22 @@
 
 import React from 'react';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ModuleInfo, PermissionSelection } from '../../types/role-management';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-import { ModuleInfo } from '../../types/role-management';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface CreateRoleModuleSidebarProps {
   modules: ModuleInfo[];
   selectedModuleId: string | null;
   onModuleSelect: (moduleId: string) => void;
-  permissionSelections: Record<string, Record<number, boolean>>;
+  permissionSelections: PermissionSelection;
 }
 
-export function CreateRoleModuleSidebar({ 
-  modules, 
-  selectedModuleId, 
+export function CreateRoleModuleSidebar({
+  modules,
+  selectedModuleId,
   onModuleSelect,
-  permissionSelections 
+  permissionSelections
 }: CreateRoleModuleSidebarProps) {
   
   const getSelectedPermissionsCount = (moduleId: string) => {
@@ -24,51 +24,58 @@ export function CreateRoleModuleSidebar({
     return Object.values(moduleSelections).filter(Boolean).length;
   };
 
-  const getTotalPermissionsCount = (moduleId: string) => {
-    const module = modules.find(m => m.id === moduleId);
-    return module?.features.length || 0;
+  // FIX: Prevent form submission khi click module
+  const handleModuleClick = (moduleId: string, event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    console.log('📋 [CreateRoleModuleSidebar] Module clicked:', moduleId);
+    onModuleSelect(moduleId);
   };
 
   return (
-    <div className="w-64 border-r bg-gray-50">
+    <div className="w-64 bg-gray-50 border-r">
       <div className="p-4 border-b">
-        <h3 className="font-medium text-gray-900">Modules</h3>
-        <p className="text-sm text-gray-500">Chọn module để cấu hình quyền</p>
+        <h3 className="font-semibold text-gray-900">Modules</h3>
+        <p className="text-sm text-gray-600 mt-1">Chọn module để cấu hình quyền</p>
       </div>
       
-      <ScrollArea className="h-96">
+      <ScrollArea className="flex-1 h-[400px]">
         <div className="p-2">
           {modules.map((module) => {
             const selectedCount = getSelectedPermissionsCount(module.id);
-            const totalCount = getTotalPermissionsCount(module.id);
             const isSelected = selectedModuleId === module.id;
             
             return (
-              <button
+              <Button
                 key={module.id}
-                onClick={() => onModuleSelect(module.id)}
-                className={cn(
-                  "w-full text-left p-3 rounded-lg mb-2 transition-colors",
-                  "hover:bg-white hover:shadow-sm",
-                  isSelected && "bg-blue-50 border border-blue-200"
-                )}
+                type="button"
+                variant={isSelected ? "default" : "ghost"}
+                className={`w-full justify-start mb-1 h-auto p-3 ${
+                  isSelected ? 'bg-blue-600 text-white' : 'hover:bg-gray-100'
+                }`}
+                onClick={(e) => handleModuleClick(module.id, e)}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="font-medium text-gray-900">{module.name}</div>
-                    <div className="text-sm text-gray-500 mt-1">{module.description}</div>
+                <div className="flex items-center justify-between w-full">
+                  <div className="text-left">
+                    <div className="font-medium">{module.name}</div>
+                    <div className={`text-xs ${
+                      isSelected ? 'text-blue-100' : 'text-gray-500'
+                    }`}>
+                      {module.features.length} quyền
+                    </div>
                   </div>
-                  
-                  <div className="ml-3 flex flex-col items-end">
+                  {selectedCount > 0 && (
                     <Badge 
-                      variant={selectedCount > 0 ? "default" : "secondary"}
-                      className="text-xs"
+                      variant={isSelected ? "secondary" : "default"}
+                      className={`ml-2 ${
+                        isSelected ? 'bg-blue-500 text-white' : 'bg-green-100 text-green-800'
+                      }`}
                     >
-                      {selectedCount}/{totalCount}
+                      {selectedCount}
                     </Badge>
-                  </div>
+                  )}
                 </div>
-              </button>
+              </Button>
             );
           })}
         </div>
