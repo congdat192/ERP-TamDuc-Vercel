@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { CreateInvitationRequest } from '../../types/invitation';
 import { RoleService } from '../../services/roleService';
-import { Role } from '../../types/role-management';
+import { CustomRole } from '../../types/role-management';
 
 interface CreateInvitationModalProps {
   isOpen: boolean;
@@ -19,7 +19,7 @@ interface CreateInvitationModalProps {
 export function CreateInvitationModal({ isOpen, onClose, onInvitationSent }: CreateInvitationModalProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [roles, setRoles] = useState<Role[]>([]);
+  const [roles, setRoles] = useState<CustomRole[]>([]);
   const [formData, setFormData] = useState<CreateInvitationRequest>({
     email: '',
     name: '',

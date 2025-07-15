@@ -4,11 +4,11 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
-import { InvitationFilters } from '../../types/invitation';
+import type { InvitationFilters as IInvitationFilters } from '../../types/invitation';
 
 interface InvitationFiltersProps {
-  filters: InvitationFilters;
-  onFiltersChange: (filters: InvitationFilters) => void;
+  filters: IInvitationFilters;
+  onFiltersChange: (filters: IInvitationFilters) => void;
 }
 
 export function InvitationFilters({ filters, onFiltersChange }: InvitationFiltersProps) {
