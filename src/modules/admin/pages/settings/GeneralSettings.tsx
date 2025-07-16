@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Building2, Save, Globe } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useBusinessContext } from '@/contexts/BusinessContext';
+import { useBusiness } from '@/contexts/BusinessContext';
 import { updateBusiness, uploadBusinessLogo } from '@/services/businessService';
 import { BusinessLogoUpload } from '@/components/ui/business-logo-upload';
 import { LoadingSpinner } from '@/components/ui/loading';
@@ -24,7 +23,7 @@ interface FormData {
 
 export function GeneralSettings() {
   const { toast } = useToast();
-  const { currentBusiness, refreshCurrentBusiness } = useBusinessContext();
+  const { currentBusiness, refreshCurrentBusiness } = useBusiness();
   const [isLoading, setIsLoading] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [selectedLogoFile, setSelectedLogoFile] = useState<File | null>(null);
