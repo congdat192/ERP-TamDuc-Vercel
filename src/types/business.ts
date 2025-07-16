@@ -8,6 +8,12 @@ export interface Business {
   is_owner: boolean;
   created_at: string;
   updated_at: string;
+  logo_path?: string | null;
+  address?: string | null;
+  phone_number?: string | null;
+  email_address?: string | null;
+  website_url?: string | null;
+  tax_number?: string | null;
 }
 
 export interface BusinessListResponse {
@@ -16,12 +22,24 @@ export interface BusinessListResponse {
 
 export interface CreateBusinessRequest {
   name: string;
-  description: string;
+  description?: string;
+  logo_path?: string;
+  address?: string;
+  phone_number?: string;
+  email_address?: string;
+  website_url?: string;
+  tax_number?: string;
 }
 
 export interface UpdateBusinessRequest {
   name: string;
-  description: string;
+  description?: string;
+  logo_path?: string;
+  address?: string;
+  phone_number?: string;
+  email_address?: string;
+  website_url?: string;
+  tax_number?: string;
 }
 
 export interface BusinessContextType {
@@ -33,7 +51,7 @@ export interface BusinessContextType {
   setCurrentBusiness: (business: Business) => void;
   fetchBusinesses: () => Promise<void>;
   selectBusiness: (businessId: number) => Promise<void>;
-  createBusiness: (data: { name: string; description?: string }) => Promise<Business>;
+  createBusiness: (data: CreateBusinessRequest) => Promise<Business>;
   updateBusiness: (businessId: number, data: UpdateBusinessRequest) => Promise<Business>;
   refreshBusinesses: () => Promise<void>;
   refreshCurrentBusiness: () => Promise<void>;

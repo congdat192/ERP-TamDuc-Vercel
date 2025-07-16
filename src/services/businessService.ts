@@ -45,7 +45,7 @@ export const getBusiness = async (businessId: number): Promise<Business> => {
 
 // Update business
 export const updateBusiness = async (businessId: number, data: UpdateBusinessRequest): Promise<Business> => {
-  console.log('📝 [businessService] Updating business ID:', businessId);
+  console.log('📝 [businessService] Updating business ID:', businessId, 'with data:', data);
   
   const business = await api.put<Business>(`/businesses/${businessId}`, data);
   
@@ -54,4 +54,27 @@ export const updateBusiness = async (businessId: number, data: UpdateBusinessReq
     ...business,
     is_owner: business.user_role === 'owner'
   };
+};
+
+// Upload business logo
+export const uploadBusinessLogo = async (businessId: number, file: File): Promise<{ logo_path: string }> => {
+  console.log('📷 [businessService] Uploading logo for business ID:', businessId);
+  
+  const formData = new FormData();
+  formData.append('image', file);
+  
+  const response = await api.post<{ logo_path: string }>('/images', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  
+  console.log('✅ [businessService] Logo uploaded successfully:', response.logo_path);
+  return response;
+};
+
+// Get business logo URL
+export const getBusinessLogoUrl = (logoPath: string | null | undefined): string | null => {
+  if (!logoPath) return null;
+  return `https://matkinhtamducxyz.sgp1.digitaloceanspaces.com/${logoPath}`;
 };
