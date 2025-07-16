@@ -1,4 +1,3 @@
-
 // Authentication service for API calls
 import { User, getAvatarUrl } from '@/types/auth';
 import { api } from './apiService';
@@ -446,11 +445,11 @@ export const resendVerificationEmail = async (email: string): Promise<ResendVeri
   });
 };
 
-// Email Verification API
-export const verifyEmail = async (id: string, hash: string): Promise<void> => {
-  console.log('📧 [authService] Verifying email for ID:', id);
+// Email Verification API - UPDATED to use new POST endpoint
+export const verifyEmail = async (email: string, hash: string): Promise<void> => {
+  console.log('📧 [authService] Verifying email using new POST API:', email);
   
-  return api.get(`/email/verify/${id}/${hash}`, { 
+  return api.post('/email/verify', { email, hash }, { 
     requiresAuth: false,
     requiresBusinessId: false 
   });

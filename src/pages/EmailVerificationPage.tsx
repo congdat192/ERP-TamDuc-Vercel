@@ -31,28 +31,28 @@ export function EmailVerificationPage() {
         return;
       }
 
+      // Extract email from URL parameters
       // Handle both URL formats:
-      // 1. /email/verify/:id/:hash (standard API format)
+      // 1. /email/verify/:id/:hash (standard API format - use id as email)
       // 2. /xac-nhan-tai-khoan/:email/:hash (email URL format)
-      let verificationId = id;
+      let verificationEmail = email;
       
-      if (!verificationId && email) {
-        // If we have email instead of id, we need to decode the email
-        console.log('🔄 [EmailVerification] Using email format, email:', email);
-        // For email format, we'll use the email as the ID since the API might expect it
-        verificationId = decodeURIComponent(email);
+      if (!verificationEmail && id) {
+        // If we have id instead of email, decode it as email
+        console.log('🔄 [EmailVerification] Using id as email:', id);
+        verificationEmail = decodeURIComponent(id);
       }
 
-      if (!verificationId) {
-        console.error('❌ [EmailVerification] Missing verification ID/email');
-        setError('Link xác thực không hợp lệ - thiếu thông tin định danh');
+      if (!verificationEmail) {
+        console.error('❌ [EmailVerification] Missing email parameter');
+        setError('Link xác thực không hợp lệ - thiếu thông tin email');
         setIsVerifying(false);
         return;
       }
 
       try {
-        console.log('📧 [EmailVerification] Calling verifyEmail API with:', { verificationId, hash });
-        await verifyEmail(verificationId, hash);
+        console.log('📧 [EmailVerification] Calling verifyEmail API with:', { verificationEmail, hash });
+        await verifyEmail(verificationEmail, hash);
         console.log('✅ [EmailVerification] Verification successful');
         setIsVerified(true);
         toast({
