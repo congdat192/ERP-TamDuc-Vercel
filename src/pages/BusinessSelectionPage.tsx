@@ -4,52 +4,36 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Building2, Plus, Crown, Users, ArrowRight, Loader2 } from 'lucide-react';
+import { Building2, Plus, Crown, Users, ArrowRight, Loader2, RefreshCw } from 'lucide-react';
 import { useBusiness } from '@/contexts/BusinessContext';
 import { useAuth } from '@/components/auth/AuthContext';
 import { Business } from '@/types/business';
 import { useToast } from '@/hooks/use-toast';
 
 export function BusinessSelectionPage() {
-  const { businesses, hasOwnBusiness, fetchBusinesses, selectBusiness, isLoading } = useBusiness();
+  const { businesses, hasOwnBusiness, selectBusiness, isLoading, error, refreshBusinesses } = useBusiness();
   const { currentUser, isAuthenticated, logout } = useAuth();
-  const [isInitializing, setIsInitializing] = useState(true);
   const [selectedBusinessId, setSelectedBusinessId] = useState<number | null>(null);
   const [isSelecting, setIsSelecting] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Check authentication and fetch businesses on mount
+  // Check authentication on mount - don't fetch businesses (BusinessContext handles this)
   useEffect(() => {
-    const initializePage = async () => {
-      console.log('🚀 [BusinessSelectionPage] Initializing...');
-      
-      if (!isAuthenticated || !currentUser) {
-        console.log('❌ [BusinessSelectionPage] User not authenticated, redirecting to login');
-        navigate('/login');
-        return;
-      }
+    console.log('🚀 [BusinessSelectionPage] Initializing...');
+    
+    if (!isAuthenticated || !currentUser) {
+      console.log('❌ [BusinessSelectionPage] User not authenticated, redirecting to login');
+      navigate('/login');
+      return;
+    }
 
-      try {
-        console.log('🔄 [BusinessSelectionPage] Fetching businesses...');
-        await fetchBusinesses();
-      } catch (error) {
-        console.error('❌ [BusinessSelectionPage] Failed to fetch businesses:', error);
-        toast({
-          title: "Lỗi",
-          description: "Không thể tải danh sách doanh nghiệp",
-          variant: "destructive",
-        });
-      } finally {
-        setIsInitializing(false);
-      }
-    };
-
-    initializePage();
-  }, [isAuthenticated, currentUser, navigate, fetchBusinesses, toast]);
+    console.log('✅ [BusinessSelectionPage] User authenticated, waiting for BusinessContext to load businesses');
+  }, [isAuthenticated, currentUser, navigate]);
 
   const handleBusinessSelect = async (business: Business) => {
-    if (selectedBusinessId === business.id || isSelecting) return;
+    if (selectedBusinessId === business.id || isSelecting || isLoading) return;
     
     setSelectedBusinessId(business.id);
     setIsSelecting(true);
@@ -83,7 +67,6 @@ export function BusinessSelectionPage() {
 
   const handleCreateBusiness = () => {
     if (hasOwnBusiness) {
-      // User already has a business, show limitation message
       toast({
         title: "Thông báo",
         description: "Bạn đã có doanh nghiệp riêng. Mỗi tài khoản chỉ được tạo tối đa 1 doanh nghiệp.",
@@ -92,6 +75,30 @@ export function BusinessSelectionPage() {
       return;
     }
     navigate('/create-business');
+  };
+
+  const handleRefresh = async () => {
+    if (isRefreshing || isLoading) return;
+    
+    setIsRefreshing(true);
+    try {
+      console.log('🔄 [BusinessSelectionPage] Manually refreshing businesses');
+      await refreshBusinesses();
+      toast({
+        title: "Thành công",
+        description: "Đã làm mới danh sách doanh nghiệp",
+        variant: "default",
+      });
+    } catch (error: any) {
+      console.error('❌ [BusinessSelectionPage] Failed to refresh businesses:', error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể làm mới danh sách doanh nghiệp",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -121,8 +128,13 @@ export function BusinessSelectionPage() {
     }
   };
 
-  // Show loading while initializing
-  if (isInitializing) {
+  // Redirect if not authenticated
+  if (!isAuthenticated || !currentUser) {
+    return null;
+  }
+
+  // Show loading while BusinessContext is loading
+  if (isLoading && businesses.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -133,9 +145,34 @@ export function BusinessSelectionPage() {
     );
   }
 
-  // Redirect if not authenticated
-  if (!isAuthenticated || !currentUser) {
-    return null;
+  // Show error state if there's an error and no cached businesses
+  if (error && businesses.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Building2 className="w-8 h-8 text-red-600" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            Không thể tải doanh nghiệp
+          </h3>
+          <p className="text-gray-500 mb-4">{error}</p>
+          <div className="space-x-2">
+            <Button onClick={handleRefresh} disabled={isRefreshing}>
+              {isRefreshing ? (
+                <Loader2 className="animate-spin w-4 h-4 mr-2" />
+              ) : (
+                <RefreshCw className="w-4 h-4 mr-2" />
+              )}
+              Thử lại
+            </Button>
+            <Button variant="outline" onClick={handleLogout}>
+              Đăng xuất
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -164,9 +201,18 @@ export function BusinessSelectionPage() {
               </p>
             </div>
           )}
+
+          {/* Show error message if there's an error but we have cached businesses */}
+          {error && businesses.length > 0 && (
+            <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+              <p className="text-sm text-yellow-700">
+                Cảnh báo: {error}
+              </p>
+            </div>
+          )}
         </div>
 
-        {/* User Info & Logout */}
+        {/* User Info & Actions */}
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
@@ -177,9 +223,24 @@ export function BusinessSelectionPage() {
               <p className="text-sm text-gray-500">{currentUser.email}</p>
             </div>
           </div>
-          <Button variant="outline" onClick={handleLogout}>
-            Đăng Xuất
-          </Button>
+          <div className="flex space-x-2">
+            <Button 
+              variant="outline" 
+              onClick={handleRefresh} 
+              disabled={isRefreshing || isLoading}
+              size="sm"
+            >
+              {isRefreshing ? (
+                <Loader2 className="animate-spin w-4 h-4 mr-2" />
+              ) : (
+                <RefreshCw className="w-4 h-4 mr-2" />
+              )}
+              Làm mới
+            </Button>
+            <Button variant="outline" onClick={handleLogout}>
+              Đăng Xuất
+            </Button>
+          </div>
         </div>
 
         {/* Businesses Grid */}
@@ -261,7 +322,7 @@ export function BusinessSelectionPage() {
         </div>
 
         {/* No Businesses Message */}
-        {businesses.length === 0 && (
+        {businesses.length === 0 && !isLoading && (
           <Card className="text-center py-8">
             <CardContent>
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">

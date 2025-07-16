@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback, useMemo, useRef } from 'react';
 import { Business, BusinessContextType } from '@/types/business';
 import { getBusinesses, createBusiness as createBusinessAPI } from '@/services/businessService';
 import { useAuth } from '@/components/auth/AuthContext';
@@ -15,16 +15,135 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const { isAuthenticated, currentUser } = useAuth();
   const { toast } = useToast();
+  
+  // Refs for optimization and preventing duplicate calls
+  const isMountedRef = useRef(true);
+  const isInitializingRef = useRef(false);
+  const lastFetchTimeRef = useRef<number>(0);
+  const businessesCacheRef = useRef<{ data: Business[]; timestamp: number } | null>(null);
+  
+  // Cache duration: 30 seconds
+  const CACHE_DURATION = 30 * 1000;
+  const MIN_REQUEST_DELAY = 1000; // Minimum 1 second between requests
 
-  // Lưu business context với intended route
-  const saveIntendedRoute = (intendedRoute?: string) => {
-    if (intendedRoute) {
-      sessionStorage.setItem('intendedRoute', intendedRoute);
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  // Check if cache is valid
+  const isCacheValid = useCallback(() => {
+    if (!businessesCacheRef.current) return false;
+    return Date.now() - businessesCacheRef.current.timestamp < CACHE_DURATION;
+  }, []);
+
+  // Throttled business initialization with retry mechanism
+  const initializeBusinessContext = useCallback(async (retryCount = 0) => {
+    if (!isAuthenticated || !currentUser || !isMountedRef.current) {
+      console.log('🏢 [BusinessProvider] User not authenticated, skipping business initialization');
+      return;
     }
-  };
 
-  // Khôi phục business context từ localStorage
-  const restoreBusinessContext = () => {
+    // Prevent concurrent requests
+    if (isInitializingRef.current) {
+      console.log('🏢 [BusinessProvider] Already initializing, skipping...');
+      return;
+    }
+
+    // Check cache first
+    if (isCacheValid() && businessesCacheRef.current) {
+      console.log('🏢 [BusinessProvider] Using cached businesses data');
+      setBusinesses(businessesCacheRef.current.data);
+      
+      // Restore business context from cache
+      if (!restoreBusinessContext() && businessesCacheRef.current.data.length > 0) {
+        setSelectedBusiness(businessesCacheRef.current.data[0]);
+        setSelectedBusinessId(businessesCacheRef.current.data[0].id.toString());
+      }
+      return;
+    }
+
+    // Rate limiting: ensure minimum delay between requests
+    const now = Date.now();
+    const timeSinceLastRequest = now - lastFetchTimeRef.current;
+    if (timeSinceLastRequest < MIN_REQUEST_DELAY) {
+      const delayNeeded = MIN_REQUEST_DELAY - timeSinceLastRequest;
+      console.log(`🏢 [BusinessProvider] Rate limiting: waiting ${delayNeeded}ms`);
+      await new Promise(resolve => setTimeout(resolve, delayNeeded));
+    }
+
+    isInitializingRef.current = true;
+    lastFetchTimeRef.current = Date.now();
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      console.log('🏢 [BusinessProvider] Loading businesses for authenticated user...');
+      
+      const businessList = await getBusinesses();
+      
+      if (!isMountedRef.current) return;
+      
+      console.log('✅ [BusinessProvider] Businesses loaded:', businessList);
+      setBusinesses(businessList);
+      
+      // Update cache
+      businessesCacheRef.current = {
+        data: businessList,
+        timestamp: Date.now()
+      };
+
+      // Restore business context after loading
+      if (!restoreBusinessContext() && businessList.length > 0) {
+        setSelectedBusiness(businessList[0]);
+        setSelectedBusinessId(businessList[0].id.toString());
+      }
+    } catch (error: any) {
+      if (!isMountedRef.current) return;
+      
+      console.error('❌ [BusinessProvider] Error loading businesses:', error);
+      
+      // Handle 429 (Too Many Requests) with exponential backoff
+      if (error.message?.includes('429') || error.message?.includes('Too many requests')) {
+        if (retryCount < 3) {
+          const retryDelay = Math.pow(2, retryCount) * 2000; // 2s, 4s, 8s
+          console.log(`🔄 [BusinessProvider] Rate limited, retrying in ${retryDelay}ms (attempt ${retryCount + 1}/3)`);
+          
+          setTimeout(() => {
+            if (isMountedRef.current) {
+              initializeBusinessContext(retryCount + 1);
+            }
+          }, retryDelay);
+          return;
+        } else {
+          setError('Quá nhiều yêu cầu. Vui lòng đợi một chút và thử lại.');
+        }
+      } else {
+        setError(error.message || 'Không thể tải danh sách doanh nghiệp');
+      }
+      
+      // Only show toast error if user is on ERP pages
+      if (isAuthenticated && window.location.pathname.startsWith('/ERP/')) {
+        toast({
+          title: "Lỗi",
+          description: error.message?.includes('429') 
+            ? "Quá nhiều yêu cầu. Vui lòng đợi một chút và thử lại."
+            : "Không thể tải thông tin doanh nghiệp",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
+      isInitializingRef.current = false;
+    }
+  }, [isAuthenticated, currentUser, toast, isCacheValid]);
+
+  // Restore business context from localStorage
+  const restoreBusinessContext = useCallback(() => {
     const savedBusinessId = getSelectedBusinessId();
     if (savedBusinessId && businesses.length > 0) {
       const savedBusiness = businesses.find(b => b.id.toString() === savedBusinessId);
@@ -35,69 +154,39 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
       }
     }
     return false;
-  };
+  }, [businesses]);
 
-  // CHỈ tải businesses khi user đã authenticated
-  const initializeBusinessContext = async () => {
-    if (!isAuthenticated || !currentUser) {
-      console.log('🏢 [BusinessProvider] User not authenticated, skipping business initialization');
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      setError(null);
-      console.log('🏢 [BusinessProvider] Loading businesses for authenticated user...');
-      
-      const businessList = await getBusinesses();
-      console.log('✅ [BusinessProvider] Businesses loaded:', businessList);
-      setBusinesses(businessList);
-
-      // Khôi phục business context sau khi load xong
-      if (!restoreBusinessContext() && businessList.length > 0) {
-        // Nếu không có saved business và có businesses, chọn business đầu tiên
-        setSelectedBusiness(businessList[0]);
-        setSelectedBusinessId(businessList[0].id.toString());
-      }
-    } catch (error: any) {
-      console.error('❌ [BusinessProvider] Error loading businesses:', error);
-      setError(error.message || 'Không thể tải danh sách doanh nghiệp');
-      
-      // CHỈ hiển thị toast error nếu user đã authenticated và đang ở trang cần business context
-      if (isAuthenticated && window.location.pathname.startsWith('/ERP/')) {
-        toast({
-          title: "Lỗi",
-          description: "Không thể tải thông tin doanh nghiệp",
-          variant: "destructive",
-        });
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Effect để initialize business context khi user login
+  // Optimized effect with proper dependencies
   useEffect(() => {
     console.log('🏢 [BusinessProvider] Auth state changed:', { isAuthenticated, user: currentUser?.email });
     
     if (isAuthenticated && currentUser) {
-      initializeBusinessContext();
+      // Debounce initialization to prevent rapid calls
+      const timeoutId = setTimeout(() => {
+        initializeBusinessContext();
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
     } else {
-      // Reset business context khi logout
+      // Reset business context when logout
       setBusinesses([]);
       setSelectedBusiness(null);
       setError(null);
       clearSelectedBusinessId();
       sessionStorage.removeItem('intendedRoute');
+      businessesCacheRef.current = null;
     }
-  }, [isAuthenticated, currentUser]);
+  }, [isAuthenticated, currentUser?.id]); // Only depend on essential values
 
-  const fetchBusinesses = async () => {
+  // Memoized functions to prevent unnecessary re-renders
+  const fetchBusinesses = useCallback(async () => {
     if (!isAuthenticated) return;
+    // Clear cache to force fresh data
+    businessesCacheRef.current = null;
     await initializeBusinessContext();
-  };
+  }, [isAuthenticated, initializeBusinessContext]);
 
-  const selectBusiness = async (businessId: number): Promise<void> => {
+  const selectBusiness = useCallback(async (businessId: number): Promise<void> => {
     const business = businesses.find(b => b.id === businessId);
     if (!business) {
       throw new Error(`Business with ID ${businessId} not found`);
@@ -112,9 +201,9 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
       console.error('❌ [BusinessProvider] Failed to select business:', error);
       throw error;
     }
-  };
+  }, [businesses]);
 
-  const createBusiness = async (businessData: { name: string; description?: string }) => {
+  const createBusiness = useCallback(async (businessData: { name: string; description?: string }) => {
     if (!isAuthenticated) {
       throw new Error('User not authenticated');
     }
@@ -126,7 +215,8 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
         description: businessData.description || ''
       });
       
-      // Refresh businesses list
+      // Clear cache and refresh businesses list
+      businessesCacheRef.current = null;
       await fetchBusinesses();
       
       // Select the new business
@@ -139,11 +229,36 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isAuthenticated, fetchBusinesses, selectBusiness]);
 
-  const hasOwnBusiness = businesses.some(b => b.is_owner);
+  // Memoized computed values
+  const hasOwnBusiness = useMemo(() => 
+    businesses.some(b => b.is_owner), 
+    [businesses]
+  );
 
-  const value: BusinessContextType = {
+  const refreshCurrentBusiness = useCallback(async () => {
+    if (selectedBusiness) {
+      await selectBusiness(selectedBusiness.id);
+    }
+  }, [selectedBusiness, selectBusiness]);
+
+  const clearCurrentBusiness = useCallback(() => {
+    setSelectedBusiness(null);
+    clearSelectedBusinessId();
+  }, []);
+
+  const clearBusinessData = useCallback(() => {
+    setBusinesses([]);
+    setSelectedBusiness(null);
+    setError(null);
+    clearSelectedBusinessId();
+    sessionStorage.removeItem('intendedRoute');
+    businessesCacheRef.current = null;
+  }, []);
+
+  // Memoized context value
+  const value: BusinessContextType = useMemo(() => ({
     businesses,
     currentBusiness: selectedBusiness,
     isLoading,
@@ -155,23 +270,22 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     createBusiness,
     updateBusiness: async () => { throw new Error('Not implemented'); },
     refreshBusinesses: fetchBusinesses,
-    refreshCurrentBusiness: async () => {
-      if (selectedBusiness) {
-        await selectBusiness(selectedBusiness.id);
-      }
-    },
-    clearCurrentBusiness: () => {
-      setSelectedBusiness(null);
-      clearSelectedBusinessId();
-    },
-    clearBusinessData: () => {
-      setBusinesses([]);
-      setSelectedBusiness(null);
-      setError(null);
-      clearSelectedBusinessId();
-      sessionStorage.removeItem('intendedRoute');
-    }
-  };
+    refreshCurrentBusiness,
+    clearCurrentBusiness,
+    clearBusinessData
+  }), [
+    businesses,
+    selectedBusiness,
+    isLoading,
+    error,
+    hasOwnBusiness,
+    fetchBusinesses,
+    selectBusiness,
+    createBusiness,
+    refreshCurrentBusiness,
+    clearCurrentBusiness,
+    clearBusinessData
+  ]);
 
   return (
     <BusinessContext.Provider value={value}>
