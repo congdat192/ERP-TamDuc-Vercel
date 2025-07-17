@@ -23,27 +23,19 @@ interface UIMember {
 }
 
 interface Member {
-  id: string;
-  user_id: string;
-  business_id: string;
+  id: number;
+  name: string;
+  email: string;
   status: 'ACTIVE' | 'INACTIVE';
   is_owner: boolean;
-  created_by_user_id: string;
   created_at: string;
   updated_at: string;
-  user?: {
-    id: string;
-    name: string;
-    email: string;
-    phone?: string;
-    avatar?: string;
-  };
 }
 
 interface MembersResponse {
   total: number;
-  per_page: number;
-  current_page: number;
+  per_page: string;
+  current_page: string;
   data: Member[];
 }
 
@@ -91,8 +83,8 @@ export function MembersPage() {
       setMembers(response.data);
       setPagination({
         total: response.total,
-        perPage: response.per_page,
-        currentPage: response.current_page
+        perPage: parseInt(response.per_page),
+        currentPage: parseInt(response.current_page)
       });
     } catch (err: any) {
       console.error('Error fetching members:', err);
@@ -179,12 +171,12 @@ export function MembersPage() {
 
   // Transform API data to match UI expectations
   const transformedMembers: UIMember[] = members.map(member => ({
-    id: member.id,
-    fullName: member.user?.name || 'N/A',
-    username: member.user?.email?.split('@')[0] || 'N/A',
-    email: member.user?.email || 'N/A',
-    phone: member.user?.phone,
-    avatar: member.user?.avatar,
+    id: member.id.toString(),
+    fullName: member.name || 'N/A',
+    username: member.email?.split('@')[0] || 'N/A',
+    email: member.email || 'N/A',
+    phone: undefined, // API doesn't provide this
+    avatar: undefined, // API doesn't provide this
     status: member.status === 'ACTIVE' ? 'active' : 'inactive',
     isActive: member.status === 'ACTIVE',
     isOwner: member.is_owner,

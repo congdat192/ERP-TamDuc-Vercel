@@ -2,27 +2,19 @@
 import { apiClient } from '@/lib/api-client';
 
 export interface Member {
-  id: string;
-  user_id: string;
-  business_id: string;
+  id: number;
+  name: string;
+  email: string;
   status: 'ACTIVE' | 'INACTIVE';
   is_owner: boolean;
-  created_by_user_id: string;
   created_at: string;
   updated_at: string;
-  user?: {
-    id: string;
-    name: string;
-    email: string;
-    phone?: string;
-    avatar?: string;
-  };
 }
 
 export interface MembersResponse {
   total: number;
-  per_page: number;
-  current_page: number;
+  per_page: string;
+  current_page: string;
   data: Member[];
 }
 
