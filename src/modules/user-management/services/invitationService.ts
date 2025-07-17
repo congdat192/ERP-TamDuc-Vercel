@@ -105,7 +105,8 @@ export class InvitationService {
       const response = await api.post('/invitations', data);
       console.log('✅ [InvitationService] Invitation created:', response);
       
-      // API chỉ trả về message, tạo mock response cho UI
+      // API trả về { "message": "Lời mời đã được gửi" } theo spec
+      // Tạo mock response cho UI
       return {
         id: Date.now().toString(), // Temporary ID
         email: data.email,
@@ -118,8 +119,16 @@ export class InvitationService {
       
       let errorMessage = 'Không thể gửi lời mời';
       
+      // Handle specific error cases từ API spec
       if (error.response?.status === 400 && error.response.data?.message) {
+        // Business logic errors: member exists, invitation exists
         errorMessage = error.response.data.message;
+      } else if (error.response?.status === 422) {
+        // Validation errors
+        errorMessage = 'Dữ liệu không hợp lệ';
+        if (error.response.data?.errors?.email) {
+          errorMessage = error.response.data.errors.email[0];
+        }
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       }

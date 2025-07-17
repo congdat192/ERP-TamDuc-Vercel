@@ -56,7 +56,10 @@ export class UserInvitationService {
       const queryString = params.toString();
       const endpoint = `/me/invitations${queryString ? `?${queryString}` : ''}`;
       
-      const response = await api.get<UserInvitationsListResponse>(endpoint);
+      // API này không cần business ID
+      const response = await api.get<UserInvitationsListResponse>(endpoint, {
+        requiresBusinessId: false
+      });
       console.log('✅ [UserInvitationService] Raw response:', response);
       
       // Transform API response to UI format
@@ -89,7 +92,10 @@ export class UserInvitationService {
       
       const payload = { status };
       
-      await api.post(`/me/invitations/${invitationId}`, payload);
+      // API này không cần business ID
+      await api.post(`/me/invitations/${invitationId}`, payload, {
+        requiresBusinessId: false
+      });
       console.log('✅ [UserInvitationService] Invitation response sent');
     } catch (error: any) {
       console.error('❌ [UserInvitationService] Error responding to invitation:', error);
@@ -98,6 +104,11 @@ export class UserInvitationService {
       
       if (error.response?.status === 404) {
         errorMessage = 'Lời mời không tồn tại hoặc đã được xử lý';
+      } else if (error.response?.status === 422) {
+        errorMessage = 'Dữ liệu không hợp lệ';
+        if (error.response.data?.errors?.status) {
+          errorMessage = error.response.data.errors.status[0];
+        }
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       }

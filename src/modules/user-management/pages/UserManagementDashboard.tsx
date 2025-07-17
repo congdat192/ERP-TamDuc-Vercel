@@ -2,12 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, Building2, Shield, UserCog, Mail, Loader2 } from 'lucide-react';
+import { Users, Building2, Shield, UserCog, Mail, Loader2, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardService, UserManagementCounts } from '../services/dashboardService';
+import { useToast } from '@/hooks/use-toast';
 
 export function UserManagementDashboard() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [counts, setCounts] = useState<UserManagementCounts>({
     members: 0,
     departments: 0,
@@ -16,6 +18,7 @@ export function UserManagementDashboard() {
     invitations: 0
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadCounts();
@@ -24,10 +27,22 @@ export function UserManagementDashboard() {
   const loadCounts = async () => {
     try {
       setIsLoading(true);
+      setError(null);
+      console.log('🔄 [UserManagementDashboard] Loading counts...');
+      
       const countsData = await DashboardService.getCounts();
+      console.log('✅ [UserManagementDashboard] Counts loaded:', countsData);
       setCounts(countsData);
-    } catch (error) {
-      console.error('Error loading counts:', error);
+    } catch (error: any) {
+      console.error('❌ [UserManagementDashboard] Error loading counts:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Không thể tải dữ liệu dashboard';
+      setError(errorMessage);
+      
+      toast({
+        title: "Lỗi",
+        description: errorMessage,
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -70,6 +85,32 @@ export function UserManagementDashboard() {
       color: 'text-pink-600'
     }
   ];
+
+  if (error) {
+    return (
+      <div className="space-y-8">
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Quản Lý Người Dùng</h1>
+          <p className="text-gray-600">Chọn tính năng bạn muốn sử dụng</p>
+        </div>
+
+        <Card className="max-w-md mx-auto">
+          <CardContent className="p-6">
+            <div className="text-center space-y-4">
+              <AlertCircle className="w-12 h-12 text-red-500 mx-auto" />
+              <div>
+                <h3 className="text-lg font-semibold text-red-700">Lỗi tải dữ liệu</h3>
+                <p className="text-gray-600 mt-2">{error}</p>
+              </div>
+              <Button onClick={loadCounts} variant="outline">
+                Thử lại
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -131,6 +172,20 @@ export function UserManagementDashboard() {
           );
         })}
       </div>
+
+      {/* Debug Info - chỉ hiện trong development */}
+      {process.env.NODE_ENV === 'development' && (
+        <Card className="max-w-2xl mx-auto">
+          <CardContent className="p-4">
+            <div className="text-sm text-gray-600">
+              <div className="font-medium mb-2">Debug Info:</div>
+              <pre className="text-xs bg-gray-100 p-2 rounded overflow-auto">
+                {JSON.stringify({ counts, isLoading, error }, null, 2)}
+              </pre>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
