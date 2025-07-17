@@ -25,7 +25,7 @@ import { useNavigate } from 'react-router-dom';
 import { TableLoadingSkeleton } from '@/components/ui/loading';
 import { EmptyTableState } from '@/components/ui/empty-states';
 
-interface Member {
+interface UIMember {
   id: string;
   fullName: string;
   username: string;
@@ -42,7 +42,7 @@ interface Member {
 }
 
 interface MembersTableProps {
-  users: Member[];
+  users: UIMember[];
   isLoading: boolean;
   selectedUsers: string[];
   onSelectUser: (userId: string, selected: boolean) => void;
@@ -74,7 +74,7 @@ export function MembersTable({
     return <Badge className={config?.className}>{config?.label || status}</Badge>;
   };
 
-  const handleToggleStatus = (member: Member) => {
+  const handleToggleStatus = (member: UIMember) => {
     if (member.isOwner) return; // Can't change owner status
     
     onUserUpdate?.(member.id, {
@@ -82,7 +82,7 @@ export function MembersTable({
     });
   };
 
-  const handleDeleteMember = (member: Member) => {
+  const handleDeleteMember = (member: UIMember) => {
     if (member.isOwner) return; // Can't delete owner
     
     if (confirm(`Bạn có chắc chắn muốn xóa thành viên "${member.fullName}"?`)) {

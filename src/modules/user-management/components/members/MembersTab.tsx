@@ -4,10 +4,27 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MembersTable } from './MembersTable';
 import { MemberFilters } from './MemberFilters';
 import { BulkOperations } from './BulkOperations';
-import { UserManagementFilters, EnhancedUser } from '../../types';
+import { UserManagementFilters } from '../../types';
+
+// Define a simpler interface for the UI that matches what the page provides
+interface UIMember {
+  id: string;
+  fullName: string;
+  username: string;
+  email: string;
+  phone?: string;
+  avatar?: string;
+  status: string;
+  isActive: boolean;
+  isOwner: boolean;
+  createdAt: string;
+  lastLogin?: string | null;
+  role: { name: string };
+  department?: { name: string; description?: string } | null;
+}
 
 interface MembersTabProps {
-  users?: EnhancedUser[];
+  users?: UIMember[];
   isLoading?: boolean;
   onUserCreate?: (userData: any) => void;
   onUserUpdate?: (userId: string, userData: any) => void;

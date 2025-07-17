@@ -39,29 +39,49 @@ export interface UpdateMemberData {
 
 class MembersService {
   async getMembers(filters: MemberFilters = {}): Promise<MembersResponse> {
-    const params = new URLSearchParams();
-    
-    if (filters.perPage) params.append('perPage', filters.perPage.toString());
-    if (filters.page) params.append('page', filters.page.toString());
-    if (filters.orderBy) params.append('orderBy', filters.orderBy);
-    if (filters.orderDirection) params.append('orderDirection', filters.orderDirection);
+    try {
+      const params = new URLSearchParams();
+      
+      if (filters.perPage) params.append('perPage', filters.perPage.toString());
+      if (filters.page) params.append('page', filters.page.toString());
+      if (filters.orderBy) params.append('orderBy', filters.orderBy);
+      if (filters.orderDirection) params.append('orderDirection', filters.orderDirection);
 
-    const response = await apiClient.get(`/members?${params.toString()}`);
-    return response.data;
+      const response = await apiClient.get(`/members?${params.toString()}`);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch members:', error);
+      throw error;
+    }
   }
 
   async getMemberById(memberId: string): Promise<Member> {
-    const response = await apiClient.get(`/members/${memberId}`);
-    return response.data;
+    try {
+      const response = await apiClient.get(`/members/${memberId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch member:', error);
+      throw error;
+    }
   }
 
   async updateMember(memberId: string, data: UpdateMemberData): Promise<Member> {
-    const response = await apiClient.put(`/members/${memberId}`, data);
-    return response.data;
+    try {
+      const response = await apiClient.put(`/members/${memberId}`, data);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to update member:', error);
+      throw error;
+    }
   }
 
   async deleteMember(memberId: string): Promise<void> {
-    await apiClient.delete(`/members/${memberId}`);
+    try {
+      await apiClient.delete(`/members/${memberId}`);
+    } catch (error) {
+      console.error('Failed to delete member:', error);
+      throw error;
+    }
   }
 }
 

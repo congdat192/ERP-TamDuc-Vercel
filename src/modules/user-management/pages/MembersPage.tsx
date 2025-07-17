@@ -4,6 +4,23 @@ import { MembersTab } from '../components/members/MembersTab';
 import { membersService, Member, MemberFilters } from '../services/membersService';
 import { useToast } from '@/hooks/use-toast';
 
+// Define a simpler interface for the UI that matches what MembersTable expects
+interface UIMember {
+  id: string;
+  fullName: string;
+  username: string;
+  email: string;
+  phone?: string;
+  avatar?: string;
+  status: string;
+  isActive: boolean;
+  isOwner: boolean;
+  createdAt: string;
+  lastLogin?: string | null;
+  role: { name: string };
+  department?: { name: string; description?: string } | null;
+}
+
 export function MembersPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -49,9 +66,9 @@ export function MembersPage() {
 
   const handleUpdateMember = async (memberId: string, data: any) => {
     try {
-      // Convert status to API format (0 or 1)
+      // Convert status to API format (0 or 1) with proper typing
       const updateData = {
-        status: data.isActive ? 1 : 0
+        status: data.isActive ? 1 as const : 0 as const
       };
 
       await membersService.updateMember(memberId, updateData);
@@ -106,7 +123,7 @@ export function MembersPage() {
   }, []);
 
   // Transform API data to match UI expectations
-  const transformedMembers = members.map(member => ({
+  const transformedMembers: UIMember[] = members.map(member => ({
     id: member.id,
     fullName: member.user?.name || 'N/A',
     username: member.user?.email?.split('@')[0] || 'N/A',
