@@ -37,19 +37,19 @@ export class RoleService {
       console.log('✅ [RoleService] Raw roles response:', response);
       
       return response.data.map((role: ApiRoleResponse) => {
-        // Parse permissions từ array of objects thành array of IDs
-        const permissionIds = role.permissions ? role.permissions.map(p => p.id) : [];
+        // Parse permissions từ array of objects thành array of codes
+        const permissionCodes = role.permissions ? role.permissions.map(p => p.code) : [];
         
         console.log(`🔧 [RoleService] Role "${role.name}" permissions:`, {
           original: role.permissions,
-          parsed: permissionIds
+          parsed: permissionCodes
         });
         
         return {
           id: role.id.toString(),
           name: role.name,
           description: role.description || '',
-          permissions: permissionIds, // Array of permission IDs
+          permissions: permissionCodes, // Array of permission codes
           userCount: 0, // Không có trong API response
           isSystem: false, // Không có trong API response
           created_at: role.created_at,
@@ -68,19 +68,19 @@ export class RoleService {
       const response = await api.get<ApiRoleResponse>(`/roles/${roleId}`);
       console.log('✅ [RoleService] Raw role response:', response);
       
-      // Parse permissions từ array of objects thành array of IDs
-      const permissionIds = response.permissions ? response.permissions.map(p => p.id) : [];
+      // Parse permissions từ array of objects thành array of codes
+      const permissionCodes = response.permissions ? response.permissions.map(p => p.code) : [];
       
       console.log(`🔧 [RoleService] Role "${response.name}" permissions:`, {
         original: response.permissions,
-        parsed: permissionIds
+        parsed: permissionCodes
       });
       
       return {
         id: response.id.toString(),
         name: response.name,
         description: response.description || '',
-        permissions: permissionIds, // Array of permission IDs
+        permissions: permissionCodes, // Array of permission codes
         userCount: 0, // Không có trong API response
         isSystem: false, // Không có trong API response
         created_at: response.created_at,
@@ -101,19 +101,18 @@ export class RoleService {
         throw new Error('Vui lòng chọn ít nhất một quyền cho vai trò');
       }
 
-      // Ensure permissions are numbers
-      const permissions = roleData.permissions.map(id => {
-        const numId = typeof id === 'string' ? parseInt(id, 10) : id;
-        if (isNaN(numId)) {
-          throw new Error('ID quyền không hợp lệ');
+      // Ensure permissions are strings (codes)
+      const permissions = roleData.permissions.map(code => {
+        if (typeof code !== 'string') {
+          throw new Error('Permission code phải là chuỗi');
         }
-        return numId;
+        return code;
       });
       
       const payload = {
         name: roleData.name.trim(),
         description: roleData.description?.trim() || '',
-        permissions: permissions
+        permissions: permissions // Array of permission codes
       };
       
       console.log('🔧 [RoleService] Sending payload to backend:', JSON.stringify(payload, null, 2));
@@ -122,13 +121,13 @@ export class RoleService {
       console.log('✅ [RoleService] Backend response:', response);
 
       // Parse permissions từ response
-      const permissionIds = response.permissions ? response.permissions.map(p => p.id) : [];
+      const permissionCodes = response.permissions ? response.permissions.map(p => p.code) : [];
 
       return {
         id: response.id.toString(),
         name: response.name,
         description: response.description,
-        permissions: permissionIds,
+        permissions: permissionCodes,
         userCount: 0,
         isSystem: false,
         created_at: response.created_at,
@@ -177,15 +176,14 @@ export class RoleService {
         throw new Error('Vui lòng chọn ít nhất một quyền cho vai trò');
       }
 
-      // Ensure permissions are numbers if provided
-      let permissions: number[] = [];
+      // Ensure permissions are strings (codes) if provided
+      let permissions: string[] = [];
       if (roleData.permissions) {
-        permissions = roleData.permissions.map(id => {
-          const numId = typeof id === 'string' ? parseInt(id, 10) : id;
-          if (isNaN(numId)) {
-            throw new Error('ID quyền không hợp lệ');
+        permissions = roleData.permissions.map(code => {
+          if (typeof code !== 'string') {
+            throw new Error('Permission code phải là chuỗi');
           }
-          return numId;
+          return code;
         });
       }
       
@@ -200,13 +198,13 @@ export class RoleService {
       console.log('✅ [RoleService] Update response:', response);
       
       // Parse permissions từ response
-      const permissionIds = response.permissions ? response.permissions.map(p => p.id) : [];
+      const permissionCodes = response.permissions ? response.permissions.map(p => p.code) : [];
       
       return {
         id: response.id.toString(),
         name: response.name,
         description: response.description,
-        permissions: permissionIds,
+        permissions: permissionCodes,
         userCount: 0,
         isSystem: false,
         created_at: response.created_at,

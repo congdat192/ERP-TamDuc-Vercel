@@ -41,19 +41,19 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
   // Memoize the initialization function để prevent unnecessary re-runs
   const initializePermissions = useCallback((modulesData: ModuleInfo[], roleData: CustomRole) => {
     console.log('🔧 [EditRoleModal] Initializing permissions for role:', roleData.name);
-    console.log('🔧 [EditRoleModal] Role permissions (IDs):', roleData.permissions);
+    console.log('🔧 [EditRoleModal] Role permissions (codes):', roleData.permissions);
     console.log('🔧 [EditRoleModal] Available modules:', modulesData.map(m => ({ id: m.id, name: m.name })));
     
     const initialSelections: PermissionSelection = {};
     modulesData.forEach(module => {
       initialSelections[module.id] = {};
       module.features.forEach(feature => {
-        // Check if this feature permission exists in role's permissions (array of IDs)
-        const isSelected = Array.isArray(roleData.permissions) && roleData.permissions.includes(feature.id);
-        initialSelections[module.id][feature.id] = isSelected;
+        // Check if this feature permission exists in role's permissions (array of codes)
+        const isSelected = Array.isArray(roleData.permissions) && roleData.permissions.includes(feature.code);
+        initialSelections[module.id][feature.code] = isSelected;
         
         if (isSelected) {
-          console.log(`✅ [EditRoleModal] Feature ${feature.id} (${feature.name}) is selected for module ${module.name}`);
+          console.log(`✅ [EditRoleModal] Feature ${feature.code} (${feature.name}) is selected for module ${module.name}`);
         }
       });
     });
@@ -153,12 +153,12 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
         return;
       }
       
-      // Build permissions array từ selections
-      const permissions: number[] = [];
+      // Build permissions array từ selections - sử dụng feature codes
+      const permissions: string[] = [];
       Object.values(permissionSelections).forEach(moduleSelections => {
-        Object.entries(moduleSelections).forEach(([featureId, selected]) => {
+        Object.entries(moduleSelections).forEach(([featureCode, selected]) => {
           if (selected) {
-            permissions.push(parseInt(featureId));
+            permissions.push(featureCode);
           }
         });
       });
@@ -170,7 +170,7 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
       const roleData: Partial<RoleCreationData> = {
         name: data.name.trim(),
         description: data.description?.trim() || '',
-        permissions
+        permissions // Array of permission codes
       };
       
       console.log('🔧 [EditRoleModal] Final payload for update:', roleData);
@@ -213,14 +213,14 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
     onClose();
   };
 
-  const handlePermissionChange = (moduleId: string, featureId: number, selected: boolean) => {
-    console.log('🔧 [EditRoleModal] Permission change:', { moduleId, featureId, selected });
+  const handlePermissionChange = (moduleId: string, featureCode: string, selected: boolean) => {
+    console.log('🔧 [EditRoleModal] Permission change:', { moduleId, featureCode, selected });
     
     setPermissionSelections(prev => ({
       ...prev,
       [moduleId]: {
         ...prev[moduleId],
-        [featureId]: selected
+        [featureCode]: selected
       }
     }));
   };

@@ -66,12 +66,12 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
         setSelectedModuleId(modulesData[0].id);
       }
       
-      // Initialize permission selections
+      // Initialize permission selections - track by feature codes
       const initialSelections: PermissionSelection = {};
       modulesData.forEach(module => {
         initialSelections[module.id] = {};
         module.features.forEach(feature => {
-          initialSelections[module.id][feature.id] = false;
+          initialSelections[module.id][feature.code] = false;
         });
       });
       setPermissionSelections(initialSelections);
@@ -108,12 +108,12 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
         return;
       }
       
-      // Build permissions array từ selections
-      const permissions: number[] = [];
+      // Build permissions array từ selections - sử dụng feature codes
+      const permissions: string[] = [];
       Object.values(permissionSelections).forEach(moduleSelections => {
-        Object.entries(moduleSelections).forEach(([featureId, selected]) => {
+        Object.entries(moduleSelections).forEach(([featureCode, selected]) => {
           if (selected) {
-            permissions.push(parseInt(featureId));
+            permissions.push(featureCode);
           }
         });
       });
@@ -126,7 +126,7 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
       const roleData: RoleCreationData = {
         name: data.name.trim(),
         description: data.description?.trim() || '',
-        permissions
+        permissions // Array of permission codes
       };
 
       console.log('🔧 [CreateRoleModal] Submitting role data:', roleData);
@@ -173,14 +173,14 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
     onClose();
   };
 
-  const handlePermissionChange = (moduleId: string, featureId: number, selected: boolean) => {
-    console.log('🔧 [CreateRoleModal] Permission change:', { moduleId, featureId, selected });
+  const handlePermissionChange = (moduleId: string, featureCode: string, selected: boolean) => {
+    console.log('🔧 [CreateRoleModal] Permission change:', { moduleId, featureCode, selected });
     
     setPermissionSelections(prev => ({
       ...prev,
       [moduleId]: {
         ...prev[moduleId],
-        [featureId]: selected
+        [featureCode]: selected
       }
     }));
   };

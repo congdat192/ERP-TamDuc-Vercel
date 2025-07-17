@@ -47,10 +47,10 @@ export interface FeatureInfo {
   type: 'view' | 'create' | 'edit' | 'delete';
 }
 
-// Permission selection state cho UI
+// Permission selection state cho UI - track by feature codes
 export interface PermissionSelection {
   [moduleId: string]: {
-    [featureId: number]: boolean;
+    [featureCode: string]: boolean;
   };
 }
 
@@ -66,19 +66,19 @@ export interface ModulePermissions {
   [moduleId: string]: CustomPermission;
 }
 
-// Role creation data - permissions là array các feature IDs
+// Role creation data - permissions là array các feature codes
 export interface RoleCreationData {
   name: string;
   description: string;
-  permissions: number[]; // Array of feature IDs: [1,2,3,4]
+  permissions: string[]; // Array of feature codes: ["view_customers", "create_customers"]
 }
 
-// Custom Role structure
+// Custom Role structure - permissions là array các feature codes
 export interface CustomRole {
   id: string;
   name: string;
   description: string;
-  permissions: number[]; // Array of feature IDs
+  permissions: string[]; // Array of feature codes
   userCount: number;
   isSystem: boolean;
   created_at: string;
