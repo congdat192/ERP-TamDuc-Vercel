@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { MembersTab } from '../components/members/MembersTab';
-import { membersService, Member, MemberFilters } from '../services/membersService';
+import { api } from '@/services/apiService';
 import { useToast } from '@/hooks/use-toast';
+import { useBusiness } from '@/contexts/BusinessContext';
 
 // Define a simpler interface for the UI that matches what MembersTable expects
 interface UIMember {
@@ -21,6 +22,38 @@ interface UIMember {
   department?: { name: string; description?: string } | null;
 }
 
+interface Member {
+  id: string;
+  user_id: string;
+  business_id: string;
+  status: 'ACTIVE' | 'INACTIVE';
+  is_owner: boolean;
+  created_by_user_id: string;
+  created_at: string;
+  updated_at: string;
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+    phone?: string;
+    avatar?: string;
+  };
+}
+
+interface MembersResponse {
+  total: number;
+  per_page: number;
+  current_page: number;
+  data: Member[];
+}
+
+interface MemberFilters {
+  perPage?: number;
+  page?: number;
+  orderBy?: string;
+  orderDirection?: 'asc' | 'desc';
+}
+
 export function MembersPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -32,19 +65,28 @@ export function MembersPage() {
   });
   
   const { toast } = useToast();
+  const { currentBusiness } = useBusiness();
 
   const fetchMembers = async (filters: MemberFilters = {}) => {
     try {
       setIsLoading(true);
       setError(null);
       
-      const response = await membersService.getMembers({
-        perPage: pagination.perPage,
-        page: pagination.currentPage,
-        orderBy: 'created_at',
-        orderDirection: 'asc',
-        ...filters
-      });
+      const params = new URLSearchParams();
+      
+      if (filters.perPage) params.append('perPage', filters.perPage.toString());
+      else params.append('perPage', pagination.perPage.toString());
+      
+      if (filters.page) params.append('page', filters.page.toString());
+      else params.append('page', pagination.currentPage.toString());
+      
+      if (filters.orderBy) params.append('orderBy', filters.orderBy);
+      else params.append('orderBy', 'created_at');
+      
+      if (filters.orderDirection) params.append('orderDirection', filters.orderDirection);
+      else params.append('orderDirection', 'asc');
+
+      const response = await api.get<MembersResponse>(`/members?${params.toString()}`);
 
       setMembers(response.data);
       setPagination({
@@ -53,12 +95,23 @@ export function MembersPage() {
         currentPage: response.current_page
       });
     } catch (err: any) {
-      setError(err.message || 'Có lỗi xảy ra khi tải danh sách thành viên');
-      toast({
-        title: "Lỗi",
-        description: "Không thể tải danh sách thành viên",
-        variant: "destructive",
-      });
+      console.error('Error fetching members:', err);
+      
+      if (err.message?.includes('not a member of this business')) {
+        setError('Bạn không có quyền xem danh sách thành viên của doanh nghiệp này.');
+        toast({
+          title: "Không có quyền truy cập",
+          description: "Bạn không phải là thành viên của doanh nghiệp này",
+          variant: "destructive",
+        });
+      } else {
+        setError(err.message || 'Có lỗi xảy ra khi tải danh sách thành viên');
+        toast({
+          title: "Lỗi",
+          description: "Không thể tải danh sách thành viên",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -71,7 +124,7 @@ export function MembersPage() {
         status: data.isActive ? 1 as const : 0 as const
       };
 
-      await membersService.updateMember(memberId, updateData);
+      await api.put(`/members/${memberId}`, updateData);
       
       toast({
         title: "Thành công",
@@ -91,7 +144,7 @@ export function MembersPage() {
 
   const handleDeleteMember = async (memberId: string) => {
     try {
-      await membersService.deleteMember(memberId);
+      await api.delete(`/members/${memberId}`);
       
       toast({
         title: "Thành công",
@@ -119,8 +172,10 @@ export function MembersPage() {
   };
 
   useEffect(() => {
-    fetchMembers();
-  }, []);
+    if (currentBusiness) {
+      fetchMembers();
+    }
+  }, [currentBusiness]);
 
   // Transform API data to match UI expectations
   const transformedMembers: UIMember[] = members.map(member => ({
