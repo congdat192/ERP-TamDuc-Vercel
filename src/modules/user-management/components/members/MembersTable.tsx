@@ -22,12 +22,27 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
-import { EnhancedUser } from '../../types';
 import { TableLoadingSkeleton } from '@/components/ui/loading';
 import { EmptyTableState } from '@/components/ui/empty-states';
 
+interface Member {
+  id: string;
+  fullName: string;
+  username: string;
+  email: string;
+  phone?: string;
+  avatar?: string;
+  status: string;
+  isActive: boolean;
+  isOwner: boolean;
+  createdAt: string;
+  lastLogin?: string | null;
+  role: { name: string };
+  department?: { name: string; description?: string } | null;
+}
+
 interface MembersTableProps {
-  users: EnhancedUser[];
+  users: Member[];
   isLoading: boolean;
   selectedUsers: string[];
   onSelectUser: (userId: string, selected: boolean) => void;
@@ -45,20 +60,34 @@ export function MembersTable({
 }: MembersTableProps) {
   const navigate = useNavigate();
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, isOwner: boolean) => {
+    if (isOwner) {
+      return <Badge className="bg-purple-100 text-purple-800">Chủ Sở Hữu</Badge>;
+    }
+    
     const statusConfig = {
       active: { className: "bg-green-100 text-green-800", label: "Hoạt Động" },
       inactive: { className: "bg-gray-100 text-gray-800", label: "Không Hoạt Động" },
-      locked: { className: "bg-red-100 text-red-800", label: "Bị Khóa" },
-      pending_verification: { className: "bg-yellow-100 text-yellow-800", label: "Chờ Xác Thực" }
     };
     
     const config = statusConfig[status as keyof typeof statusConfig];
     return <Badge className={config?.className}>{config?.label || status}</Badge>;
   };
 
-  const handleViewProfile = (userId: string) => {
-    navigate(`/profile/${userId}`);
+  const handleToggleStatus = (member: Member) => {
+    if (member.isOwner) return; // Can't change owner status
+    
+    onUserUpdate?.(member.id, {
+      isActive: !member.isActive
+    });
+  };
+
+  const handleDeleteMember = (member: Member) => {
+    if (member.isOwner) return; // Can't delete owner
+    
+    if (confirm(`Bạn có chắc chắn muốn xóa thành viên "${member.fullName}"?`)) {
+      onUserDelete?.(member.id);
+    }
   };
 
   if (isLoading) {
@@ -90,10 +119,9 @@ export function MembersTable({
             />
           </TableHead>
           <TableHead>Thành Viên</TableHead>
-          <TableHead>Phòng Ban</TableHead>
           <TableHead>Vai Trò</TableHead>
           <TableHead>Trạng Thái</TableHead>
-          <TableHead>Lần Đăng Nhập Cuối</TableHead>
+          <TableHead>Ngày Tham Gia</TableHead>
           <TableHead className="text-right">Hành Động</TableHead>
         </TableRow>
       </TableHeader>
@@ -104,6 +132,7 @@ export function MembersTable({
               <Checkbox
                 checked={selectedUsers.includes(user.id)}
                 onCheckedChange={(checked) => onSelectUser(user.id, !!checked)}
+                disabled={user.isOwner} // Can't select owner
               />
             </TableCell>
             <TableCell>
@@ -116,7 +145,6 @@ export function MembersTable({
                 </Avatar>
                 <div>
                   <p className="font-medium text-gray-900">{user.fullName}</p>
-                  <p className="text-sm text-gray-500">@{user.username}</p>
                   <p className="text-sm text-gray-500">{user.email}</p>
                   {user.phone && (
                     <p className="text-sm text-gray-500">{user.phone}</p>
@@ -125,25 +153,13 @@ export function MembersTable({
               </div>
             </TableCell>
             <TableCell>
-              {user.department ? (
-                <div>
-                  <p className="font-medium">{user.department.name}</p>
-                  {user.department.description && (
-                    <p className="text-sm text-gray-500">{user.department.description}</p>
-                  )}
-                </div>
-              ) : (
-                <span className="text-gray-400">Chưa phân công</span>
-              )}
-            </TableCell>
-            <TableCell>
               <Badge variant="outline">{user.role.name}</Badge>
             </TableCell>
             <TableCell>
-              {getStatusBadge(user.status)}
+              {getStatusBadge(user.status, user.isOwner)}
             </TableCell>
             <TableCell className="text-sm text-gray-600">
-              {user.lastLogin ? new Date(user.lastLogin).toLocaleString('vi-VN') : 'Chưa đăng nhập'}
+              {new Date(user.createdAt).toLocaleDateString('vi-VN')}
             </TableCell>
             <TableCell className="text-right">
               <DropdownMenu>
@@ -153,42 +169,38 @@ export function MembersTable({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => handleViewProfile(user.id)}>
+                  <DropdownMenuItem onClick={() => {}}>
                     <ExternalLink className="w-4 h-4 mr-2" />
                     Xem Profile
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onUserUpdate?.(user.id, {})}>
-                    <Edit className="w-4 h-4 mr-2" />
-                    Chỉnh Sửa
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => {}}>
-                    <Key className="w-4 h-4 mr-2" />
-                    Đặt Lại Mật Khẩu
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    onClick={() => {}}
-                    className={user.status === 'active' ? 'text-red-600' : 'text-green-600'}
-                  >
-                    {user.status === 'active' ? (
-                      <>
-                        <EyeOff className="w-4 h-4 mr-2" />
-                        Khóa Tài Khoản
-                      </>
-                    ) : (
-                      <>
-                        <Eye className="w-4 h-4 mr-2" />
-                        Mở Khóa
-                      </>
-                    )}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => onUserDelete?.(user.id)}
-                    className="text-red-600"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Xóa Thành Viên
-                  </DropdownMenuItem>
+                  {!user.isOwner && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        onClick={() => handleToggleStatus(user)}
+                        className={user.isActive ? 'text-red-600' : 'text-green-600'}
+                      >
+                        {user.isActive ? (
+                          <>
+                            <EyeOff className="w-4 h-4 mr-2" />
+                            Vô Hiệu Hóa
+                          </>
+                        ) : (
+                          <>
+                            <Eye className="w-4 h-4 mr-2" />
+                            Kích Hoạt
+                          </>
+                        )}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => handleDeleteMember(user)}
+                        className="text-red-600"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Xóa Thành Viên
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </TableCell>
