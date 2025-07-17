@@ -17,8 +17,6 @@ export interface Invitation {
 
 export interface CreateInvitationRequest {
   email: string;
-  name: string;
-  role_id?: string;
 }
 
 export interface InvitationFilters {
@@ -33,6 +31,29 @@ export interface InvitationFilters {
 
 export interface InvitationResponse {
   data: Invitation[];
+  total: number;
+  page: number;
+  perPage: number;
+  totalPages: number;
+}
+
+// User Invitations (lời mời nhận được)
+export interface UserInvitation {
+  id: string;
+  businessName: string;
+  inviterName: string;
+  created_at: string;
+}
+
+export interface UserInvitationFilters {
+  page?: number;
+  perPage?: number;
+  orderBy?: string;
+  orderDirection?: 'asc' | 'desc';
+}
+
+export interface UserInvitationResponse {
+  data: UserInvitation[];
   total: number;
   page: number;
   perPage: number;

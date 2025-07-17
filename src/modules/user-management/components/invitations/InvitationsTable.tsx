@@ -3,8 +3,8 @@ import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Mail, Clock } from 'lucide-react';
-import { Invitation } from '../../types/invitation';
+import { Trash2, Mail, Clock, User } from 'lucide-react';
+import { Invitation } from '../../services/invitationService';
 import { format } from 'date-fns';
 
 interface InvitationsTableProps {
@@ -51,9 +51,7 @@ export function InvitationsTable({ invitations, isLoading, onDelete }: Invitatio
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Người nhận</TableHead>
           <TableHead>Email</TableHead>
-          <TableHead>Vai trò</TableHead>
           <TableHead>Trạng thái</TableHead>
           <TableHead>Ngày gửi</TableHead>
           <TableHead>Người gửi</TableHead>
@@ -63,14 +61,11 @@ export function InvitationsTable({ invitations, isLoading, onDelete }: Invitatio
       <TableBody>
         {invitations.map((invitation) => (
           <TableRow key={invitation.id}>
-            <TableCell className="font-medium">{invitation.name}</TableCell>
-            <TableCell>{invitation.email}</TableCell>
-            <TableCell>
-              {invitation.role ? (
-                <Badge variant="secondary">{invitation.role}</Badge>
-              ) : (
-                <span className="text-gray-400">Chưa định</span>
-              )}
+            <TableCell className="font-medium">
+              <div className="flex items-center space-x-2">
+                <Mail className="w-4 h-4 text-gray-400" />
+                <span>{invitation.email}</span>
+              </div>
             </TableCell>
             <TableCell>{getStatusBadge(invitation.status)}</TableCell>
             <TableCell>
@@ -83,9 +78,11 @@ export function InvitationsTable({ invitations, isLoading, onDelete }: Invitatio
             </TableCell>
             <TableCell>
               {invitation.invited_by ? (
-                <div className="text-sm">
-                  <p className="font-medium">{invitation.invited_by.name}</p>
-                  <p className="text-gray-500">{invitation.invited_by.email}</p>
+                <div className="flex items-center space-x-2">
+                  <User className="w-4 h-4 text-gray-400" />
+                  <div className="text-sm">
+                    <p className="font-medium">{invitation.invited_by.name}</p>
+                  </div>
                 </div>
               ) : (
                 <span className="text-gray-400">N/A</span>

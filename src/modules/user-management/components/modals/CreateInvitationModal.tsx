@@ -4,12 +4,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { CreateInvitationRequest } from '../../types/invitation';
-import { RoleService } from '../../services/roleService';
-import { InvitationService } from '../../services/invitationService';
-import { CustomRole } from '../../types/role-management';
+import { InvitationService, CreateInvitationRequest } from '../../services/invitationService';
 
 interface CreateInvitationModalProps {
   isOpen: boolean;
@@ -20,35 +16,17 @@ interface CreateInvitationModalProps {
 export function CreateInvitationModal({ isOpen, onClose, onInvitationSent }: CreateInvitationModalProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [roles, setRoles] = useState<CustomRole[]>([]);
   const [formData, setFormData] = useState<CreateInvitationRequest>({
-    email: '',
-    name: '',
-    role_id: undefined
+    email: ''
   });
-
-  useEffect(() => {
-    if (isOpen) {
-      loadRoles();
-    }
-  }, [isOpen]);
-
-  const loadRoles = async () => {
-    try {
-      const rolesData = await RoleService.getRoles();
-      setRoles(rolesData);
-    } catch (error) {
-      console.error('Error loading roles:', error);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.email || !formData.name) {
+    if (!formData.email) {
       toast({
         title: "Lỗi",
-        description: "Vui lòng điền đầy đủ thông tin",
+        description: "Vui lòng nhập địa chỉ email",
         variant: "destructive",
       });
       return;
@@ -78,7 +56,7 @@ export function CreateInvitationModal({ isOpen, onClose, onInvitationSent }: Cre
   };
 
   const handleClose = () => {
-    setFormData({ email: '', name: '', role_id: undefined });
+    setFormData({ email: '' });
     onClose();
   };
 
@@ -86,48 +64,23 @@ export function CreateInvitationModal({ isOpen, onClose, onInvitationSent }: Cre
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Gửi Lời Mời</DialogTitle>
+          <DialogTitle>Gửi Lời Mời Thành Viên</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Họ và tên *</Label>
-            <Input
-              id="name"
-              placeholder="Nhập họ và tên"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email *</Label>
+            <Label htmlFor="email">Địa chỉ Email *</Label>
             <Input
               id="email"
               type="email"
               placeholder="user@example.com"
               value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              onChange={(e) => setFormData({ email: e.target.value })}
               required
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="role">Vai trò</Label>
-            <Select value={formData.role_id} onValueChange={(value) => setFormData({ ...formData, role_id: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder="Chọn vai trò (tùy chọn)" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Không chỉ định vai trò</SelectItem>
-                {roles.map((role) => (
-                  <SelectItem key={role.id} value={role.id}>
-                    {role.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <p className="text-sm text-gray-500">
+              Người nhận sẽ được gửi email mời tham gia doanh nghiệp
+            </p>
           </div>
 
           <div className="flex space-x-2 pt-4">

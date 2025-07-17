@@ -2,17 +2,6 @@
 import { CustomRole, RoleCreationData } from '../types/role-management';
 import { api } from '../../../services/apiService';
 
-interface RoleApiResponse {
-  id: number;
-  name: string;
-  description: string;
-  permissions: number[];
-  user_count: number;
-  is_system: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
 // API Permission object từ backend
 interface ApiPermission {
   id: number;
@@ -24,20 +13,27 @@ interface ApiPermission {
 // API Role response từ backend
 interface ApiRoleResponse {
   id: number;
+  business_id: number;
   name: string;
   description: string;
   permissions: ApiPermission[]; // Array of permission objects
-  user_count?: number;
-  is_system?: boolean;
   created_at: string;
   updated_at: string;
+}
+
+// API Response wrapper cho danh sách roles
+interface RolesApiResponse {
+  total: number;
+  per_page: number;
+  current_page: number;
+  data: ApiRoleResponse[];
 }
 
 export class RoleService {
   static async getRoles(): Promise<CustomRole[]> {
     try {
       console.log('🔍 [RoleService] Fetching roles...');
-      const response = await api.get<{ data: ApiRoleResponse[] }>('/roles');
+      const response = await api.get<RolesApiResponse>('/roles');
       console.log('✅ [RoleService] Raw roles response:', response);
       
       return response.data.map((role: ApiRoleResponse) => {
@@ -54,8 +50,8 @@ export class RoleService {
           name: role.name,
           description: role.description || '',
           permissions: permissionIds, // Array of permission IDs
-          userCount: role.user_count || 0,
-          isSystem: role.is_system || false,
+          userCount: 0, // Không có trong API response
+          isSystem: false, // Không có trong API response
           created_at: role.created_at,
           updated_at: role.updated_at
         };
@@ -85,8 +81,8 @@ export class RoleService {
         name: response.name,
         description: response.description || '',
         permissions: permissionIds, // Array of permission IDs
-        userCount: response.user_count || 0,
-        isSystem: response.is_system || false,
+        userCount: 0, // Không có trong API response
+        isSystem: false, // Không có trong API response
         created_at: response.created_at,
         updated_at: response.updated_at
       };
@@ -107,35 +103,26 @@ export class RoleService {
       };
       
       console.log('🔧 [RoleService] Sending payload to backend:', JSON.stringify(payload, null, 2));
-      console.log('🔧 [RoleService] API endpoint: POST /roles');
-      console.log('🔧 [RoleService] Permissions array:', payload.permissions);
       
-      const response = await api.post<RoleApiResponse>('/roles', payload);
+      const response = await api.post<ApiRoleResponse>('/roles', payload);
       console.log('✅ [RoleService] Backend response:', response);
-      console.log('✅ [RoleService] Response structure:', JSON.stringify(response, null, 2));
 
-      // API trả về direct object, không có wrapper
+      // Parse permissions từ response
+      const permissionIds = response.permissions ? response.permissions.map(p => p.id) : [];
+
       return {
         id: response.id.toString(),
         name: response.name,
         description: response.description,
-        permissions: response.permissions || [],
-        userCount: response.user_count || 0,
-        isSystem: response.is_system || false,
+        permissions: permissionIds,
+        userCount: 0,
+        isSystem: false,
         created_at: response.created_at,
         updated_at: response.updated_at
       };
     } catch (error: any) {
       console.error('❌ [RoleService] Error creating role:', error);
-      console.error('❌ [RoleService] Error details:');
-      console.error('  - Status:', error.response?.status);
-      console.error('  - Status Text:', error.response?.statusText);
-      console.error('  - Response Data:', error.response?.data);
-      console.error('  - Request Headers:', error.config?.headers);
-      console.error('  - Request URL:', error.config?.url);
-      console.error('  - Request Data:', error.config?.data);
       
-      // Extract chi tiết error message từ backend
       let errorMessage = 'Không thể tạo vai trò';
       
       if (error.response?.data?.message) {
@@ -153,72 +140,48 @@ export class RoleService {
     try {
       console.log('🔧 [RoleService] Updating role:', roleId, roleData);
       
-      // FIX: Sử dụng endpoint /roles/{id} và KHÔNG truyền ID trong payload
       const payload = {
         name: roleData.name,
         description: roleData.description,
-        permissions: roleData.permissions || [] // Array of feature IDs
+        permissions: roleData.permissions || []
       };
       
-      console.log('🔧 [RoleService] Update payload (without ID):', JSON.stringify(payload, null, 2));
-      console.log('🔧 [RoleService] API endpoint: PUT /roles/' + roleId);
-      console.log('🔧 [RoleService] Permissions being sent:', payload.permissions);
+      console.log('🔧 [RoleService] Update payload:', JSON.stringify(payload, null, 2));
       
-      // FIX: Sử dụng endpoint /roles/{id} thay vì /roles
-      const response = await api.put<RoleApiResponse>(`/roles/${roleId}`, payload);
+      const response = await api.put<ApiRoleResponse>(`/roles/${roleId}`, payload);
       console.log('✅ [RoleService] Update response:', response);
       
-      // Parse permissions nếu backend trả về array of objects
-      let permissionIds = [];
-      if (Array.isArray(response.permissions)) {
-        if (response.permissions.length > 0 && typeof response.permissions[0] === 'object') {
-          // Backend trả về array of objects
-          permissionIds = response.permissions.map((p: any) => p.id);
-        } else {
-          // Backend trả về array of IDs
-          permissionIds = response.permissions;
-        }
-      }
-      
-      console.log('🔧 [RoleService] Parsed permissions from response:', permissionIds);
+      // Parse permissions từ response
+      const permissionIds = response.permissions ? response.permissions.map(p => p.id) : [];
       
       return {
         id: response.id.toString(),
         name: response.name,
         description: response.description,
         permissions: permissionIds,
-        userCount: response.user_count || 0,
-        isSystem: response.is_system || false,
+        userCount: 0,
+        isSystem: false,
         created_at: response.created_at,
         updated_at: response.updated_at
       };
     } catch (error: any) {
       console.error('❌ [RoleService] Error updating role:', error);
-      console.error('❌ [RoleService] Error response:', error.response?.data);
-      console.error('❌ [RoleService] Error status:', error.response?.status);
-      console.error('❌ [RoleService] Error headers:', error.response?.headers);
       
       let errorMessage = 'Không thể cập nhật vai trò';
       
-      // Xử lý specific error messages từ backend
       if (error.response?.status === 422) {
-        errorMessage = 'Dữ liệu không hợp lệ. Vui lòng kiểm tra lại thông tin.';
+        errorMessage = 'Tên vai trò đã tồn tại hoặc dữ liệu không hợp lệ';
         if (error.response.data?.message) {
           errorMessage = error.response.data.message;
         }
       } else if (error.response?.status === 404) {
-        errorMessage = 'Vai trò không tồn tại hoặc đã bị xóa.';
-      } else if (error.response?.status === 500) {
-        errorMessage = 'Lỗi hệ thống. Vui lòng thử lại sau.';
+        errorMessage = 'Vai trò không tồn tại hoặc đã bị xóa';
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
-      } else if (error.response?.data?.error) {
-        errorMessage = error.response.data.error;
       } else if (error.message) {
         errorMessage = error.message;
       }
       
-      console.error('❌ [RoleService] Final error message:', errorMessage);
       throw new Error(errorMessage);
     }
   }
@@ -226,36 +189,24 @@ export class RoleService {
   static async deleteRole(roleId: string): Promise<void> {
     try {
       console.log('🗑️ [RoleService] Deleting role:', roleId);
-      console.log('🗑️ [RoleService] Using endpoint: DELETE /roles/' + roleId);
       
-      // Sử dụng endpoint /roles/{id} như API documentation
       await api.delete(`/roles/${roleId}`);
       console.log('✅ [RoleService] Role deleted successfully');
     } catch (error: any) {
       console.error('❌ [RoleService] Error deleting role:', error);
-      console.error('❌ [RoleService] Error response:', error.response?.data);
-      console.error('❌ [RoleService] Error status:', error.response?.status);
-      console.error('❌ [RoleService] Request URL:', error.config?.url);
-      console.error('❌ [RoleService] Request method:', error.config?.method);
       
       let errorMessage = 'Không thể xóa vai trò';
       
-      // Xử lý specific error cases
       if (error.response?.status === 404) {
-        errorMessage = 'Vai trò không tồn tại hoặc đã bị xóa.';
-      } else if (error.response?.status === 422) {
-        errorMessage = 'Không thể xóa vai trò này. Có thể vai trò đang được sử dụng bởi người dùng khác.';
-      } else if (error.response?.status === 500) {
-        errorMessage = 'Lỗi hệ thống: Có thể database chưa được cấu hình đầy đủ. Vui lòng liên hệ quản trị viên.';
+        errorMessage = 'Vai trò không tồn tại hoặc đã bị xóa';
+      } else if (error.response?.status === 400) {
+        errorMessage = 'Không thể xóa vai trò đang được sử dụng';
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
-      } else if (error.response?.data?.error) {
-        errorMessage = error.response.data.error;
       } else if (error.message) {
         errorMessage = error.message;
       }
       
-      console.error('❌ [RoleService] Final error message:', errorMessage);
       throw new Error(errorMessage);
     }
   }
