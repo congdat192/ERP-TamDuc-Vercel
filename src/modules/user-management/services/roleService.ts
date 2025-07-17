@@ -96,10 +96,24 @@ export class RoleService {
     try {
       console.log('🔧 [RoleService] Creating role with data:', roleData);
       
+      // Validate permissions array
+      if (!Array.isArray(roleData.permissions) || roleData.permissions.length === 0) {
+        throw new Error('Vui lòng chọn ít nhất một quyền cho vai trò');
+      }
+
+      // Ensure permissions are numbers
+      const permissions = roleData.permissions.map(id => {
+        const numId = typeof id === 'string' ? parseInt(id, 10) : id;
+        if (isNaN(numId)) {
+          throw new Error('ID quyền không hợp lệ');
+        }
+        return numId;
+      });
+      
       const payload = {
-        name: roleData.name,
-        description: roleData.description,
-        permissions: roleData.permissions
+        name: roleData.name.trim(),
+        description: roleData.description?.trim() || '',
+        permissions: permissions
       };
       
       console.log('🔧 [RoleService] Sending payload to backend:', JSON.stringify(payload, null, 2));
@@ -125,7 +139,25 @@ export class RoleService {
       
       let errorMessage = 'Không thể tạo vai trò';
       
-      if (error.response?.data?.message) {
+      // Handle specific API errors
+      if (error.response?.status === 422) {
+        if (error.response?.data?.message === 'Tên vai trò đã tồn tại') {
+          errorMessage = 'Tên vai trò đã tồn tại trong hệ thống';
+        } else if (error.response?.data?.errors) {
+          const errors = error.response.data.errors;
+          if (errors.name) {
+            errorMessage = `Tên vai trò: ${errors.name[0]}`;
+          } else if (errors.permissions) {
+            errorMessage = `Quyền hạn: ${errors.permissions[0]}`;
+          } else {
+            errorMessage = 'Dữ liệu không hợp lệ';
+          }
+        } else {
+          errorMessage = error.response.data.message || 'Dữ liệu không hợp lệ';
+        }
+      } else if (error.response?.status === 500) {
+        errorMessage = 'Lỗi server. Vui lòng liên hệ quản trị viên.';
+      } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.message) {
         errorMessage = error.message;
@@ -140,11 +172,27 @@ export class RoleService {
     try {
       console.log('🔧 [RoleService] Updating role:', roleId, roleData);
       
-      const payload = {
-        name: roleData.name,
-        description: roleData.description,
-        permissions: roleData.permissions || []
-      };
+      // Validate permissions array if provided
+      if (roleData.permissions && (!Array.isArray(roleData.permissions) || roleData.permissions.length === 0)) {
+        throw new Error('Vui lòng chọn ít nhất một quyền cho vai trò');
+      }
+
+      // Ensure permissions are numbers if provided
+      let permissions: number[] = [];
+      if (roleData.permissions) {
+        permissions = roleData.permissions.map(id => {
+          const numId = typeof id === 'string' ? parseInt(id, 10) : id;
+          if (isNaN(numId)) {
+            throw new Error('ID quyền không hợp lệ');
+          }
+          return numId;
+        });
+      }
+      
+      const payload: any = {};
+      if (roleData.name !== undefined) payload.name = roleData.name.trim();
+      if (roleData.description !== undefined) payload.description = roleData.description?.trim() || '';
+      if (roleData.permissions !== undefined) payload.permissions = permissions;
       
       console.log('🔧 [RoleService] Update payload:', JSON.stringify(payload, null, 2));
       
@@ -169,13 +217,26 @@ export class RoleService {
       
       let errorMessage = 'Không thể cập nhật vai trò';
       
+      // Handle specific API errors
       if (error.response?.status === 422) {
-        errorMessage = 'Tên vai trò đã tồn tại hoặc dữ liệu không hợp lệ';
-        if (error.response.data?.message) {
-          errorMessage = error.response.data.message;
+        if (error.response?.data?.message === 'Tên vai trò đã tồn tại') {
+          errorMessage = 'Tên vai trò đã tồn tại trong hệ thống';
+        } else if (error.response?.data?.errors) {
+          const errors = error.response.data.errors;
+          if (errors.name) {
+            errorMessage = `Tên vai trò: ${errors.name[0]}`;
+          } else if (errors.permissions) {
+            errorMessage = `Quyền hạn: ${errors.permissions[0]}`;
+          } else {
+            errorMessage = 'Dữ liệu không hợp lệ';
+          }
+        } else {
+          errorMessage = error.response.data.message || 'Dữ liệu không hợp lệ';
         }
       } else if (error.response?.status === 404) {
         errorMessage = 'Vai trò không tồn tại hoặc đã bị xóa';
+      } else if (error.response?.status === 500) {
+        errorMessage = 'Lỗi server. Vui lòng liên hệ quản trị viên.';
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.message) {
@@ -190,17 +251,24 @@ export class RoleService {
     try {
       console.log('🗑️ [RoleService] Deleting role:', roleId);
       
-      await api.delete(`/roles/${roleId}`);
-      console.log('✅ [RoleService] Role deleted successfully');
+      const response = await api.delete(`/roles/${roleId}`);
+      console.log('✅ [RoleService] Role deleted successfully:', response);
     } catch (error: any) {
       console.error('❌ [RoleService] Error deleting role:', error);
       
       let errorMessage = 'Không thể xóa vai trò';
       
+      // Handle specific API errors
       if (error.response?.status === 404) {
         errorMessage = 'Vai trò không tồn tại hoặc đã bị xóa';
       } else if (error.response?.status === 400) {
-        errorMessage = 'Không thể xóa vai trò đang được sử dụng';
+        if (error.response?.data?.message === 'Không thể xóa vai trò đang được sử dụng') {
+          errorMessage = 'Không thể xóa vai trò này vì đang có người dùng sử dụng';
+        } else {
+          errorMessage = error.response.data.message || 'Không thể xóa vai trò';
+        }
+      } else if (error.response?.status === 500) {
+        errorMessage = 'Lỗi server. Vui lòng liên hệ quản trị viên.';
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.message) {

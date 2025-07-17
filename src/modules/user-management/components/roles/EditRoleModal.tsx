@@ -11,6 +11,8 @@ import { RoleService } from '../../services/roleService';
 import { ModuleService } from '../../services/moduleService';
 import { CreateRoleModuleSidebar } from './CreateRoleModuleSidebar';
 import { CreateRolePermissionDetail } from './CreateRolePermissionDetail';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 interface EditRoleModalProps {
   isOpen: boolean;
@@ -31,6 +33,7 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingModules, setIsLoadingModules] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [error, setError] = useState<string>('');
   const { toast } = useToast();
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<FormData>();
@@ -64,6 +67,7 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
   const loadModules = useCallback(async () => {
     try {
       setIsLoadingModules(true);
+      setError('');
       console.log('🔄 [EditRoleModal] Loading modules...');
       
       const modulesData = await ModuleService.getActiveModules();
@@ -78,9 +82,11 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
       return modulesData;
     } catch (error) {
       console.error('❌ [EditRoleModal] Error loading modules:', error);
+      const errorMessage = error instanceof Error ? error.message : "Không thể tải danh sách modules";
+      setError(errorMessage);
       toast({
         title: "Lỗi",
-        description: "Không thể tải danh sách modules",
+        description: errorMessage,
         variant: "destructive"
       });
       return [];
@@ -97,6 +103,7 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
       // Reset state
       setIsInitialized(false);
       setPermissionSelections({});
+      setError('');
       
       // Set form values
       setValue('name', role.name);
@@ -114,6 +121,7 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
       setPermissionSelections({});
       setSelectedModuleId(null);
       setModules([]);
+      setError('');
     }
   }, [isOpen, role, setValue, loadModules, initializePermissions]);
 
@@ -122,6 +130,18 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
 
     try {
       setIsLoading(true);
+      setError('');
+      
+      // Validate form data
+      if (!data.name.trim()) {
+        setError('Tên vai trò không được để trống');
+        return;
+      }
+      
+      if (data.name.trim().length < 2) {
+        setError('Tên vai trò phải có ít nhất 2 ký tự');
+        return;
+      }
       
       // Validate permissions before submit
       const hasPermissions = Object.values(permissionSelections).some(moduleSelections =>
@@ -129,11 +149,7 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
       );
       
       if (!hasPermissions) {
-        toast({
-          title: "Cảnh báo",
-          description: "Vui lòng chọn ít nhất một quyền cho vai trò",
-          variant: "destructive"
-        });
+        setError('Vui lòng chọn ít nhất một quyền cho vai trò');
         return;
       }
       
@@ -152,8 +168,8 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
       console.log('🔧 [EditRoleModal] Form data:', data);
 
       const roleData: Partial<RoleCreationData> = {
-        name: data.name,
-        description: data.description,
+        name: data.name.trim(),
+        description: data.description?.trim() || '',
         permissions
       };
       
@@ -176,6 +192,7 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
       console.error('❌ [EditRoleModal] Error updating role:', error);
       
       const errorMessage = error instanceof Error ? error.message : "Không thể cập nhật vai trò";
+      setError(errorMessage);
       
       toast({
         title: "Lỗi",
@@ -192,6 +209,7 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
     setPermissionSelections({});
     setSelectedModuleId(null);
     setIsInitialized(false);
+    setError('');
     onClose();
   };
 
@@ -232,7 +250,8 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
     selectedPermissions: getSelectedPermissionsCount(),
     isLoadingModules,
     isInitialized,
-    selectedModuleId
+    selectedModuleId,
+    error
   });
 
   return (
@@ -241,6 +260,13 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
         <DialogHeader className="flex-shrink-0">
           <DialogTitle className="text-card-foreground">Chỉnh Sửa Vai Trò: {role.name}</DialogTitle>
         </DialogHeader>
+
+        {error && (
+          <Alert variant="destructive" className="flex-shrink-0">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
           {/* Basic Information */}
@@ -296,6 +322,10 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
               <div className="flex-1 flex items-center justify-center bg-card">
                 <div className="text-muted-foreground">Đang khởi tạo permissions...</div>
               </div>
+            ) : modules.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center bg-card">
+                <div className="text-muted-foreground">Không có modules nào được tìm thấy</div>
+              </div>
             ) : (
               <>
                 <CreateRoleModuleSidebar
@@ -335,7 +365,7 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
             </Button>
             <Button 
               type="submit" 
-              disabled={isLoading || isLoadingModules || role.isSystem || !isInitialized}
+              disabled={isLoading || isLoadingModules || role.isSystem || !isInitialized || modules.length === 0}
               className="bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               {isLoading ? 'Đang cập nhật...' : 'Cập Nhật Vai Trò'}
