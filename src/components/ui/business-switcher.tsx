@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useBusiness } from '@/contexts/BusinessContext';
 import { useNavigate } from 'react-router-dom';
 import { Business } from '@/types/business';
+import { getBusinessLogoUrl } from '@/services/businessService';
 
 interface BusinessSwitcherProps {
   className?: string;
@@ -65,6 +66,35 @@ export function BusinessSwitcher({ className }: BusinessSwitcherProps) {
     }
   };
 
+  // Business logo component for consistent rendering
+  const BusinessLogo = ({ business, size = "w-8 h-8" }: { business: Business; size?: string }) => {
+    const logoUrl = getBusinessLogoUrl(business.logo_path);
+    
+    if (logoUrl) {
+      return (
+        <div className={`${size} rounded-lg overflow-hidden flex items-center justify-center bg-gray-100 flex-shrink-0`}>
+          <img 
+            src={logoUrl} 
+            alt={`${business.name} logo`}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              // Fallback to icon if image fails to load
+              e.currentTarget.style.display = 'none';
+              e.currentTarget.nextElementSibling?.classList.remove('hidden');
+            }}
+          />
+          <Building2 className="w-4 h-4 text-gray-600 hidden" />
+        </div>
+      );
+    }
+    
+    return (
+      <div className={`${size} bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0`}>
+        <Building2 className="w-4 h-4 text-white" />
+      </div>
+    );
+  };
+
   if (!currentBusiness) return null;
 
   return (
@@ -75,9 +105,7 @@ export function BusinessSwitcher({ className }: BusinessSwitcherProps) {
             variant="ghost" 
             className={`flex items-center space-x-2 h-auto p-2 ${className}`}
           >
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Building2 className="w-4 h-4 text-white" />
-            </div>
+            <BusinessLogo business={currentBusiness} />
             <div className="flex flex-col items-start min-w-0">
               <div className="flex items-center space-x-2">
                 <span className="font-medium text-sm truncate max-w-32">
@@ -108,9 +136,7 @@ export function BusinessSwitcher({ className }: BusinessSwitcherProps) {
                 className="p-3 cursor-pointer"
               >
                 <div className="flex items-center space-x-3 w-full">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Building2 className="w-4 h-4 text-white" />
-                  </div>
+                  <BusinessLogo business={business} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <span className="font-medium text-sm truncate">

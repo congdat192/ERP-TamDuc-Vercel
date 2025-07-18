@@ -35,6 +35,29 @@ export function BusinessSelectionPage() {
     console.log('✅ [BusinessSelectionPage] User authenticated, waiting for BusinessContext to load businesses');
   }, [isAuthenticated, currentUser, navigate]);
 
+  // Standardized Business Logo component with fixed sizing
+  const BusinessLogo = ({ business }: { business: Business }) => {
+    const logoUrl = getBusinessLogoUrl(business.logo_path);
+    
+    return (
+      <div className="w-12 h-12 rounded-lg overflow-hidden flex items-center justify-center bg-gray-100 flex-shrink-0">
+        {logoUrl ? (
+          <img 
+            src={logoUrl} 
+            alt={`${business.name} logo`}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              // Fallback to icon if image fails to load
+              e.currentTarget.style.display = 'none';
+              e.currentTarget.nextElementSibling?.classList.remove('hidden');
+            }}
+          />
+        ) : null}
+        <Building2 className={`w-6 h-6 text-gray-600 ${logoUrl ? 'hidden' : ''}`} />
+      </div>
+    );
+  };
+
   // Fetch pending invitations count
   const fetchPendingInvitations = async () => {
     if (!isAuthenticated || !currentUser) return;
@@ -319,44 +342,30 @@ export function BusinessSelectionPage() {
         {/* Businesses Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {businesses.map((business) => {
-            const businessLogoUrl = getBusinessLogoUrl(business.logo_path);
-            
             return (
               <Card 
                 key={business.id} 
-                className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-blue-200"
+                className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-blue-200 h-full flex flex-col"
                 onClick={() => handleBusinessSelect(business)}
               >
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="w-12 h-12 rounded-lg overflow-hidden flex items-center justify-center bg-gray-100">
-                      {businessLogoUrl ? (
-                        <img 
-                          src={businessLogoUrl} 
-                          alt={`${business.name} logo`}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            // Fallback to icon if image fails to load
-                            e.currentTarget.style.display = 'none';
-                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                          }}
-                        />
-                      ) : null}
-                      <Building2 className={`w-6 h-6 text-gray-600 ${businessLogoUrl ? 'hidden' : ''}`} />
-                    </div>
+                <CardHeader className="pb-3 flex-shrink-0">
+                  <div className="flex items-start justify-between mb-3">
+                    <BusinessLogo business={business} />
                     <Badge className={getRoleBadgeColor(business.user_role)}>
                       {business.is_owner && <Crown className="w-3 h-3 mr-1" />}
                       {getRoleDisplayName(business.user_role)}
                     </Badge>
                   </div>
-                  <CardTitle className="text-lg">{business.name}</CardTitle>
-                  {business.description && (
-                    <CardDescription className="text-sm">
-                      {business.description}
+                  <CardTitle className="text-lg line-clamp-2 min-h-[3.5rem] flex items-center">
+                    {business.name}
+                  </CardTitle>
+                  <div className="min-h-[2.5rem] flex items-start">
+                    <CardDescription className="text-sm line-clamp-2">
+                      {business.description || 'Chưa có mô tả cho doanh nghiệp này'}
                     </CardDescription>
-                  )}
+                  </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex-grow flex flex-col justify-end">
                   <Button 
                     className="w-full"
                     disabled={selectedBusinessId === business.id || isLoading || isSelecting}
@@ -378,26 +387,30 @@ export function BusinessSelectionPage() {
             );
           })}
 
-          {/* Create Business Card */}
+          {/* Create Business Card - Standardized */}
           <Card 
-            className="cursor-pointer hover:shadow-lg transition-shadow border-2 border-dashed border-gray-300 hover:border-blue-300"
+            className="cursor-pointer hover:shadow-lg transition-shadow border-2 border-dashed border-gray-300 hover:border-blue-300 h-full flex flex-col"
             onClick={handleCreateBusiness}
           >
-            <CardHeader className="pb-3">
-              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                <Plus className="w-6 h-6 text-gray-600" />
+            <CardHeader className="pb-3 flex-shrink-0">
+              <div className="mb-3">
+                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <Plus className="w-6 h-6 text-gray-600" />
+                </div>
               </div>
-              <CardTitle className="text-lg">
+              <CardTitle className="text-lg line-clamp-2 min-h-[3.5rem] flex items-center">
                 {hasOwnBusiness ? 'Tạo Doanh Nghiệp' : 'Tạo Doanh Nghiệp Mới'}
               </CardTitle>
-              <CardDescription className="text-sm">
-                {hasOwnBusiness 
-                  ? 'Bạn đã có doanh nghiệp riêng (giới hạn 1 doanh nghiệp/tài khoản)' 
-                  : 'Tạo doanh nghiệp của riêng bạn'
-                }
-              </CardDescription>
+              <div className="min-h-[2.5rem] flex items-start">
+                <CardDescription className="text-sm line-clamp-2">
+                  {hasOwnBusiness 
+                    ? 'Bạn đã có doanh nghiệp riêng (giới hạn 1 doanh nghiệp/tài khoản)' 
+                    : 'Tạo doanh nghiệp của riêng bạn và bắt đầu quản lý'
+                  }
+                </CardDescription>
+              </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex-grow flex flex-col justify-end">
               <Button 
                 variant={hasOwnBusiness ? "outline" : "default"}
                 className="w-full"
