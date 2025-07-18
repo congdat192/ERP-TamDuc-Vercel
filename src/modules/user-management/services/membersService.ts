@@ -1,80 +1,57 @@
 
-import { apiClient } from '@/lib/api-client';
+import { apiCall } from '@/services/apiService';
+import { Member, MembersResponse } from '../types';
 
-export interface Member {
-  id: number;
-  name: string;
-  email: string;
-  status: 'ACTIVE' | 'INACTIVE';
-  is_owner: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface MembersResponse {
-  total: number;
-  per_page: string;
-  current_page: string;
-  data: Member[];
-}
-
-export interface MemberFilters {
-  perPage?: number;
-  page?: number;
-  orderBy?: string;
-  orderDirection?: 'asc' | 'desc';
-}
-
-export interface UpdateMemberData {
-  status: 0 | 1; // 0 = inactive, 1 = active
-}
-
-class MembersService {
-  async getMembers(filters: MemberFilters = {}): Promise<MembersResponse> {
-    try {
-      const params = new URLSearchParams();
-      
-      if (filters.perPage) params.append('perPage', filters.perPage.toString());
-      if (filters.page) params.append('page', filters.page.toString());
-      if (filters.orderBy) params.append('orderBy', filters.orderBy);
-      if (filters.orderDirection) params.append('orderDirection', filters.orderDirection);
-
-      const response = await apiClient.get(`/members?${params.toString()}`);
-      return response.data;
-    } catch (error) {
-      console.error('Failed to fetch members:', error);
-      throw new Error('Không thể tải danh sách thành viên');
-    }
+export const getMembers = async (): Promise<MembersResponse> => {
+  console.log('🔍 [MembersService] Fetching members...');
+  
+  try {
+    const response = await apiCall<MembersResponse>('GET', '/members?perPage=20&page=1&orderBy=created_at&orderDirection=asc');
+    console.log('✅ [MembersService] Raw response:', response);
+    
+    return response;
+  } catch (error) {
+    console.error('❌ [MembersService] Error fetching members:', error);
+    throw error;
   }
+};
 
-  async getMemberById(memberId: string): Promise<Member> {
-    try {
-      const response = await apiClient.get(`/members/${memberId}`);
-      return response.data;
-    } catch (error) {
-      console.error('Failed to fetch member:', error);
-      throw new Error('Không thể tải thông tin thành viên');
-    }
+export const getMember = async (id: number): Promise<Member> => {
+  console.log('🔍 [MembersService] Fetching member:', id);
+  
+  try {
+    const response = await apiCall<Member>('GET', `/members/${id}`);
+    console.log('✅ [MembersService] Member fetched:', response);
+    
+    return response;
+  } catch (error) {
+    console.error('❌ [MembersService] Error fetching member:', error);
+    throw error;
   }
+};
 
-  async updateMember(memberId: string, data: UpdateMemberData): Promise<Member> {
-    try {
-      const response = await apiClient.put(`/members/${memberId}`, data);
-      return response.data;
-    } catch (error) {
-      console.error('Failed to update member:', error);
-      throw new Error('Không thể cập nhật thành viên');
-    }
+export const updateMember = async (id: number, data: { status: number }): Promise<Member> => {
+  console.log('📝 [MembersService] Updating member:', id, data);
+  
+  try {
+    const response = await apiCall<Member>('PUT', `/members/${id}`, data);
+    console.log('✅ [MembersService] Member updated:', response);
+    
+    return response;
+  } catch (error) {
+    console.error('❌ [MembersService] Error updating member:', error);
+    throw error;
   }
+};
 
-  async deleteMember(memberId: string): Promise<void> {
-    try {
-      await apiClient.delete(`/members/${memberId}`);
-    } catch (error) {
-      console.error('Failed to delete member:', error);
-      throw new Error('Không thể xóa thành viên');
-    }
+export const deleteMember = async (id: number): Promise<void> => {
+  console.log('🗑️ [MembersService] Deleting member:', id);
+  
+  try {
+    await apiCall<void>('DELETE', `/members/${id}`);
+    console.log('✅ [MembersService] Member deleted successfully');
+  } catch (error) {
+    console.error('❌ [MembersService] Error deleting member:', error);
+    throw error;
   }
-}
-
-export const membersService = new MembersService();
+};

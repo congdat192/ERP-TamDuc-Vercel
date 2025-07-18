@@ -1,4 +1,3 @@
-
 import { api } from './apiService';
 import { Business, BusinessListResponse, CreateBusinessRequest, UpdateBusinessRequest } from '@/types/business';
 
@@ -56,52 +55,71 @@ export const updateBusiness = async (businessId: number, data: UpdateBusinessReq
   };
 };
 
-// Upload business logo with proper form data structure
+// Upload business logo with multiple type attempts
 export const uploadBusinessLogo = async (businessId: number, file: File): Promise<{ logo_path: string }> => {
   console.log('📷 [businessService] Uploading logo for business ID:', businessId);
   
-  const formData = new FormData();
-  formData.append('image', file);
+  // Try different type values that the API might accept
+  const typeVariants = [
+    'business_logo',
+    'logo', 
+    'business',
+    'company_logo',
+    'image'
+  ];
   
-  // Add type field that the API expects
-  formData.append('type', 'business_logo');
-  
-  console.log('📋 [businessService] FormData contents:');
-  for (let pair of formData.entries()) {
-    console.log(`  ${pair[0]}: ${pair[1] instanceof File ? `File(${pair[1].name})` : pair[1]}`);
-  }
-  
-  try {
-    const response = await api.post<{ logo_path: string }>('/images', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    
-    console.log('✅ [businessService] Logo uploaded successfully:', response.logo_path);
-    return response;
-  } catch (error: any) {
-    console.error('❌ [businessService] Logo upload failed:', error);
-    
-    // If the API still fails, try uploading without the type field
-    if (error.message?.includes('Loại ảnh') || error.message?.includes('type')) {
-      console.log('🔄 [businessService] Retrying upload without type field...');
+  for (const typeValue of typeVariants) {
+    try {
+      console.log(`🔄 [businessService] Trying type: ${typeValue}`);
       
-      const simpleFormData = new FormData();
-      simpleFormData.append('image', file);
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('type', typeValue);
       
-      const retryResponse = await api.post<{ logo_path: string }>('/images', simpleFormData, {
+      console.log('📋 [businessService] FormData contents:');
+      for (let pair of formData.entries()) {
+        console.log(`  ${pair[0]}: ${pair[1] instanceof File ? `File(${pair[1].name})` : pair[1]}`);
+      }
+      
+      const response = await api.post<{ logo_path: string }>('/images', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
       
-      console.log('✅ [businessService] Logo uploaded successfully on retry:', retryResponse.logo_path);
-      return retryResponse;
+      console.log(`✅ [businessService] Logo uploaded successfully with type ${typeValue}:`, response.logo_path);
+      return response;
+    } catch (error: any) {
+      console.error(`❌ [businessService] Upload failed with type ${typeValue}:`, error);
+      
+      // Continue to next type variant
+      if (typeVariants.indexOf(typeValue) < typeVariants.length - 1) {
+        continue;
+      }
+      
+      // If all type variants failed, try without type field
+      console.log('🔄 [businessService] All type variants failed, trying without type field...');
+      
+      try {
+        const simpleFormData = new FormData();
+        simpleFormData.append('image', file);
+        
+        const retryResponse = await api.post<{ logo_path: string }>('/images', simpleFormData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        
+        console.log('✅ [businessService] Logo uploaded successfully without type:', retryResponse.logo_path);
+        return retryResponse;
+      } catch (finalError) {
+        console.error('❌ [businessService] Final upload attempt failed:', finalError);
+        throw new Error('Không thể upload logo. Vui lòng thử lại sau.');
+      }
     }
-    
-    throw error;
   }
+  
+  throw new Error('Không thể upload logo với bất kỳ format nào.');
 };
 
 // Get business logo URL
