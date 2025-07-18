@@ -21,7 +21,7 @@ export function InvitationAcceptPage() {
   // Get additional info from URL if provided
   const businessName = searchParams.get('business') || 'doanh nghiệp';
   const inviterName = searchParams.get('inviter') || 'người mời';
-  const action = searchParams.get('action'); // accept, reject, or null
+  const status = searchParams.get('status'); // accept, reject, or null
 
   const handleAcceptInvitation = async () => {
     if (!id) {
@@ -97,7 +97,7 @@ export function InvitationAcceptPage() {
     }
   };
 
-  // Auto-execute action based on URL parameter
+  // Auto-execute status based on URL parameter
   useEffect(() => {
     if (!id) {
       setError('Liên kết lời mời không hợp lệ');
@@ -105,15 +105,15 @@ export function InvitationAcceptPage() {
       return;
     }
 
-    // Auto-execute if action parameter is present
-    if (action === 'accept' && !processed && !loading) {
+    // Auto-execute if status parameter is present
+    if (status === 'accept' && !processed && !loading) {
       console.log('🎯 Auto-accepting invitation from URL parameter');
       handleAcceptInvitation();
-    } else if (action === 'reject' && !processed && !loading) {
+    } else if (status === 'reject' && !processed && !loading) {
       console.log('🎯 Auto-rejecting invitation from URL parameter');  
       handleRejectInvitation();
     }
-  }, [id, action, processed, loading]);
+  }, [id, status, processed, loading]);
 
   if (!id || error) {
     return (
@@ -158,8 +158,8 @@ export function InvitationAcceptPage() {
     );
   }
 
-  // Show loading state if auto-executing action
-  if (loading || (action && !processed)) {
+  // Show loading state if auto-executing status
+  if (loading || (status && !processed)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Card className="w-full max-w-md">
@@ -167,7 +167,7 @@ export function InvitationAcceptPage() {
             <Loader2 className="w-16 h-16 mx-auto text-blue-500 mb-4 animate-spin" />
             <CardTitle>Đang xử lý lời mời...</CardTitle>
             <CardDescription>
-              {action === 'accept' ? 'Đang chấp nhận lời mời' : 'Đang từ chối lời mời'}
+              {status === 'accept' ? 'Đang chấp nhận lời mời' : 'Đang từ chối lời mời'}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -175,7 +175,7 @@ export function InvitationAcceptPage() {
     );
   }
 
-  // Show manual selection UI if no action parameter
+  // Show manual selection UI if no status parameter
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <Card className="w-full max-w-md">
