@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -37,6 +36,7 @@ import { ERPLayout } from "@/components/layout/ERPLayout";
 import { useAuth } from "@/components/auth/AuthContext";
 import { useBusiness } from "@/contexts/BusinessContext";
 import { Navigate, useNavigate } from "react-router-dom";
+import { InvitationAcceptPage } from "./pages/InvitationAcceptPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -176,12 +176,16 @@ const App = () => (
                   <Route path="/register" element={<RegisterPage />} />
                   <Route path="/email/verify/:id/:hash" element={<EmailVerificationPage />} />
                   <Route path="/xac-nhan-tai-khoan/:email/:hash" element={<EmailVerificationPage />} />
-                   <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                   <Route path="/reset-password" element={<ResetPasswordPage />} />
-                   <Route path="/doi-mat-khau/" element={<ResetPasswordPage />} />
-                   <Route path="/change-password" element={<ChangePasswordPage />} />
+                  <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                  <Route path="/reset-password" element={<ResetPasswordPage />} />
+                  <Route path="/doi-mat-khau/" element={<ResetPasswordPage />} />
+                  <Route path="/change-password" element={<ChangePasswordPage />} />
                   <Route path="/business-selection" element={<BusinessSelectionPage />} />
                   <Route path="/create-business" element={<CreateBusinessPage />} />
+                  
+                  {/* Public invitation acceptance route */}
+                  <Route path="/accept-invitation/:id" element={<InvitationAcceptPage />} />
+                  <Route path="/invitations/accept/:id" element={<InvitationAcceptPage />} />
                   
                   {/* ERP Routes without business ID */}
                   <Route 

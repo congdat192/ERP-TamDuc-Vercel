@@ -85,6 +85,7 @@ export class UserInvitationService {
 
   /**
    * Phản hồi lời mời (chấp nhận hoặc từ chối)
+   * API: POST /api/v1/me/invitations/{id}
    */
   static async respondToInvitation(invitationId: string, status: 'accept' | 'reject'): Promise<void> {
     try {
@@ -92,7 +93,7 @@ export class UserInvitationService {
       
       const payload = { status };
       
-      // API này không cần business ID
+      // Correct endpoint according to API documentation
       await api.post(`/me/invitations/${invitationId}`, payload, {
         requiresBusinessId: false
       });
@@ -109,6 +110,10 @@ export class UserInvitationService {
         if (error.response.data?.errors?.status) {
           errorMessage = error.response.data.errors.status[0];
         }
+      } else if (error.response?.status === 401) {
+        errorMessage = 'Bạn cần đăng nhập để thực hiện thao tác này';
+      } else if (error.response?.status === 403) {
+        errorMessage = 'Email của bạn chưa được xác thực';
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       }
