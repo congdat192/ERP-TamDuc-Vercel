@@ -47,6 +47,7 @@ export const uploadAvatar = async (file: File): Promise<ImageUploadResponse> => 
   // Create FormData
   const formData = new FormData();
   formData.append('image', file);
+  formData.append('type', 'avatar'); // Add type field for avatar uploads
 
   try {
     // Use fetch directly for FormData upload (don't use apiCall as it adds JSON headers)

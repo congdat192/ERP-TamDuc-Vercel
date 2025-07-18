@@ -56,21 +56,52 @@ export const updateBusiness = async (businessId: number, data: UpdateBusinessReq
   };
 };
 
-// Upload business logo
+// Upload business logo with proper form data structure
 export const uploadBusinessLogo = async (businessId: number, file: File): Promise<{ logo_path: string }> => {
   console.log('📷 [businessService] Uploading logo for business ID:', businessId);
   
   const formData = new FormData();
   formData.append('image', file);
   
-  const response = await api.post<{ logo_path: string }>('/images', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
+  // Add type field that the API expects
+  formData.append('type', 'business_logo');
   
-  console.log('✅ [businessService] Logo uploaded successfully:', response.logo_path);
-  return response;
+  console.log('📋 [businessService] FormData contents:');
+  for (let pair of formData.entries()) {
+    console.log(`  ${pair[0]}: ${pair[1] instanceof File ? `File(${pair[1].name})` : pair[1]}`);
+  }
+  
+  try {
+    const response = await api.post<{ logo_path: string }>('/images', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    
+    console.log('✅ [businessService] Logo uploaded successfully:', response.logo_path);
+    return response;
+  } catch (error: any) {
+    console.error('❌ [businessService] Logo upload failed:', error);
+    
+    // If the API still fails, try uploading without the type field
+    if (error.message?.includes('Loại ảnh') || error.message?.includes('type')) {
+      console.log('🔄 [businessService] Retrying upload without type field...');
+      
+      const simpleFormData = new FormData();
+      simpleFormData.append('image', file);
+      
+      const retryResponse = await api.post<{ logo_path: string }>('/images', simpleFormData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      console.log('✅ [businessService] Logo uploaded successfully on retry:', retryResponse.logo_path);
+      return retryResponse;
+    }
+    
+    throw error;
+  }
 };
 
 // Get business logo URL
