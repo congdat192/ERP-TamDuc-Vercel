@@ -197,12 +197,16 @@ export function InvitationManagementPage() {
                             <Building2 className="w-6 h-6 text-white" />
                           </div>
                           <div>
-                            <CardTitle className="text-lg">{invitation.businessName}</CardTitle>
-                            <CardDescription className="mt-1">
-                              Được mời bởi: <span className="font-medium">{invitation.inviterName}</span>
+                            <CardTitle className="text-lg font-semibold text-gray-900">
+                              {invitation.businessName || 'Doanh nghiệp chưa xác định'}
+                            </CardTitle>
+                            <CardDescription className="mt-1 text-gray-600">
+                              Được mời bởi: <span className="font-medium text-gray-800">{invitation.inviterName || 'Người dùng không xác định'}</span>
                             </CardDescription>
-                            <div className="flex items-center space-x-2 mt-2">
-                              <Badge variant="secondary">Đang chờ phản hồi</Badge>
+                            <div className="flex items-center space-x-2 mt-3">
+                              <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+                                Đang chờ phản hồi
+                              </Badge>
                               <span className="text-xs text-gray-500">
                                 {formatDistanceToNow(new Date(invitation.created_at), {
                                   addSuffix: true,
@@ -219,7 +223,7 @@ export function InvitationManagementPage() {
                         <Button 
                           onClick={() => handleAcceptInvitation(invitation.id)}
                           disabled={processingId === invitation.id}
-                          className="flex-1"
+                          className="flex-1 bg-green-600 hover:bg-green-700"
                         >
                           {processingId === invitation.id ? (
                             <>
@@ -237,7 +241,7 @@ export function InvitationManagementPage() {
                           variant="outline"
                           onClick={() => handleRejectInvitation(invitation.id)}
                           disabled={processingId === invitation.id}
-                          className="flex-1"
+                          className="flex-1 border-red-200 text-red-700 hover:bg-red-50"
                         >
                           {processingId === invitation.id ? (
                             <>

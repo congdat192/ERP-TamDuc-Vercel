@@ -74,6 +74,15 @@ export function MembersTable({
     return <Badge className={config?.className}>{config?.label || status}</Badge>;
   };
 
+  const getRoleBadge = (user: UIMember) => {
+    if (user.isOwner) {
+      return <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">Owner</Badge>;
+    }
+    
+    // Hiển thị vai trò thực tế của user nếu không phải Owner
+    return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">{user.role.name}</Badge>;
+  };
+
   const handleToggleStatus = (member: UIMember) => {
     if (member.isOwner) return; // Can't change owner status
     
@@ -153,7 +162,7 @@ export function MembersTable({
               </div>
             </TableCell>
             <TableCell>
-              <Badge variant="outline">{user.role.name}</Badge>
+              {getRoleBadge(user)}
             </TableCell>
             <TableCell>
               {getStatusBadge(user.status, user.isOwner)}
