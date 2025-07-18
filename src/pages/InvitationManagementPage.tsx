@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Building2, Mail, CheckCircle, XCircle, Loader2, ArrowLeft, RefreshCw } from 'lucide-react';
 import { UserInvitationService, UserInvitation } from '@/modules/user-management/services/userInvitationService';
 import { useAuth } from '@/components/auth/AuthContext';
+import { useBusiness } from '@/contexts/BusinessContext';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
@@ -17,6 +18,7 @@ export function InvitationManagementPage() {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const { currentUser, isAuthenticated } = useAuth();
+  const { refreshBusinesses } = useBusiness();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -64,13 +66,18 @@ export function InvitationManagementPage() {
     setProcessingId(invitationId);
     try {
       await UserInvitationService.acceptInvitation(invitationId);
-      toast({
-        title: "Thành công!",
-        description: "Bạn đã chấp nhận lời mời thành công. Vui lòng chọn doanh nghiệp để tiếp tục.",
-      });
       
       // Remove processed invitation from list
       setInvitations(prev => prev.filter(inv => inv.id !== invitationId));
+      
+      // Refresh business list to get the new business
+      console.log('🔄 [InvitationManagementPage] Refreshing business list after accepting invitation');
+      await refreshBusinesses();
+      
+      toast({
+        title: "Thành công!",
+        description: "Bạn đã chấp nhận lời mời thành công. Danh sách doanh nghiệp đã được cập nhật.",
+      });
       
       // Redirect to business selection after success
       setTimeout(() => {
