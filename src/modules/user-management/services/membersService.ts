@@ -51,7 +51,7 @@ export const getMember = async (id: number): Promise<Member> => {
   }
 };
 
-export const updateMember = async (id: number, data: { status: number }): Promise<Member> => {
+export const updateMember = async (id: number, data: { status: 'ACTIVE' | 'INACTIVE' }): Promise<Member> => {
   console.log('📝 [MembersService] Updating member:', id, data);
   
   try {

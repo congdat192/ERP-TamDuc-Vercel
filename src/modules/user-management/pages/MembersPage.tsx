@@ -129,16 +129,16 @@ export function MembersPage() {
     try {
       console.log('🔧 [MembersPage] Updating member:', memberId, data);
       
-      // Convert status to API format (0 or 1) with proper typing
+      // Convert UI action to API status format
       const updateData = {
-        status: data.isActive ? 1 as const : 0 as const
+        status: data.isActive ? 'ACTIVE' as const : 'INACTIVE' as const
       };
 
       await api.put(`/members/${memberId}`, updateData);
       
       toast({
         title: "Thành công",
-        description: "Cập nhật thông tin thành viên thành công",
+        description: "Cập nhật trạng thái thành viên thành công",
       });
       
       // Refresh the members list
@@ -147,7 +147,7 @@ export function MembersPage() {
       console.error('❌ [MembersPage] Error updating member:', err);
       toast({
         title: "Lỗi",
-        description: err.message || "Không thể cập nhật thông tin thành viên",
+        description: err.message || "Không thể cập nhật trạng thái thành viên",
         variant: "destructive",
       });
     }

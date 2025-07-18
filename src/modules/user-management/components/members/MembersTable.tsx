@@ -86,6 +86,8 @@ export function MembersTable({
   const handleToggleStatus = (member: UIMember) => {
     if (member.isOwner) return; // Can't change owner status
     
+    console.log('🔄 [MembersTable] Toggling status for member:', member.id, 'from', member.isActive ? 'ACTIVE' : 'INACTIVE', 'to', !member.isActive ? 'ACTIVE' : 'INACTIVE');
+    
     onUserUpdate?.(member.id, {
       isActive: !member.isActive
     });
