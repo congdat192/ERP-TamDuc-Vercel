@@ -39,8 +39,22 @@ export function InvitationManagementPage() {
         orderBy: 'created_at',
         orderDirection: 'desc'
       });
+      
+      console.log('📊 [InvitationManagementPage] Raw API response:', response);
+      console.log('📋 [InvitationManagementPage] Invitations data:', response.data);
+      
       setInvitations(response.data);
       console.log('✅ [InvitationManagementPage] Loaded invitations:', response.data.length);
+      
+      // Log chi tiết từng invitation để debug
+      response.data.forEach((invitation, index) => {
+        console.log(`📧 [Invitation ${index + 1}]:`, {
+          id: invitation.id,
+          businessName: invitation.businessName,
+          inviterName: invitation.inviterName,
+          created_at: invitation.created_at
+        });
+      });
     } catch (error: any) {
       console.error('❌ [InvitationManagementPage] Error fetching invitations:', error);
       toast({
@@ -65,6 +79,7 @@ export function InvitationManagementPage() {
     
     setProcessingId(invitationId);
     try {
+      console.log('✅ [InvitationManagementPage] Accepting invitation:', invitationId);
       await UserInvitationService.acceptInvitation(invitationId);
       
       // Remove processed invitation from list
@@ -84,6 +99,7 @@ export function InvitationManagementPage() {
         navigate('/business-selection');
       }, 1500);
     } catch (error: any) {
+      console.error('❌ [InvitationManagementPage] Error accepting invitation:', error);
       toast({
         title: "Lỗi",
         description: error.message,
@@ -99,6 +115,7 @@ export function InvitationManagementPage() {
     
     setProcessingId(invitationId);
     try {
+      console.log('❌ [InvitationManagementPage] Rejecting invitation:', invitationId);
       await UserInvitationService.rejectInvitation(invitationId);
       toast({
         title: "Đã từ chối",
@@ -108,6 +125,7 @@ export function InvitationManagementPage() {
       // Remove processed invitation from list
       setInvitations(prev => prev.filter(inv => inv.id !== invitationId));
     } catch (error: any) {
+      console.error('❌ [InvitationManagementPage] Error rejecting invitation:', error);
       toast({
         title: "Lỗi",
         description: error.message,
@@ -163,7 +181,7 @@ export function InvitationManagementPage() {
               <Mail className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <p className="font-medium text-gray-900">{currentUser.fullName}</p>
+              <p className="font-medium text-gray-900">{currentUser.name || currentUser.fullName}</p>
               <p className="text-sm text-gray-500">{currentUser.email}</p>
             </div>
           </div>

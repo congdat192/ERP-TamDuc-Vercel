@@ -78,7 +78,11 @@ export function MembersPage() {
       if (filters.orderDirection) params.append('orderDirection', filters.orderDirection);
       else params.append('orderDirection', 'asc');
 
+      console.log('🔍 [MembersPage] Fetching members with params:', params.toString());
       const response = await api.get<MembersResponse>(`/members?${params.toString()}`);
+      
+      console.log('📊 [MembersPage] Raw API response:', response);
+      console.log('👥 [MembersPage] Members data:', response.data);
 
       setMembers(response.data);
       setPagination({
@@ -86,8 +90,20 @@ export function MembersPage() {
         perPage: parseInt(response.per_page),
         currentPage: parseInt(response.current_page)
       });
+      
+      // Log chi tiết từng member để debug role
+      response.data.forEach((member, index) => {
+        console.log(`👤 [Member ${index + 1}]:`, {
+          id: member.id,
+          name: member.name,
+          email: member.email,
+          status: member.status,
+          is_owner: member.is_owner,
+          created_at: member.created_at
+        });
+      });
     } catch (err: any) {
-      console.error('Error fetching members:', err);
+      console.error('❌ [MembersPage] Error fetching members:', err);
       
       if (err.message?.includes('not a member of this business')) {
         setError('Bạn không có quyền xem danh sách thành viên của doanh nghiệp này.');
@@ -111,6 +127,8 @@ export function MembersPage() {
 
   const handleUpdateMember = async (memberId: string, data: any) => {
     try {
+      console.log('🔧 [MembersPage] Updating member:', memberId, data);
+      
       // Convert status to API format (0 or 1) with proper typing
       const updateData = {
         status: data.isActive ? 1 as const : 0 as const
@@ -126,6 +144,7 @@ export function MembersPage() {
       // Refresh the members list
       await fetchMembers();
     } catch (err: any) {
+      console.error('❌ [MembersPage] Error updating member:', err);
       toast({
         title: "Lỗi",
         description: err.message || "Không thể cập nhật thông tin thành viên",
@@ -136,6 +155,7 @@ export function MembersPage() {
 
   const handleDeleteMember = async (memberId: string) => {
     try {
+      console.log('🗑️ [MembersPage] Deleting member:', memberId);
       await api.delete(`/members/${memberId}`);
       
       toast({
@@ -146,6 +166,7 @@ export function MembersPage() {
       // Refresh the members list
       await fetchMembers();
     } catch (err: any) {
+      console.error('❌ [MembersPage] Error deleting member:', err);
       toast({
         title: "Lỗi",
         description: err.message || "Không thể xóa thành viên",
@@ -155,36 +176,45 @@ export function MembersPage() {
   };
 
   const handleFiltersChange = (filters: any) => {
+    console.log('🔍 [MembersPage] Filters changed:', filters);
     fetchMembers(filters);
   };
 
   const handleBulkOperation = async (operation: any) => {
+    console.log('📦 [MembersPage] Bulk operation:', operation);
     // Handle bulk operations here if needed
-    console.log('Bulk operation:', operation);
   };
 
   useEffect(() => {
     if (currentBusiness) {
+      console.log('🏢 [MembersPage] Current business:', currentBusiness);
       fetchMembers();
     }
   }, [currentBusiness]);
 
-  // Transform API data to match UI expectations
-  const transformedMembers: UIMember[] = members.map(member => ({
-    id: member.id.toString(),
-    fullName: member.name || 'N/A',
-    username: member.email?.split('@')[0] || 'N/A',
-    email: member.email || 'N/A',
-    phone: undefined, // API doesn't provide this
-    avatar: undefined, // API doesn't provide this
-    status: member.status === 'ACTIVE' ? 'active' : 'inactive',
-    isActive: member.status === 'ACTIVE',
-    isOwner: member.is_owner,
-    createdAt: member.created_at,
-    lastLogin: null, // API doesn't provide this
-    role: { name: member.is_owner ? 'Owner' : 'Member' },
-    department: null // API doesn't provide this
-  }));
+  // Transform API data to match UI expectations với role chính xác
+  const transformedMembers: UIMember[] = members.map(member => {
+    const transformedMember = {
+      id: member.id.toString(),
+      fullName: member.name || 'N/A',
+      username: member.email?.split('@')[0] || 'N/A',
+      email: member.email || 'N/A',
+      phone: undefined, // API doesn't provide this
+      avatar: undefined, // API doesn't provide this
+      status: member.status === 'ACTIVE' ? 'active' : 'inactive',
+      isActive: member.status === 'ACTIVE',
+      isOwner: member.is_owner,
+      createdAt: member.created_at,
+      lastLogin: null, // API doesn't provide this
+      role: { 
+        name: member.is_owner ? 'Chủ Sở Hữu' : 'Thành Viên' 
+      },
+      department: null // API doesn't provide this
+    };
+    
+    console.log(`🔄 [MembersPage] Transformed member ${member.id}:`, transformedMember);
+    return transformedMember;
+  });
 
   if (error) {
     return (
