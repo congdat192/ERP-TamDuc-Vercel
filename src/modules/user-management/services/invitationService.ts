@@ -19,6 +19,7 @@ interface BusinessInvitationsListResponse {
 
 export interface CreateInvitationRequest {
   email: string;
+  role_id?: string; // Thêm field role_id optional
 }
 
 export interface InvitationFilters {
@@ -102,7 +103,13 @@ export class InvitationService {
     try {
       console.log('🔧 [InvitationService] Creating invitation:', data);
       
-      const response = await api.post('/invitations', data);
+      // Prepare payload - chỉ gửi role_id nếu có
+      const payload: any = { email: data.email };
+      if (data.role_id) {
+        payload.role_id = parseInt(data.role_id); // Convert to number theo API spec
+      }
+      
+      const response = await api.post('/invitations', payload);
       console.log('✅ [InvitationService] Invitation created:', response);
       
       // API trả về { "message": "Lời mời đã được gửi" } theo spec
@@ -128,6 +135,8 @@ export class InvitationService {
         errorMessage = 'Dữ liệu không hợp lệ';
         if (error.response.data?.errors?.email) {
           errorMessage = error.response.data.errors.email[0];
+        } else if (error.response.data?.errors?.role_id) {
+          errorMessage = error.response.data.errors.role_id[0];
         }
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
