@@ -79,3 +79,21 @@ export interface BulkOperation {
   userIds: string[];
   params?: Record<string, any>;
 }
+
+// Add missing Member and MembersResponse types
+export interface Member {
+  id: number;
+  name: string;
+  email: string;
+  status: 'ACTIVE' | 'INACTIVE';
+  is_owner: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MembersResponse {
+  total: number;
+  per_page: string;
+  current_page: string;
+  data: Member[];
+}

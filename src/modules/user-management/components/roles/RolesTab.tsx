@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,7 +20,7 @@ import {
 import { CreateRoleModal } from './CreateRoleModal';
 import { EditRoleModal } from './EditRoleModal';
 import { RoleService } from '../../services/roleService';
-import { membersService } from '../../services/membersService';
+import { getMembers } from '../../services/membersService';
 import { CustomRole } from '../../types/role-management';
 import { useToast } from '@/hooks/use-toast';
 import { TableLoadingSkeleton } from '@/components/ui/loading';
@@ -69,7 +68,7 @@ export function RolesTab() {
       console.log('👥 [RolesTab] Loading user counts for roles...');
       
       // Fetch all members to count users per role
-      const membersResponse = await membersService.getMembers({
+      const membersResponse = await getMembers({
         perPage: 1000, // Get all members to count properly
         page: 1
       });
