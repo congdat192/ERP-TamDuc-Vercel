@@ -112,7 +112,7 @@ export function GeneralSettings() {
       if (selectedLogoFile) {
         setIsUploadingLogo(true);
         const logoResponse = await uploadBusinessLogo(currentBusiness.id, selectedLogoFile);
-        logoPath = logoResponse.logo_path;
+        logoPath = logoResponse.path;
         setIsUploadingLogo(false);
       }
 

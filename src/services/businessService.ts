@@ -55,8 +55,8 @@ export const updateBusiness = async (businessId: number, data: UpdateBusinessReq
   };
 };
 
-// Upload business logo with correct type
-export const uploadBusinessLogo = async (businessId: number, file: File): Promise<{ logo_path: string }> => {
+// Upload business logo with direct fetch
+export const uploadBusinessLogo = async (businessId: number, file: File): Promise<{ path: string }> => {
   console.log('📷 [businessService] Uploading logo for business ID:', businessId);
   
   const formData = new FormData();
@@ -68,15 +68,42 @@ export const uploadBusinessLogo = async (businessId: number, file: File): Promis
     console.log(`  ${pair[0]}: ${pair[1] instanceof File ? `File(${pair[1].name})` : pair[1]}`);
   }
   
+  // Get token from localStorage
+  const token = localStorage.getItem('auth_token');
+  if (!token) {
+    throw new Error('Không tìm thấy token xác thực');
+  }
+
+  // Get business ID for X-Business-Id header
+  const selectedBusinessId = localStorage.getItem('cbi');
+  
   try {
-    const response = await api.post<{ logo_path: string }>('/images', formData, {
+    const response = await fetch('https://api.matkinhtamduc.xyz/api/v1/images', {
+      method: 'POST',
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json',
+        ...(selectedBusinessId && { 'X-Business-Id': selectedBusinessId }),
+        // Don't set Content-Type for FormData - browser will set it automatically with boundary
       },
+      body: formData,
     });
+
+    console.log('📨 [businessService] Upload response status:', response.status);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Upload thất bại' }));
+      console.error('❌ [businessService] Upload failed:', errorData);
+      throw new Error(errorData.message || 'Upload logo thất bại');
+    }
+
+    const data = await response.json();
+    console.log('✅ [businessService] Logo uploaded successfully:', data);
     
-    console.log('✅ [businessService] Logo uploaded successfully:', response.logo_path);
-    return response;
+    // Return the path from response
+    return {
+      path: data.path
+    };
   } catch (error: any) {
     console.error('❌ [businessService] Logo upload failed:', error);
     throw new Error('Không thể upload logo. Vui lòng thử lại sau.');
