@@ -181,7 +181,7 @@ export function InvitationManagementPage() {
               <Mail className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <p className="font-medium text-gray-900">{currentUser.name || currentUser.fullName}</p>
+              <p className="font-medium text-gray-900">{currentUser.fullName}</p>
               <p className="text-sm text-gray-500">{currentUser.email}</p>
             </div>
           </div>
