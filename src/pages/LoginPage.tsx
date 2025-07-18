@@ -11,6 +11,15 @@ export function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated && currentUser) {
+      // Check for redirect URL first
+      const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
+      if (redirectUrl) {
+        console.log('🔄 [LoginPage] Redirecting to saved URL:', redirectUrl);
+        sessionStorage.removeItem('redirectAfterLogin');
+        navigate(redirectUrl);
+        return;
+      }
+
       // Redirect based on user role
       if (currentUser.role === 'platform-admin') {
         navigate('/platformadmin');

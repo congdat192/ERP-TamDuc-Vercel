@@ -37,6 +37,7 @@ import { useAuth } from "@/components/auth/AuthContext";
 import { useBusiness } from "@/contexts/BusinessContext";
 import { Navigate, useNavigate } from "react-router-dom";
 import { InvitationAcceptPage } from "./pages/InvitationAcceptPage";
+import { InvitationManagementPage } from "./pages/InvitationManagementPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -160,6 +161,27 @@ const ProtectedERPRoute = ({ children, module }: { children: React.ReactNode; mo
   );
 };
 
+// Protected Route for general authentication (not business-specific)
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { currentUser, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isAuthenticated || !currentUser) {
+      // Save current URL to redirect back after login
+      const currentPath = window.location.pathname + window.location.search;
+      sessionStorage.setItem('redirectAfterLogin', currentPath);
+      navigate('/login');
+    }
+  }, [isAuthenticated, currentUser, navigate]);
+
+  if (!isAuthenticated || !currentUser) {
+    return null;
+  }
+
+  return <>{children}</>;
+};
+
 const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
@@ -183,10 +205,41 @@ const App = () => (
                   <Route path="/business-selection" element={<BusinessSelectionPage />} />
                   <Route path="/create-business" element={<CreateBusinessPage />} />
                   
-                  {/* Public invitation acceptance routes - both English and Vietnamese */}
-                  <Route path="/accept-invitation/:id" element={<InvitationAcceptPage />} />
-                  <Route path="/invitations/accept/:id" element={<InvitationAcceptPage />} />
-                  <Route path="/loi-moi/:id" element={<InvitationAcceptPage />} />
+                  {/* Protected Invitation Management */}
+                  <Route 
+                    path="/invitations" 
+                    element={
+                      <ProtectedRoute>
+                        <InvitationManagementPage />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  
+                  {/* Protected invitation acceptance routes - redirect to invitation management */}
+                  <Route 
+                    path="/accept-invitation/:id" 
+                    element={
+                      <ProtectedRoute>
+                        <Navigate to="/invitations" replace />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/invitations/accept/:id" 
+                    element={
+                      <ProtectedRoute>
+                        <Navigate to="/invitations" replace />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/loi-moi/:id" 
+                    element={
+                      <ProtectedRoute>
+                        <Navigate to="/invitations" replace />
+                      </ProtectedRoute>
+                    } 
+                  />
                   
                   {/* ERP Routes without business ID */}
                   <Route 

@@ -4,11 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Building2, Plus, Crown, Users, ArrowRight, Loader2, RefreshCw } from 'lucide-react';
+import { Building2, Plus, Crown, Users, ArrowRight, Loader2, RefreshCw, Mail } from 'lucide-react';
 import { useBusiness } from '@/contexts/BusinessContext';
 import { useAuth } from '@/components/auth/AuthContext';
 import { Business } from '@/types/business';
 import { useToast } from '@/hooks/use-toast';
+import { UserInvitationService } from '@/modules/user-management/services/userInvitationService';
 
 export function BusinessSelectionPage() {
   const { businesses, hasOwnBusiness, selectBusiness, isLoading, error, refreshBusinesses } = useBusiness();
@@ -16,6 +17,8 @@ export function BusinessSelectionPage() {
   const [selectedBusinessId, setSelectedBusinessId] = useState<number | null>(null);
   const [isSelecting, setIsSelecting] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [pendingInvitationsCount, setPendingInvitationsCount] = useState(0);
+  const [loadingInvitations, setLoadingInvitations] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -31,6 +34,34 @@ export function BusinessSelectionPage() {
 
     console.log('✅ [BusinessSelectionPage] User authenticated, waiting for BusinessContext to load businesses');
   }, [isAuthenticated, currentUser, navigate]);
+
+  // Fetch pending invitations count
+  const fetchPendingInvitations = async () => {
+    if (!isAuthenticated || !currentUser) return;
+    
+    setLoadingInvitations(true);
+    try {
+      const response = await UserInvitationService.getUserInvitations({
+        page: 1,
+        perPage: 100, // Get all to count
+        orderBy: 'created_at',
+        orderDirection: 'desc'
+      });
+      setPendingInvitationsCount(response.data.length);
+      console.log('📧 [BusinessSelectionPage] Pending invitations:', response.data.length);
+    } catch (error: any) {
+      console.error('❌ [BusinessSelectionPage] Error fetching invitations:', error);
+      // Don't show toast for invitation fetch errors as it's not critical
+    } finally {
+      setLoadingInvitations(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated && currentUser) {
+      fetchPendingInvitations();
+    }
+  }, [isAuthenticated, currentUser]);
 
   const handleBusinessSelect = async (business: Business) => {
     if (selectedBusinessId === business.id || isSelecting || isLoading) return;
@@ -83,7 +114,10 @@ export function BusinessSelectionPage() {
     setIsRefreshing(true);
     try {
       console.log('🔄 [BusinessSelectionPage] Manually refreshing businesses');
-      await refreshBusinesses();
+      await Promise.all([
+        refreshBusinesses(),
+        fetchPendingInvitations()
+      ]);
       toast({
         title: "Thành công",
         description: "Đã làm mới danh sách doanh nghiệp",
@@ -108,6 +142,10 @@ export function BusinessSelectionPage() {
     } catch (error) {
       console.error('Logout failed:', error);
     }
+  };
+
+  const handleManageInvitations = () => {
+    navigate('/invitations');
   };
 
   const getRoleDisplayName = (role: string) => {
@@ -210,6 +248,26 @@ export function BusinessSelectionPage() {
               </p>
             </div>
           )}
+
+          {/* Invitation Notification */}
+          {pendingInvitationsCount > 0 && (
+            <div className="mt-4 bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex items-center justify-center space-x-2">
+                <Mail className="w-5 h-5 text-green-600" />
+                <span className="text-green-800 font-medium">
+                  Bạn có {pendingInvitationsCount} lời mời đang chờ phản hồi
+                </span>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mt-2 border-green-300 text-green-700 hover:bg-green-100"
+                onClick={handleManageInvitations}
+              >
+                Xem và quản lý lời mời
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* User Info & Actions */}
@@ -224,6 +282,21 @@ export function BusinessSelectionPage() {
             </div>
           </div>
           <div className="flex space-x-2">
+            {/* Invitations Button with Badge */}
+            <Button 
+              variant="outline" 
+              onClick={handleManageInvitations}
+              className="relative"
+              size="sm"
+            >
+              <Mail className="w-4 h-4 mr-2" />
+              Lời mời
+              {pendingInvitationsCount > 0 && (
+                <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1.5 py-0.5 min-w-[1.25rem] h-5">
+                  {pendingInvitationsCount}
+                </Badge>
+              )}
+            </Button>
             <Button 
               variant="outline" 
               onClick={handleRefresh} 
