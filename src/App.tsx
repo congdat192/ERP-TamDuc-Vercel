@@ -183,9 +183,10 @@ const App = () => (
                   <Route path="/business-selection" element={<BusinessSelectionPage />} />
                   <Route path="/create-business" element={<CreateBusinessPage />} />
                   
-                  {/* Public invitation acceptance route */}
+                  {/* Public invitation acceptance routes - both English and Vietnamese */}
                   <Route path="/accept-invitation/:id" element={<InvitationAcceptPage />} />
                   <Route path="/invitations/accept/:id" element={<InvitationAcceptPage />} />
+                  <Route path="/loi-moi/:id" element={<InvitationAcceptPage />} />
                   
                   {/* ERP Routes without business ID */}
                   <Route 

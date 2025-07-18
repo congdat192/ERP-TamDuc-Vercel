@@ -43,7 +43,7 @@ class MembersService {
       return response.data;
     } catch (error) {
       console.error('Failed to fetch members:', error);
-      throw error;
+      throw new Error('Không thể tải danh sách thành viên');
     }
   }
 
@@ -53,7 +53,7 @@ class MembersService {
       return response.data;
     } catch (error) {
       console.error('Failed to fetch member:', error);
-      throw error;
+      throw new Error('Không thể tải thông tin thành viên');
     }
   }
 
@@ -63,7 +63,7 @@ class MembersService {
       return response.data;
     } catch (error) {
       console.error('Failed to update member:', error);
-      throw error;
+      throw new Error('Không thể cập nhật thành viên');
     }
   }
 
@@ -72,7 +72,7 @@ class MembersService {
       await apiClient.delete(`/members/${memberId}`);
     } catch (error) {
       console.error('Failed to delete member:', error);
-      throw error;
+      throw new Error('Không thể xóa thành viên');
     }
   }
 }

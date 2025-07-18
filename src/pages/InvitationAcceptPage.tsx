@@ -21,6 +21,7 @@ export function InvitationAcceptPage() {
   // Get additional info from URL if provided
   const businessName = searchParams.get('business') || 'doanh nghiệp';
   const inviterName = searchParams.get('inviter') || 'người mời';
+  const action = searchParams.get('action'); // accept, reject, or null
 
   const handleAcceptInvitation = async () => {
     if (!id) {
@@ -96,13 +97,23 @@ export function InvitationAcceptPage() {
     }
   };
 
-  // Check if invitation ID is valid
+  // Auto-execute action based on URL parameter
   useEffect(() => {
     if (!id) {
       setError('Liên kết lời mời không hợp lệ');
       setProcessed(true);
+      return;
     }
-  }, [id]);
+
+    // Auto-execute if action parameter is present
+    if (action === 'accept' && !processed && !loading) {
+      console.log('🎯 Auto-accepting invitation from URL parameter');
+      handleAcceptInvitation();
+    } else if (action === 'reject' && !processed && !loading) {
+      console.log('🎯 Auto-rejecting invitation from URL parameter');  
+      handleRejectInvitation();
+    }
+  }, [id, action, processed, loading]);
 
   if (!id || error) {
     return (
@@ -147,6 +158,24 @@ export function InvitationAcceptPage() {
     );
   }
 
+  // Show loading state if auto-executing action
+  if (loading || (action && !processed)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <Loader2 className="w-16 h-16 mx-auto text-blue-500 mb-4 animate-spin" />
+            <CardTitle>Đang xử lý lời mời...</CardTitle>
+            <CardDescription>
+              {action === 'accept' ? 'Đang chấp nhận lời mời' : 'Đang từ chối lời mời'}
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
+  // Show manual selection UI if no action parameter
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <Card className="w-full max-w-md">
