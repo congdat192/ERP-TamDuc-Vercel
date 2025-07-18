@@ -1,12 +1,18 @@
-
 import { api } from '@/services/apiService';
 
 // API Response structures cho User Invitations (lời mời nhận được)
 interface UserInvitationApiResponse {
   id: number;
   created_at: string;
-  from_business_name: string;
-  from_user_name: string;
+  from_business: {
+    id: string;
+    name: string;
+    logo_path: string | null;
+  };
+  from_user: {
+    name: string;
+    avatar_path: string | null;
+  };
 }
 
 interface UserInvitationsListResponse {
@@ -19,7 +25,9 @@ interface UserInvitationsListResponse {
 export interface UserInvitation {
   id: string;
   businessName: string;
+  businessLogoPath: string | null;
   inviterName: string;
+  inviterAvatarPath: string | null;
   created_at: string;
 }
 
@@ -65,8 +73,10 @@ export class UserInvitationService {
       // Transform API response to UI format
       const transformedData: UserInvitation[] = response.data.map(item => ({
         id: item.id.toString(),
-        businessName: item.from_business_name,
-        inviterName: item.from_user_name,
+        businessName: item.from_business.name,
+        businessLogoPath: item.from_business.logo_path,
+        inviterName: item.from_user.name,
+        inviterAvatarPath: item.from_user.avatar_path,
         created_at: item.created_at
       }));
 

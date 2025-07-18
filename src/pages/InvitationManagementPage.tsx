@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +8,7 @@ import { UserInvitationService, UserInvitation } from '@/modules/user-management
 import { useAuth } from '@/components/auth/AuthContext';
 import { useBusiness } from '@/contexts/BusinessContext';
 import { useToast } from '@/hooks/use-toast';
+import { getBusinessLogoUrl } from '@/services/businessService';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
 
@@ -51,6 +51,7 @@ export function InvitationManagementPage() {
         console.log(`📧 [Invitation ${index + 1}]:`, {
           id: invitation.id,
           businessName: invitation.businessName,
+          businessLogoPath: invitation.businessLogoPath,
           inviterName: invitation.inviterName,
           created_at: invitation.created_at
         });
@@ -206,77 +207,93 @@ export function InvitationManagementPage() {
                   </h2>
                 </div>
                 
-                {invitations.map((invitation) => (
-                  <Card key={invitation.id} className="border-2 hover:shadow-md transition-shadow">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start space-x-3">
-                          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                            <Building2 className="w-6 h-6 text-white" />
-                          </div>
-                          <div>
-                            <CardTitle className="text-lg font-semibold text-gray-900">
-                              {invitation.businessName || 'Doanh nghiệp chưa xác định'}
-                            </CardTitle>
-                            <CardDescription className="mt-1 text-gray-600">
-                              Được mời bởi: <span className="font-medium text-gray-800">{invitation.inviterName || 'Người dùng không xác định'}</span>
-                            </CardDescription>
-                            <div className="flex items-center space-x-2 mt-3">
-                              <Badge variant="secondary" className="bg-orange-100 text-orange-800">
-                                Đang chờ phản hồi
-                              </Badge>
-                              <span className="text-xs text-gray-500">
-                                {formatDistanceToNow(new Date(invitation.created_at), {
-                                  addSuffix: true,
-                                  locale: vi
-                                })}
-                              </span>
+                {invitations.map((invitation) => {
+                  const businessLogoUrl = getBusinessLogoUrl(invitation.businessLogoPath);
+                  
+                  return (
+                    <Card key={invitation.id} className="border-2 hover:shadow-md transition-shadow">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-start space-x-3">
+                            <div className="w-12 h-12 rounded-lg overflow-hidden flex items-center justify-center bg-gray-100">
+                              {businessLogoUrl ? (
+                                <img 
+                                  src={businessLogoUrl} 
+                                  alt={`${invitation.businessName} logo`}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    // Fallback to icon if image fails to load
+                                    e.currentTarget.style.display = 'none';
+                                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                  }}
+                                />
+                              ) : null}
+                              <Building2 className={`w-6 h-6 text-gray-600 ${businessLogoUrl ? 'hidden' : ''}`} />
+                            </div>
+                            <div>
+                              <CardTitle className="text-lg font-semibold text-gray-900">
+                                {invitation.businessName || 'Doanh nghiệp chưa xác định'}
+                              </CardTitle>
+                              <CardDescription className="mt-1 text-gray-600">
+                                Được mời bởi: <span className="font-medium text-gray-800">{invitation.inviterName || 'Người dùng không xác định'}</span>
+                              </CardDescription>
+                              <div className="flex items-center space-x-2 mt-3">
+                                <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+                                  Đang chờ phản hồi
+                                </Badge>
+                                <span className="text-xs text-gray-500">
+                                  {formatDistanceToNow(new Date(invitation.created_at), {
+                                    addSuffix: true,
+                                    locale: vi
+                                  })}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <div className="flex space-x-3">
-                        <Button 
-                          onClick={() => handleAcceptInvitation(invitation.id)}
-                          disabled={processingId === invitation.id}
-                          className="flex-1 bg-green-600 hover:bg-green-700"
-                        >
-                          {processingId === invitation.id ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Đang xử lý...
-                            </>
-                          ) : (
-                            <>
-                              <CheckCircle className="w-4 h-4 mr-2" />
-                              Chấp nhận
-                            </>
-                          )}
-                        </Button>
-                        <Button 
-                          variant="outline"
-                          onClick={() => handleRejectInvitation(invitation.id)}
-                          disabled={processingId === invitation.id}
-                          className="flex-1 border-red-200 text-red-700 hover:bg-red-50"
-                        >
-                          {processingId === invitation.id ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Đang xử lý...
-                            </>
-                          ) : (
-                            <>
-                              <XCircle className="w-4 h-4 mr-2" />
-                              Từ chối
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <div className="flex space-x-3">
+                          <Button 
+                            onClick={() => handleAcceptInvitation(invitation.id)}
+                            disabled={processingId === invitation.id}
+                            className="flex-1 bg-green-600 hover:bg-green-700"
+                          >
+                            {processingId === invitation.id ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Đang xử lý...
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle className="w-4 h-4 mr-2" />
+                                Chấp nhận
+                              </>
+                            )}
+                          </Button>
+                          <Button 
+                            variant="outline"
+                            onClick={() => handleRejectInvitation(invitation.id)}
+                            disabled={processingId === invitation.id}
+                            className="flex-1 border-red-200 text-red-700 hover:bg-red-50"
+                          >
+                            {processingId === invitation.id ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Đang xử lý...
+                              </>
+                            ) : (
+                              <>
+                                <XCircle className="w-4 h-4 mr-2" />
+                                Từ chối
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             ) : (
               <Card className="text-center py-8">

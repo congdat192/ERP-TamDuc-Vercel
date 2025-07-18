@@ -41,7 +41,9 @@ export interface InvitationResponse {
 export interface UserInvitation {
   id: string;
   businessName: string;
+  businessLogoPath: string | null;
   inviterName: string;
+  inviterAvatarPath: string | null;
   created_at: string;
 }
 

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +9,7 @@ import { useAuth } from '@/components/auth/AuthContext';
 import { Business } from '@/types/business';
 import { useToast } from '@/hooks/use-toast';
 import { UserInvitationService } from '@/modules/user-management/services/userInvitationService';
+import { getBusinessLogoUrl } from '@/services/businessService';
 
 export function BusinessSelectionPage() {
   const { businesses, hasOwnBusiness, selectBusiness, isLoading, error, refreshBusinesses } = useBusiness();
@@ -318,49 +318,65 @@ export function BusinessSelectionPage() {
 
         {/* Businesses Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {businesses.map((business) => (
-            <Card 
-              key={business.id} 
-              className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-blue-200"
-              onClick={() => handleBusinessSelect(business)}
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                    <Building2 className="w-6 h-6 text-white" />
+          {businesses.map((business) => {
+            const businessLogoUrl = getBusinessLogoUrl(business.logo_path);
+            
+            return (
+              <Card 
+                key={business.id} 
+                className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-blue-200"
+                onClick={() => handleBusinessSelect(business)}
+              >
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <div className="w-12 h-12 rounded-lg overflow-hidden flex items-center justify-center bg-gray-100">
+                      {businessLogoUrl ? (
+                        <img 
+                          src={businessLogoUrl} 
+                          alt={`${business.name} logo`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            // Fallback to icon if image fails to load
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                          }}
+                        />
+                      ) : null}
+                      <Building2 className={`w-6 h-6 text-gray-600 ${businessLogoUrl ? 'hidden' : ''}`} />
+                    </div>
+                    <Badge className={getRoleBadgeColor(business.user_role)}>
+                      {business.is_owner && <Crown className="w-3 h-3 mr-1" />}
+                      {getRoleDisplayName(business.user_role)}
+                    </Badge>
                   </div>
-                  <Badge className={getRoleBadgeColor(business.user_role)}>
-                    {business.is_owner && <Crown className="w-3 h-3 mr-1" />}
-                    {getRoleDisplayName(business.user_role)}
-                  </Badge>
-                </div>
-                <CardTitle className="text-lg">{business.name}</CardTitle>
-                {business.description && (
-                  <CardDescription className="text-sm">
-                    {business.description}
-                  </CardDescription>
-                )}
-              </CardHeader>
-              <CardContent>
-                <Button 
-                  className="w-full"
-                  disabled={selectedBusinessId === business.id || isLoading || isSelecting}
-                >
-                  {selectedBusinessId === business.id ? (
-                    <>
-                      <Loader2 className="animate-spin w-4 h-4 mr-2" />
-                      Đang chọn...
-                    </>
-                  ) : (
-                    <>
-                      Vào ERP
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </>
+                  <CardTitle className="text-lg">{business.name}</CardTitle>
+                  {business.description && (
+                    <CardDescription className="text-sm">
+                      {business.description}
+                    </CardDescription>
                   )}
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+                </CardHeader>
+                <CardContent>
+                  <Button 
+                    className="w-full"
+                    disabled={selectedBusinessId === business.id || isLoading || isSelecting}
+                  >
+                    {selectedBusinessId === business.id ? (
+                      <>
+                        <Loader2 className="animate-spin w-4 h-4 mr-2" />
+                        Đang chọn...
+                      </>
+                    ) : (
+                      <>
+                        Vào ERP
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
 
           {/* Create Business Card */}
           <Card 
