@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Trash2, Mail, Clock, User } from 'lucide-react';
-import { Invitation } from '../../services/invitationService';
+import { Invitation } from '../../types/invitation';
 import { format } from 'date-fns';
 
 interface InvitationsTableProps {
@@ -94,7 +94,6 @@ export function InvitationsTable({ invitations, isLoading, onDelete }: Invitatio
                 size="sm"
                 onClick={() => onDelete?.(invitation.id)}
                 className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                disabled={invitation.status === 'accepted'}
               >
                 <Trash2 className="w-4 h-4" />
               </Button>

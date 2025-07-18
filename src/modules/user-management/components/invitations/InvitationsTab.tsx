@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Mail, Plus } from 'lucide-react';
+import { Mail, Plus, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { InvitationsTable } from './InvitationsTable';
 import { InvitationFilters } from './InvitationFilters';
 import { CreateInvitationModal } from '../modals/CreateInvitationModal';
@@ -25,7 +25,7 @@ export function InvitationsTab() {
 
   useEffect(() => {
     loadInvitations();
-  }, [filters]);
+  }, [filters, pagination.page, pagination.perPage]);
 
   const loadInvitations = async () => {
     try {
@@ -37,12 +37,11 @@ export function InvitationsTab() {
       });
       
       setInvitations(response.data);
-      setPagination({
-        page: response.page,
-        perPage: response.perPage,
+      setPagination(prev => ({
+        ...prev,
         total: response.total,
         totalPages: response.totalPages
-      });
+      }));
     } catch (error: any) {
       toast({
         title: "Lỗi",
@@ -74,6 +73,22 @@ export function InvitationsTab() {
   const handleInvitationSent = () => {
     loadInvitations();
   };
+
+  const handlePageChange = (newPage: number) => {
+    setPagination(prev => ({ ...prev, page: newPage }));
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setPagination(prev => ({ 
+      ...prev, 
+      perPage: newItemsPerPage, 
+      page: 1 // Reset to first page when changing items per page
+    }));
+  };
+
+  // Calculate pagination display
+  const startIndex = (pagination.page - 1) * pagination.perPage + 1;
+  const endIndex = Math.min(pagination.page * pagination.perPage, pagination.total);
 
   return (
     <div className="space-y-6">
@@ -115,6 +130,70 @@ export function InvitationsTab() {
             isLoading={isLoading}
             onDelete={handleDelete}
           />
+          
+          {/* Pagination */}
+          {!isLoading && invitations.length > 0 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t mt-4">
+              <div className="flex items-center space-x-3">
+                <span className="text-sm text-muted-foreground">Hiển thị</span>
+                <select
+                  value={pagination.perPage}
+                  onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+                  className="px-2 py-1 text-sm border rounded bg-background"
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+                <span className="text-sm text-muted-foreground">
+                  {startIndex} – {endIndex} trong {pagination.total.toLocaleString('vi-VN')} lời mời
+                </span>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(1)}
+                  disabled={pagination.page === 1}
+                  className="h-8 w-8 p-0"
+                >
+                  <ChevronsLeft className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(pagination.page - 1)}
+                  disabled={pagination.page === 1}
+                  className="h-8 w-8 p-0"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <span className="px-3 py-1 text-sm min-w-[80px] text-center">
+                  Trang {pagination.page} / {pagination.totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(pagination.page + 1)}
+                  disabled={pagination.page === pagination.totalPages}
+                  className="h-8 w-8 p-0"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(pagination.totalPages)}
+                  disabled={pagination.page === pagination.totalPages}
+                  className="h-8 w-8 p-0"
+                >
+                  <ChevronsRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

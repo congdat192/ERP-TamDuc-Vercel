@@ -27,6 +27,8 @@ export interface InvitationFilters {
   perPage?: number;
   orderBy?: string;
   orderDirection?: 'asc' | 'desc';
+  search?: string;
+  status?: string[];
 }
 
 // Transform API response to UI format
@@ -65,6 +67,20 @@ export class InvitationService {
       if (filters.perPage) params.append('perPage', filters.perPage.toString());
       if (filters.orderBy) params.append('orderBy', filters.orderBy);
       if (filters.orderDirection) params.append('orderDirection', filters.orderDirection);
+      if (filters.search) params.append('search', filters.search);
+      
+      // Handle status filter - send as comma-separated string
+      if (filters.status && filters.status.length > 0) {
+        const statusMap: Record<string, string> = {
+          'pending': 'INVITED',
+          'accepted': 'ACCEPTED', 
+          'rejected': 'REJECTED',
+          'expired': 'EXPIRED'
+        };
+        
+        const apiStatuses = filters.status.map(s => statusMap[s] || s).join(',');
+        params.append('status', apiStatuses);
+      }
 
       const queryString = params.toString();
       const endpoint = `/invitations${queryString ? `?${queryString}` : ''}`;
