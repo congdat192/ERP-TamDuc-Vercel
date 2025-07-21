@@ -44,7 +44,7 @@ interface UIMember {
 }
 
 interface Role {
-  id: string;
+  id: number; // Changed to number to match API
   name: string;
   description?: string;
 }
@@ -57,7 +57,7 @@ interface MembersTableProps {
   onSelectUser: (userId: string, selected: boolean) => void;
   onUserUpdate?: (userId: string, data: any) => void;
   onUserDelete?: (userId: string) => void;
-  onUpdateMemberRole?: (memberId: string, roleId: string) => Promise<void>;
+  onUpdateMemberRole?: (memberId: string, roleId: number) => Promise<void>; // Changed roleId to number
 }
 
 export function MembersTable({
@@ -98,7 +98,7 @@ export function MembersTable({
       return <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">Owner</Badge>;
     }
     
-    // Hiển thị vai trò thực tế của user nếu không phải Owner
+    // Hiển thị vai trò thực tế của user
     return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">{user.role.name}</Badge>;
   };
 
@@ -123,6 +123,7 @@ export function MembersTable({
   const handleEditRole = (member: UIMember) => {
     if (member.isOwner) return; // Can't change owner role
     
+    console.log('✏️ [MembersTable] Opening edit role modal for member:', member.id);
     setEditRoleModal({
       isOpen: true,
       member: member
@@ -136,7 +137,8 @@ export function MembersTable({
     });
   };
 
-  const handleUpdateRole = async (memberId: string, roleId: string) => {
+  const handleUpdateRole = async (memberId: string, roleId: number) => {
+    console.log('🔄 [MembersTable] Handling role update:', memberId, 'to role:', roleId);
     if (onUpdateMemberRole) {
       await onUpdateMemberRole(memberId, roleId);
     }

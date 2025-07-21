@@ -21,7 +21,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User, UserCheck } from 'lucide-react';
 
 interface Role {
-  id: string;
+  id: number; // Changed to number to match API
   name: string;
   description?: string;
 }
@@ -39,7 +39,7 @@ interface EditMemberRoleModalProps {
   onClose: () => void;
   member: Member | null;
   roles: Role[];
-  onUpdateRole: (memberId: string, roleId: string) => Promise<void>;
+  onUpdateRole: (memberId: string, roleId: number) => Promise<void>; // Changed roleId to number
   isLoading?: boolean;
 }
 
@@ -51,7 +51,7 @@ export function EditMemberRoleModal({
   onUpdateRole,
   isLoading = false
 }: EditMemberRoleModalProps) {
-  const [selectedRoleId, setSelectedRoleId] = useState<string>('');
+  const [selectedRoleId, setSelectedRoleId] = useState<number | null>(null); // Changed to number
   const [isSaving, setIsSaving] = useState(false);
 
   // Reset selectedRoleId when member changes
@@ -59,15 +59,16 @@ export function EditMemberRoleModal({
     if (member && roles.length > 0) {
       // Find current role ID by name (since we only have role name from member data)
       const currentRole = roles.find(role => role.name === member.role.name);
-      setSelectedRoleId(currentRole?.id || '');
+      setSelectedRoleId(currentRole?.id || null);
     }
   }, [member, roles]);
 
   const handleSave = async () => {
-    if (!member || !selectedRoleId) return;
+    if (!member || selectedRoleId === null) return;
 
     try {
       setIsSaving(true);
+      console.log('🔄 [EditMemberRoleModal] Updating role:', member.id, 'to role ID:', selectedRoleId);
       await onUpdateRole(member.id, selectedRoleId);
       onClose();
     } catch (error) {
@@ -127,8 +128,8 @@ export function EditMemberRoleModal({
               Chọn Vai Trò Mới
             </label>
             <Select
-              value={selectedRoleId}
-              onValueChange={setSelectedRoleId}
+              value={selectedRoleId?.toString() || ''}
+              onValueChange={(value) => setSelectedRoleId(parseInt(value))}
               disabled={isLoading || isSaving}
             >
               <SelectTrigger>
@@ -136,7 +137,7 @@ export function EditMemberRoleModal({
               </SelectTrigger>
               <SelectContent>
                 {roles.map((role) => (
-                  <SelectItem key={role.id} value={role.id}>
+                  <SelectItem key={role.id} value={role.id.toString()}>
                     <div className="flex flex-col">
                       <span className="font-medium">{role.name}</span>
                       {role.description && (

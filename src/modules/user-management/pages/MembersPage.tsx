@@ -29,19 +29,20 @@ interface Member {
   email: string;
   status: 'ACTIVE' | 'INACTIVE';
   is_owner: boolean;
+  roles?: Array<{ id: number; name: string; description?: string }>;
   created_at: string;
   updated_at: string;
 }
 
 interface MembersResponse {
   total: number;
-  per_page: string;
-  current_page: string;
+  per_page: number;
+  current_page: number;
   data: Member[];
 }
 
 interface Role {
-  id: string;
+  id: number;
   name: string;
   description?: string;
 }
@@ -111,8 +112,8 @@ export function MembersPage() {
       setMembers(response.data);
       setPagination({
         total: response.total,
-        perPage: parseInt(response.per_page),
-        currentPage: parseInt(response.current_page)
+        perPage: response.per_page,
+        currentPage: response.current_page
       });
       
       // Log chi tiết từng member để debug role
@@ -123,6 +124,7 @@ export function MembersPage() {
           email: member.email,
           status: member.status,
           is_owner: member.is_owner,
+          roles: member.roles,
           created_at: member.created_at
         });
       });
@@ -177,12 +179,13 @@ export function MembersPage() {
     }
   };
 
-  const handleUpdateMemberRole = async (memberId: string, roleId: string) => {
+  const handleUpdateMemberRole = async (memberId: string, roleId: number) => {
     try {
-      console.log('👤 [MembersPage] Updating member role:', memberId, 'to role:', roleId);
+      console.log('👤 [MembersPage] Updating member role:', memberId, 'to role ID:', roleId);
       
+      // Use the correct API payload format
       await api.put(`/members/${memberId}`, {
-        role_id: parseInt(roleId)
+        role_ids: [roleId] // API expects array format
       });
       
       toast({
@@ -190,7 +193,8 @@ export function MembersPage() {
         description: "Cập nhật vai trò thành viên thành công",
       });
       
-      // Refresh the members list
+      // Refresh the members list to get updated role information
+      console.log('🔄 [MembersPage] Refreshing members list after role update...');
       await fetchMembers();
     } catch (err: any) {
       console.error('❌ [MembersPage] Error updating member role:', err);
@@ -245,6 +249,16 @@ export function MembersPage() {
 
   // Transform API data to match UI expectations với role chính xác
   const transformedMembers: UIMember[] = members.map(member => {
+    // Get role name from roles array if available, otherwise fallback
+    let roleName = 'Thành Viên'; // Default role name
+    
+    if (member.is_owner) {
+      roleName = 'Chủ Sở Hữu';
+    } else if (member.roles && member.roles.length > 0) {
+      // Use the first role if multiple roles exist
+      roleName = member.roles[0].name;
+    }
+    
     const transformedMember = {
       id: member.id.toString(),
       fullName: member.name || 'N/A',
@@ -258,7 +272,7 @@ export function MembersPage() {
       createdAt: member.created_at,
       lastLogin: null, // API doesn't provide this
       role: { 
-        name: member.is_owner ? 'Chủ Sở Hữu' : 'Thành Viên' 
+        name: roleName 
       },
       department: null // API doesn't provide this
     };

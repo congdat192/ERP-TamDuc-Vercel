@@ -69,8 +69,9 @@ export const updateMemberRole = async (id: number, roleId: number): Promise<Memb
   console.log('👤 [MembersService] Updating member role:', id, 'to role:', roleId);
   
   try {
+    // Fix: Use correct API payload format with role_ids array
     const response = await api.put<Member>(`/members/${id}`, {
-      role_id: roleId
+      role_ids: [roleId] // API expects array format
     });
     console.log('✅ [MembersService] Member role updated:', response);
     

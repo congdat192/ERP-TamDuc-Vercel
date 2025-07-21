@@ -23,7 +23,7 @@ interface UIMember {
 }
 
 interface Role {
-  id: string;
+  id: number; // Changed to number to match API
   name: string;
   description?: string;
 }
@@ -34,7 +34,7 @@ interface MembersTabProps {
   isLoading: boolean;
   onUserUpdate?: (userId: string, data: any) => void;
   onUserDelete?: (userId: string) => void;
-  onUpdateMemberRole?: (memberId: string, roleId: string) => Promise<void>;
+  onUpdateMemberRole?: (memberId: string, roleId: number) => Promise<void>; // Changed roleId to number
   onBulkOperation?: (operation: any) => void;
   onFiltersChange?: (filters: any) => void;
 }

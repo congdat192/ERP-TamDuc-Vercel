@@ -12,21 +12,20 @@ export interface Department {
 }
 
 export interface Role {
-  id: string;
+  id: number; // Changed from string to number to match API
   name: string;
   description?: string;
   permissions: Permission[];
-  memberCount: number;
-  isSystem: boolean;
+  memberCount?: number;
+  isSystem?: boolean;
   created_at: string;
   updated_at: string;
 }
 
 export interface Permission {
-  id: string;
-  module: string;
-  action: string;
-  resource?: string;
+  id: number; // Changed from string to number to match API
+  code: string;
+  name: string;
   description: string;
 }
 
@@ -80,20 +79,21 @@ export interface BulkOperation {
   params?: Record<string, any>;
 }
 
-// Add missing Member and MembersResponse types
+// API Member types (matching actual API response)
 export interface Member {
-  id: number;
+  id: number; // API returns number
   name: string;
   email: string;
   status: 'ACTIVE' | 'INACTIVE';
   is_owner: boolean;
+  roles?: Role[]; // API may include roles array
   created_at: string;
   updated_at: string;
 }
 
 export interface MembersResponse {
   total: number;
-  per_page: string;
-  current_page: string;
+  per_page: number; // Changed from string to number
+  current_page: number; // Changed from string to number
   data: Member[];
 }
