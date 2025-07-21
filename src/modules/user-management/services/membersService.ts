@@ -1,4 +1,3 @@
-
 import { api } from '@/services/apiService';
 import { Member, MembersResponse } from '../types';
 
@@ -9,13 +8,16 @@ interface MemberFilters {
   orderDirection?: 'asc' | 'desc';
 }
 
-// Enhanced Member type with roles information
-export interface MemberWithRoles extends Member {
-  roles: Array<{
-    id: number;
-    name: string;
-    description: string;
-  }>;
+// Simple role interface matching API response
+interface ApiRole {
+  id: number;
+  name: string;
+  description: string;
+}
+
+// Enhanced Member type with API roles information
+export interface MemberWithRoles extends Omit<Member, 'roles'> {
+  roles: ApiRole[];
 }
 
 export const getMembers = async (filters: MemberFilters = {}): Promise<MembersResponse> => {
