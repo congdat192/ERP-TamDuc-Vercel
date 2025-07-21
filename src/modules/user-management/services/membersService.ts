@@ -9,6 +9,15 @@ interface MemberFilters {
   orderDirection?: 'asc' | 'desc';
 }
 
+// Enhanced Member type with roles information
+export interface MemberWithRoles extends Member {
+  roles: Array<{
+    id: number;
+    name: string;
+    description: string;
+  }>;
+}
+
 export const getMembers = async (filters: MemberFilters = {}): Promise<MembersResponse> => {
   console.log('🔍 [MembersService] Fetching members...');
   
@@ -33,6 +42,57 @@ export const getMembers = async (filters: MemberFilters = {}): Promise<MembersRe
     return response;
   } catch (error) {
     console.error('❌ [MembersService] Error fetching members:', error);
+    throw error;
+  }
+};
+
+export const getMembersWithRoles = async (): Promise<MemberWithRoles[]> => {
+  console.log('🔍 [MembersService] Fetching all members with role details...');
+  
+  try {
+    // First, get all members
+    const membersResponse = await getMembers({
+      perPage: 1000, // Get all members
+      page: 1
+    });
+    
+    console.log(`📊 [MembersService] Found ${membersResponse.data.length} members, fetching role details...`);
+    
+    // Then, fetch detailed info for each member to get roles
+    const memberDetailsPromises = membersResponse.data.map(async (member): Promise<MemberWithRoles> => {
+      try {
+        const memberDetail = await getMember(member.id);
+        return {
+          ...member,
+          roles: (memberDetail as any).roles || [] // Cast to access roles property
+        };
+      } catch (error) {
+        console.warn(`⚠️ [MembersService] Failed to fetch details for member ${member.id}:`, error);
+        // Return member without roles if detail fetch fails
+        return {
+          ...member,
+          roles: []
+        };
+      }
+    });
+    
+    // Wait for all member details to be fetched
+    const membersWithRoles = await Promise.all(memberDetailsPromises);
+    
+    console.log('✅ [MembersService] Members with roles fetched:', membersWithRoles);
+    
+    // Log role distribution for debugging
+    const roleDistribution: Record<string, number> = {};
+    membersWithRoles.forEach(member => {
+      member.roles.forEach(role => {
+        roleDistribution[role.name] = (roleDistribution[role.name] || 0) + 1;
+      });
+    });
+    console.log('📈 [MembersService] Role distribution:', roleDistribution);
+    
+    return membersWithRoles;
+  } catch (error) {
+    console.error('❌ [MembersService] Error fetching members with roles:', error);
     throw error;
   }
 };
@@ -97,6 +157,7 @@ export const deleteMember = async (id: number): Promise<void> => {
 // Export all functions as a service object for backward compatibility
 export const membersService = {
   getMembers,
+  getMembersWithRoles,
   getMember,
   updateMember,
   updateMemberRole,

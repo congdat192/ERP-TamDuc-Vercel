@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,7 +22,7 @@ import {
 import { CreateRoleModal } from './CreateRoleModal';
 import { EditRoleModal } from './EditRoleModal';
 import { RoleService } from '../../services/roleService';
-import { getMembers } from '../../services/membersService';
+import { getMembersWithRoles } from '../../services/membersService';
 import { CustomRole } from '../../types/role-management';
 import { useToast } from '@/hooks/use-toast';
 import { TableLoadingSkeleton } from '@/components/ui/loading';
@@ -66,15 +67,12 @@ export function RolesTab() {
 
   const loadRoleUserCounts = async (rolesData: CustomRole[]) => {
     try {
-      console.log('👥 [RolesTab] Loading user counts for roles...');
+      console.log('👥 [RolesTab] Loading actual user counts for roles...');
       
-      // Fetch all members to count users per role
-      const membersResponse = await getMembers({
-        perPage: 1000, // Get all members to count properly
-        page: 1
-      });
+      // Fetch all members with their role details
+      const membersWithRoles = await getMembersWithRoles();
       
-      console.log('📊 [RolesTab] Members response:', membersResponse);
+      console.log('📊 [RolesTab] Members with roles:', membersWithRoles);
       
       const userCounts: Record<string, number> = {};
       
@@ -83,50 +81,20 @@ export function RolesTab() {
         userCounts[role.id] = 0;
       });
       
-      // Count members by role
-      // Since the current API doesn't provide role assignment info for members,
-      // we'll use a more realistic distribution based on typical role usage patterns
-      const activeMembers = membersResponse.data.filter(member => 
-        member.status === 'ACTIVE' && !member.is_owner
-      );
-      
-      console.log(`👤 [RolesTab] Active members (non-owners): ${activeMembers.length}`);
-      
-      if (rolesData.length > 0 && activeMembers.length > 0) {
-        // Create a more realistic distribution based on role names
-        rolesData.forEach((role) => {
-          const roleName = role.name.toLowerCase();
-          
-          // Admin roles typically have fewer users
-          if (roleName.includes('admin') || roleName.includes('quản trị')) {
-            userCounts[role.id] = Math.min(2, Math.ceil(activeMembers.length * 0.1));
-          }
-          // Manager/Leader roles have moderate users
-          else if (roleName.includes('trưởng') || roleName.includes('manager') || roleName.includes('lead')) {
-            userCounts[role.id] = Math.min(5, Math.ceil(activeMembers.length * 0.2));
-          }
-          // Staff/Employee roles have most users
-          else if (roleName.includes('nhân viên') || roleName.includes('staff') || roleName.includes('employee')) {
-            userCounts[role.id] = Math.ceil(activeMembers.length * 0.6);
-          }
-          // Custom roles get remaining users
-          else {
-            userCounts[role.id] = Math.ceil(activeMembers.length * 0.1);
-          }
-        });
-        
-        // Adjust counts to not exceed total active members
-        const totalAssigned = Object.values(userCounts).reduce((sum, count) => sum + count, 0);
-        if (totalAssigned > activeMembers.length) {
-          // Scale down proportionally
-          const scaleFactor = activeMembers.length / totalAssigned;
-          Object.keys(userCounts).forEach(roleId => {
-            userCounts[roleId] = Math.max(0, Math.floor(userCounts[roleId] * scaleFactor));
+      // Count actual members by role
+      membersWithRoles.forEach(member => {
+        // Only count active, non-owner members
+        if (member.status === 'ACTIVE' && !member.is_owner && member.roles) {
+          member.roles.forEach(role => {
+            // Count this member for this role
+            if (userCounts.hasOwnProperty(role.id.toString())) {
+              userCounts[role.id.toString()]++;
+            }
           });
         }
-      }
+      });
       
-      console.log('📈 [RolesTab] Calculated user counts:', userCounts);
+      console.log('📈 [RolesTab] Actual user counts:', userCounts);
       setRoleUserCounts(userCounts);
     } catch (error) {
       console.error('❌ [RolesTab] Error loading role user counts:', error);
@@ -137,6 +105,12 @@ export function RolesTab() {
       });
       console.log('🔧 [RolesTab] Using default counts (0) due to error');
       setRoleUserCounts(defaultCounts);
+      
+      toast({
+        title: "Cảnh báo",
+        description: "Không thể tải số lượng người dùng cho vai trò",
+        variant: "destructive",
+      });
     }
   };
 
