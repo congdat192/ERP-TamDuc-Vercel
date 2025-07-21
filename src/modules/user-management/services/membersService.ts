@@ -71,7 +71,11 @@ export const getMembersWithRoles = async (): Promise<MemberWithRoles[]> => {
       // Convert members to MemberWithRoles format
       const membersWithRoles: MemberWithRoles[] = response.data.map(member => ({
         ...member,
-        roles: member.roles || [] // Use roles directly from API response
+        roles: (member.roles || []).map(role => ({
+          id: role.id,
+          name: role.name,
+          description: role.description || '' // Ensure description is always a string
+        }))
       }));
       
       allMembers = [...allMembers, ...membersWithRoles];
