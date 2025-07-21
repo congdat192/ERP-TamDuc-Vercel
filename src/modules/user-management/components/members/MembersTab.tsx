@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MemberFilters } from './MemberFilters';
 import { MembersTable } from './MembersTable';
 import { BulkOperations } from './BulkOperations';
+import { UserManagementFilters } from '../../types';
 
 interface UIMember {
   id: string;
@@ -49,6 +50,7 @@ export function MembersTab({
   onFiltersChange
 }: MembersTabProps) {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [filters, setFilters] = useState<UserManagementFilters>({});
 
   const handleSelectUser = (userId: string, selected: boolean) => {
     if (selected) {
@@ -56,6 +58,19 @@ export function MembersTab({
     } else {
       setSelectedUsers(prev => prev.filter(id => id !== userId));
     }
+  };
+
+  const handleFiltersChange = (newFilters: UserManagementFilters) => {
+    setFilters(newFilters);
+    onFiltersChange?.(newFilters);
+  };
+
+  const handleSelectAll = () => {
+    setSelectedUsers(users.map(user => user.id));
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedUsers([]);
   };
 
   return (
@@ -66,13 +81,18 @@ export function MembersTab({
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <MemberFilters onFiltersChange={onFiltersChange} />
+            <MemberFilters 
+              filters={filters}
+              onFiltersChange={handleFiltersChange} 
+            />
             
             {selectedUsers.length > 0 && (
               <BulkOperations
-                selectedUsers={selectedUsers}
+                selectedCount={selectedUsers.length}
+                totalCount={users.length}
+                onSelectAll={handleSelectAll}
+                onDeselectAll={handleDeselectAll}
                 onBulkOperation={onBulkOperation}
-                onClearSelection={() => setSelectedUsers([])}
               />
             )}
 
