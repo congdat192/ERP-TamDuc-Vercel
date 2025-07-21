@@ -1,3 +1,4 @@
+
 import { api } from '@/services/apiService';
 
 // API Response structures theo documentation mới
@@ -121,7 +122,7 @@ export class InvitationService {
       // Prepare payload - chỉ gửi role_id nếu có
       const payload: any = { email: data.email };
       if (data.role_id) {
-        payload.role_id = parseInt(data.role_id); // Convert to number theo API spec
+        payload.role_id = data.role_id; // Keep as number, no need to convert
       }
       
       const response = await api.post('/invitations', payload);
