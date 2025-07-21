@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -67,9 +66,9 @@ export function RolesTab() {
 
   const loadRoleUserCounts = async (rolesData: CustomRole[]) => {
     try {
-      console.log('👥 [RolesTab] Loading actual user counts for roles...');
+      console.log('👥 [RolesTab] Loading user counts for roles...');
       
-      // Fetch all members with their role details
+      // Fetch all members with their role details using optimized function
       const membersWithRoles = await getMembersWithRoles();
       
       console.log('📊 [RolesTab] Members with roles:', membersWithRoles);
@@ -81,9 +80,8 @@ export function RolesTab() {
         userCounts[role.id] = 0;
       });
       
-      // Count actual members by role
+      // Count actual members by role (exclude owners and inactive members)
       membersWithRoles.forEach(member => {
-        // Only count active, non-owner members
         if (member.status === 'ACTIVE' && !member.is_owner && member.roles) {
           member.roles.forEach(role => {
             // Count this member for this role
@@ -94,10 +92,11 @@ export function RolesTab() {
         }
       });
       
-      console.log('📈 [RolesTab] Actual user counts:', userCounts);
+      console.log('📈 [RolesTab] Final user counts by role:', userCounts);
       setRoleUserCounts(userCounts);
     } catch (error) {
       console.error('❌ [RolesTab] Error loading role user counts:', error);
+      
       // Set default counts to 0 if we can't load member data
       const defaultCounts: Record<string, number> = {};
       rolesData.forEach(role => {

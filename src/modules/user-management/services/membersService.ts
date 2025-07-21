@@ -1,3 +1,4 @@
+
 import { api } from '@/services/apiService';
 import { Member, MembersResponse } from '../types';
 
@@ -49,50 +50,54 @@ export const getMembers = async (filters: MemberFilters = {}): Promise<MembersRe
 };
 
 export const getMembersWithRoles = async (): Promise<MemberWithRoles[]> => {
-  console.log('🔍 [MembersService] Fetching all members with role details...');
+  console.log('🔍 [MembersService] Fetching all members with roles...');
   
   try {
-    // First, get all members
-    const membersResponse = await getMembers({
-      perPage: 1000, // Get all members
-      page: 1
-    });
+    let allMembers: MemberWithRoles[] = [];
+    let currentPage = 1;
+    let hasMorePages = true;
     
-    console.log(`📊 [MembersService] Found ${membersResponse.data.length} members, fetching role details...`);
+    // Fetch all members with pagination (respecting API limit of 100 per page)
+    while (hasMorePages) {
+      console.log(`📄 [MembersService] Fetching page ${currentPage}...`);
+      
+      const response = await getMembers({
+        perPage: 100, // Respect API limit
+        page: currentPage,
+        orderBy: 'created_at',
+        orderDirection: 'asc'
+      });
+      
+      // Convert members to MemberWithRoles format
+      const membersWithRoles: MemberWithRoles[] = response.data.map(member => ({
+        ...member,
+        roles: member.roles || [] // Use roles directly from API response
+      }));
+      
+      allMembers = [...allMembers, ...membersWithRoles];
+      
+      // Check if we have more pages
+      const totalPages = Math.ceil(response.total / 100);
+      hasMorePages = currentPage < totalPages;
+      currentPage++;
+      
+      console.log(`📊 [MembersService] Page ${currentPage - 1}: ${membersWithRoles.length} members, Total so far: ${allMembers.length}`);
+    }
     
-    // Then, fetch detailed info for each member to get roles
-    const memberDetailsPromises = membersResponse.data.map(async (member): Promise<MemberWithRoles> => {
-      try {
-        const memberDetail = await getMember(member.id);
-        return {
-          ...member,
-          roles: (memberDetail as any).roles || [] // Cast to access roles property
-        };
-      } catch (error) {
-        console.warn(`⚠️ [MembersService] Failed to fetch details for member ${member.id}:`, error);
-        // Return member without roles if detail fetch fails
-        return {
-          ...member,
-          roles: []
-        };
-      }
-    });
-    
-    // Wait for all member details to be fetched
-    const membersWithRoles = await Promise.all(memberDetailsPromises);
-    
-    console.log('✅ [MembersService] Members with roles fetched:', membersWithRoles);
+    console.log('✅ [MembersService] All members with roles fetched:', allMembers.length);
     
     // Log role distribution for debugging
     const roleDistribution: Record<string, number> = {};
-    membersWithRoles.forEach(member => {
-      member.roles.forEach(role => {
-        roleDistribution[role.name] = (roleDistribution[role.name] || 0) + 1;
-      });
+    allMembers.forEach(member => {
+      if (member.status === 'ACTIVE' && !member.is_owner && member.roles) {
+        member.roles.forEach(role => {
+          roleDistribution[role.name] = (roleDistribution[role.name] || 0) + 1;
+        });
+      }
     });
     console.log('📈 [MembersService] Role distribution:', roleDistribution);
     
-    return membersWithRoles;
+    return allMembers;
   } catch (error) {
     console.error('❌ [MembersService] Error fetching members with roles:', error);
     throw error;
