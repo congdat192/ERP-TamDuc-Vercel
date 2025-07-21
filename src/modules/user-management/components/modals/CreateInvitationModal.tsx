@@ -146,15 +146,15 @@ export function CreateInvitationModal({ isOpen, onClose, onInvitationSent }: Cre
             ) : (
               <>
                 <Select 
-                  value={formData.role_id} 
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, role_id: value }))}
+                  value={formData.role_id?.toString()} 
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, role_id: parseInt(value) }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Chọn vai trò" />
                   </SelectTrigger>
                   <SelectContent>
                     {roles.map((role) => (
-                      <SelectItem key={role.id} value={role.id}>
+                      <SelectItem key={role.id} value={role.id.toString()}>
                         <div className="flex flex-col">
                           <span className="font-medium">{role.name}</span>
                           {role.description && (

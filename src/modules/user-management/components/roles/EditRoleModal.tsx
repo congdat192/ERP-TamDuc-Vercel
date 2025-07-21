@@ -175,7 +175,7 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
       
       console.log('🔧 [EditRoleModal] Final payload for update:', roleData);
       
-      const updatedRole = await RoleService.updateRole(role.id, roleData);
+      const updatedRole = await RoleService.updateRole(role.id.toString(), roleData);
       console.log('✅ [EditRoleModal] Role updated successfully:', updatedRole);
       
       onRoleUpdated(updatedRole);

@@ -1,4 +1,3 @@
-
 import { api } from '@/services/apiService';
 
 // API Response structures theo documentation mới
@@ -19,7 +18,7 @@ interface BusinessInvitationsListResponse {
 
 export interface CreateInvitationRequest {
   email: string;
-  role_id?: string; // Thêm field role_id optional
+  role_id?: number; // Changed from string to number to match API
 }
 
 export interface InvitationFilters {

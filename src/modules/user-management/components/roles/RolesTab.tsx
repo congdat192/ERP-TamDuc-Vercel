@@ -136,7 +136,7 @@ export function RolesTab() {
     if (confirm(`Bạn có chắc chắn muốn xóa vai trò "${role.name}"?`)) {
       try {
         console.log('🗑️ [RolesTab] Deleting role:', role.id);
-        await RoleService.deleteRole(role.id);
+        await RoleService.deleteRole(role.id.toString());
         toast({
           title: "Thành công",
           description: "Đã xóa vai trò",
