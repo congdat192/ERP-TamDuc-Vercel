@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +12,8 @@ import {
   EyeOff, 
   Key, 
   MoreHorizontal,
-  ExternalLink
+  ExternalLink,
+  UserCheck
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -24,6 +25,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { TableLoadingSkeleton } from '@/components/ui/loading';
 import { EmptyTableState } from '@/components/ui/empty-states';
+import { EditMemberRoleModal } from '../modals/EditMemberRoleModal';
 
 interface UIMember {
   id: string;
@@ -41,24 +43,41 @@ interface UIMember {
   department?: { name: string; description?: string } | null;
 }
 
+interface Role {
+  id: string;
+  name: string;
+  description?: string;
+}
+
 interface MembersTableProps {
   users: UIMember[];
   isLoading: boolean;
   selectedUsers: string[];
+  roles?: Role[];
   onSelectUser: (userId: string, selected: boolean) => void;
   onUserUpdate?: (userId: string, data: any) => void;
   onUserDelete?: (userId: string) => void;
+  onUpdateMemberRole?: (memberId: string, roleId: string) => Promise<void>;
 }
 
 export function MembersTable({
   users,
   isLoading,
   selectedUsers,
+  roles = [],
   onSelectUser,
   onUserUpdate,
-  onUserDelete
+  onUserDelete,
+  onUpdateMemberRole
 }: MembersTableProps) {
   const navigate = useNavigate();
+  const [editRoleModal, setEditRoleModal] = useState<{
+    isOpen: boolean;
+    member: UIMember | null;
+  }>({
+    isOpen: false,
+    member: null
+  });
 
   const getStatusBadge = (status: string, isOwner: boolean) => {
     if (isOwner) {
@@ -101,6 +120,28 @@ export function MembersTable({
     }
   };
 
+  const handleEditRole = (member: UIMember) => {
+    if (member.isOwner) return; // Can't change owner role
+    
+    setEditRoleModal({
+      isOpen: true,
+      member: member
+    });
+  };
+
+  const handleCloseEditRoleModal = () => {
+    setEditRoleModal({
+      isOpen: false,
+      member: null
+    });
+  };
+
+  const handleUpdateRole = async (memberId: string, roleId: string) => {
+    if (onUpdateMemberRole) {
+      await onUpdateMemberRole(memberId, roleId);
+    }
+  };
+
   if (isLoading) {
     return <TableLoadingSkeleton />;
   }
@@ -114,110 +155,127 @@ export function MembersTable({
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-12">
-            <Checkbox
-              checked={selectedUsers.length === users.length && users.length > 0}
-              onCheckedChange={(checked) => {
-                if (checked) {
-                  users.forEach(user => onSelectUser(user.id, true));
-                } else {
-                  users.forEach(user => onSelectUser(user.id, false));
-                }
-              }}
-            />
-          </TableHead>
-          <TableHead>Thành Viên</TableHead>
-          <TableHead>Vai Trò</TableHead>
-          <TableHead>Trạng Thái</TableHead>
-          <TableHead>Ngày Tham Gia</TableHead>
-          <TableHead className="text-right">Hành Động</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {users.map((user) => (
-          <TableRow key={user.id}>
-            <TableCell>
+    <>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-12">
               <Checkbox
-                checked={selectedUsers.includes(user.id)}
-                onCheckedChange={(checked) => onSelectUser(user.id, !!checked)}
-                disabled={user.isOwner} // Can't select owner
+                checked={selectedUsers.length === users.length && users.length > 0}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    users.forEach(user => onSelectUser(user.id, true));
+                  } else {
+                    users.forEach(user => onSelectUser(user.id, false));
+                  }
+                }}
               />
-            </TableCell>
-            <TableCell>
-              <div className="flex items-center space-x-3">
-                <Avatar className="w-10 h-10">
-                  <AvatarImage src={user.avatar} />
-                  <AvatarFallback className="bg-blue-100 text-blue-600">
-                    {user.fullName.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="font-medium text-gray-900">{user.fullName}</p>
-                  <p className="text-sm text-gray-500">{user.email}</p>
-                  {user.phone && (
-                    <p className="text-sm text-gray-500">{user.phone}</p>
-                  )}
-                </div>
-              </div>
-            </TableCell>
-            <TableCell>
-              {getRoleBadge(user)}
-            </TableCell>
-            <TableCell>
-              {getStatusBadge(user.status, user.isOwner)}
-            </TableCell>
-            <TableCell className="text-sm text-gray-600">
-              {new Date(user.createdAt).toLocaleDateString('vi-VN')}
-            </TableCell>
-            <TableCell className="text-right">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm">
-                    <MoreHorizontal className="w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => {}}>
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    Xem Profile
-                  </DropdownMenuItem>
-                  {!user.isOwner && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem 
-                        onClick={() => handleToggleStatus(user)}
-                        className={user.isActive ? 'text-red-600' : 'text-green-600'}
-                      >
-                        {user.isActive ? (
-                          <>
-                            <EyeOff className="w-4 h-4 mr-2" />
-                            Vô Hiệu Hóa
-                          </>
-                        ) : (
-                          <>
-                            <Eye className="w-4 h-4 mr-2" />
-                            Kích Hoạt
-                          </>
-                        )}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => handleDeleteMember(user)}
-                        className="text-red-600"
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Xóa Thành Viên
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </TableCell>
+            </TableHead>
+            <TableHead>Thành Viên</TableHead>
+            <TableHead>Vai Trò</TableHead>
+            <TableHead>Trạng Thái</TableHead>
+            <TableHead>Ngày Tham Gia</TableHead>
+            <TableHead className="text-right">Hành Động</TableHead>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {users.map((user) => (
+            <TableRow key={user.id}>
+              <TableCell>
+                <Checkbox
+                  checked={selectedUsers.includes(user.id)}
+                  onCheckedChange={(checked) => onSelectUser(user.id, !!checked)}
+                  disabled={user.isOwner} // Can't select owner
+                />
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center space-x-3">
+                  <Avatar className="w-10 h-10">
+                    <AvatarImage src={user.avatar} />
+                    <AvatarFallback className="bg-blue-100 text-blue-600">
+                      {user.fullName.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-medium text-gray-900">{user.fullName}</p>
+                    <p className="text-sm text-gray-500">{user.email}</p>
+                    {user.phone && (
+                      <p className="text-sm text-gray-500">{user.phone}</p>
+                    )}
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell>
+                {getRoleBadge(user)}
+              </TableCell>
+              <TableCell>
+                {getStatusBadge(user.status, user.isOwner)}
+              </TableCell>
+              <TableCell className="text-sm text-gray-600">
+                {new Date(user.createdAt).toLocaleDateString('vi-VN')}
+              </TableCell>
+              <TableCell className="text-right">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm">
+                      <MoreHorizontal className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => {}}>
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Xem Profile
+                    </DropdownMenuItem>
+                    {!user.isOwner && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem 
+                          onClick={() => handleEditRole(user)}
+                          disabled={roles.length === 0}
+                        >
+                          <UserCheck className="w-4 h-4 mr-2" />
+                          Edit Vai Trò
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleToggleStatus(user)}
+                          className={user.isActive ? 'text-red-600' : 'text-green-600'}
+                        >
+                          {user.isActive ? (
+                            <>
+                              <EyeOff className="w-4 h-4 mr-2" />
+                              Vô Hiệu Hóa
+                            </>
+                          ) : (
+                            <>
+                              <Eye className="w-4 h-4 mr-2" />
+                              Kích Hoạt
+                            </>
+                          )}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleDeleteMember(user)}
+                          className="text-red-600"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Xóa Thành Viên
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
+      <EditMemberRoleModal
+        isOpen={editRoleModal.isOpen}
+        onClose={handleCloseEditRoleModal}
+        member={editRoleModal.member}
+        roles={roles}
+        onUpdateRole={handleUpdateRole}
+      />
+    </>
   );
 }

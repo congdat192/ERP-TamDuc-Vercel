@@ -1,12 +1,10 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MembersTable } from './MembersTable';
 import { MemberFilters } from './MemberFilters';
+import { MembersTable } from './MembersTable';
 import { BulkOperations } from './BulkOperations';
-import { UserManagementFilters } from '../../types';
 
-// Define a simpler interface for the UI that matches what the page provides
 interface UIMember {
   id: string;
   fullName: string;
@@ -23,88 +21,72 @@ interface UIMember {
   department?: { name: string; description?: string } | null;
 }
 
+interface Role {
+  id: string;
+  name: string;
+  description?: string;
+}
+
 interface MembersTabProps {
-  users?: UIMember[];
-  isLoading?: boolean;
-  onUserCreate?: (userData: any) => void;
-  onUserUpdate?: (userId: string, userData: any) => void;
+  users: UIMember[];
+  roles?: Role[];
+  isLoading: boolean;
+  onUserUpdate?: (userId: string, data: any) => void;
   onUserDelete?: (userId: string) => void;
+  onUpdateMemberRole?: (memberId: string, roleId: string) => Promise<void>;
   onBulkOperation?: (operation: any) => void;
-  onFiltersChange?: (filters: UserManagementFilters) => void;
+  onFiltersChange?: (filters: any) => void;
 }
 
 export function MembersTab({
-  users = [],
-  isLoading = false,
-  onUserCreate,
+  users,
+  roles = [],
+  isLoading,
   onUserUpdate,
   onUserDelete,
+  onUpdateMemberRole,
   onBulkOperation,
   onFiltersChange
 }: MembersTabProps) {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-  const [filters, setFilters] = useState<UserManagementFilters>({});
-
-  const handleFiltersChange = (newFilters: UserManagementFilters) => {
-    setFilters(newFilters);
-    onFiltersChange?.(newFilters);
-  };
 
   const handleSelectUser = (userId: string, selected: boolean) => {
-    setSelectedUsers(prev => 
-      selected 
-        ? [...prev, userId]
-        : prev.filter(id => id !== userId)
-    );
-  };
-
-  const handleSelectAll = () => {
-    setSelectedUsers(users.map(user => user.id));
-  };
-
-  const handleDeselectAll = () => {
-    setSelectedUsers([]);
+    if (selected) {
+      setSelectedUsers(prev => [...prev, userId]);
+    } else {
+      setSelectedUsers(prev => prev.filter(id => id !== userId));
+    }
   };
 
   return (
     <div className="space-y-6">
-      {/* Filters Bar */}
-      <Card>
-        <CardContent className="p-6">
-          <MemberFilters 
-            filters={filters}
-            onFiltersChange={handleFiltersChange}
-          />
-        </CardContent>
-      </Card>
-
-      {/* Bulk Operations */}
-      {selectedUsers.length > 0 && (
-        <BulkOperations
-          selectedCount={selectedUsers.length}
-          totalCount={users.length}
-          onSelectAll={handleSelectAll}
-          onDeselectAll={handleDeselectAll}
-          onBulkOperation={onBulkOperation}
-        />
-      )}
-
-      {/* Members Table */}
       <Card>
         <CardHeader>
-          <CardTitle>
-            Danh Sách Thành Viên {users.length > 0 && `(${users.length})`}
-          </CardTitle>
+          <CardTitle>Quản Lý Thành Viên</CardTitle>
         </CardHeader>
         <CardContent>
-          <MembersTable
-            users={users}
-            isLoading={isLoading}
-            selectedUsers={selectedUsers}
-            onSelectUser={handleSelectUser}
-            onUserUpdate={onUserUpdate}
-            onUserDelete={onUserDelete}
-          />
+          <div className="space-y-4">
+            <MemberFilters onFiltersChange={onFiltersChange} />
+            
+            {selectedUsers.length > 0 && (
+              <BulkOperations
+                selectedUsers={selectedUsers}
+                onBulkOperation={onBulkOperation}
+                onClearSelection={() => setSelectedUsers([])}
+              />
+            )}
+
+            <MembersTable
+              users={users}
+              roles={roles}
+              isLoading={isLoading}
+              selectedUsers={selectedUsers}
+              onSelectUser={handleSelectUser}
+              onUserUpdate={onUserUpdate}
+              onUserDelete={onUserDelete}
+              onUpdateMemberRole={onUpdateMemberRole}
+            />
+          </div>
         </CardContent>
       </Card>
     </div>

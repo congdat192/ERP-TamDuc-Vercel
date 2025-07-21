@@ -4,6 +4,7 @@ import { MembersTab } from '../components/members/MembersTab';
 import { api } from '@/services/apiService';
 import { useToast } from '@/hooks/use-toast';
 import { useBusiness } from '@/contexts/BusinessContext';
+import { RoleService } from '../services/roleService';
 
 // Define a simpler interface for the UI that matches what MembersTable expects
 interface UIMember {
@@ -39,6 +40,12 @@ interface MembersResponse {
   data: Member[];
 }
 
+interface Role {
+  id: string;
+  name: string;
+  description?: string;
+}
+
 interface MemberFilters {
   perPage?: number;
   page?: number;
@@ -48,7 +55,9 @@ interface MemberFilters {
 
 export function MembersPage() {
   const [members, setMembers] = useState<Member[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingRoles, setIsLoadingRoles] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState({
     total: 0,
@@ -58,6 +67,21 @@ export function MembersPage() {
   
   const { toast } = useToast();
   const { currentBusiness } = useBusiness();
+
+  const fetchRoles = async () => {
+    try {
+      setIsLoadingRoles(true);
+      console.log('🔍 [MembersPage] Fetching roles...');
+      const rolesData = await RoleService.getRoles();
+      console.log('✅ [MembersPage] Roles loaded:', rolesData);
+      setRoles(rolesData);
+    } catch (err: any) {
+      console.error('❌ [MembersPage] Error fetching roles:', err);
+      // Don't show toast for role loading errors, just log them
+    } finally {
+      setIsLoadingRoles(false);
+    }
+  };
 
   const fetchMembers = async (filters: MemberFilters = {}) => {
     try {
@@ -153,6 +177,32 @@ export function MembersPage() {
     }
   };
 
+  const handleUpdateMemberRole = async (memberId: string, roleId: string) => {
+    try {
+      console.log('👤 [MembersPage] Updating member role:', memberId, 'to role:', roleId);
+      
+      await api.put(`/members/${memberId}`, {
+        role_id: parseInt(roleId)
+      });
+      
+      toast({
+        title: "Thành công",
+        description: "Cập nhật vai trò thành viên thành công",
+      });
+      
+      // Refresh the members list
+      await fetchMembers();
+    } catch (err: any) {
+      console.error('❌ [MembersPage] Error updating member role:', err);
+      toast({
+        title: "Lỗi",
+        description: err.message || "Không thể cập nhật vai trò thành viên",
+        variant: "destructive",
+      });
+      throw err; // Re-throw to let modal handle the error
+    }
+  };
+
   const handleDeleteMember = async (memberId: string) => {
     try {
       console.log('🗑️ [MembersPage] Deleting member:', memberId);
@@ -189,6 +239,7 @@ export function MembersPage() {
     if (currentBusiness) {
       console.log('🏢 [MembersPage] Current business:', currentBusiness);
       fetchMembers();
+      fetchRoles();
     }
   }, [currentBusiness]);
 
@@ -236,9 +287,11 @@ export function MembersPage() {
   return (
     <MembersTab
       users={transformedMembers}
+      roles={roles}
       isLoading={isLoading}
       onUserUpdate={handleUpdateMember}
       onUserDelete={handleDeleteMember}
+      onUpdateMemberRole={handleUpdateMemberRole}
       onBulkOperation={handleBulkOperation}
       onFiltersChange={handleFiltersChange}
     />

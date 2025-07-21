@@ -65,6 +65,22 @@ export const updateMember = async (id: number, data: { status: 'ACTIVE' | 'INACT
   }
 };
 
+export const updateMemberRole = async (id: number, roleId: number): Promise<Member> => {
+  console.log('👤 [MembersService] Updating member role:', id, 'to role:', roleId);
+  
+  try {
+    const response = await api.put<Member>(`/members/${id}`, {
+      role_id: roleId
+    });
+    console.log('✅ [MembersService] Member role updated:', response);
+    
+    return response;
+  } catch (error) {
+    console.error('❌ [MembersService] Error updating member role:', error);
+    throw error;
+  }
+};
+
 export const deleteMember = async (id: number): Promise<void> => {
   console.log('🗑️ [MembersService] Deleting member:', id);
   
@@ -82,5 +98,6 @@ export const membersService = {
   getMembers,
   getMember,
   updateMember,
+  updateMemberRole,
   deleteMember
 };
