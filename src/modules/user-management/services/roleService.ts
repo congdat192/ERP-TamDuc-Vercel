@@ -1,4 +1,3 @@
-
 import { CustomRole, RoleCreationData } from '../types/role-management';
 import { api } from '../../../services/apiService';
 
@@ -46,7 +45,7 @@ export class RoleService {
         });
         
         return {
-          id: role.id.toString(),
+          id: role.id, // Keep as number to match API
           name: role.name,
           description: role.description || '',
           permissions: permissionCodes, // Array of permission codes
@@ -77,7 +76,7 @@ export class RoleService {
       });
       
       return {
-        id: response.id.toString(),
+        id: response.id, // Keep as number to match API
         name: response.name,
         description: response.description || '',
         permissions: permissionCodes, // Array of permission codes
@@ -124,7 +123,7 @@ export class RoleService {
       const permissionCodes = response.permissions ? response.permissions.map(p => p.code) : [];
 
       return {
-        id: response.id.toString(),
+        id: response.id, // Keep as number to match API
         name: response.name,
         description: response.description,
         permissions: permissionCodes,
@@ -201,7 +200,7 @@ export class RoleService {
       const permissionCodes = response.permissions ? response.permissions.map(p => p.code) : [];
       
       return {
-        id: response.id.toString(),
+        id: response.id, // Keep as number to match API
         name: response.name,
         description: response.description,
         permissions: permissionCodes,

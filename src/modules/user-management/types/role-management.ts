@@ -73,9 +73,9 @@ export interface RoleCreationData {
   permissions: string[]; // Array of feature codes: ["view_customers", "create_customers"]
 }
 
-// Custom Role structure - permissions là array các feature codes
+// Custom Role structure - permissions là array các feature codes - id is now number to match API
 export interface CustomRole {
-  id: string;
+  id: number; // Changed from string to number to match API response
   name: string;
   description: string;
   permissions: string[]; // Array of feature codes
