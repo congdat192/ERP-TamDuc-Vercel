@@ -54,6 +54,19 @@ interface MemberFilters {
   orderDirection?: 'asc' | 'desc';
 }
 
+// Helper function to generate avatar URL from name
+const generateAvatarUrl = (name: string): string => {
+  const initials = name
+    .split(' ')
+    .map(word => word.charAt(0))
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+  
+  // Using a service that generates avatar based on initials
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=3b82f6&color=ffffff&size=40&rounded=true`;
+};
+
 export function MembersPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
@@ -247,7 +260,7 @@ export function MembersPage() {
     }
   }, [currentBusiness]);
 
-  // Transform API data to match UI expectations với role chính xác
+  // Transform API data to match UI expectations với role và avatar
   const transformedMembers: UIMember[] = members.map(member => {
     // Get role name from roles array if available, otherwise fallback
     let roleName = 'Thành Viên'; // Default role name
@@ -265,7 +278,7 @@ export function MembersPage() {
       username: member.email?.split('@')[0] || 'N/A',
       email: member.email || 'N/A',
       phone: undefined, // API doesn't provide this
-      avatar: undefined, // API doesn't provide this
+      avatar: generateAvatarUrl(member.name || 'User'), // Generate avatar from name
       status: member.status === 'ACTIVE' ? 'active' : 'inactive',
       isActive: member.status === 'ACTIVE',
       isOwner: member.is_owner,

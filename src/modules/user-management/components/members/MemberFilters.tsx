@@ -6,12 +6,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Search, Filter, X } from 'lucide-react';
 import { UserManagementFilters } from '../../types';
 
+interface Role {
+  id: number;
+  name: string;
+  description?: string;
+}
+
 interface MemberFiltersProps {
   filters: UserManagementFilters;
   onFiltersChange: (filters: UserManagementFilters) => void;
+  roles?: Role[];
 }
 
-export function MemberFilters({ filters, onFiltersChange }: MemberFiltersProps) {
+export function MemberFilters({ filters, onFiltersChange, roles = [] }: MemberFiltersProps) {
   const handleSearchChange = (value: string) => {
     onFiltersChange({ ...filters, search: value });
   };
@@ -23,6 +30,13 @@ export function MemberFilters({ filters, onFiltersChange }: MemberFiltersProps) 
     });
   };
 
+  const handleRoleChange = (value: string) => {
+    onFiltersChange({ 
+      ...filters, 
+      roleIds: value === 'all' ? undefined : [parseInt(value)]
+    });
+  };
+
   const handleClearFilters = () => {
     onFiltersChange({});
   };
@@ -30,7 +44,6 @@ export function MemberFilters({ filters, onFiltersChange }: MemberFiltersProps) 
   const hasActiveFilters = Boolean(
     filters.search || 
     filters.status?.length || 
-    filters.departmentIds?.length || 
     filters.roleIds?.length
   );
 
@@ -54,28 +67,20 @@ export function MemberFilters({ filters, onFiltersChange }: MemberFiltersProps) 
           <SelectItem value="all">Tất cả trạng thái</SelectItem>
           <SelectItem value="active">Hoạt động</SelectItem>
           <SelectItem value="inactive">Không hoạt động</SelectItem>
-          <SelectItem value="locked">Bị khóa</SelectItem>
-          <SelectItem value="pending_verification">Chờ xác thực</SelectItem>
         </SelectContent>
       </Select>
 
-      <Select value="all">
-        <SelectTrigger className="w-48">
-          <SelectValue placeholder="Lọc theo phòng ban" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Tất cả phòng ban</SelectItem>
-          {/* TODO: Populate from departments data */}
-        </SelectContent>
-      </Select>
-
-      <Select value="all">
+      <Select value={filters.roleIds?.[0]?.toString() || 'all'} onValueChange={handleRoleChange}>
         <SelectTrigger className="w-48">
           <SelectValue placeholder="Lọc theo vai trò" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">Tất cả vai trò</SelectItem>
-          {/* TODO: Populate from roles data */}
+          {roles.map((role) => (
+            <SelectItem key={role.id} value={role.id.toString()}>
+              {role.name}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
 

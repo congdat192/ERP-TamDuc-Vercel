@@ -23,7 +23,7 @@ interface UIMember {
 }
 
 interface Role {
-  id: number; // Changed to number to match API
+  id: number;
   name: string;
   description?: string;
 }
@@ -34,7 +34,7 @@ interface MembersTabProps {
   isLoading: boolean;
   onUserUpdate?: (userId: string, data: any) => void;
   onUserDelete?: (userId: string) => void;
-  onUpdateMemberRole?: (memberId: string, roleId: number) => Promise<void>; // Changed roleId to number
+  onUpdateMemberRole?: (memberId: string, roleId: number) => Promise<void>;
   onBulkOperation?: (operation: any) => void;
   onFiltersChange?: (filters: any) => void;
 }
@@ -83,7 +83,8 @@ export function MembersTab({
           <div className="space-y-4">
             <MemberFilters 
               filters={filters}
-              onFiltersChange={handleFiltersChange} 
+              onFiltersChange={handleFiltersChange}
+              roles={roles}
             />
             
             {selectedUsers.length > 0 && (

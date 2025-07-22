@@ -1,4 +1,3 @@
-
 import { ModulePermission, UserRole, ERPModule, VoucherFeature } from '@/types/auth';
 
 export const MODULE_PERMISSIONS: ModulePermission[] = [
@@ -16,7 +15,7 @@ export const MODULE_PERMISSIONS: ModulePermission[] = [
   },
   {
     module: 'sales',
-    label: 'Bán Hàng',
+    label: 'Hóa đơn',
     icon: 'TrendingUp',
     allowedRoles: ['erp-admin', 'custom']
   },
