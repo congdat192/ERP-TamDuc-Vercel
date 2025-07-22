@@ -7,26 +7,18 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/ui/loading';
 import { useToast } from '@/hooks/use-toast';
-import { Building2, CheckCircle2, AlertCircle, Loader2, Wifi, WifiOff, Shield } from 'lucide-react';
+import { Building2, CheckCircle2, AlertCircle, Loader2, Shield } from 'lucide-react';
 import { 
   createPipeline, 
   updatePipeline, 
-  syncPipeline,
-  testKiotVietConnection 
+  syncPipeline
 } from '@/services/pipelineService';
-import type { Pipeline, PipelineConfig, TestConnectionResponse } from '@/types/pipeline';
+import type { Pipeline } from '@/types/pipeline';
 
 interface SimpleKiotVietIntegrationProps {
   integration?: Pipeline;
   onSave: (config: any) => void;
   onDisconnect?: () => void;
-}
-
-interface ConnectionTestResult {
-  success: boolean;
-  message: string;
-  details?: any;
-  timestamp: string;
 }
 
 export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }: SimpleKiotVietIntegrationProps) {
@@ -40,10 +32,8 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
   
   const [isSaving, setIsSaving] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [isTestingConnection, setIsTestingConnection] = useState(false);
   const [formErrors, setFormErrors] = useState<string[]>([]);
   const [syncResult, setSyncResult] = useState<{ success: boolean; message: string; details?: any } | null>(null);
-  const [connectionTestResult, setConnectionTestResult] = useState<ConnectionTestResult | null>(null);
 
   const validateForm = (): boolean => {
     const errors: string[] = [];
@@ -64,74 +54,8 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
     return errors.length === 0;
   };
 
-  const handleTestConnection = async () => {
-    if (!validateForm()) return;
-
-    setIsTestingConnection(true);
-    setConnectionTestResult(null);
-
-    try {
-      const result = await testKiotVietConnection({
-        client_id: formData.clientId,
-        client_secret: formData.clientSecret,
-        retailer: formData.retailer
-      });
-
-      const testResult: ConnectionTestResult = {
-        success: result.success,
-        message: result.message,
-        details: result.details,
-        timestamp: new Date().toLocaleString('vi-VN')
-      };
-
-      setConnectionTestResult(testResult);
-
-      if (result.success) {
-        toast({
-          title: 'Kiểm tra kết nối thành công',
-          description: 'Thông tin KiotViet hợp lệ. Bạn có thể lưu cấu hình.',
-        });
-      } else {
-        toast({
-          title: 'Kiểm tra kết nối thất bại',
-          description: result.message,
-          variant: 'destructive'
-        });
-      }
-      
-    } catch (error) {
-      console.error('Test connection error:', error);
-      
-      const errorResult: ConnectionTestResult = {
-        success: false,
-        message: 'Lỗi không xác định khi kiểm tra kết nối. Vui lòng thử lại.',
-        timestamp: new Date().toLocaleString('vi-VN')
-      };
-      
-      setConnectionTestResult(errorResult);
-      
-      toast({
-        title: 'Lỗi kiểm tra kết nối',
-        description: 'Không thể kiểm tra kết nối. Vui lòng thử lại.',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsTestingConnection(false);
-    }
-  };
-
   const handleSaveConfiguration = async () => {
     if (!validateForm()) return;
-
-    // Require successful connection test before saving
-    if (!connectionTestResult?.success) {
-      toast({
-        title: 'Yêu cầu kiểm tra kết nối',
-        description: 'Vui lòng kiểm tra kết nối thành công trước khi lưu cấu hình.',
-        variant: 'destructive'
-      });
-      return;
-    }
 
     setIsSaving(true);
 
@@ -258,7 +182,6 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
         
         // Clear all results when disconnecting
         setSyncResult(null);
-        setConnectionTestResult(null);
         
         onDisconnect();
       } catch (error) {
@@ -274,7 +197,6 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
 
   const handleFormReset = () => {
     setSyncResult(null);
-    setConnectionTestResult(null);
     setFormData({
       retailer: '',
       clientId: '',
@@ -394,41 +316,6 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
           </div>
         )}
 
-        {/* Connection Test Result */}
-        {connectionTestResult && (
-          <div className={`flex items-center space-x-2 p-3 rounded-lg ${
-            connectionTestResult.success 
-              ? 'bg-green-50 border border-green-200' 
-              : 'bg-red-50 border border-red-200'
-          }`}>
-            {connectionTestResult.success ? (
-              <Wifi className="w-4 h-4 text-green-500" />
-            ) : (
-              <WifiOff className="w-4 h-4 text-red-500" />
-            )}
-            <div className="flex-1">
-              <span className={`text-sm font-medium ${
-                connectionTestResult.success ? 'text-green-700' : 'text-red-700'
-              }`}>
-                {connectionTestResult.success ? 'Kết nối thành công' : 'Kết nối thất bại'}
-              </span>
-              <p className={`text-xs mt-1 ${
-                connectionTestResult.success ? 'text-green-600' : 'text-red-600'
-              }`}>
-                {connectionTestResult.message}
-              </p>
-              <div className="text-xs text-gray-500 mt-1">
-                Kiểm tra lúc: {connectionTestResult.timestamp}
-              </div>
-              {connectionTestResult.details && (
-                <div className="text-xs text-gray-600 mt-1">
-                  Trạng thái API: {connectionTestResult.details.api_access ? 'Có quyền truy cập' : 'Không có quyền'}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
         {/* Form Fields */}
         <div className="space-y-4">
           <div>
@@ -440,7 +327,7 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
               value={formData.retailer}
               onChange={(e) => setFormData(prev => ({ ...prev, retailer: e.target.value }))}
               placeholder="Nhập tên cửa hàng KiotViet"
-              disabled={isSaving || isTestingConnection}
+              disabled={isSaving}
               className="voucher-input"
             />
           </div>
@@ -454,7 +341,7 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
               value={formData.clientId}
               onChange={(e) => setFormData(prev => ({ ...prev, clientId: e.target.value }))}
               placeholder="Nhập Client ID từ KiotViet"
-              disabled={isSaving || isTestingConnection}
+              disabled={isSaving}
               className="voucher-input"
             />
           </div>
@@ -469,59 +356,30 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
               value={formData.clientSecret}
               onChange={(e) => setFormData(prev => ({ ...prev, clientSecret: e.target.value }))}
               placeholder="Nhập Client Secret từ KiotViet"
-              disabled={isSaving || isTestingConnection}
+              disabled={isSaving}
               className="voucher-input"
             />
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="space-y-3">
-          {/* Test Connection Button */}
-          <Button
-            onClick={handleTestConnection}
-            disabled={isTestingConnection || isSaving}
-            variant="outline"
-            className="w-full border-2"
-          >
-            {isTestingConnection ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Đang kiểm tra kết nối...
-              </>
-            ) : (
-              <>
-                <Wifi className="w-4 h-4 mr-2" />
-                Kiểm tra kết nối
-              </>
-            )}
-          </Button>
-
-          {/* Save Configuration Button */}
-          <Button
-            onClick={handleSaveConfiguration}
-            disabled={isSaving || isTestingConnection || !connectionTestResult?.success}
-            className="w-full voucher-button-primary"
-          >
-            {isSaving ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Đang lưu cấu hình...
-              </>
-            ) : (
-              <>
-                <Shield className="w-4 h-4 mr-2" />
-                Lưu cấu hình
-              </>
-            )}
-          </Button>
-
-          {!connectionTestResult?.success && formData.retailer && formData.clientId && formData.clientSecret && (
-            <p className="text-xs text-gray-600 text-center">
-              Vui lòng kiểm tra kết nối thành công trước khi lưu cấu hình
-            </p>
+        {/* Save Configuration Button */}
+        <Button
+          onClick={handleSaveConfiguration}
+          disabled={isSaving}
+          className="w-full voucher-button-primary"
+        >
+          {isSaving ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Đang lưu cấu hình...
+            </>
+          ) : (
+            <>
+              <Shield className="w-4 h-4 mr-2" />
+              Lưu cấu hình
+            </>
           )}
-        </div>
+        </Button>
 
         {/* Reset Form Button */}
         {(formData.retailer || formData.clientId || formData.clientSecret) && (
@@ -530,7 +388,7 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
               onClick={handleFormReset}
               variant="ghost"
               className="w-full text-sm theme-text-muted hover:theme-text"
-              disabled={isSaving || isTestingConnection}
+              disabled={isSaving}
             >
               Xóa form và làm lại
             </Button>
