@@ -37,3 +37,19 @@ export interface UpdatePipelineRequest {
   config?: PipelineConfig | VihatConfig;
   access_token?: PipelineAccessToken;
 }
+
+export interface TestConnectionRequest {
+  type: 'KIOT_VIET' | 'VIHAT';
+  config: PipelineConfig | VihatConfig;
+}
+
+export interface TestConnectionResponse {
+  success: boolean;
+  message: string;
+  details?: {
+    connection_status: string;
+    api_access: boolean;
+    permissions: string[];
+    error_code?: string;
+  };
+}

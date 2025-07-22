@@ -47,110 +47,76 @@ export interface TestConnectionRequest {
 export interface TestConnectionResponse {
   success: boolean;
   message: string;
-  data?: any;
-  testPipelineId?: string;
+  details?: {
+    connection_status: string;
+    api_access: boolean;
+    permissions: string[];
+    error_code?: string;
+  };
 }
 
-// Store test pipeline IDs for cleanup
-const testPipelineIds = new Set<string>();
-
-// Test KiotViet connection by creating a temporary pipeline
+// Test KiotViet connection by calling backend test endpoint
 export const testKiotVietConnection = async (config: PipelineConfig): Promise<TestConnectionResponse> => {
-  console.log('🔄 [pipelineService] Testing KiotViet connection by creating temporary pipeline for retailer:', config.retailer);
+  console.log('🔄 [pipelineService] Testing KiotViet connection via backend for retailer:', config.retailer);
   
-  // Try different type variants that might be accepted by the backend
-  const typeVariants = ['KIOT_VIET', 'KIOTVIET', 'KiotViet', 'kiot_viet'];
-  
-  for (const typeVariant of typeVariants) {
-    try {
-      // Create a temporary pipeline for testing - API only accepts type and config
-      const createPayload = {
-        type: typeVariant,
-        config: {
-          client_id: config.client_id,
-          client_secret: config.client_secret,
-          retailer: config.retailer
-        }
-      };
-
-      console.log(`🚀 [pipelineService] Trying type "${typeVariant}" with payload:`, JSON.stringify(createPayload, null, 2));
-
-      const testPipeline = await api.post<Pipeline>('/pipelines', createPayload, {
-        requiresBusinessId: true,
-        requiresAuth: true
-      });
-
-      console.log('✅ [pipelineService] Test pipeline created successfully with type:', typeVariant, 'ID:', testPipeline.id);
-      
-      // Store the test pipeline ID for potential cleanup
-      testPipelineIds.add(testPipeline.id);
-      
-      return {
-        success: true,
-        message: 'Kết nối KiotViet thành công! Thông tin xác thực hợp lệ.',
-        data: testPipeline,
-        testPipelineId: testPipeline.id
-      };
-      
-    } catch (error: any) {
-      console.error(`❌ [pipelineService] Type "${typeVariant}" failed:`, error.message);
-      
-      // If it's not a type validation error, break the loop
-      if (!error.message?.includes('selected type is invalid')) {
-        console.error('❌ [pipelineService] Non-type error encountered:', error);
-        break;
+  try {
+    const testPayload: TestConnectionRequest = {
+      type: 'KIOT_VIET',
+      config: {
+        client_id: config.client_id,
+        client_secret: config.client_secret,
+        retailer: config.retailer
       }
-      
-      // Continue to next type variant
-      continue;
+    };
+
+    console.log('🚀 [pipelineService] Sending test request to backend:', {
+      type: testPayload.type,
+      retailer: config.retailer,
+      client_id: config.client_id
+    });
+
+    const response = await api.post<TestConnectionResponse>('/pipelines/test-connection', testPayload, {
+      requiresBusinessId: true,
+      requiresAuth: true
+    });
+
+    console.log('✅ [pipelineService] Test connection successful:', response);
+    
+    return {
+      success: true,
+      message: response.message || 'Kết nối KiotViet thành công! Thông tin xác thực hợp lệ.',
+      details: response.details
+    };
+    
+  } catch (error: any) {
+    console.error('❌ [pipelineService] Test connection failed:', error);
+    
+    let errorMessage = 'Không thể kết nối với KiotViet. Vui lòng kiểm tra thông tin và thử lại.';
+    let errorDetails = undefined;
+    
+    if (error.response?.data) {
+      errorMessage = error.response.data.message || errorMessage;
+      errorDetails = error.response.data.details;
+    } else if (error.message) {
+      if (error.message.includes('401') || error.message.includes('unauthorized')) {
+        errorMessage = 'Thông tin Client ID hoặc Client Secret không chính xác.';
+      } else if (error.message.includes('404')) {
+        errorMessage = 'Tên cửa hàng (Retailer) không tồn tại trong hệ thống KiotViet.';
+      } else if (error.message.includes('403')) {
+        errorMessage = 'Tài khoản không có quyền truy cập hoặc đã bị khóa.';
+      } else if (error.message.includes('500')) {
+        errorMessage = 'Lỗi máy chủ KiotViet. Vui lòng thử lại sau.';
+      } else if (error.message.includes('network') || error.message.includes('timeout')) {
+        errorMessage = 'Lỗi kết nối mạng. Vui lòng kiểm tra internet và thử lại.';
+      }
     }
+    
+    return {
+      success: false,
+      message: errorMessage,
+      details: errorDetails
+    };
   }
-  
-  // If all type variants failed, return generic error
-  console.error('❌ [pipelineService] All type variants failed');
-  
-  return {
-    success: false,
-    message: 'Loại tích hợp không hợp lệ. Vui lòng liên hệ hỗ trợ kỹ thuật.'
-  };
-};
-
-// Convert test pipeline to active pipeline when user saves configuration
-export const convertTestPipelineToActive = async (testPipelineId: string): Promise<Pipeline> => {
-  console.log('🔄 [pipelineService] Converting test pipeline to active:', testPipelineId);
-  
-  const pipeline = await api.put<Pipeline>(`/pipelines/${testPipelineId}`, {
-    status: 'ACTIVE'
-  }, {
-    requiresBusinessId: true,
-  });
-  
-  // Remove from test pipeline tracking
-  testPipelineIds.delete(testPipelineId);
-  
-  console.log('✅ [pipelineService] Test pipeline converted to active:', pipeline.id);
-  return pipeline;
-};
-
-// Cleanup test pipelines that weren't saved
-export const cleanupTestPipelines = async (): Promise<void> => {
-  console.log('🧹 [pipelineService] Cleaning up test pipelines:', testPipelineIds.size);
-  
-  const cleanupPromises = Array.from(testPipelineIds).map(async (pipelineId) => {
-    try {
-      await api.put(`/pipelines/${pipelineId}`, {
-        status: 'INACTIVE'
-      }, {
-        requiresBusinessId: true,
-      });
-      console.log('🗑️ [pipelineService] Cleaned up test pipeline:', pipelineId);
-    } catch (error) {
-      console.error('❌ [pipelineService] Failed to cleanup test pipeline:', pipelineId, error);
-    }
-  });
-  
-  await Promise.allSettled(cleanupPromises);
-  testPipelineIds.clear();
 };
 
 // Get all pipelines for current business
