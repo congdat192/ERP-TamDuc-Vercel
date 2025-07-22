@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { MembersTab } from '../components/members/MembersTab';
 import { api } from '@/services/apiService';
@@ -52,10 +51,13 @@ interface MemberFilters {
   page?: number;
   orderBy?: string;
   orderDirection?: 'asc' | 'desc';
+  search?: string;
+  status?: string[];
+  roleIds?: number[];
 }
 
-// Helper function to generate avatar URL from name
-const generateAvatarUrl = (name: string): string => {
+// Helper function to generate more reliable avatar URL
+const generateAvatarUrl = (name: string, email: string): string => {
   const initials = name
     .split(' ')
     .map(word => word.charAt(0))
@@ -63,8 +65,8 @@ const generateAvatarUrl = (name: string): string => {
     .toUpperCase()
     .slice(0, 2);
   
-  // Using a service that generates avatar based on initials
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=3b82f6&color=ffffff&size=40&rounded=true`;
+  // Use DiceBear API which is more reliable than ui-avatars
+  return `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(initials)}&backgroundColor=3b82f6&textColor=ffffff`;
 };
 
 export function MembersPage() {
@@ -115,6 +117,23 @@ export function MembersPage() {
       
       if (filters.orderDirection) params.append('orderDirection', filters.orderDirection);
       else params.append('orderDirection', 'asc');
+
+      // Add search filter
+      if (filters.search) params.append('search', filters.search);
+      
+      // Add status filter
+      if (filters.status && filters.status.length > 0) {
+        filters.status.forEach(status => {
+          params.append('status[]', status);
+        });
+      }
+      
+      // Add role filter
+      if (filters.roleIds && filters.roleIds.length > 0) {
+        filters.roleIds.forEach(roleId => {
+          params.append('roleIds[]', roleId.toString());
+        });
+      }
 
       console.log('🔍 [MembersPage] Fetching members with params:', params.toString());
       const response = await api.get<MembersResponse>(`/members?${params.toString()}`);
@@ -272,13 +291,16 @@ export function MembersPage() {
       roleName = member.roles[0].name;
     }
     
+    // Generate avatar URL using the new service
+    const avatarUrl = generateAvatarUrl(member.name || 'User', member.email);
+    
     const transformedMember = {
       id: member.id.toString(),
       fullName: member.name || 'N/A',
       username: member.email?.split('@')[0] || 'N/A',
       email: member.email || 'N/A',
       phone: undefined, // API doesn't provide this
-      avatar: generateAvatarUrl(member.name || 'User'), // Generate avatar from name
+      avatar: avatarUrl, // Use the new avatar service
       status: member.status === 'ACTIVE' ? 'active' : 'inactive',
       isActive: member.status === 'ACTIVE',
       isOwner: member.is_owner,
@@ -291,6 +313,7 @@ export function MembersPage() {
     };
     
     console.log(`🔄 [MembersPage] Transformed member ${member.id}:`, transformedMember);
+    console.log(`🖼️ [MembersPage] Avatar URL for ${member.name}:`, avatarUrl);
     return transformedMember;
   });
 

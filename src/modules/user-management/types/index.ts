@@ -65,7 +65,7 @@ export interface UserManagementFilters {
   search?: string;
   status?: string[];
   departmentIds?: string[];
-  roleIds?: string[];
+  roleIds?: number[]; // Changed from string[] to number[] to match API
   groupIds?: string[];
   dateRange?: {
     start: string;

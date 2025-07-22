@@ -20,24 +20,30 @@ interface MemberFiltersProps {
 
 export function MemberFilters({ filters, onFiltersChange, roles = [] }: MemberFiltersProps) {
   const handleSearchChange = (value: string) => {
+    console.log('🔍 [MemberFilters] Search changed:', value);
     onFiltersChange({ ...filters, search: value });
   };
 
   const handleStatusChange = (value: string) => {
+    console.log('📊 [MemberFilters] Status changed:', value);
+    const statusValue = value === 'all' ? undefined : [value.toUpperCase()]; // Convert to API format
     onFiltersChange({ 
       ...filters, 
-      status: value === 'all' ? undefined : [value]
+      status: statusValue
     });
   };
 
   const handleRoleChange = (value: string) => {
+    console.log('👤 [MemberFilters] Role changed:', value);
+    const roleIds = value === 'all' ? undefined : [parseInt(value)]; // Convert to number array
     onFiltersChange({ 
       ...filters, 
-      roleIds: value === 'all' ? undefined : [value]
+      roleIds: roleIds
     });
   };
 
   const handleClearFilters = () => {
+    console.log('🧹 [MemberFilters] Clearing all filters');
     onFiltersChange({});
   };
 
@@ -46,6 +52,19 @@ export function MemberFilters({ filters, onFiltersChange, roles = [] }: MemberFi
     filters.status?.length || 
     filters.roleIds?.length
   );
+
+  // Get current filter values for display
+  const currentStatus = filters.status?.[0]?.toLowerCase() || 'all';
+  const currentRoleId = filters.roleIds?.[0]?.toString() || 'all';
+
+  console.log('🎛️ [MemberFilters] Current filters:', {
+    search: filters.search,
+    status: filters.status,
+    roleIds: filters.roleIds,
+    currentStatus,
+    currentRoleId,
+    hasActiveFilters
+  });
 
   return (
     <div className="flex flex-col sm:flex-row gap-4 flex-1">
@@ -59,7 +78,7 @@ export function MemberFilters({ filters, onFiltersChange, roles = [] }: MemberFi
         />
       </div>
       
-      <Select value={filters.status?.[0] || 'all'} onValueChange={handleStatusChange}>
+      <Select value={currentStatus} onValueChange={handleStatusChange}>
         <SelectTrigger className="w-48">
           <SelectValue placeholder="Lọc theo trạng thái" />
         </SelectTrigger>
@@ -70,7 +89,7 @@ export function MemberFilters({ filters, onFiltersChange, roles = [] }: MemberFi
         </SelectContent>
       </Select>
 
-      <Select value={filters.roleIds?.[0] || 'all'} onValueChange={handleRoleChange}>
+      <Select value={currentRoleId} onValueChange={handleRoleChange}>
         <SelectTrigger className="w-48">
           <SelectValue placeholder="Lọc theo vai trò" />
         </SelectTrigger>
