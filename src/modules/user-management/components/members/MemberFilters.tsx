@@ -33,7 +33,7 @@ export function MemberFilters({ filters, onFiltersChange, roles = [] }: MemberFi
   const handleRoleChange = (value: string) => {
     onFiltersChange({ 
       ...filters, 
-      roleIds: value === 'all' ? undefined : [parseInt(value)]
+      roleIds: value === 'all' ? undefined : [value]
     });
   };
 
@@ -70,7 +70,7 @@ export function MemberFilters({ filters, onFiltersChange, roles = [] }: MemberFi
         </SelectContent>
       </Select>
 
-      <Select value={filters.roleIds?.[0]?.toString() || 'all'} onValueChange={handleRoleChange}>
+      <Select value={filters.roleIds?.[0] || 'all'} onValueChange={handleRoleChange}>
         <SelectTrigger className="w-48">
           <SelectValue placeholder="Lọc theo vai trò" />
         </SelectTrigger>
