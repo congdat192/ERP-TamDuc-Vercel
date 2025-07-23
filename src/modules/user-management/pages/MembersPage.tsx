@@ -67,8 +67,11 @@ const generateAvatarUrl = (name: string, email: string): string => {
     .toUpperCase()
     .slice(0, 2);
   
-  // Use DiceBear API which is more reliable than ui-avatars
-  return `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(initials)}&backgroundColor=3b82f6&textColor=ffffff`;
+  // Use placeholder.com which is more reliable and doesn't have CORS issues
+  const backgroundColor = '3b82f6'; // blue-500
+  const textColor = 'ffffff'; // white
+  
+  return `https://via.placeholder.com/40x40/${backgroundColor}/${textColor}?text=${encodeURIComponent(initials)}`;
 };
 
 export function MembersPage() {
@@ -298,6 +301,12 @@ export function MembersPage() {
       ? getAvatarUrl(member.avatarPath)
       : generateAvatarUrl(member.name || 'User', member.email);
     
+    console.log(`🖼️ [MembersPage] Avatar for ${member.name}:`, {
+      hasAvatarPath: !!member.avatarPath,
+      avatarPath: member.avatarPath,
+      finalUrl: avatarUrl
+    });
+    
     const transformedMember = {
       id: member.id.toString(),
       fullName: member.name || 'N/A',
@@ -317,7 +326,6 @@ export function MembersPage() {
     };
     
     console.log(`🔄 [MembersPage] Transformed member ${member.id}:`, transformedMember);
-    console.log(`🖼️ [MembersPage] Avatar URL for ${member.name}:`, avatarUrl);
     return transformedMember;
   });
 

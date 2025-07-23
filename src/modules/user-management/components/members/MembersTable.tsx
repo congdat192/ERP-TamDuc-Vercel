@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -78,6 +77,16 @@ export function MembersTable({
     isOpen: false,
     member: null
   });
+
+  // Debug: Log users và avatar URLs
+  React.useEffect(() => {
+    console.log('🖼️ [MembersTable] Debug - Users with avatars:', users.map(user => ({
+      id: user.id,
+      name: user.fullName,
+      avatar: user.avatar,
+      avatarLength: user.avatar?.length
+    })));
+  }, [users]);
 
   const getStatusBadge = (status: string, isOwner: boolean) => {
     if (isOwner) {
@@ -181,93 +190,106 @@ export function MembersTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {users.map((user) => (
-            <TableRow key={user.id}>
-              <TableCell>
-                <Checkbox
-                  checked={selectedUsers.includes(user.id)}
-                  onCheckedChange={(checked) => onSelectUser(user.id, !!checked)}
-                  disabled={user.isOwner} // Can't select owner
-                />
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center space-x-3">
-                  <Avatar className="w-10 h-10">
-                    <AvatarImage src={user.avatar} />
-                    <AvatarFallback className="bg-blue-100 text-blue-600">
-                      {user.fullName.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-medium text-gray-900">{user.fullName}</p>
-                    <p className="text-sm text-gray-500">{user.email}</p>
-                    {user.phone && (
-                      <p className="text-sm text-gray-500">{user.phone}</p>
-                    )}
+          {users.map((user) => {
+            // Debug log cho từng user
+            console.log(`🖼️ [MembersTable] Rendering avatar for ${user.fullName}:`, user.avatar);
+            
+            return (
+              <TableRow key={user.id}>
+                <TableCell>
+                  <Checkbox
+                    checked={selectedUsers.includes(user.id)}
+                    onCheckedChange={(checked) => onSelectUser(user.id, !!checked)}
+                    disabled={user.isOwner} // Can't select owner
+                  />
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center space-x-3">
+                    <Avatar className="w-10 h-10">
+                      <AvatarImage 
+                        src={user.avatar}
+                        onLoad={() => {
+                          console.log(`✅ [MembersTable] Avatar loaded successfully for ${user.fullName}:`, user.avatar);
+                        }}
+                        onError={(e) => {
+                          console.error(`❌ [MembersTable] Avatar failed to load for ${user.fullName}:`, user.avatar, e);
+                        }}
+                      />
+                      <AvatarFallback className="bg-blue-100 text-blue-600">
+                        {user.fullName.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium text-gray-900">{user.fullName}</p>
+                      <p className="text-sm text-gray-500">{user.email}</p>
+                      {user.phone && (
+                        <p className="text-sm text-gray-500">{user.phone}</p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </TableCell>
-              <TableCell>
-                {getRoleBadge(user)}
-              </TableCell>
-              <TableCell>
-                {getStatusBadge(user.status, user.isOwner)}
-              </TableCell>
-              <TableCell className="text-sm text-gray-600">
-                {new Date(user.createdAt).toLocaleDateString('vi-VN')}
-              </TableCell>
-              <TableCell className="text-right">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <MoreHorizontal className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => {}}>
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Xem Profile
-                    </DropdownMenuItem>
-                    {!user.isOwner && (
-                      <>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem 
-                          onClick={() => handleEditRole(user)}
-                          disabled={roles.length === 0}
-                        >
-                          <UserCheck className="w-4 h-4 mr-2" />
-                          Edit Vai Trò
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => handleToggleStatus(user)}
-                          className={user.isActive ? 'text-red-600' : 'text-green-600'}
-                        >
-                          {user.isActive ? (
-                            <>
-                              <EyeOff className="w-4 h-4 mr-2" />
-                              Vô Hiệu Hóa
-                            </>
-                          ) : (
-                            <>
-                              <Eye className="w-4 h-4 mr-2" />
-                              Kích Hoạt
-                            </>
-                          )}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => handleDeleteMember(user)}
-                          className="text-red-600"
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Xóa Thành Viên
-                        </DropdownMenuItem>
-                      </>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-            </TableRow>
-          ))}
+                </TableCell>
+                <TableCell>
+                  {getRoleBadge(user)}
+                </TableCell>
+                <TableCell>
+                  {getStatusBadge(user.status, user.isOwner)}
+                </TableCell>
+                <TableCell className="text-sm text-gray-600">
+                  {new Date(user.createdAt).toLocaleDateString('vi-VN')}
+                </TableCell>
+                <TableCell className="text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <MoreHorizontal className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => {}}>
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Xem Profile
+                      </DropdownMenuItem>
+                      {!user.isOwner && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            onClick={() => handleEditRole(user)}
+                            disabled={roles.length === 0}
+                          >
+                            <UserCheck className="w-4 h-4 mr-2" />
+                            Edit Vai Trò
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleToggleStatus(user)}
+                            className={user.isActive ? 'text-red-600' : 'text-green-600'}
+                          >
+                            {user.isActive ? (
+                              <>
+                                <EyeOff className="w-4 h-4 mr-2" />
+                                Vô Hiệu Hóa
+                              </>
+                            ) : (
+                              <>
+                                <Eye className="w-4 h-4 mr-2" />
+                                Kích Hoạt
+                              </>
+                            )}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleDeleteMember(user)}
+                            className="text-red-600"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Xóa Thành Viên
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
 
