@@ -4,6 +4,7 @@ import { api } from '@/services/apiService';
 import { useToast } from '@/hooks/use-toast';
 import { useBusiness } from '@/contexts/BusinessContext';
 import { RoleService } from '../services/roleService';
+import { getAvatarUrl } from '@/types/auth';
 
 // Define a simpler interface for the UI that matches what MembersTable expects
 interface UIMember {
@@ -28,6 +29,7 @@ interface Member {
   email: string;
   status: 'ACTIVE' | 'INACTIVE';
   is_owner: boolean;
+  avatarPath?: string; // Added avatarPath field
   roles?: Array<{ id: number; name: string; description?: string }>;
   created_at: string;
   updated_at: string;
@@ -279,7 +281,7 @@ export function MembersPage() {
     }
   }, [currentBusiness]);
 
-  // Transform API data to match UI expectations với role và avatar
+  // Transform API data to match UI expectations với avatar từ API
   const transformedMembers: UIMember[] = members.map(member => {
     // Get role name from roles array if available, otherwise fallback
     let roleName = 'Thành Viên'; // Default role name
@@ -291,8 +293,10 @@ export function MembersPage() {
       roleName = member.roles[0].name;
     }
     
-    // Generate avatar URL using the new service
-    const avatarUrl = generateAvatarUrl(member.name || 'User', member.email);
+    // Use real avatar URL from API if available, otherwise generate one
+    const avatarUrl = member.avatarPath 
+      ? getAvatarUrl(member.avatarPath)
+      : generateAvatarUrl(member.name || 'User', member.email);
     
     const transformedMember = {
       id: member.id.toString(),
@@ -300,7 +304,7 @@ export function MembersPage() {
       username: member.email?.split('@')[0] || 'N/A',
       email: member.email || 'N/A',
       phone: undefined, // API doesn't provide this
-      avatar: avatarUrl, // Use the new avatar service
+      avatar: avatarUrl, // Use real avatar URL or generated fallback
       status: member.status === 'ACTIVE' ? 'active' : 'inactive',
       isActive: member.status === 'ACTIVE',
       isOwner: member.is_owner,
