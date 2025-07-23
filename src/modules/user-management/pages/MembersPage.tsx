@@ -29,7 +29,7 @@ interface Member {
   email: string;
   status: 'ACTIVE' | 'INACTIVE';
   is_owner: boolean;
-  avatarPath?: string; // Added avatarPath field
+  avatarPath?: string;
   roles?: Array<{ id: number; name: string; description?: string }>;
   created_at: string;
   updated_at: string;
@@ -58,8 +58,8 @@ interface MemberFilters {
   roleIds?: number[];
 }
 
-// Helper function to generate more reliable avatar URL
-const generateAvatarUrl = (name: string, email: string): string => {
+// Helper function to generate reliable fallback avatar URL using a working service
+const generateFallbackAvatarUrl = (name: string, email: string): string => {
   const initials = name
     .split(' ')
     .map(word => word.charAt(0))
@@ -67,11 +67,9 @@ const generateAvatarUrl = (name: string, email: string): string => {
     .toUpperCase()
     .slice(0, 2);
   
-  // Use placeholder.com which is more reliable and doesn't have CORS issues
-  const backgroundColor = '3b82f6'; // blue-500
-  const textColor = 'ffffff'; // white
-  
-  return `https://via.placeholder.com/40x40/${backgroundColor}/${textColor}?text=${encodeURIComponent(initials)}`;
+  // Use a more reliable service that doesn't have CORS issues
+  // Alternative 1: Using ui-avatars.com (widely used and reliable)
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=3b82f6&color=ffffff&size=40&bold=true`;
 };
 
 export function MembersPage() {
@@ -153,7 +151,7 @@ export function MembersPage() {
         currentPage: response.current_page
       });
       
-      // Log chi tiết từng member để debug role
+      // Log chi tiết từng member để debug avatar
       response.data.forEach((member, index) => {
         console.log(`👤 [Member ${index + 1}]:`, {
           id: member.id,
@@ -161,6 +159,7 @@ export function MembersPage() {
           email: member.email,
           status: member.status,
           is_owner: member.is_owner,
+          avatarPath: member.avatarPath,
           roles: member.roles,
           created_at: member.created_at
         });
@@ -284,7 +283,7 @@ export function MembersPage() {
     }
   }, [currentBusiness]);
 
-  // Transform API data to match UI expectations với avatar từ API
+  // Transform API data to match UI expectations với avatar logic giống UserProfile
   const transformedMembers: UIMember[] = members.map(member => {
     // Get role name from roles array if available, otherwise fallback
     let roleName = 'Thành Viên'; // Default role name
@@ -296,16 +295,18 @@ export function MembersPage() {
       roleName = member.roles[0].name;
     }
     
-    // Use real avatar URL from API if available, otherwise generate one
-    const avatarUrl = member.avatarPath 
-      ? getAvatarUrl(member.avatarPath)
-      : generateAvatarUrl(member.name || 'User', member.email);
+    // Use avatar logic similar to UserProfile
+    let avatarUrl: string | undefined;
     
-    console.log(`🖼️ [MembersPage] Avatar for ${member.name}:`, {
-      hasAvatarPath: !!member.avatarPath,
-      avatarPath: member.avatarPath,
-      finalUrl: avatarUrl
-    });
+    if (member.avatarPath) {
+      // If API provides avatarPath, use getAvatarUrl() like in UserProfile
+      avatarUrl = getAvatarUrl(member.avatarPath);
+      console.log(`🖼️ [MembersPage] Using real avatar for ${member.name}:`, avatarUrl);
+    } else {
+      // If no avatarPath, use fallback generator with working service
+      avatarUrl = generateFallbackAvatarUrl(member.name || 'User', member.email);
+      console.log(`🎨 [MembersPage] Using fallback avatar for ${member.name}:`, avatarUrl);
+    }
     
     const transformedMember = {
       id: member.id.toString(),
@@ -313,7 +314,7 @@ export function MembersPage() {
       username: member.email?.split('@')[0] || 'N/A',
       email: member.email || 'N/A',
       phone: undefined, // API doesn't provide this
-      avatar: avatarUrl, // Use real avatar URL or generated fallback
+      avatar: avatarUrl,
       status: member.status === 'ACTIVE' ? 'active' : 'inactive',
       isActive: member.status === 'ACTIVE',
       isOwner: member.is_owner,
@@ -325,7 +326,12 @@ export function MembersPage() {
       department: null // API doesn't provide this
     };
     
-    console.log(`🔄 [MembersPage] Transformed member ${member.id}:`, transformedMember);
+    console.log(`🔄 [MembersPage] Transformed member ${member.id}:`, {
+      id: transformedMember.id,
+      name: transformedMember.fullName,
+      hasRealAvatar: !!member.avatarPath,
+      avatarUrl: transformedMember.avatar
+    });
     return transformedMember;
   });
 

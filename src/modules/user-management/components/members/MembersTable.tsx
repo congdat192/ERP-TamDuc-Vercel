@@ -78,16 +78,6 @@ export function MembersTable({
     member: null
   });
 
-  // Debug: Log users và avatar URLs
-  React.useEffect(() => {
-    console.log('🖼️ [MembersTable] Debug - Users with avatars:', users.map(user => ({
-      id: user.id,
-      name: user.fullName,
-      avatar: user.avatar,
-      avatarLength: user.avatar?.length
-    })));
-  }, [users]);
-
   const getStatusBadge = (status: string, isOwner: boolean) => {
     if (isOwner) {
       return <Badge className="bg-purple-100 text-purple-800">Chủ Sở Hữu</Badge>;
@@ -191,9 +181,6 @@ export function MembersTable({
         </TableHeader>
         <TableBody>
           {users.map((user) => {
-            // Debug log cho từng user
-            console.log(`🖼️ [MembersTable] Rendering avatar for ${user.fullName}:`, user.avatar);
-            
             return (
               <TableRow key={user.id}>
                 <TableCell>
@@ -208,12 +195,7 @@ export function MembersTable({
                     <Avatar className="w-10 h-10">
                       <AvatarImage 
                         src={user.avatar}
-                        onLoad={() => {
-                          console.log(`✅ [MembersTable] Avatar loaded successfully for ${user.fullName}:`, user.avatar);
-                        }}
-                        onError={(e) => {
-                          console.error(`❌ [MembersTable] Avatar failed to load for ${user.fullName}:`, user.avatar, e);
-                        }}
+                        alt={user.fullName}
                       />
                       <AvatarFallback className="bg-blue-100 text-blue-600">
                         {user.fullName.charAt(0)}
