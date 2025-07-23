@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { MembersTab } from '../components/members/MembersTab';
 import { api } from '@/services/apiService';
@@ -5,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useBusiness } from '@/contexts/BusinessContext';
 import { RoleService } from '../services/roleService';
 import { getAvatarUrl } from '@/types/auth';
+import { UserManagementFilters } from '../types';
 
 // Define a simpler interface for the UI that matches what MembersTable expects
 interface UIMember {
@@ -48,14 +50,12 @@ interface Role {
   description?: string;
 }
 
-interface MemberFilters {
+// Updated MemberFilters to match UserManagementFilters structure
+interface MemberFilters extends UserManagementFilters {
   perPage?: number;
   page?: number;
   orderBy?: string;
   orderDirection?: 'asc' | 'desc';
-  search?: string;
-  status?: string[];
-  roleIds?: number[];
 }
 
 // Helper function to generate reliable fallback avatar URL using a working service
@@ -109,6 +109,7 @@ export function MembersPage() {
       
       const params = new URLSearchParams();
       
+      // Basic pagination and ordering
       if (filters.perPage) params.append('perPage', filters.perPage.toString());
       else params.append('perPage', pagination.perPage.toString());
       
@@ -122,12 +123,18 @@ export function MembersPage() {
       else params.append('orderDirection', 'asc');
 
       // Add search filter
-      if (filters.search) params.append('search', filters.search);
+      if (filters.search && filters.search.trim()) {
+        params.append('search', filters.search.trim());
+        console.log('🔍 [MembersPage] Adding search filter:', filters.search.trim());
+      }
       
-      // Add status filter
+      // Add status filter - convert from UI format to API format
       if (filters.status && filters.status.length > 0) {
         filters.status.forEach(status => {
-          params.append('status[]', status);
+          // Convert lowercase UI status to uppercase API status
+          const apiStatus = status.toUpperCase();
+          params.append('status[]', apiStatus);
+          console.log('📊 [MembersPage] Adding status filter:', apiStatus);
         });
       }
       
@@ -135,6 +142,7 @@ export function MembersPage() {
       if (filters.roleIds && filters.roleIds.length > 0) {
         filters.roleIds.forEach(roleId => {
           params.append('roleIds[]', roleId.toString());
+          console.log('👤 [MembersPage] Adding role filter:', roleId);
         });
       }
 
@@ -265,9 +273,21 @@ export function MembersPage() {
     }
   };
 
-  const handleFiltersChange = (filters: any) => {
+  const handleFiltersChange = (filters: UserManagementFilters) => {
     console.log('🔍 [MembersPage] Filters changed:', filters);
-    fetchMembers(filters);
+    
+    // Transform UserManagementFilters to MemberFilters format
+    const memberFilters: MemberFilters = {
+      ...filters,
+      // Reset to page 1 when filters change
+      page: 1,
+      perPage: pagination.perPage,
+      orderBy: 'created_at',
+      orderDirection: 'asc'
+    };
+    
+    console.log('🔄 [MembersPage] Transformed filters for API:', memberFilters);
+    fetchMembers(memberFilters);
   };
 
   const handleBulkOperation = async (operation: any) => {
