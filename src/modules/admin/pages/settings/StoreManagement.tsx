@@ -1,308 +1,554 @@
-
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Store, Building2, Plus, Search, Edit, Trash2, Eye, MoreHorizontal } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Plus, Edit, Trash2, CheckCircle, Ban, Store as StoreIcon } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { useStore } from '@/contexts/StoreContext';
-import { CreateStoreModal } from '../../components/CreateStoreModal';
-import { EditStoreModal } from '../../components/EditStoreModal';
-import { StoreDetailModal } from '../../components/StoreDetailModal';
-import { ConfirmationDialog } from '../../components/ConfirmationDialog';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
 import { StoreEntity } from '@/types/store';
-import { toast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Textarea } from '@/components/ui/textarea';
+import { LoadingSpinner } from '@/components/ui/loading';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
+
+// Define the schema for creating/updating a store
+const storeSchema = z.object({
+  name: z.string().min(2, {
+    message: "Tên cửa hàng phải có ít nhất 2 ký tự.",
+  }),
+  address: z.string().optional(),
+  phone_number: z.string().optional(),
+  email: z.string().email("Email không đúng định dạng").optional(),
+  status: z.enum(['active', 'inactive']).default('active'),
+  is_main_store: z.boolean().default(false),
+  description: z.string().optional(),
+});
+
+type StoreSchemaType = z.infer<typeof storeSchema>;
 
 export function StoreManagement() {
+  const { toast } = useToast();
   const { 
     stores, 
+    currentStore,
     isLoading, 
+    error, 
     fetchStores, 
-    deleteStore, 
-    updateStore,
-    getActiveStores 
+    createStore, 
+    updateStore, 
+    deleteStore,
+    setCurrentStore
   } = useStore();
   
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [editingStore, setEditingStore] = useState<StoreEntity | null>(null);
-  const [viewingStore, setViewingStore] = useState<StoreEntity | null>(null);
-  const [deletingStore, setDeletingStore] = useState<StoreEntity | null>(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [editStore, setEditStore] = useState<StoreEntity | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deletingStoreId, setDeletingStoreId] = useState<number | null>(null);
+
+  // Initialize form for creating/editing stores
+  const form = useForm<StoreSchemaType>({
+    resolver: zodResolver(storeSchema),
+    defaultValues: {
+      name: "",
+      address: "",
+      phone_number: "",
+      email: "",
+      status: 'active',
+      is_main_store: false,
+      description: ""
+    },
+  });
 
   // Load stores on component mount
   useEffect(() => {
     fetchStores();
   }, [fetchStores]);
 
-  const filteredStores = stores.filter(store => {
-    if (!searchTerm) return true;
-    const search = searchTerm.toLowerCase();
-    return (
-      store.name.toLowerCase().includes(search) ||
-      store.code.toLowerCase().includes(search) ||
-      store.address?.toLowerCase().includes(search) ||
-      store.manager_name?.toLowerCase().includes(search)
-    );
-  });
-
-  const handleDeleteStore = async () => {
-    if (!deletingStore) return;
-    
+  // Handle store creation
+  const handleCreate = async (values: StoreSchemaType) => {
     try {
-      await deleteStore(deletingStore.id);
-      setDeletingStore(null);
-    } catch (error) {
-      // Error handled by context
-    }
-  };
-
-  const handleToggleStatus = async (store: StoreEntity) => {
-    try {
-      const newStatus = store.status === 'active' ? 'inactive' : 'active';
-      await updateStore(store.id, { status: newStatus });
-      
+      await createStore(values);
       toast({
         title: "Thành công",
-        description: `Đã ${newStatus === 'active' ? 'kích hoạt' : 'tạm dừng'} cửa hàng "${store.name}"`,
+        description: "Đã tạo cửa hàng mới.",
       });
-    } catch (error) {
-      // Error handled by context
+      setShowCreateDialog(false);
+      form.reset();
+    } catch (error: any) {
+      toast({
+        title: "Lỗi",
+        description: error.message || "Không thể tạo cửa hàng.",
+        variant: "destructive",
+      });
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    return status === 'active' ? (
-      <Badge className="bg-green-100 text-green-800">Hoạt động</Badge>
-    ) : (
-      <Badge variant="secondary">Tạm dừng</Badge>
+  // Handle store update
+  const handleUpdate = async (values: StoreSchemaType) => {
+    if (!editStore) return;
+    try {
+      await updateStore(editStore.id, values);
+      toast({
+        title: "Thành công",
+        description: "Đã cập nhật cửa hàng.",
+      });
+      setEditStore(null);
+      form.reset();
+    } catch (error: any) {
+      toast({
+        title: "Lỗi",
+        description: error.message || "Không thể cập nhật cửa hàng.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle store deletion
+  const handleDeleteConfirm = async () => {
+    if (!deletingStoreId) return;
+    try {
+      await deleteStore(deletingStoreId);
+      toast({
+        title: "Thành công",
+        description: "Đã xóa cửa hàng.",
+      });
+      setShowDeleteDialog(false);
+      setDeletingStoreId(null);
+    } catch (error: any) {
+      toast({
+        title: "Lỗi",
+        description: error.message || "Không thể xóa cửa hàng.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Prepare form for editing a store
+  const onEdit = (store: StoreEntity) => {
+    setEditStore(store);
+    form.reset({
+      name: store.name,
+      address: store.address || "",
+      phone_number: store.phone_number || "",
+      email: store.email || "",
+      status: store.status,
+      is_main_store: store.is_main_store,
+      description: store.description || ""
+    });
+  };
+
+  // Prepare deletion and show confirmation dialog
+  const onDelete = (storeId: number) => {
+    setDeletingStoreId(storeId);
+    setShowDeleteDialog(true);
+  };
+
+  const handleSelectStore = (store: StoreEntity) => {
+    setCurrentStore(store);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <LoadingSpinner size="lg" />
+        <span className="ml-2 theme-text">Đang tải danh sách cửa hàng...</span>
+      </div>
     );
-  };
+  }
 
-  const getStoreIcon = (store: StoreEntity) => {
-    if (store.is_main_store) {
-      return <Store className="w-4 h-4 text-yellow-500" />;
-    }
-    return <Building2 className="w-4 h-4 text-gray-500" />;
-  };
-
-  const activeStoresCount = getActiveStores().length;
-  const totalStoresCount = stores.length;
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64 text-red-500">
+        Lỗi: {error}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold theme-text">Quản lý cửa hàng</h1>
-          <p className="theme-text-muted">
-            Quản lý thông tin các cửa hàng và chi nhánh
-          </p>
+          <h3 className="text-2xl font-semibold theme-text">Quản Lý Cửa Hàng</h3>
+          <p className="theme-text-muted">Thêm, chỉnh sửa và quản lý các cửa hàng của bạn</p>
         </div>
         <Button 
-          onClick={() => setIsCreateModalOpen(true)}
-          className="voucher-button-primary"
+          onClick={() => setShowCreateDialog(true)}
+          className="theme-bg-primary text-white hover:opacity-90"
         >
           <Plus className="w-4 h-4 mr-2" />
-          Thêm cửa hàng
+          Thêm Cửa Hàng
         </Button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Tổng số cửa hàng</CardDescription>
-            <CardTitle className="text-2xl">{totalStoresCount}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs theme-text-muted">
-              Bao gồm tất cả cửa hàng và chi nhánh
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Đang hoạt động</CardDescription>
-            <CardTitle className="text-2xl text-green-600">{activeStoresCount}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs theme-text-muted">
-              Cửa hàng đang kinh doanh
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Tạm dừng</CardDescription>
-            <CardTitle className="text-2xl text-gray-500">{totalStoresCount - activeStoresCount}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xs theme-text-muted">
-              Cửa hàng ngừng hoạt động
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Search and Actions */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center space-x-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 theme-text-muted h-4 w-4" />
-              <Input
-                placeholder="Tìm kiếm cửa hàng theo tên, mã, địa chỉ..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+      {/* Store List */}
+      <Card className="theme-card">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <StoreIcon className="w-5 h-5 theme-text-primary" />
+            <span className="theme-text">Danh Sách Cửa Hàng</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {stores.length === 0 ? (
+            <div className="text-center theme-text-muted">
+              Không có cửa hàng nào. Hãy tạo một cửa hàng mới!
             </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Stores Table */}
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="font-medium">Cửa hàng</TableHead>
-                  <TableHead className="font-medium">Mã</TableHead>
-                  <TableHead className="font-medium">Địa chỉ</TableHead>
-                  <TableHead className="font-medium">Quản lý</TableHead>
-                  <TableHead className="font-medium">Số điện thoại</TableHead>
-                  <TableHead className="font-medium">Trạng thái</TableHead>
-                  <TableHead className="font-medium">Thao tác</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
-                      <div className="flex items-center justify-center space-x-2">
-                        <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                        <span>Đang tải...</span>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : filteredStores.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
-                      <div className="flex flex-col items-center space-y-2">
-                        <Building2 className="w-8 h-8 theme-text-muted" />
-                        <span className="theme-text-muted">
-                          {searchTerm ? 'Không tìm thấy cửa hàng nào' : 'Chưa có cửa hàng nào'}
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {stores.map((store) => (
+                <Card key={store.id} className="theme-card hover:shadow-md transition-shadow duration-200">
+                  <CardHeader className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm font-medium theme-text truncate">
+                        {store.name}
+                      </CardTitle>
+                      {currentStore?.id === store.id && (
+                        <CheckCircle className="w-4 h-4 text-green-500" />
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {store.address || 'Không có địa chỉ'}
+                    </p>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <p className="text-sm theme-text">
+                      {store.description || 'Không có mô tả'}
+                    </p>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs theme-text-muted">
+                        Trạng thái:
+                      </span>
+                      {store.status === 'active' ? (
+                        <span className="text-xs text-green-500">
+                          Đang hoạt động
                         </span>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredStores.map((store) => (
-                    <TableRow key={store.id} className="hover:bg-gray-50">
-                      <TableCell>
-                        <div className="flex items-center space-x-3">
-                          {getStoreIcon(store)}
-                          <div>
-                            <div className="font-medium">{store.name}</div>
-                            {store.is_main_store && (
-                              <Badge variant="outline" className="text-xs mt-1">
-                                Cửa hàng chính
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="font-mono text-sm">{store.code}</TableCell>
-                      <TableCell>
-                        <div className="max-w-48 truncate" title={store.address}>
-                          {store.address || '-'}
-                        </div>
-                      </TableCell>
-                      <TableCell>{store.manager_name || '-'}</TableCell>
-                      <TableCell>{store.manager_phone || store.phone || '-'}</TableCell>
-                      <TableCell>{getStatusBadge(store.status)}</TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => setViewingStore(store)}
-                            >
-                              <Eye className="mr-2 h-4 w-4" />
-                              Xem chi tiết
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => setEditingStore(store)}
-                            >
-                              <Edit className="mr-2 h-4 w-4" />
-                              Chỉnh sửa
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleToggleStatus(store)}
-                            >
-                              {store.status === 'active' ? 'Tạm dừng' : 'Kích hoạt'}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => setDeletingStore(store)}
-                              className="text-red-600"
-                              disabled={store.is_main_store}
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Xóa
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                      ) : (
+                        <span className="text-xs text-red-500">
+                          Ngừng hoạt động
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs theme-text-muted">
+                        Cửa hàng chính:
+                      </span>
+                      {store.is_main_store ? (
+                        <span className="text-xs text-blue-500">
+                          Có
+                        </span>
+                      ) : (
+                        <span className="text-xs">
+                          Không
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex justify-end space-x-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleSelectStore(store)}
+                      >
+                        Chọn
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => onEdit(store)}
+                      >
+                        <Edit className="w-4 h-4 mr-2" />
+                        Sửa
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => onDelete(store.id)}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Xóa
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Modals */}
-      <CreateStoreModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-      />
+      {/* Create Store Dialog */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogTrigger asChild>
+          {/* This trigger is hidden */}
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Tạo Cửa Hàng Mới</DialogTitle>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleCreate)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tên Cửa Hàng</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nhập tên cửa hàng" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Địa Chỉ</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nhập địa chỉ" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="phone_number"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Số Điện Thoại</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nhập số điện thoại" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="Nhập email" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mô Tả</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Nhập mô tả" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-sm">Trạng Thái</FormLabel>
+                      <p className="text-xs text-muted-foreground">
+                        Chọn trạng thái hoạt động cho cửa hàng
+                      </p>
+                    </div>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Chọn trạng thái" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="active">Hoạt động</SelectItem>
+                        <SelectItem value="inactive">Ngừng hoạt động</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="is_main_store"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-sm">Cửa Hàng Chính</FormLabel>
+                      <p className="text-xs text-muted-foreground">
+                        Đặt làm cửa hàng chính
+                      </p>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button type="submit">Tạo</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
 
-      <EditStoreModal
-        store={editingStore}
-        isOpen={!!editingStore}
-        onClose={() => setEditingStore(null)}
-      />
+      {/* Edit Store Dialog */}
+      <Dialog open={!!editStore} onOpenChange={() => setEditStore(null)}>
+        <DialogTrigger asChild>
+          {/* This trigger is hidden */}
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Chỉnh Sửa Cửa Hàng</DialogTitle>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(handleUpdate)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tên Cửa Hàng</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nhập tên cửa hàng" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Địa Chỉ</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nhập địa chỉ" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="phone_number"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Số Điện Thoại</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nhập số điện thoại" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="Nhập email" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mô Tả</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Nhập mô tả" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-sm">Trạng Thái</FormLabel>
+                      <p className="text-xs text-muted-foreground">
+                        Chọn trạng thái hoạt động cho cửa hàng
+                      </p>
+                    </div>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Chọn trạng thái" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="active">Hoạt động</SelectItem>
+                        <SelectItem value="inactive">Ngừng hoạt động</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="is_main_store"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-sm">Cửa Hàng Chính</FormLabel>
+                      <p className="text-xs text-muted-foreground">
+                        Đặt làm cửa hàng chính
+                      </p>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button type="submit">Cập Nhật</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
 
-      <StoreDetailModal
-        store={viewingStore}
-        isOpen={!!viewingStore}
-        onClose={() => setViewingStore(null)}
-      />
-
+      {/* Delete Confirmation Dialog */}
       <ConfirmationDialog
-        isOpen={!!deletingStore}
-        onClose={() => setDeletingStore(null)}
-        onConfirm={handleDeleteStore}
-        title="Xóa cửa hàng"
-        message={`Bạn có chắc chắn muốn xóa cửa hàng "${deletingStore?.name}"? Hành động này không thể hoàn tác.`}
+        isOpen={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Xác nhận xóa cửa hàng"
+        message="Bạn có chắc chắn muốn xóa cửa hàng này? Hành động này không thể hoàn tác."
         confirmText="Xóa"
-        confirmVariant="destructive"
       />
     </div>
   );

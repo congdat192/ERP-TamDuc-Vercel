@@ -231,6 +231,16 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     }
   }, [isAuthenticated, fetchBusinesses, selectBusiness]);
 
+  const updateBusiness = useCallback(async (businessId: number, data: any) => {
+    // Implementation placeholder
+    throw new Error('Not implemented');
+  }, []);
+
+  const deleteBusiness = useCallback(async (businessId: number) => {
+    // Implementation placeholder
+    throw new Error('Not implemented');
+  }, []);
+
   // Memoized computed values
   const hasOwnBusiness = useMemo(() => 
     businesses.some(b => b.is_owner), 
@@ -268,7 +278,8 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     fetchBusinesses,
     selectBusiness,
     createBusiness,
-    updateBusiness: async () => { throw new Error('Not implemented'); },
+    updateBusiness,
+    deleteBusiness,
     refreshBusinesses: fetchBusinesses,
     refreshCurrentBusiness,
     clearCurrentBusiness,
@@ -282,6 +293,8 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     fetchBusinesses,
     selectBusiness,
     createBusiness,
+    updateBusiness,
+    deleteBusiness,
     refreshCurrentBusiness,
     clearCurrentBusiness,
     clearBusinessData
