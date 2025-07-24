@@ -179,17 +179,17 @@
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
     
-    /* Dark mode sidebar */
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 240 4.8% 95.9%;
-    --sidebar-primary-foreground: 240 5.9% 10%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
+    /* Enhanced Dark mode sidebar - Better contrast */
+    --sidebar-background: 222.2 84% 4.9%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 210 40% 98%;
+    --sidebar-primary-foreground: 222.2 84% 4.9%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217.2 32.6% 17.5%;
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    /* Enhanced Theme Variables - Dark Mode */
+    /* Enhanced Theme Variables - Dark Mode - Improved consistency */
     --theme-background: 222.2 84% 4.9%;
     --theme-card: 217.2 32.6% 17.5%;
     --theme-text: 210 40% 98%;
@@ -471,7 +471,7 @@
     font-weight: 600;
   }
 
-  /* Enhanced Theme Classes - FIXED AND EXPANDED FOR STAT CARDS */
+  /* Enhanced Theme Classes - FIXED for better contrast in both modes */
   .theme-bg-primary {
     background-color: hsl(var(--voucher-primary-500));
     color: white;

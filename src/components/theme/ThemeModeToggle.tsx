@@ -16,8 +16,10 @@ export function ThemeModeToggle() {
           size="sm"
           onClick={() => setThemeMode('light')}
           className={cn(
-            "flex-1 flex items-center justify-center space-x-2 h-10",
-            theme.mode === 'light' && "theme-bg-primary text-white border-theme-primary"
+            "flex-1 flex items-center justify-center space-x-2 h-10 transition-all duration-200",
+            theme.mode === 'light' 
+              ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90" 
+              : "border-border text-foreground hover:bg-accent hover:text-accent-foreground"
           )}
         >
           <Sun className="w-4 h-4" />
@@ -28,8 +30,10 @@ export function ThemeModeToggle() {
           size="sm"
           onClick={() => setThemeMode('dark')}
           className={cn(
-            "flex-1 flex items-center justify-center space-x-2 h-10",
-            theme.mode === 'dark' && "theme-bg-primary text-white border-theme-primary"
+            "flex-1 flex items-center justify-center space-x-2 h-10 transition-all duration-200",
+            theme.mode === 'dark' 
+              ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90" 
+              : "border-border text-foreground hover:bg-accent hover:text-accent-foreground"
           )}
         >
           <Moon className="w-4 h-4" />
