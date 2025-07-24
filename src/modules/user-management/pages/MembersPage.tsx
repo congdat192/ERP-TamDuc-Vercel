@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { MembersTab } from '../components/members/MembersTab';
 import { api } from '@/services/apiService';
@@ -72,8 +71,48 @@ const generateFallbackAvatarUrl = (name: string, email: string): string => {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=3b82f6&color=ffffff&size=40&bold=true`;
 };
 
+// Client-side filtering function
+const applyClientSideFilters = (members: Member[], filters: UserManagementFilters): Member[] => {
+  console.log('🔧 [MembersPage] Applying client-side filters:', filters);
+  console.log('🔧 [MembersPage] Before filtering:', members.length, 'members');
+  
+  let filteredMembers = [...members];
+
+  // Apply search filter
+  if (filters.search && filters.search.trim()) {
+    const searchTerm = filters.search.toLowerCase().trim();
+    filteredMembers = filteredMembers.filter(member => 
+      member.name?.toLowerCase().includes(searchTerm) || 
+      member.email?.toLowerCase().includes(searchTerm)
+    );
+    console.log('🔍 [MembersPage] After search filter:', filteredMembers.length, 'members');
+  }
+
+  // Apply status filter
+  if (filters.status && filters.status.length > 0) {
+    const statusFilters = filters.status.map(s => s.toUpperCase());
+    filteredMembers = filteredMembers.filter(member => 
+      statusFilters.includes(member.status)
+    );
+    console.log('📊 [MembersPage] After status filter:', filteredMembers.length, 'members');
+  }
+
+  // Apply role filter
+  if (filters.roleIds && filters.roleIds.length > 0) {
+    filteredMembers = filteredMembers.filter(member => 
+      member.roles?.some(role => filters.roleIds!.includes(role.id))
+    );
+    console.log('👤 [MembersPage] After role filter:', filteredMembers.length, 'members');
+  }
+
+  console.log('✅ [MembersPage] Final filtered result:', filteredMembers.length, 'members');
+  return filteredMembers;
+};
+
 export function MembersPage() {
-  const [members, setMembers] = useState<Member[]>([]);
+  const [allMembers, setAllMembers] = useState<Member[]>([]); // Store all members from API
+  const [filteredMembers, setFilteredMembers] = useState<Member[]>([]); // Store filtered members
+  const [currentFilters, setCurrentFilters] = useState<UserManagementFilters>({}); // Store current filters
   const [roles, setRoles] = useState<Role[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingRoles, setIsLoadingRoles] = useState(false);
@@ -107,110 +146,31 @@ export function MembersPage() {
       setIsLoading(true);
       setError(null);
       
+      // For now, we'll fetch all members without server-side filtering
+      // since the API doesn't seem to handle filters correctly
       const params = new URLSearchParams();
-      
-      // Basic pagination and ordering
-      if (filters.perPage) params.append('perPage', filters.perPage.toString());
-      else params.append('perPage', pagination.perPage.toString());
-      
-      if (filters.page) params.append('page', filters.page.toString());
-      else params.append('page', pagination.currentPage.toString());
-      
-      if (filters.orderBy) params.append('orderBy', filters.orderBy);
-      else params.append('orderBy', 'created_at');
-      
-      if (filters.orderDirection) params.append('orderDirection', filters.orderDirection);
-      else params.append('orderDirection', 'asc');
-
-      // Add search filter
-      if (filters.search && filters.search.trim()) {
-        params.append('search', filters.search.trim());
-        console.log('🔍 [MembersPage] Adding search filter:', filters.search.trim());
-      }
-      
-      // Add status filter - convert from UI format to API format
-      if (filters.status && filters.status.length > 0) {
-        filters.status.forEach(status => {
-          // Convert lowercase UI status to uppercase API status
-          const apiStatus = status.toUpperCase();
-          params.append('status[]', apiStatus);
-          console.log('📊 [MembersPage] Adding status filter:', apiStatus);
-        });
-      }
-      
-      // Add role filter
-      if (filters.roleIds && filters.roleIds.length > 0) {
-        filters.roleIds.forEach(roleId => {
-          params.append('roleIds[]', roleId.toString());
-          console.log('👤 [MembersPage] Adding role filter:', roleId);
-        });
-      }
+      params.append('perPage', '100'); // Get more members to ensure we have all data
+      params.append('page', '1');
+      params.append('orderBy', 'created_at');
+      params.append('orderDirection', 'asc');
 
       const fullUrl = `/members?${params.toString()}`;
-      console.log('🌐 [MembersPage] Full API URL:', fullUrl);
-      console.log('🔍 [MembersPage] Fetching members with params:', params.toString());
-      console.log('📋 [MembersPage] Applied filters:', {
-        search: filters.search,
-        status: filters.status,
-        roleIds: filters.roleIds,
-        hasSearch: !!(filters.search && filters.search.trim()),
-        hasStatus: !!(filters.status && filters.status.length > 0),
-        hasRoles: !!(filters.roleIds && filters.roleIds.length > 0)
-      });
+      console.log('🌐 [MembersPage] Fetching all members from API:', fullUrl);
       
       const response = await api.get<MembersResponse>(fullUrl);
       
       console.log('📊 [MembersPage] Raw API response:', response);
       console.log('👥 [MembersPage] Members data:', response.data);
-      console.log('📈 [MembersPage] Response stats:', {
-        totalMembers: response.total,
-        returnedMembers: response.data.length,
-        currentPage: response.current_page,
-        perPage: response.per_page
-      });
 
-      // Debug: Log each member's details for filtering verification
-      console.log('🔍 [MembersPage] DEBUGGING FILTER RESULTS:');
-      response.data.forEach((member, index) => {
-        console.log(`👤 [Member ${index + 1}]:`, {
-          id: member.id,
-          name: member.name,
-          email: member.email,
-          status: member.status,
-          is_owner: member.is_owner,
-          roles: member.roles?.map(r => ({ id: r.id, name: r.name })) || [],
-          created_at: member.created_at
-        });
-      });
+      // Store all members from API
+      setAllMembers(response.data);
+      
+      // Apply client-side filtering
+      const filtered = applyClientSideFilters(response.data, currentFilters);
+      setFilteredMembers(filtered);
 
-      // Additional debugging for filter verification
-      if (filters.search) {
-        const searchTerm = filters.search.toLowerCase();
-        const matchingMembers = response.data.filter(member => 
-          member.name?.toLowerCase().includes(searchTerm) || 
-          member.email?.toLowerCase().includes(searchTerm)
-        );
-        console.log(`🔍 [MembersPage] Search "${filters.search}" should match ${matchingMembers.length} members locally`);
-      }
-
-      if (filters.status && filters.status.length > 0) {
-        const statusFilters = filters.status.map(s => s.toUpperCase());
-        const matchingMembers = response.data.filter(member => 
-          statusFilters.includes(member.status)
-        );
-        console.log(`📊 [MembersPage] Status filter ${JSON.stringify(statusFilters)} should match ${matchingMembers.length} members locally`);
-      }
-
-      if (filters.roleIds && filters.roleIds.length > 0) {
-        const matchingMembers = response.data.filter(member => 
-          member.roles?.some(role => filters.roleIds!.includes(role.id))
-        );
-        console.log(`👤 [MembersPage] Role filter ${JSON.stringify(filters.roleIds)} should match ${matchingMembers.length} members locally`);
-      }
-
-      setMembers(response.data);
       setPagination({
-        total: response.total,
+        total: filtered.length, // Use filtered count for pagination
         perPage: response.per_page,
         currentPage: response.current_page
       });
@@ -318,27 +278,20 @@ export function MembersPage() {
 
   const handleFiltersChange = (filters: UserManagementFilters) => {
     console.log('🔍 [MembersPage] Filters changed:', filters);
-    console.log('🔍 [MembersPage] Filter details:', {
-      search: filters.search,
-      searchLength: filters.search?.length || 0,
-      status: filters.status,
-      statusCount: filters.status?.length || 0,
-      roleIds: filters.roleIds,
-      roleCount: filters.roleIds?.length || 0
-    });
     
-    // Transform UserManagementFilters to MemberFilters format
-    const memberFilters: MemberFilters = {
-      ...filters,
-      // Reset to page 1 when filters change
-      page: 1,
-      perPage: pagination.perPage,
-      orderBy: 'created_at',
-      orderDirection: 'asc'
-    };
+    // Store current filters
+    setCurrentFilters(filters);
     
-    console.log('🔄 [MembersPage] Transformed filters for API:', memberFilters);
-    fetchMembers(memberFilters);
+    // Apply client-side filtering to existing data
+    const filtered = applyClientSideFilters(allMembers, filters);
+    setFilteredMembers(filtered);
+    
+    // Update pagination total
+    setPagination(prev => ({
+      ...prev,
+      total: filtered.length,
+      currentPage: 1 // Reset to first page when filters change
+    }));
   };
 
   const handleBulkOperation = async (operation: any) => {
@@ -355,7 +308,7 @@ export function MembersPage() {
   }, [currentBusiness]);
 
   // Transform API data to match UI expectations với avatar logic giống UserProfile
-  const transformedMembers: UIMember[] = members.map(member => {
+  const transformedMembers: UIMember[] = filteredMembers.map(member => {
     // Get role name from roles array if available, otherwise fallback
     let roleName = 'Thành Viên'; // Default role name
     
