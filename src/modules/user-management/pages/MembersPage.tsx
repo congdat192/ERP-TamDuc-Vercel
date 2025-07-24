@@ -146,11 +146,67 @@ export function MembersPage() {
         });
       }
 
+      const fullUrl = `/members?${params.toString()}`;
+      console.log('🌐 [MembersPage] Full API URL:', fullUrl);
       console.log('🔍 [MembersPage] Fetching members with params:', params.toString());
-      const response = await api.get<MembersResponse>(`/members?${params.toString()}`);
+      console.log('📋 [MembersPage] Applied filters:', {
+        search: filters.search,
+        status: filters.status,
+        roleIds: filters.roleIds,
+        hasSearch: !!(filters.search && filters.search.trim()),
+        hasStatus: !!(filters.status && filters.status.length > 0),
+        hasRoles: !!(filters.roleIds && filters.roleIds.length > 0)
+      });
+      
+      const response = await api.get<MembersResponse>(fullUrl);
       
       console.log('📊 [MembersPage] Raw API response:', response);
       console.log('👥 [MembersPage] Members data:', response.data);
+      console.log('📈 [MembersPage] Response stats:', {
+        totalMembers: response.total,
+        returnedMembers: response.data.length,
+        currentPage: response.current_page,
+        perPage: response.per_page
+      });
+
+      // Debug: Log each member's details for filtering verification
+      console.log('🔍 [MembersPage] DEBUGGING FILTER RESULTS:');
+      response.data.forEach((member, index) => {
+        console.log(`👤 [Member ${index + 1}]:`, {
+          id: member.id,
+          name: member.name,
+          email: member.email,
+          status: member.status,
+          is_owner: member.is_owner,
+          roles: member.roles?.map(r => ({ id: r.id, name: r.name })) || [],
+          created_at: member.created_at
+        });
+      });
+
+      // Additional debugging for filter verification
+      if (filters.search) {
+        const searchTerm = filters.search.toLowerCase();
+        const matchingMembers = response.data.filter(member => 
+          member.name?.toLowerCase().includes(searchTerm) || 
+          member.email?.toLowerCase().includes(searchTerm)
+        );
+        console.log(`🔍 [MembersPage] Search "${filters.search}" should match ${matchingMembers.length} members locally`);
+      }
+
+      if (filters.status && filters.status.length > 0) {
+        const statusFilters = filters.status.map(s => s.toUpperCase());
+        const matchingMembers = response.data.filter(member => 
+          statusFilters.includes(member.status)
+        );
+        console.log(`📊 [MembersPage] Status filter ${JSON.stringify(statusFilters)} should match ${matchingMembers.length} members locally`);
+      }
+
+      if (filters.roleIds && filters.roleIds.length > 0) {
+        const matchingMembers = response.data.filter(member => 
+          member.roles?.some(role => filters.roleIds!.includes(role.id))
+        );
+        console.log(`👤 [MembersPage] Role filter ${JSON.stringify(filters.roleIds)} should match ${matchingMembers.length} members locally`);
+      }
 
       setMembers(response.data);
       setPagination({
@@ -159,19 +215,6 @@ export function MembersPage() {
         currentPage: response.current_page
       });
       
-      // Log chi tiết từng member để debug avatar
-      response.data.forEach((member, index) => {
-        console.log(`👤 [Member ${index + 1}]:`, {
-          id: member.id,
-          name: member.name,
-          email: member.email,
-          status: member.status,
-          is_owner: member.is_owner,
-          avatarPath: member.avatarPath,
-          roles: member.roles,
-          created_at: member.created_at
-        });
-      });
     } catch (err: any) {
       console.error('❌ [MembersPage] Error fetching members:', err);
       
@@ -275,6 +318,14 @@ export function MembersPage() {
 
   const handleFiltersChange = (filters: UserManagementFilters) => {
     console.log('🔍 [MembersPage] Filters changed:', filters);
+    console.log('🔍 [MembersPage] Filter details:', {
+      search: filters.search,
+      searchLength: filters.search?.length || 0,
+      status: filters.status,
+      statusCount: filters.status?.length || 0,
+      roleIds: filters.roleIds,
+      roleCount: filters.roleIds?.length || 0
+    });
     
     // Transform UserManagementFilters to MemberFilters format
     const memberFilters: MemberFilters = {
