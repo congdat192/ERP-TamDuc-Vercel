@@ -1,3 +1,4 @@
+import { Store } from './store';
 
 export interface Business {
   id: number;
@@ -14,6 +15,10 @@ export interface Business {
   email_address?: string | null;
   website_url?: string | null;
   tax_number?: string | null;
+  // New store-related fields
+  stores?: Store[];
+  store_count?: number;
+  main_store?: Store;
 }
 
 export interface BusinessListResponse {
