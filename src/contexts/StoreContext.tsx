@@ -1,6 +1,5 @@
-
 import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback, useMemo } from 'react';
-import { Store, StoreContextType, CreateStoreRequest, UpdateStoreRequest } from '@/types/store';
+import { StoreEntity, StoreContextType, CreateStoreRequest, UpdateStoreRequest } from '@/types/store';
 import { getStores, createStore as createStoreAPI, updateStore as updateStoreAPI, deleteStore as deleteStoreAPI } from '@/services/storeService';
 import { useBusiness } from '@/contexts/BusinessContext';
 import { useToast } from '@/hooks/use-toast';
@@ -8,8 +7,8 @@ import { useToast } from '@/hooks/use-toast';
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [stores, setStores] = useState<Store[]>([]);
-  const [currentStore, setCurrentStore] = useState<Store | null>(null);
+  const [stores, setStores] = useState<StoreEntity[]>([]);
+  const [currentStore, setCurrentStore] = useState<StoreEntity | null>(null);
   const [selectedStoreIds, setSelectedStoreIds] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,7 +69,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   }, [currentBusiness, toast]);
 
-  const createStore = useCallback(async (storeData: CreateStoreRequest): Promise<Store> => {
+  const createStore = useCallback(async (storeData: CreateStoreRequest): Promise<StoreEntity> => {
     if (!currentBusiness) {
       throw new Error('Không có doanh nghiệp được chọn');
     }
@@ -101,7 +100,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   }, [currentBusiness, fetchStores, toast]);
 
-  const updateStore = useCallback(async (storeId: number, storeData: UpdateStoreRequest): Promise<Store> => {
+  const updateStore = useCallback(async (storeId: number, storeData: UpdateStoreRequest): Promise<StoreEntity> => {
     try {
       setIsLoading(true);
       const updatedStore = await updateStoreAPI(storeId, storeData);
@@ -179,11 +178,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setSelectedStoreIds([]);
   }, []);
 
-  const getStoreById = useCallback((storeId: number): Store | undefined => {
+  const getStoreById = useCallback((storeId: number): StoreEntity | undefined => {
     return stores.find(store => store.id === storeId);
   }, [stores]);
 
-  const getActiveStores = useCallback((): Store[] => {
+  const getActiveStores = useCallback((): StoreEntity[] => {
     return stores.filter(store => store.status === 'active');
   }, [stores]);
 

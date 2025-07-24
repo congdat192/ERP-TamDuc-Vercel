@@ -17,7 +17,7 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { Store as StoreType } from '@/types/store';
+import { StoreEntity } from '@/types/store';
 import { toast } from '@/hooks/use-toast';
 
 export function StoreManagement() {
@@ -32,9 +32,9 @@ export function StoreManagement() {
   
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [editingStore, setEditingStore] = useState<StoreType | null>(null);
-  const [viewingStore, setViewingStore] = useState<StoreType | null>(null);
-  const [deletingStore, setDeletingStore] = useState<StoreType | null>(null);
+  const [editingStore, setEditingStore] = useState<StoreEntity | null>(null);
+  const [viewingStore, setViewingStore] = useState<StoreEntity | null>(null);
+  const [deletingStore, setDeletingStore] = useState<StoreEntity | null>(null);
 
   // Load stores on component mount
   useEffect(() => {
@@ -63,7 +63,7 @@ export function StoreManagement() {
     }
   };
 
-  const handleToggleStatus = async (store: StoreType) => {
+  const handleToggleStatus = async (store: StoreEntity) => {
     try {
       const newStatus = store.status === 'active' ? 'inactive' : 'active';
       await updateStore(store.id, { status: newStatus });
@@ -85,7 +85,7 @@ export function StoreManagement() {
     );
   };
 
-  const getStoreIcon = (store: StoreType) => {
+  const getStoreIcon = (store: StoreEntity) => {
     if (store.is_main_store) {
       return <Store className="w-4 h-4 text-yellow-500" />;
     }
@@ -300,7 +300,7 @@ export function StoreManagement() {
         onClose={() => setDeletingStore(null)}
         onConfirm={handleDeleteStore}
         title="Xóa cửa hàng"
-        description={`Bạn có chắc chắn muốn xóa cửa hàng "${deletingStore?.name}"? Hành động này không thể hoàn tác.`}
+        message={`Bạn có chắc chắn muốn xóa cửa hàng "${deletingStore?.name}"? Hành động này không thể hoàn tác.`}
         confirmText="Xóa"
         confirmVariant="destructive"
       />

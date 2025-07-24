@@ -1,5 +1,5 @@
 
-export interface Store {
+export interface StoreEntity {
   id: number;
   business_id: number;
   name: string;
@@ -42,34 +42,34 @@ export interface UpdateStoreRequest {
 }
 
 export interface StoreListResponse {
-  data: Store[];
+  data: StoreEntity[];
   total: number;
   per_page: number;
   current_page: number;
 }
 
 export interface StoreContextType {
-  stores: Store[];
-  currentStore: Store | null;
+  stores: StoreEntity[];
+  currentStore: StoreEntity | null;
   selectedStoreIds: number[];
   isLoading: boolean;
   error: string | null;
   
   // Store management
   fetchStores: () => Promise<void>;
-  createStore: (data: CreateStoreRequest) => Promise<Store>;
-  updateStore: (storeId: number, data: UpdateStoreRequest) => Promise<Store>;
+  createStore: (data: CreateStoreRequest) => Promise<StoreEntity>;
+  updateStore: (storeId: number, data: UpdateStoreRequest) => Promise<StoreEntity>;
   deleteStore: (storeId: number) => Promise<void>;
   
   // Store selection
-  setCurrentStore: (store: Store | null) => void;
+  setCurrentStore: (store: StoreEntity | null) => void;
   setSelectedStoreIds: (storeIds: number[]) => void;
   selectAllStores: () => void;
   clearStoreSelection: () => void;
   
   // Utilities
-  getStoreById: (storeId: number) => Store | undefined;
-  getActiveStores: () => Store[];
+  getStoreById: (storeId: number) => StoreEntity | undefined;
+  getActiveStores: () => StoreEntity[];
   refreshStores: () => Promise<void>;
   clearStoreData: () => void;
 }

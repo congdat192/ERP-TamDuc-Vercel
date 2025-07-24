@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useStore } from '@/contexts/StoreContext';
 import { useNavigate } from 'react-router-dom';
+import { StoreEntity } from '@/types/store';
 
 interface StoreSelectorProps {
   className?: string;
@@ -45,7 +46,7 @@ export function StoreSelector({
 
   const activeStores = getActiveStores();
 
-  const handleStoreSelect = (store: Store) => {
+  const handleStoreSelect = (store: StoreEntity) => {
     if (mode === 'single') {
       setCurrentStore(store);
       setIsOpen(false);
@@ -98,7 +99,7 @@ export function StoreSelector({
     }
   };
 
-  const getStoreIcon = (store: Store) => {
+  const getStoreIcon = (store: StoreEntity) => {
     if (store.is_main_store) {
       return <Store className="w-4 h-4 text-yellow-500" />;
     }
