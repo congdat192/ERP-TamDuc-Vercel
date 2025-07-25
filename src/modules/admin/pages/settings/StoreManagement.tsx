@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,15 +17,18 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Textarea } from '@/components/ui/textarea';
 import { LoadingSpinner } from '@/components/ui/loading';
-import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
+import { ConfirmationDialog } from '../../components/ConfirmationDialog';
 
 // Define the schema for creating/updating a store
 const storeSchema = z.object({
   name: z.string().min(2, {
     message: "Tên cửa hàng phải có ít nhất 2 ký tự.",
   }),
+  code: z.string().min(1, {
+    message: "Mã cửa hàng là bắt buộc.",
+  }),
   address: z.string().optional(),
-  phone_number: z.string().optional(),
+  phone: z.string().optional(),
   email: z.string().email("Email không đúng định dạng").optional(),
   status: z.enum(['active', 'inactive']).default('active'),
   is_main_store: z.boolean().default(false),
@@ -57,8 +61,9 @@ export function StoreManagement() {
     resolver: zodResolver(storeSchema),
     defaultValues: {
       name: "",
+      code: "",
       address: "",
-      phone_number: "",
+      phone: "",
       email: "",
       status: 'active',
       is_main_store: false,
@@ -135,8 +140,9 @@ export function StoreManagement() {
     setEditStore(store);
     form.reset({
       name: store.name,
+      code: store.code,
       address: store.address || "",
-      phone_number: store.phone_number || "",
+      phone: store.phone || "",
       email: store.email || "",
       status: store.status,
       is_main_store: store.is_main_store,
@@ -309,6 +315,19 @@ export function StoreManagement() {
               />
               <FormField
                 control={form.control}
+                name="code"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mã Cửa Hàng</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nhập mã cửa hàng" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
                 name="address"
                 render={({ field }) => (
                   <FormItem>
@@ -322,7 +341,7 @@ export function StoreManagement() {
               />
               <FormField
                 control={form.control}
-                name="phone_number"
+                name="phone"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Số Điện Thoại</FormLabel>
@@ -438,6 +457,19 @@ export function StoreManagement() {
               />
               <FormField
                 control={form.control}
+                name="code"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mã Cửa Hàng</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nhập mã cửa hàng" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
                 name="address"
                 render={({ field }) => (
                   <FormItem>
@@ -451,7 +483,7 @@ export function StoreManagement() {
               />
               <FormField
                 control={form.control}
-                name="phone_number"
+                name="phone"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Số Điện Thoại</FormLabel>
@@ -549,6 +581,7 @@ export function StoreManagement() {
         title="Xác nhận xóa cửa hàng"
         message="Bạn có chắc chắn muốn xóa cửa hàng này? Hành động này không thể hoàn tác."
         confirmText="Xóa"
+        variant="destructive"
       />
     </div>
   );
