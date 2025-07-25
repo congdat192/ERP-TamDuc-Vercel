@@ -92,7 +92,6 @@ export function ERPLayout({
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Enhanced Header - Luôn cố định */}
         <Header
-          onSidebarToggle={handleMobileSidebarToggle}
           currentPage={getPageTitle()}
           onPageChange={() => {}}
           onLogout={onLogout}

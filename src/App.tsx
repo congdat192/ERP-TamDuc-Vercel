@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -28,8 +29,8 @@ import { InventoryPage } from '@/pages/InventoryPage';
 import { MarketingPage } from '@/pages/MarketingPage';
 import { InvoiceDetailPage } from '@/pages/InvoiceDetailPage';
 import { ProductDetailPage } from '@/pages/ProductDetailPage';
-import { NotFound } from '@/pages/NotFound';
-import { Index } from '@/pages/Index';
+import NotFound from '@/pages/NotFound';
+import Index from '@/pages/Index';
 
 // Theme System
 import { ThemeSystem } from '@/components/theme/ThemeSystem';

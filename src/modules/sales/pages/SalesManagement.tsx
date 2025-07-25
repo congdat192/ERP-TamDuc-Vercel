@@ -48,20 +48,14 @@ export function SalesManagement() {
       {/* Search and Actions */}
       <SalesSearchAndActions 
         searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
+        onSearchTermChange={setSearchTerm}
       />
       
       {/* Filters */}
-      <SalesFilters 
-        filters={filters}
-        onFiltersChange={handleFilterChange}
-      />
+      <SalesFilters />
       
       {/* Sales Table */}
-      <SalesTable 
-        searchTerm={searchTerm}
-        filters={filters}
-      />
+      <SalesTable />
     </div>
   );
 }

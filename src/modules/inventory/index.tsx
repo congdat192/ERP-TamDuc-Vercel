@@ -1,6 +1,6 @@
 
 import { InventoryManagement } from './pages/InventoryManagement';
 
-export function InventoryModule({ currentUser, onBackToModules }: any) {
-  return <InventoryManagement currentUser={currentUser} onBackToModules={onBackToModules} />;
+export function InventoryModule() {
+  return <InventoryManagement />;
 }

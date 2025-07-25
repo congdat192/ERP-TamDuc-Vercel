@@ -42,12 +42,17 @@ export function CustomerManagement() {
       </div>
 
       {/* Customer Stats */}
-      <CustomerStats />
+      <CustomerStats 
+        totalCustomers={0}
+        newCustomersToday={0}
+        totalDebt={0}
+        totalSpent={0}
+      />
       
       {/* Search and Actions */}
       <CustomerSearchActions 
         searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
+        onSearchTermChange={setSearchTerm}
       />
       
       {/* Filters */}
@@ -57,10 +62,7 @@ export function CustomerManagement() {
       />
       
       {/* Customer Table */}
-      <CustomerTable 
-        searchTerm={searchTerm}
-        filters={filters}
-      />
+      <CustomerTable />
     </div>
   );
 }

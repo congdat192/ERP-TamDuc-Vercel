@@ -49,20 +49,14 @@ export function InventoryManagement() {
       {/* Search and Actions */}
       <InventorySearchActions 
         searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
+        onSearchTermChange={setSearchTerm}
       />
       
       {/* Filters */}
-      <InventoryFilters 
-        filters={filters}
-        onFiltersChange={handleFilterChange}
-      />
+      <InventoryFilters />
       
       {/* Inventory Table */}
-      <InventoryTable 
-        searchTerm={searchTerm}
-        filters={filters}
-      />
+      <InventoryTable />
     </div>
   );
 }
