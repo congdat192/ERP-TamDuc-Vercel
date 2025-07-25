@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,7 +28,7 @@ const storeSchema = z.object({
   }),
   address: z.string().optional(),
   phone: z.string().optional(),
-  email: z.string().email("Email không đúng định dạng").optional(),
+  email: z.string().email("Email không đúng định dạng").optional().or(z.literal("")),
   status: z.enum(['active', 'inactive']).default('active'),
   is_main_store: z.boolean().default(false),
   description: z.string().optional(),
@@ -79,7 +78,18 @@ export function StoreManagement() {
   // Handle store creation
   const handleCreate = async (values: StoreSchemaType) => {
     try {
-      await createStore(values);
+      // Ensure required fields are present and properly typed
+      const createData = {
+        name: values.name,
+        code: values.code,
+        address: values.address || undefined,
+        phone: values.phone || undefined,
+        email: values.email || undefined,
+        description: values.description || undefined,
+        is_main_store: values.is_main_store || false,
+      };
+      
+      await createStore(createData);
       toast({
         title: "Thành công",
         description: "Đã tạo cửa hàng mới.",
@@ -99,7 +109,19 @@ export function StoreManagement() {
   const handleUpdate = async (values: StoreSchemaType) => {
     if (!editStore) return;
     try {
-      await updateStore(editStore.id, values);
+      // Prepare update data with proper typing
+      const updateData = {
+        name: values.name,
+        code: values.code,
+        address: values.address || undefined,
+        phone: values.phone || undefined,
+        email: values.email || undefined,
+        status: values.status,
+        is_main_store: values.is_main_store,
+        description: values.description || undefined,
+      };
+      
+      await updateStore(editStore.id, updateData);
       toast({
         title: "Thành công",
         description: "Đã cập nhật cửa hàng.",
