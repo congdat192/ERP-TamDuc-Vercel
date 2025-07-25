@@ -7,7 +7,6 @@ import { IntegrationsSettings } from '../pages/settings/IntegrationsSettings';
 import { SecuritySettings } from '../pages/settings/SecuritySettings';
 import { NotificationsSettings } from '../pages/settings/NotificationsSettings';
 import { AppearanceSettings } from '../pages/settings/AppearanceSettings';
-import { StoreManagement } from '../pages/settings/StoreManagement';
 
 export function SettingsRouter() {
   return (
@@ -15,7 +14,6 @@ export function SettingsRouter() {
       <Routes>
         <Route path="/" element={<Navigate to="General" replace />} />
         <Route path="/General" element={<GeneralSettings />} />
-        <Route path="/Stores" element={<StoreManagement />} />
         <Route path="/API" element={<APISettings />} />
         <Route path="/Integrations" element={<IntegrationsSettings />} />
         <Route path="/Security" element={<SecuritySettings />} />

@@ -1,10 +1,13 @@
 
 import { SalesModule } from '@/modules/sales';
+import { useAuth } from '@/components/auth/AuthContext';
 
 interface SalesPageProps {
   onBackToERP?: () => void;
 }
 
 export function SalesPage({ onBackToERP }: SalesPageProps) {
-  return <SalesModule />;
+  const { currentUser } = useAuth();
+  
+  return <SalesModule currentUser={currentUser} onBackToModules={onBackToERP || (() => {})} />;
 }
