@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { ERPMainSidebar } from './ERPMainSidebar';
 import { Header } from './Header';
@@ -92,10 +91,7 @@ export function ERPLayout({
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Enhanced Header - Luôn cố định */}
         <Header
-          currentPage={getPageTitle()}
-          onPageChange={() => {}}
-          onLogout={onLogout}
-          currentUser={currentUser}
+          title={getPageTitle()}
         />
         
         {/* Main content area */}

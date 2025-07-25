@@ -16,6 +16,7 @@ export function SalesManagement() {
     dateRange: { from: undefined, to: undefined },
   });
   const [storeMode, setStoreMode] = useState<'single' | 'multiple' | 'all'>('single');
+  const [currentPage, setCurrentPage] = useState(1);
 
   const handleFilterChange = (newFilters: any) => {
     setFilters(prev => ({ ...prev, ...newFilters }));
@@ -23,6 +24,24 @@ export function SalesManagement() {
 
   const handleModeChange = (mode: 'single' | 'multiple' | 'all') => {
     setStoreMode(mode);
+  };
+
+  // Mock data
+  const mockSalesData: any[] = [];
+  const mockVisibleColumns: any[] = [];
+
+  const clearAllFilters = () => {
+    setFilters({
+      status: '',
+      paymentMethod: '',
+      customerType: '',
+      priceRange: { min: '', max: '' },
+      dateRange: { from: undefined, to: undefined },
+    });
+  };
+
+  const applyFilters = () => {
+    // Apply filter logic here
   };
 
   return (
@@ -45,17 +64,30 @@ export function SalesManagement() {
       {/* Sales Stats */}
       <ThemedSalesStats />
       
-      {/* Search and Actions */}
-      <SalesSearchAndActions 
+      {/* Search and Actions - Temporarily comment out until we fix the component */}
+      {/* <SalesSearchAndActions 
         searchTerm={searchTerm}
         onSearchTermChange={setSearchTerm}
-      />
+      /> */}
       
       {/* Filters */}
-      <SalesFilters />
+      <SalesFilters 
+        onClearFilters={clearAllFilters}
+        onApplyFilters={applyFilters}
+        isMobile={false}
+      />
       
       {/* Sales Table */}
-      <SalesTable />
+      <SalesTable 
+        salesData={mockSalesData}
+        visibleColumns={mockVisibleColumns}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        itemsPerPage={20}
+        onSelectInvoice={() => {}}
+        onUpdateInvoice={() => {}}
+        onDeleteInvoice={() => {}}
+      />
     </div>
   );
 }

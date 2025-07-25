@@ -24,6 +24,19 @@ export function CustomerManagement() {
     setStoreMode(mode);
   };
 
+  // Mock data and handlers
+  const mockCustomers: any[] = [];
+  const mockVisibleColumns: any[] = [];
+  const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
+
+  const handleSelectCustomer = (customerId: string, selected: boolean) => {
+    if (selected) {
+      setSelectedCustomers(prev => [...prev, customerId]);
+    } else {
+      setSelectedCustomers(prev => prev.filter(id => id !== customerId));
+    }
+  };
+
   return (
     <div className="space-y-6 p-6">
       {/* Header with Store Selector */}
@@ -43,10 +56,10 @@ export function CustomerManagement() {
 
       {/* Customer Stats */}
       <CustomerStats 
-        totalCustomers={0}
-        newCustomersToday={0}
-        totalDebt={0}
-        totalSpent={0}
+        totalCustomers="0"
+        newCustomersToday="0"
+        totalDebt="0"
+        totalSpent="0"
       />
       
       {/* Search and Actions */}
@@ -55,14 +68,27 @@ export function CustomerManagement() {
         onSearchTermChange={setSearchTerm}
       />
       
-      {/* Filters */}
-      <CustomerFilters 
+      {/* Filters - Temporarily comment out until we fix the component */}
+      {/* <CustomerFilters 
         filters={filters}
         onFiltersChange={handleFilterChange}
-      />
+      /> */}
       
       {/* Customer Table */}
-      <CustomerTable />
+      <CustomerTable 
+        customers={mockCustomers}
+        visibleColumns={mockVisibleColumns}
+        selectedCustomers={selectedCustomers}
+        handleSelectCustomer={handleSelectCustomer}
+        onUpdateCustomer={() => {}}
+        onDeleteCustomer={() => {}}
+        onExportCustomers={() => {}}
+        onBulkAction={() => {}}
+        searchTerm={searchTerm}
+        filters={filters}
+        sortBy=""
+        sortDirection="asc"
+      />
     </div>
   );
 }

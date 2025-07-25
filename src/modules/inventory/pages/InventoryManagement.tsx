@@ -17,6 +17,7 @@ export function InventoryManagement() {
     dateRange: { from: undefined, to: undefined },
   });
   const [storeMode, setStoreMode] = useState<'single' | 'multiple' | 'all'>('single');
+  const [currentPage, setCurrentPage] = useState(1);
 
   const handleFilterChange = (newFilters: any) => {
     setFilters(prev => ({ ...prev, ...newFilters }));
@@ -24,6 +25,26 @@ export function InventoryManagement() {
 
   const handleModeChange = (mode: 'single' | 'multiple' | 'all') => {
     setStoreMode(mode);
+  };
+
+  // Mock data
+  const mockInventoryData: any[] = [];
+  const mockVisibleColumns: any[] = [];
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+
+  const clearAllFilters = () => {
+    setFilters({
+      category: '',
+      supplier: '',
+      status: '',
+      stockLevel: '',
+      priceRange: { min: '', max: '' },
+      dateRange: { from: undefined, to: undefined },
+    });
+  };
+
+  const applyFilters = () => {
+    // Apply filter logic here
   };
 
   return (
@@ -46,17 +67,42 @@ export function InventoryManagement() {
       {/* Inventory Stats */}
       <ThemedInventoryStats />
       
-      {/* Search and Actions */}
-      <InventorySearchActions 
+      {/* Search and Actions - Temporarily comment out until we fix the component */}
+      {/* <InventorySearchActions 
         searchTerm={searchTerm}
         onSearchTermChange={setSearchTerm}
-      />
+      /> */}
       
       {/* Filters */}
-      <InventoryFilters />
+      <InventoryFilters 
+        onClearFilters={clearAllFilters}
+        onApplyFilters={applyFilters}
+        isMobile={false}
+      />
       
       {/* Inventory Table */}
-      <InventoryTable />
+      <InventoryTable 
+        inventoryData={mockInventoryData}
+        visibleColumns={mockVisibleColumns}
+        selectedItems={selectedItems}
+        onSelectItem={(id: string, selected: boolean) => {
+          if (selected) {
+            setSelectedItems(prev => [...prev, id]);
+          } else {
+            setSelectedItems(prev => prev.filter(item => item !== id));
+          }
+        }}
+        onUpdateItem={() => {}}
+        onDeleteItem={() => {}}
+        onBulkAction={() => {}}
+        searchTerm={searchTerm}
+        filters={filters}
+        sortBy=""
+        sortDirection="asc"
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        itemsPerPage={20}
+      />
     </div>
   );
 }
