@@ -1,5 +1,6 @@
 
 export { UserManagementLayout } from './components/UserManagementLayout';
+export { UserManagementModule } from './components/UserManagementModule';
 export { MembersPage } from './pages/MembersPage';
 export { DepartmentsPage } from './pages/DepartmentsPage';
 export { RolesPage } from './pages/RolesPage';

@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from 'react';
-import { Dashboard } from '@/modules/dashboard/pages/Dashboard';
+import { Dashboard } from '@/modules/dashboard';
 import { CustomerModule } from '@/modules/customer';
 import { SalesModule } from '@/modules/sales';
 import { InventoryModule } from '@/modules/inventory';
@@ -30,24 +31,28 @@ export function ERPHome() {
     setCurrentModule(module);
   };
 
+  const handleBackToModules = () => {
+    setCurrentModule('dashboard');
+  };
+
   const renderModuleContent = () => {
     switch (currentModule) {
       case 'dashboard':
         return <Dashboard />;
       case 'customers':
-        return <CustomerModule />;
+        return <CustomerModule currentUser={currentUser} onBackToModules={handleBackToModules} />;
       case 'sales':
-        return <SalesModule />;
+        return <SalesModule currentUser={currentUser} onBackToModules={handleBackToModules} />;
       case 'inventory':
-        return <InventoryModule />;
+        return <InventoryModule currentUser={currentUser} onBackToModules={handleBackToModules} />;
       case 'voucher':
-        return <VoucherModule currentUser={currentUser} />;
+        return <VoucherModule currentUser={currentUser} onBackToModules={handleBackToModules} />;
       case 'affiliate':
         return <AffiliateModule />;
       case 'marketing':
-        return <MarketingModule />;
+        return <MarketingModule currentUser={currentUser} onBackToModules={handleBackToModules} />;
       case 'user-management':
-        return <UserManagementModule />;
+        return <UserManagementModule currentUser={currentUser} onBackToModules={handleBackToModules} />;
       case 'system-settings':
         return <AdminModule />;
       default:

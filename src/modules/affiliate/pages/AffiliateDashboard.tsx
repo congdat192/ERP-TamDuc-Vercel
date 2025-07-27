@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { UniversalStatCard } from '@/components/ui/UniversalStatCard';
@@ -66,7 +65,7 @@ export function AffiliateDashboard() {
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
-      pending: { label: 'Chờ duyệt', variant: 'secondary' as const },
+      pending: { label: 'Chờ duyệt', variant: 'default' as const },
       approved: { label: 'Đã duyệt', variant: 'default' as const },
       rejected: { label: 'Từ chối', variant: 'destructive' as const },
       paid: { label: 'Đã thanh toán', variant: 'default' as const }
@@ -75,7 +74,7 @@ export function AffiliateDashboard() {
     return statusInfo ? (
       <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
     ) : (
-      <Badge variant="outline">{status}</Badge>
+      <Badge variant="default">{status}</Badge>
     );
   };
 
@@ -127,10 +126,10 @@ export function AffiliateDashboard() {
       {unreadAlerts.length > 0 && (
         <div className="grid gap-3">
           {unreadAlerts.slice(0, 3).map((alert) => (
-            <Alert key={alert.id} variant={getAlertVariant(alert.priority)}>
+            <Alert key={alert.id} variant={alert.priority === 'critical' ? 'destructive' : 'default'}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  {getAlertIcon(alert.type)}
+                  <AlertTriangle className="w-4 h-4" />
                   <div>
                     <div className="font-medium">{alert.title}</div>
                     <AlertDescription>{alert.message}</AlertDescription>
@@ -220,14 +219,14 @@ export function AffiliateDashboard() {
                 <Line 
                   type="monotone" 
                   dataKey="referrals" 
-                  stroke="hsl(var(--voucher-primary-500))" 
+                  stroke="#2196F3" 
                   strokeWidth={2}
                   name="Tổng Giới Thiệu"
                 />
                 <Line 
                   type="monotone" 
                   dataKey="successfulReferrals" 
-                  stroke="hsl(var(--voucher-secondary-500))" 
+                  stroke="#3FB0AC" 
                   strokeWidth={2}
                   name="Thành Công"
                 />
@@ -249,7 +248,7 @@ export function AffiliateDashboard() {
                 <Tooltip formatter={(value) => formatCurrency(Number(value))} />
                 <Bar 
                   dataKey="commissionAmount" 
-                  fill="hsl(var(--voucher-primary-500))" 
+                  fill="#2196F3" 
                   name="Hoa Hồng"
                 />
               </BarChart>
