@@ -1,34 +1,33 @@
 
-import {
-  LayoutDashboard,
-  Users,
-  TrendingUp,
-  Package,
-  Calculator,
-  UserCheck,
-  Ticket,
-  Settings,
-  Shield,
-  Building2,
-  Home,
-  Target
+import { 
+  BarChart3, 
+  Users, 
+  ShoppingCart, 
+  Package, 
+  Calculator, 
+  UserCheck, 
+  Ticket, 
+  Megaphone, 
+  Settings, 
+  UserCog,
+  Share2,
+  LucideIcon
 } from 'lucide-react';
 
-const iconMap = {
-  LayoutDashboard,
-  Users,
-  TrendingUp,
-  Package,
-  Calculator,
-  UserCheck,
-  Ticket,
-  Settings,
-  Shield,
-  Building2,
-  Home,
-  Target
+export const getIconComponent = (iconName: string): LucideIcon => {
+  const iconMap: Record<string, LucideIcon> = {
+    BarChart3,
+    Users,
+    ShoppingCart,
+    Package,
+    Calculator,
+    UserCheck,
+    Ticket,
+    Megaphone,
+    Settings,
+    UserCog,
+    Share2
+  };
+  
+  return iconMap[iconName] || BarChart3;
 };
-
-export function getIconComponent(iconName: string) {
-  return iconMap[iconName as keyof typeof iconMap] || LayoutDashboard;
-}
