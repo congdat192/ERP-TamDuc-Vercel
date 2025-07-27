@@ -1,5 +1,6 @@
 
-import { api } from './apiService';
+import { apiClient } from '@/lib/api-client';
+import { Pipeline } from '@/types/pipeline';
 
 export interface PipelineConfig {
   client_id: string;
@@ -7,176 +8,133 @@ export interface PipelineConfig {
   retailer: string;
 }
 
-export interface PipelineAccessToken {
-  token: string;
-  refresh_token: string;
+export interface CreatePipelineRequest {
+  type: 'KIOT_VIET';
+  config: PipelineConfig;
 }
 
-export interface Pipeline {
+export interface UpdatePipelineRequest {
+  status?: 'ACTIVE' | 'INACTIVE';
+  config?: PipelineConfig;
+}
+
+export interface PipelineResponse {
   id: string;
-  type: 'KIOT_VIET';
-  status: 'ACTIVE' | 'INACTIVE' | 'TESTING';
+  type: string;
+  status: 'ACTIVE' | 'INACTIVE';
   config: PipelineConfig;
-  access_token: PipelineAccessToken;
+  business_id: string;
   created_at: string;
   updated_at: string;
 }
 
-export interface CreatePipelineRequest {
-  type: 'KIOT_VIET';
-  status: 'ACTIVE' | 'INACTIVE' | 'TESTING';
-  config: PipelineConfig;
-  access_token: PipelineAccessToken;
-}
-
-export interface UpdatePipelineRequest {
-  status?: 'ACTIVE' | 'INACTIVE' | 'TESTING';
-  config?: PipelineConfig;
-  access_token?: PipelineAccessToken;
-}
-
-export interface PipelineListResponse {
-  data: Pipeline[];
-}
-
-export interface TestConnectionRequest {
-  type: 'KIOT_VIET';
-  config: PipelineConfig;
-}
-
-export interface TestConnectionResponse {
-  success: boolean;
-  message: string;
-  details?: {
-    connection_status: string;
-    api_access: boolean;
-    permissions: string[];
-    error_code?: string;
-  };
-}
-
-// Test KiotViet connection by calling backend test endpoint
-export const testKiotVietConnection = async (config: PipelineConfig): Promise<TestConnectionResponse> => {
-  console.log('🔄 [pipelineService] Testing KiotViet connection via backend for retailer:', config.retailer);
-  
+export const getPipelines = async (): Promise<PipelineResponse[]> => {
   try {
-    const testPayload: TestConnectionRequest = {
-      type: 'KIOT_VIET',
-      config: {
-        client_id: config.client_id,
-        client_secret: config.client_secret,
-        retailer: config.retailer
-      }
-    };
-
-    console.log('🚀 [pipelineService] Sending test request to backend:', {
-      type: testPayload.type,
-      retailer: config.retailer,
-      client_id: config.client_id
-    });
-
-    const response = await api.post<TestConnectionResponse>('/pipelines/test-connection', testPayload, {
-      requiresBusinessId: true,
-      requiresAuth: true
-    });
-
-    console.log('✅ [pipelineService] Test connection successful:', response);
+    console.log('🔄 [pipelineService] Fetching pipelines');
     
-    return {
-      success: true,
-      message: response.message || 'Kết nối KiotViet thành công! Thông tin xác thực hợp lệ.',
-      details: response.details
-    };
+    const response = await apiClient.get<PipelineResponse[]>('/pipelines');
     
-  } catch (error: any) {
-    console.error('❌ [pipelineService] Test connection failed:', error);
-    
-    let errorMessage = 'Không thể kết nối với KiotViet. Vui lòng kiểm tra thông tin và thử lại.';
-    let errorDetails = undefined;
-    
-    if (error.response?.data) {
-      errorMessage = error.response.data.message || errorMessage;
-      errorDetails = error.response.data.details;
-    } else if (error.message) {
-      if (error.message.includes('401') || error.message.includes('unauthorized')) {
-        errorMessage = 'Thông tin Client ID hoặc Client Secret không chính xác.';
-      } else if (error.message.includes('404')) {
-        errorMessage = 'Tên cửa hàng (Retailer) không tồn tại trong hệ thống KiotViet.';
-      } else if (error.message.includes('403')) {
-        errorMessage = 'Tài khoản không có quyền truy cập hoặc đã bị khóa.';
-      } else if (error.message.includes('500')) {
-        errorMessage = 'Lỗi máy chủ KiotViet. Vui lòng thử lại sau.';
-      } else if (error.message.includes('network') || error.message.includes('timeout')) {
-        errorMessage = 'Lỗi kết nối mạng. Vui lòng kiểm tra internet và thử lại.';
-      }
-    }
-    
-    return {
-      success: false,
-      message: errorMessage,
-      details: errorDetails
-    };
+    console.log('✅ [pipelineService] Fetched pipelines:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ [pipelineService] Error fetching pipelines:', error);
+    throw error;
   }
 };
 
-// Get all pipelines for current business
-export const getPipelines = async (): Promise<Pipeline[]> => {
-  console.log('🔄 [pipelineService] Getting all pipelines');
-  
-  const response = await api.get<PipelineListResponse>('/pipelines', {
-    requiresBusinessId: true,
-  });
-  
-  console.log('✅ [pipelineService] Retrieved pipelines:', response.data.length);
-  return response.data;
+export const getPipeline = async (pipelineId: string): Promise<PipelineResponse> => {
+  try {
+    console.log('🔄 [pipelineService] Fetching pipeline:', pipelineId);
+    
+    const response = await apiClient.get<PipelineResponse>(`/pipelines/${pipelineId}`);
+    
+    console.log('✅ [pipelineService] Fetched pipeline:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ [pipelineService] Error fetching pipeline:', error);
+    throw error;
+  }
 };
 
-// Create new pipeline
-export const createPipeline = async (data: CreatePipelineRequest): Promise<Pipeline> => {
-  console.log('🏗️ [pipelineService] Creating pipeline:', data.type);
-  
-  const pipeline = await api.post<Pipeline>('/pipelines', data, {
-    requiresBusinessId: true,
-  });
-  
-  console.log('✅ [pipelineService] Created pipeline:', pipeline.id);
-  return pipeline;
+export const createPipeline = async (data: CreatePipelineRequest): Promise<PipelineResponse> => {
+  try {
+    console.log('🔄 [pipelineService] Creating pipeline:', data);
+    
+    const response = await apiClient.post<PipelineResponse>('/pipelines', data);
+    
+    console.log('✅ [pipelineService] Created pipeline:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ [pipelineService] Error creating pipeline:', error);
+    throw error;
+  }
 };
 
-// Get specific pipeline
-export const getPipeline = async (pipelineId: string): Promise<Pipeline> => {
-  console.log('🔍 [pipelineService] Getting pipeline:', pipelineId);
-  
-  const pipeline = await api.get<Pipeline>(`/pipelines/${pipelineId}`, {
-    requiresBusinessId: true,
-  });
-  
-  console.log('✅ [pipelineService] Retrieved pipeline:', pipeline.type);
-  return pipeline;
+export const updatePipeline = async (pipelineId: string, data: UpdatePipelineRequest): Promise<PipelineResponse> => {
+  try {
+    console.log('🔄 [pipelineService] Updating pipeline:', pipelineId, data);
+    
+    const requestData = {
+      status: data.status,
+      config: data.config
+    };
+    
+    const response = await apiClient.put<PipelineResponse>(`/pipelines/${pipelineId}`, requestData);
+    
+    console.log('✅ [pipelineService] Updated pipeline:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ [pipelineService] Error updating pipeline:', error);
+    throw error;
+  }
 };
 
-// Update pipeline
-export const updatePipeline = async (
-  pipelineId: string, 
-  data: UpdatePipelineRequest
-): Promise<Pipeline> => {
-  console.log('📝 [pipelineService] Updating pipeline:', pipelineId);
-  
-  const pipeline = await api.put<Pipeline>(`/pipelines/${pipelineId}`, data, {
-    requiresBusinessId: true,
-  });
-  
-  console.log('✅ [pipelineService] Updated pipeline:', pipeline.id);
-  return pipeline;
+export const syncPipeline = async (pipelineId: string): Promise<{ message: string }> => {
+  try {
+    console.log('🔄 [pipelineService] Syncing pipeline:', pipelineId);
+    
+    const response = await apiClient.post<{ message: string }>(`/pipelines/${pipelineId}/sync`);
+    
+    console.log('✅ [pipelineService] Synced pipeline:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ [pipelineService] Error syncing pipeline:', error);
+    throw error;
+  }
 };
 
-// Sync pipeline
-export const syncPipeline = async (pipelineId: string): Promise<void> => {
-  console.log('🔄 [pipelineService] Syncing pipeline:', pipelineId);
-  
-  await api.post(`/pipelines/${pipelineId}/sync`, undefined, {
-    requiresBusinessId: true,
-  });
-  
-  console.log('✅ [pipelineService] Pipeline sync completed');
+export const deletePipeline = async (pipelineId: string): Promise<void> => {
+  try {
+    console.log('🔄 [pipelineService] Deleting pipeline:', pipelineId);
+    
+    await apiClient.delete(`/pipelines/${pipelineId}`);
+    
+    console.log('✅ [pipelineService] Deleted pipeline:', pipelineId);
+  } catch (error) {
+    console.error('❌ [pipelineService] Error deleting pipeline:', error);
+    throw error;
+  }
+};
+
+// Test pipeline connection
+export const testPipelineConnection = async (config: PipelineConfig): Promise<{
+  success: boolean;
+  message?: string;
+  error?: string;
+}> => {
+  try {
+    console.log('🔄 [pipelineService] Testing pipeline connection');
+    
+    const response = await apiClient.post<{
+      success: boolean;
+      message?: string;
+      error?: string;
+    }>('/pipelines/test-connection', { config });
+    
+    console.log('✅ [pipelineService] Pipeline connection test result:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ [pipelineService] Error testing pipeline connection:', error);
+    throw error;
+  }
 };
