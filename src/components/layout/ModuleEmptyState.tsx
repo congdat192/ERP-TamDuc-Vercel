@@ -6,9 +6,10 @@ import { Construction } from 'lucide-react';
 
 interface ModuleEmptyStateProps {
   module: string;
+  onBackToDashboard?: () => void;
 }
 
-export function ModuleEmptyState({ module }: ModuleEmptyStateProps) {
+export function ModuleEmptyState({ module, onBackToDashboard }: ModuleEmptyStateProps) {
   return (
     <div className="space-y-6 p-6">
       <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-6">
@@ -37,6 +38,12 @@ export function ModuleEmptyState({ module }: ModuleEmptyStateProps) {
             Module này hiện đang trong quá trình phát triển. Giao diện và tính năng 
             sẽ được hoàn thiện trong các phiên bản tiếp theo.
           </p>
+          
+          {onBackToDashboard && (
+            <Button onClick={onBackToDashboard}>
+              Quay Lại Tổng Quan
+            </Button>
+          )}
         </CardContent>
       </Card>
     </div>
