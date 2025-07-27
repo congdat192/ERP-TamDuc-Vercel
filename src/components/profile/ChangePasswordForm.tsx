@@ -72,7 +72,11 @@ export function ChangePasswordForm() {
     setIsLoading(true);
 
     try {
-      await updatePassword(formData.currentPassword, formData.newPassword);
+      await updatePassword({
+        current_password: formData.currentPassword,
+        password: formData.newPassword,
+        password_confirmation: formData.confirmPassword,
+      });
 
       toast({
         title: "Đổi mật khẩu thành công",

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -44,7 +45,11 @@ export const ChangePasswordPage = () => {
     setError(null);
 
     try {
-      await updatePassword(data.currentPassword, data.newPassword);
+      await updatePassword({
+        current_password: data.currentPassword,
+        password: data.newPassword,
+        password_confirmation: data.confirmPassword,
+      });
       setSuccess(true);
       
       // Redirect to profile after 3 seconds
