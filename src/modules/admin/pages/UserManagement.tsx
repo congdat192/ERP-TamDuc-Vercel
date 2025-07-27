@@ -81,7 +81,6 @@ export function UserManagement() {
       permissions: {
         modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'marketing', 'system-settings', 'user-management'],
         voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
-        affiliateFeatures: ['affiliate-dashboard', 'referrer-management', 'voucher-monitoring', 'commission-tracking', 'affiliate-analytics', 'affiliate-reports'],
         canManageUsers: true,
         canViewAllVouchers: true
       },
@@ -110,7 +109,6 @@ export function UserManagement() {
       permissions: {
         modules: ['dashboard', 'voucher'],
         voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
-        affiliateFeatures: [],
         canManageUsers: false,
         canViewAllVouchers: true
       },
@@ -138,7 +136,6 @@ export function UserManagement() {
       permissions: {
         modules: ['dashboard', 'customers', 'voucher'],
         voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list'],
-        affiliateFeatures: [],
         canManageUsers: false,
         canViewAllVouchers: false
       },
@@ -166,7 +163,6 @@ export function UserManagement() {
       permissions: {
         modules: ['dashboard'],
         voucherFeatures: [],
-        affiliateFeatures: [],
         canManageUsers: false,
         canViewAllVouchers: false
       },

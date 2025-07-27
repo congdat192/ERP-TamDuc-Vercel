@@ -1,14 +1,12 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Switch } from '@/components/ui/switch';
-import { User, UserRole, CreateUserData } from '@/types/auth';
 import { useToast } from '@/hooks/use-toast';
+import { User, UserRole, UserPermissions, CreateUserData } from '@/types/auth';
 
 interface UserCreateModalProps {
   isOpen: boolean;
@@ -17,227 +15,205 @@ interface UserCreateModalProps {
 }
 
 export function UserCreateModal({ isOpen, onClose, onUserCreated }: UserCreateModalProps) {
-  const [formData, setFormData] = useState<CreateUserData>({
-    username: '',
-    fullName: '',
-    email: '',
-    phone: '',
-    role: 'telesales',
-    password: '',
-    sendVerificationEmail: true,
-    requirePasswordReset: true,
-    permissions: {
-      modules: [],
-      voucherFeatures: [],
-      affiliateFeatures: [],
-      canManageUsers: false,
-      canViewAllVouchers: false
-    }
-  });
-
-  const [errors, setErrors] = useState<Partial<Record<keyof CreateUserData, string>>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-
-  const validateForm = (): boolean => {
-    const newErrors: Partial<Record<keyof CreateUserData, string>> = {};
-
-    if (!formData.username.trim()) {
-      newErrors.username = 'Tên đăng nhập là bắt buộc';
-    } else if (formData.username.length < 3) {
-      newErrors.username = 'Tên đăng nhập phải có ít nhất 3 ký tự';
-    }
-
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = 'Họ và tên là bắt buộc';
-    } else if (formData.fullName.length < 2) {
-      newErrors.fullName = 'Họ và tên phải có ít nhất 2 ký tự';
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email là bắt buộc';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Email không hợp lệ';
-    }
-
-    if (formData.phone && !/^[0-9+\-\s]+$/.test(formData.phone)) {
-      newErrors.phone = 'Số điện thoại không hợp lệ';
-    }
-
-    if (!formData.password.trim()) {
-      newErrors.password = 'Mật khẩu là bắt buộc';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Mật khẩu phải có ít nhất 6 ký tự';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  const [fullName, setFullName] = useState('');
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [role, setRole] = useState<UserRole>('custom');
+  const [notes, setNotes] = useState('');
+  const [password, setPassword] = useState('');
+  const [sendVerificationEmail, setSendVerificationEmail] = useState(false);
+  const [requirePasswordReset, setRequirePasswordReset] = useState(false);
+  const [permissions, setPermissions] = useState<UserPermissions>({
+    modules: [],
+    voucherFeatures: [],
+    canManageUsers: false,
+    canViewAllVouchers: false
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
+
+    if (!fullName || !username || !email || !password || !role) {
+      toast({
+        title: 'Lỗi',
+        description: 'Vui lòng điền đầy đủ thông tin.',
+        variant: 'destructive'
+      });
       return;
     }
 
     setIsSubmitting(true);
-    
+
+    const newUser: User = {
+      id: Date.now().toString(),
+      fullName,
+      username,
+      email,
+      phone: phone || undefined,
+      role,
+      permissions,
+      isActive: true,
+      status: 'pending_verification',
+      createdAt: new Date().toISOString(),
+      avatarPath: undefined,
+      emailVerified: false,
+      securitySettings: {
+        twoFactorEnabled: false,
+        loginAttemptLimit: 5,
+        passwordChangeRequired: requirePasswordReset
+      },
+      activities: [],
+      notes
+    };
+
     try {
+      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      const newUser: User = {
-        id: `user-${Date.now()}`,
-        username: formData.username,
-        fullName: formData.fullName,
-        email: formData.email,
-        phone: formData.phone,
-        role: formData.role,
-        permissions: formData.permissions,
-        isActive: true,
-        status: 'active',
-        createdAt: new Date().toISOString(),
-        emailVerified: false,
-        securitySettings: {
-          twoFactorEnabled: false,
-          loginAttemptLimit: 3,
-          passwordChangeRequired: formData.requirePasswordReset
-        },
-        activities: []
-      };
-
       onUserCreated(newUser);
-      onClose();
-      
       toast({
-        title: "Thành công",
-        description: "Tạo người dùng mới thành công",
-        duration: 3000,
+        title: 'Thành công',
+        description: 'Người dùng đã được tạo thành công.'
       });
-      
+      onClose();
     } catch (error) {
       console.error('Error creating user:', error);
       toast({
-        title: "Lỗi",
-        description: "Có lỗi xảy ra khi tạo người dùng",
-        variant: "destructive",
-        duration: 5000,
+        title: 'Lỗi',
+        description: 'Không thể tạo người dùng. Vui lòng thử lại.',
+        variant: 'destructive'
       });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleInputChange = (field: keyof CreateUserData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }));
-    }
-  };
-
-  const handleCheckboxChange = (field: 'sendVerificationEmail' | 'requirePasswordReset', checked: boolean) => {
-    setFormData(prev => ({ ...prev, [field]: checked }));
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Thêm Người Dùng Mới</DialogTitle>
+          <DialogTitle>Tạo Người Dùng Mới</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="fullName">Họ và Tên</Label>
+              <Input
+                type="text"
+                id="fullName"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="username">Tên Đăng Nhập</Label>
+              <Input
+                type="text"
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                type="email"
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="phone">Số Điện Thoại</Label>
+              <Input
+                type="tel"
+                id="phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="password">Mật Khẩu</Label>
+              <Input
+                type="password"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="role">Vai Trò</Label>
+              <Select value={role} onValueChange={(value) => setRole(value as UserRole)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="erp-admin">ERP Admin</SelectItem>
+                  <SelectItem value="voucher-admin">Voucher Admin</SelectItem>
+                  <SelectItem value="telesales">Telesales</SelectItem>
+                  <SelectItem value="custom">Custom</SelectItem>
+                  <SelectItem value="platform-admin">Platform Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
           <div className="space-y-2">
-            <Label htmlFor="username">Tên đăng nhập *</Label>
+            <Label htmlFor="notes">Ghi Chú</Label>
             <Input
-              id="username"
-              value={formData.username}
-              onChange={(e) => handleInputChange('username', e.target.value)}
-              placeholder="Nhập tên đăng nhập"
-              className={errors.username ? 'border-red-500' : ''}
+              type="text"
+              id="notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
             />
-            {errors.username && <p className="text-sm text-red-500">{errors.username}</p>}
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="fullName">Họ và tên *</Label>
-            <Input
-              id="fullName"
-              value={formData.fullName}
-              onChange={(e) => handleInputChange('fullName', e.target.value)}
-              placeholder="Nhập họ và tên đầy đủ"
-              className={errors.fullName ? 'border-red-500' : ''}
-            />
-            {errors.fullName && <p className="text-sm text-red-500">{errors.fullName}</p>}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">Email *</Label>
-            <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => handleInputChange('email', e.target.value)}
-              placeholder="user@company.com"
-              className={errors.email ? 'border-red-500' : ''}
-            />
-            {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="phone">Số điện thoại</Label>
-            <Input
-              id="phone"
-              value={formData.phone}
-              onChange={(e) => handleInputChange('phone', e.target.value)}
-              placeholder="0901234567"
-              className={errors.phone ? 'border-red-500' : ''}
-            />
-            {errors.phone && <p className="text-sm text-red-500">{errors.phone}</p>}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="role">Vai trò</Label>
-            <Select value={formData.role} onValueChange={(value: UserRole) => handleInputChange('role', value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Chọn vai trò" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="erp-admin">Quản Trị ERP</SelectItem>
-                <SelectItem value="voucher-admin">Quản Lý Voucher</SelectItem>
-                <SelectItem value="telesales">Telesales</SelectItem>
-                <SelectItem value="custom">Tùy Chỉnh</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Mật khẩu tạm thời *</Label>
-            <Input
-              id="password"
-              type="password"
-              value={formData.password}
-              onChange={(e) => handleInputChange('password', e.target.value)}
-              placeholder="Nhập mật khẩu"
-              className={errors.password ? 'border-red-500' : ''}
-            />
-            {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
-          </div>
+
           <div className="flex items-center space-x-2">
             <Checkbox
               id="sendVerificationEmail"
-              checked={formData.sendVerificationEmail}
-              onCheckedChange={(checked) => handleCheckboxChange('sendVerificationEmail', !!checked)}
+              checked={sendVerificationEmail}
+              onCheckedChange={(checked) => setSendVerificationEmail(!!checked)}
             />
-            <Label htmlFor="sendVerificationEmail">Gửi email xác thực</Label>
+            <Label htmlFor="sendVerificationEmail">Gửi Email Xác Minh</Label>
           </div>
+
           <div className="flex items-center space-x-2">
             <Checkbox
               id="requirePasswordReset"
-              checked={formData.requirePasswordReset}
-              onCheckedChange={(checked) => handleCheckboxChange('requirePasswordReset', !!checked)}
+              checked={requirePasswordReset}
+              onCheckedChange={(checked) => setRequirePasswordReset(!!checked)}
             />
-            <Label htmlFor="requirePasswordReset">Yêu cầu đổi mật khẩu khi đăng nhập lần đầu</Label>
+            <Label htmlFor="requirePasswordReset">Yêu Cầu Đặt Lại Mật Khẩu</Label>
           </div>
-          <div className="flex space-x-2 pt-4">
-            <Button type="submit" className="flex-1" disabled={isSubmitting}>
-              {isSubmitting ? 'Đang tạo...' : 'Tạo Tài Khoản'}
+
+          <div className="flex space-x-3 pt-4">
+            <Button
+              type="submit"
+              className="flex-1 bg-blue-600 hover:bg-blue-700"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Đang Tạo...' : 'Tạo Người Dùng'}
             </Button>
-            <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={isSubmitting}
+            >
               Hủy
             </Button>
           </div>
