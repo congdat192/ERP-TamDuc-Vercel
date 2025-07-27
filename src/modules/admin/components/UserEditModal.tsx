@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { User, UserRole, UpdateUserData, ERPModule, VoucherFeature, AffiliateFeature } from '@/types/auth';
-import { DEFAULT_PERMISSIONS, MODULE_PERMISSIONS, VOUCHER_FEATURES, AFFILIATE_FEATURES } from '@/constants/permissions';
+import { DEFAULT_PERMISSIONS, MODULE_PERMISSIONS } from '@/constants/permissions';
 
 interface UserEditModalProps {
   isOpen: boolean;
@@ -111,7 +112,7 @@ export function UserEditModal({ isOpen, onClose, user, onUserUpdated }: UserEdit
   };
 
   const handleRoleChange = (role: UserRole) => {
-    const defaultPermissions = DEFAULT_PERMISSIONS[role];
+    const defaultPermissions = DEFAULT_PERMISSIONS;
     setFormData(prev => ({
       ...prev,
       role,
@@ -159,13 +160,26 @@ export function UserEditModal({ isOpen, onClose, user, onUserUpdated }: UserEdit
     module.allowedRoles.includes(formData.role)
   );
 
-  const availableVoucherFeatures = VOUCHER_FEATURES.filter(feature => 
-    (feature.allowedRoles as readonly UserRole[]).includes(formData.role)
-  );
+  // Define voucher features with labels
+  const voucherFeatures = [
+    { id: 'voucher-dashboard' as VoucherFeature, label: 'Dashboard Voucher' },
+    { id: 'campaign-management' as VoucherFeature, label: 'Quản lý chiến dịch' },
+    { id: 'issue-voucher' as VoucherFeature, label: 'Phát hành voucher' },
+    { id: 'voucher-list' as VoucherFeature, label: 'Danh sách voucher' },
+    { id: 'voucher-analytics' as VoucherFeature, label: 'Phân tích voucher' },
+    { id: 'voucher-leaderboard' as VoucherFeature, label: 'Bảng xếp hạng' },
+    { id: 'voucher-settings' as VoucherFeature, label: 'Cài đặt voucher' }
+  ];
 
-  const availableAffiliateFeatures = AFFILIATE_FEATURES.filter(feature => 
-    (feature.allowedRoles as readonly UserRole[]).includes(formData.role)
-  );
+  // Define affiliate features with labels
+  const affiliateFeatures = [
+    { id: 'affiliate-dashboard' as AffiliateFeature, label: 'Dashboard Affiliate' },
+    { id: 'referrer-management' as AffiliateFeature, label: 'Quản lý người giới thiệu' },
+    { id: 'voucher-monitoring' as AffiliateFeature, label: 'Giám sát voucher' },
+    { id: 'commission-tracking' as AffiliateFeature, label: 'Theo dõi hoa hồng' },
+    { id: 'affiliate-analytics' as AffiliateFeature, label: 'Phân tích affiliate' },
+    { id: 'affiliate-reports' as AffiliateFeature, label: 'Báo cáo affiliate' }
+  ];
 
   // Check if user can have special permissions
   const canManageUsers = formData.role === 'erp-admin';
@@ -278,12 +292,12 @@ export function UserEditModal({ isOpen, onClose, user, onUserUpdated }: UserEdit
                   <div className="space-y-3">
                     <h4 className="font-medium text-gray-900">Tính Năng Voucher</h4>
                     <div className="space-y-2 max-h-40 overflow-y-auto border rounded p-3">
-                      {availableVoucherFeatures.map((feature) => (
+                      {voucherFeatures.map((feature) => (
                         <div key={feature.id} className="flex items-center space-x-2">
                           <Checkbox
                             id={`voucher-${feature.id}`}
-                            checked={formData.permissions?.voucherFeatures?.includes(feature.id as VoucherFeature) || false}
-                            onCheckedChange={(checked) => handleVoucherFeatureChange(feature.id as VoucherFeature, !!checked)}
+                            checked={formData.permissions?.voucherFeatures?.includes(feature.id) || false}
+                            onCheckedChange={(checked) => handleVoucherFeatureChange(feature.id, !!checked)}
                           />
                           <Label htmlFor={`voucher-${feature.id}`} className="text-sm">
                             {feature.label}
@@ -299,12 +313,12 @@ export function UserEditModal({ isOpen, onClose, user, onUserUpdated }: UserEdit
                   <div className="space-y-3">
                     <h4 className="font-medium text-gray-900">Tính Năng Affiliate</h4>
                     <div className="space-y-2 max-h-40 overflow-y-auto border rounded p-3">
-                      {availableAffiliateFeatures.map((feature) => (
+                      {affiliateFeatures.map((feature) => (
                         <div key={feature.id} className="flex items-center space-x-2">
                           <Checkbox
                             id={`affiliate-${feature.id}`}
-                            checked={formData.permissions?.affiliateFeatures?.includes(feature.id as AffiliateFeature) || false}
-                            onCheckedChange={(checked) => handleAffiliateFeatureChange(feature.id as AffiliateFeature, !!checked)}
+                            checked={formData.permissions?.affiliateFeatures?.includes(feature.id) || false}
+                            onCheckedChange={(checked) => handleAffiliateFeatureChange(feature.id, !!checked)}
                           />
                           <Label htmlFor={`affiliate-${feature.id}`} className="text-sm">
                             {feature.label}

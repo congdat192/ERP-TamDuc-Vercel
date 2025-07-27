@@ -1,3 +1,4 @@
+
 import { LoginCredentials } from '@/types/auth';
 
 // Function to simulate user login
@@ -56,4 +57,70 @@ export const checkAuthentication = (): boolean => {
 export const getCurrentUser = (): any => {
   const user = localStorage.getItem('currentUser');
   return user ? JSON.parse(user) : null;
+};
+
+// New exported functions for API compatibility
+export const loginUser = async (credentials: { email: string; password: string }) => {
+  const result = await login(credentials.email, credentials.password);
+  if (result.success) {
+    // Store token for API compatibility
+    localStorage.setItem('auth_token', 'mock-token');
+    return { user: result.user };
+  } else {
+    throw new Error(result.error || 'Login failed');
+  }
+};
+
+export const logoutUser = async () => {
+  localStorage.removeItem('auth_token');
+  return await logout();
+};
+
+export const getUserProfile = async () => {
+  const user = getCurrentUser();
+  if (!user) {
+    throw new Error('User not authenticated');
+  }
+  return user;
+};
+
+export const updateUserProfile = async (profileData: any) => {
+  const user = getCurrentUser();
+  if (!user) {
+    throw new Error('User not authenticated');
+  }
+  
+  // Mock update
+  const updatedUser = { ...user, ...profileData };
+  localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+  return updatedUser;
+};
+
+export const updatePassword = async (passwordData: { currentPassword: string; newPassword: string }) => {
+  // Mock password update
+  if (passwordData.currentPassword === 'password') {
+    return { success: true };
+  } else {
+    throw new Error('Current password is incorrect');
+  }
+};
+
+export const verifyEmail = async (email: string, hash: string) => {
+  // Mock email verification
+  return { success: true };
+};
+
+export const resendVerificationEmail = async (email: string) => {
+  // Mock resend verification
+  return { success: true };
+};
+
+export const forgotPassword = async (email: string) => {
+  // Mock forgot password
+  return { success: true };
+};
+
+export const resetPassword = async (resetData: { email: string; password: string; password_confirmation: string; token: string }) => {
+  // Mock reset password
+  return { success: true };
 };
