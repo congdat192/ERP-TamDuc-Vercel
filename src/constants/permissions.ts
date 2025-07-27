@@ -54,7 +54,7 @@ export const MODULE_PERMISSIONS: ModulePermission[] = [
     module: 'affiliate',
     label: 'Affiliate',
     icon: 'UserPlus',
-    allowedRoles: ['erp-admin', 'custom']
+    allowedRoles: ['erp-admin', 'voucher-admin', 'telesales', 'custom', 'platform-admin']
   },
   {
     module: 'system-settings',
