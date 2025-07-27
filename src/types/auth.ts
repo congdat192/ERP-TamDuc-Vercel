@@ -1,17 +1,46 @@
+
 export interface User {
   id: number;
+  username: string;
   fullName: string;
   email: string;
+  phone?: string;
   role: string;
   permissions: {
     modules: string[];
     actions: string[];
+    voucherFeatures: VoucherFeature[];
+    canManageUsers: boolean;
+    canViewAllVouchers: boolean;
   };
   businessId: number | null;
   departmentId: number | null;
   groupId: number | null;
   status: string;
   email_verified_at: string | null;
+  emailVerified: boolean;
+  isActive: boolean;
+  lastLogin?: string;
+  createdAt: string;
+  avatarPath?: string;
+  notes?: string;
+  securitySettings: UserSecuritySettings;
+  activities: UserActivity[];
+}
+
+export interface UserSecuritySettings {
+  twoFactorEnabled: boolean;
+  loginAttemptLimit: number;
+  passwordChangeRequired: boolean;
+  lastPasswordChange?: string;
+}
+
+export interface UserActivity {
+  id: string;
+  type: string;
+  description: string;
+  timestamp: string;
+  metadata?: Record<string, any>;
 }
 
 export interface Business {
@@ -57,6 +86,43 @@ export type ERPModule =
   | 'system-settings'
   | 'profile';
 
+export type VoucherFeature = 
+  | 'voucher-dashboard'
+  | 'campaign-management'
+  | 'issue-voucher'
+  | 'voucher-list'
+  | 'voucher-analytics'
+  | 'voucher-leaderboard'
+  | 'voucher-settings';
+
+export type UserRole = 'erp-admin' | 'voucher-admin' | 'telesales' | 'custom';
+
+export interface UserPermissions {
+  modules: string[];
+  actions: string[];
+  voucherFeatures: VoucherFeature[];
+  canManageUsers: boolean;
+  canViewAllVouchers: boolean;
+}
+
+export interface CreateUserData {
+  fullName: string;
+  email: string;
+  phone?: string;
+  role: UserRole;
+  notes?: string;
+  permissions: UserPermissions;
+}
+
+export interface UpdateUserData {
+  fullName: string;
+  email: string;
+  phone?: string;
+  role: UserRole;
+  notes?: string;
+  permissions?: UserPermissions;
+}
+
 export interface Invitation {
   id: number;
   email: string;
@@ -68,3 +134,16 @@ export interface Invitation {
   createdAt: string;
   updatedAt: string;
 }
+
+// Helper function to get avatar URL
+export const getAvatarUrl = (avatarPath?: string): string => {
+  if (!avatarPath) return '';
+  
+  // If it's already a full URL, return as is
+  if (avatarPath.startsWith('http')) {
+    return avatarPath;
+  }
+  
+  // If it's a relative path, construct the full URL
+  return `https://api.matkinhtamduc.xyz/storage/${avatarPath}`;
+};

@@ -83,10 +83,15 @@ const convertApiUserToUser = (apiUser: any): User => {
     createdAt: apiUser.created_at,
     lastLogin: new Date().toISOString(),
     emailVerified: !!apiUser.email_verified_at,
+    email_verified_at: apiUser.email_verified_at,
     isActive: true,
-    avatarPath: apiUser.avatar_path, // Ensure avatarPath is mapped correctly
+    avatarPath: apiUser.avatar_path,
+    businessId: null,
+    departmentId: null,
+    groupId: null,
     permissions: {
-      modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'marketing', 'system-settings', 'user-management'],
+      modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'affiliate', 'marketing', 'system-settings', 'user-management'],
+      actions: [],
       voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
       canManageUsers: true,
       canViewAllVouchers: true,
