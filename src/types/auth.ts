@@ -1,84 +1,19 @@
 
-export interface User {
-  id: string;
-  username: string;
-  fullName: string;
-  email: string;
-  phone?: string;
-  role: UserRole;
-  permissions: UserPermissions;
-  businessId: string | null;
-  departmentId: string | null;
-  groupId: string | null;
-  status: UserStatus;
-  email_verified_at: string | null;
-  emailVerified: boolean;
-  isActive: boolean;
-  lastLogin?: string;
-  createdAt: string;
-  avatarPath?: string;
-  notes?: string;
-  securitySettings: UserSecuritySettings;
-  activities: UserActivity[];
-}
+export type UserRole = 'erp-admin' | 'voucher-admin' | 'telesales' | 'custom' | 'platform-admin';
 
-export interface UserSecuritySettings {
-  twoFactorEnabled: boolean;
-  loginAttemptLimit: number;
-  passwordChangeRequired: boolean;
-  lastPasswordChange?: string;
-}
-
-export interface UserActivity {
-  id: string;
-  type: string;
-  description: string;
-  timestamp: string;
-  metadata?: Record<string, any>;
-}
-
-export interface Business {
-  id: number;
-  name: string;
-  phone: string;
-  email: string;
-  address: string;
-  logo: string | null;
-  coverImage: string | null;
-  description: string | null;
-  website: string | null;
-  socialLinks: {
-    facebook: string | null;
-    twitter: string | null;
-    linkedin: string | null;
-    instagram: string | null;
-  };
-  timezone: string;
-  currency: string;
-  language: string;
-  industry: string;
-  numberOfEmployees: number;
-  annualRevenue: number;
-  country: string;
-  city: string;
-  postalCode: string;
-  ownerId: number;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-}
+export type UserStatus = 'active' | 'inactive' | 'locked' | 'pending' | 'pending_verification';
 
 export type ERPModule = 
   | 'dashboard'
   | 'customers'
   | 'sales'
   | 'inventory'
+  | 'accounting'
+  | 'hr'
   | 'voucher'
-  | 'affiliate'
   | 'marketing'
-  | 'user-management'
   | 'system-settings'
-  | 'profile';
+  | 'user-management';
 
 export type VoucherFeature = 
   | 'voucher-dashboard'
@@ -89,57 +24,83 @@ export type VoucherFeature =
   | 'voucher-leaderboard'
   | 'voucher-settings';
 
-export type UserRole = 'erp-admin' | 'voucher-admin' | 'telesales' | 'custom' | 'platform-admin';
-
-export type UserStatus = 'active' | 'inactive' | 'pending_verification' | 'locked';
+export interface ModulePermission {
+  module: ERPModule;
+  label: string;
+  icon: string;
+  allowedRoles: UserRole[];
+}
 
 export interface UserPermissions {
-  modules: string[];
-  actions: string[];
+  modules: ERPModule[];
   voucherFeatures: VoucherFeature[];
   canManageUsers: boolean;
   canViewAllVouchers: boolean;
 }
 
+export interface UserSecuritySettings {
+  twoFactorEnabled: boolean;
+  loginAttemptLimit: number;
+  passwordChangeRequired: boolean;
+  lastPasswordChange?: string;
+}
+
+export interface User {
+  id: string;
+  fullName: string;
+  username: string;
+  email: string;
+  phone?: string;
+  role: UserRole;
+  permissions: UserPermissions;
+  isActive: boolean;
+  status: UserStatus;
+  createdAt: string;
+  lastLogin?: string;
+  avatarPath?: string; // Changed from avatar to avatarPath to match API
+  emailVerified: boolean;
+  securitySettings: UserSecuritySettings;
+  activities: any[];
+  notes?: string;
+}
+
+// Helper function to construct full avatar URL
+export const getAvatarUrl = (avatarPath?: string): string | undefined => {
+  if (!avatarPath) return undefined;
+  return `https://matkinhtamducxyz.sgp1.digitaloceanspaces.com/${avatarPath}`;
+};
+
+export interface AuthState {
+  isAuthenticated: boolean;
+  currentUser: User | null;
+  isLoading: boolean;
+}
+
+export interface LoginCredentials {
+  username: string;
+  password: string;
+}
+
 export interface CreateUserData {
+  username: string;
   fullName: string;
   email: string;
   phone?: string;
   role: UserRole;
-  notes?: string;
   permissions: UserPermissions;
+  notes?: string;
+  password: string;
+  sendVerificationEmail: boolean;
+  requirePasswordReset: boolean;
 }
 
 export interface UpdateUserData {
-  fullName: string;
-  email: string;
+  fullName?: string;
+  email?: string;
   phone?: string;
-  role: UserRole;
-  notes?: string;
+  role?: UserRole;
   permissions?: UserPermissions;
+  notes?: string;
+  isActive?: boolean;
+  status?: UserStatus;
 }
-
-export interface Invitation {
-  id: number;
-  email: string;
-  businessId: number;
-  role: string;
-  modules: string[];
-  status: 'pending' | 'accepted' | 'declined';
-  invitedBy: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-// Helper function to get avatar URL
-export const getAvatarUrl = (avatarPath?: string): string => {
-  if (!avatarPath) return '';
-  
-  // If it's already a full URL, return as is
-  if (avatarPath.startsWith('http')) {
-    return avatarPath;
-  }
-  
-  // If it's a relative path, construct the full URL
-  return `https://api.matkinhtamduc.xyz/storage/${avatarPath}`;
-};

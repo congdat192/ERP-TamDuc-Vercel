@@ -1,96 +1,86 @@
 
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
-
 const API_BASE_URL = 'https://api.matkinhtamduc.xyz/api/v1';
 
-export interface ApiResponse<T> {
+interface ApiResponse<T = any> {
   data: T;
   message?: string;
-  success?: boolean;
-}
-
-interface RequestOptions {
-  requiresBusinessId?: boolean;
 }
 
 class ApiClient {
-  private client: AxiosInstance;
+  private baseURL: string;
 
-  constructor() {
-    this.client = axios.create({
-      baseURL: API_BASE_URL,
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-    });
-
-    this.setupInterceptors();
+  constructor(baseURL: string) {
+    this.baseURL = baseURL;
   }
 
-  private setupInterceptors() {
-    // Request interceptor to add auth token and business context
-    this.client.interceptors.request.use(
-      (config) => {
-        const token = localStorage.getItem('auth_token');
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
+  private async request<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<ApiResponse<T>> {
+    const url = `${this.baseURL}${endpoint}`;
+    
+    // Get auth token from localStorage or your auth context
+    const token = localStorage.getItem('auth_token');
+    const businessId = localStorage.getItem('business_id');
 
-        const businessId = localStorage.getItem('selected_business_id');
-        if (businessId) {
-          config.headers['X-Business-Id'] = businessId;
-        }
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` }),
+      ...(businessId && { 'X-Business-Id': businessId }),
+      ...options.headers,
+    };
 
-        return config;
-      },
-      (error) => Promise.reject(error)
-    );
+    const config: RequestInit = {
+      ...options,
+      headers,
+    };
 
-    // Response interceptor to handle common errors and unwrap data
-    this.client.interceptors.response.use(
-      (response: AxiosResponse) => {
-        // For paginated responses, return the full response
-        if (response.data && (response.data.data || response.data.total !== undefined)) {
-          return response.data;
+    try {
+      const response = await fetch(url, config);
+      
+      if (!response.ok) {
+        let errorMessage = 'Network error';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || `HTTP ${response.status}`;
+        } catch {
+          errorMessage = `HTTP ${response.status}`;
         }
-        
-        // For single item responses, return the data directly
-        return response.data;
-      },
-      (error) => {
-        console.error('API Error:', error);
-        
-        if (error.response?.status === 401) {
-          localStorage.removeItem('auth_token');
-          localStorage.removeItem('erp_current_user');
-          window.location.href = '/login';
-        }
-        
-        return Promise.reject(error);
+        throw new Error(errorMessage);
       }
-    );
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Unknown error occurred');
+    }
   }
 
-  async get<T>(url: string, options?: RequestOptions): Promise<T> {
-    const response = await this.client.get<T>(url);
-    return response as T;
+  async get<T>(endpoint: string): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, { method: 'GET' });
   }
 
-  async post<T>(url: string, data?: any, options?: RequestOptions): Promise<T> {
-    const response = await this.client.post<T>(url, data);
-    return response as T;
+  async post<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, {
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined,
+    });
   }
 
-  async put<T>(url: string, data?: any, options?: RequestOptions): Promise<T> {
-    const response = await this.client.put<T>(url, data);
-    return response as T;
+  async put<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, {
+      method: 'PUT',
+      body: data ? JSON.stringify(data) : undefined,
+    });
   }
 
-  async delete<T>(url: string, options?: RequestOptions): Promise<T> {
-    const response = await this.client.delete<T>(url);
-    return response as T;
+  async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, { method: 'DELETE' });
   }
 }
 
-export const apiClient = new ApiClient();
+export const apiClient = new ApiClient(API_BASE_URL);

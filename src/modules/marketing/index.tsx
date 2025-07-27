@@ -1,28 +1,17 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { MarketingDashboard } from './pages/MarketingDashboard';
 
 interface MarketingModuleProps {
-  currentUser?: any;
-  onBackToModules: () => void;
+  currentUser: any;
 }
 
-export function MarketingModule({ currentUser, onBackToModules }: MarketingModuleProps) {
+export function MarketingModule({ currentUser }: MarketingModuleProps) {
   return (
-    <div className="space-y-6 p-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Marketing</h1>
-        <p className="text-gray-600">Quản lý chiến dịch marketing</p>
+    <div className="marketing-module-background min-h-screen">
+      <div className="p-6">
+        <MarketingDashboard />
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Marketing</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-gray-600">Module đang được phát triển...</p>
-        </CardContent>
-      </Card>
     </div>
   );
 }

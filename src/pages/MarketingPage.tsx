@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { MarketingModule } from '@/modules/marketing';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/components/auth/AuthContext';
 
 export function MarketingPage() {
   const { currentUser } = useAuth();
@@ -10,10 +10,5 @@ export function MarketingPage() {
     return <div>Unauthorized</div>;
   }
 
-  const handleBackToModules = () => {
-    // Navigate back to main modules view
-    window.location.href = '/';
-  };
-
-  return <MarketingModule currentUser={currentUser} onBackToModules={handleBackToModules} />;
+  return <MarketingModule currentUser={currentUser} />;
 }

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -59,7 +60,7 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
     setIsSaving(true);
 
     try {
-      let savedPipeline: any;
+      let savedPipeline: Pipeline;
 
       if (integration) {
         // Update existing pipeline
@@ -75,10 +76,15 @@ export function SimpleKiotVietIntegration({ integration, onSave, onDisconnect }:
         // Create new pipeline
         savedPipeline = await createPipeline({
           type: 'KIOT_VIET',
+          status: 'ACTIVE',
           config: {
             client_id: formData.clientId,
             client_secret: formData.clientSecret,
             retailer: formData.retailer
+          },
+          access_token: {
+            token: '',
+            refresh_token: ''
           }
         });
       }

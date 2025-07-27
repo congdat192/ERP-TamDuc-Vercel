@@ -2,7 +2,6 @@
 import {
   LayoutDashboard,
   Users,
-  Users2,
   TrendingUp,
   Package,
   Calculator,
@@ -18,7 +17,6 @@ import {
 const iconMap = {
   LayoutDashboard,
   Users,
-  Users2,
   TrendingUp,
   Package,
   Calculator,
