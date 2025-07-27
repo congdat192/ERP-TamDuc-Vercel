@@ -1,3 +1,4 @@
+
 // Authentication service for API calls
 import { User, getAvatarUrl } from '@/types/auth';
 import { api } from './apiService';
@@ -157,133 +158,130 @@ const convertApiUserToUser = (apiUser: any): User => {
   };
 };
 
-// Extract token from API response - handle multiple formats
+// Improved token extraction with detailed logging
 const extractTokenFromResponse = (data: any): string | null => {
   console.log('🔍 [authService] Extracting token from response data:', JSON.stringify(data, null, 2));
   
-  // Try different possible token field names
-  const possibleTokenFields = ['access_token', 'token', 'authToken', 'accessToken', 'auth_token'];
-  
-  for (const field of possibleTokenFields) {
-    if (data[field]) {
-      console.log('✅ [authService] Found token in field:', field);
-      return data[field];
-    }
+  // Check for direct token field in response
+  if (data.token) {
+    console.log('✅ [authService] Found token in "token" field:', data.token.substring(0, 20) + '...');
+    return data.token;
   }
   
-  // Check nested structures
+  // Check for access_token field
+  if (data.access_token) {
+    console.log('✅ [authService] Found token in "access_token" field:', data.access_token.substring(0, 20) + '...');
+    return data.access_token;
+  }
+  
+  // Check nested data structure
   if (data.data && typeof data.data === 'object') {
-    for (const field of possibleTokenFields) {
-      if (data.data[field]) {
-        console.log('✅ [authService] Found token in nested data field:', field);
-        return data.data[field];
-      }
+    if (data.data.token) {
+      console.log('✅ [authService] Found token in nested "data.token" field:', data.data.token.substring(0, 20) + '...');
+      return data.data.token;
+    }
+    
+    if (data.data.access_token) {
+      console.log('✅ [authService] Found token in nested "data.access_token" field:', data.data.access_token.substring(0, 20) + '...');
+      return data.data.access_token;
     }
   }
   
-  console.error('❌ [authService] No token found in any expected fields');
+  console.error('❌ [authService] No token found in response. Available fields:', Object.keys(data));
   return null;
 };
 
-// Check if error indicates email not found/doesn't exist - MOVED TO FIRST POSITION
+// Check if error indicates email not found - ONLY for error responses
 const isEmailNotFoundError = (status: number, errorData: any): boolean => {
-  console.log('🔍 [authService] Checking if error indicates email not found:', { status, errorData });
+  console.log('🔍 [authService] Checking email not found error:', { status, errorData });
   
-  // Check both 404 and 422 responses for email not found scenarios
-  if (status === 404 || status === 422) {
-    if (errorData && errorData.message) {
-      const message = errorData.message.toLowerCase();
-      
-      const notFoundIndicators = [
-        'user not found',
-        'email not found', 
-        'không tìm thấy người dùng',
-        'email không tồn tại',
-        'user does not exist',
-        'email does not exist',
-        'no user found',
-        'không tồn tại',
-        'these credentials do not match our records'  // Common Laravel message for user not found
-      ];
-      
-      const hasNotFoundIndicator = notFoundIndicators.some(indicator => 
-        message.includes(indicator)
-      );
-      
-      console.log('🔍 [authService] Email not found check result:', hasNotFoundIndicator);
-      return hasNotFoundIndicator;
-    }
+  // Only process error responses
+  if (status >= 400 && errorData && errorData.message) {
+    const message = errorData.message.toLowerCase();
+    
+    const notFoundIndicators = [
+      'user not found',
+      'email not found', 
+      'không tìm thấy người dùng',
+      'email không tồn tại',
+      'user does not exist',
+      'email does not exist',
+      'no user found',
+      'these credentials do not match our records'
+    ];
+    
+    const hasNotFoundIndicator = notFoundIndicators.some(indicator => 
+      message.includes(indicator)
+    );
+    
+    console.log('🔍 [authService] Email not found check result:', hasNotFoundIndicator);
+    return hasNotFoundIndicator;
   }
   
   return false;
 };
 
-// Check if error indicates unverified email - MOVED TO SECOND POSITION  
+// Check if error indicates unverified email - ONLY for error responses
 const isUnverifiedEmailError = (status: number, errorData: any): boolean => {
-  console.log('🔍 [authService] Checking if error indicates unverified email:', { status, errorData });
+  console.log('🔍 [authService] Checking unverified email error:', { status, errorData });
   
-  // Check for unverified email - typically 403 status with specific message
-  if (status === 403 || status === 422) {
-    if (errorData && errorData.message) {
-      const message = errorData.message.toLowerCase();
-      
-      // Specific indicators for unverified email
-      const unverifiedIndicators = [
-        'email not verified',
-        'email chưa được xác thực',
-        'verify your email',
-        'email verification required',
-        'account not verified',
-        'please verify',
-        'chưa xác thực',
-        'email address is not verified'
-      ];
-      
-      const hasUnverifiedIndicator = unverifiedIndicators.some(indicator => 
-        message.includes(indicator)
-      );
-      
-      console.log('🔍 [authService] Unverified email check result:', hasUnverifiedIndicator);
-      return hasUnverifiedIndicator;
-    }
+  // Only process error responses
+  if (status >= 400 && errorData && errorData.message) {
+    const message = errorData.message.toLowerCase();
+    
+    const unverifiedIndicators = [
+      'email not verified',
+      'email chưa được xác thực',
+      'verify your email',
+      'email verification required',
+      'account not verified',
+      'please verify',
+      'chưa xác thực',
+      'email address is not verified'
+    ];
+    
+    const hasUnverifiedIndicator = unverifiedIndicators.some(indicator => 
+      message.includes(indicator)
+    );
+    
+    console.log('🔍 [authService] Unverified email check result:', hasUnverifiedIndicator);
+    return hasUnverifiedIndicator;
   }
   
   return false;
 };
 
-// Check if error is due to incorrect password (but user exists) - MOVED TO THIRD POSITION
+// Check if error is due to incorrect password - ONLY for error responses
 const isIncorrectPasswordError = (status: number, errorData: any): boolean => {
-  console.log('🔍 [authService] Checking if error indicates incorrect password:', { status, errorData });
+  console.log('🔍 [authService] Checking incorrect password error:', { status, errorData });
   
-  // Typically 401 or 422 with credential-related messages
-  if (status === 401 || status === 422) {
-    if (errorData && errorData.message) {
-      const message = errorData.message.toLowerCase();
-      
-      const incorrectPasswordIndicators = [
-        'invalid credentials',
-        'wrong password',
-        'incorrect password',
-        'mật khẩu không đúng',
-        'sai mật khẩu',
-        'credentials do not match',
-        'authentication failed',
-        'login failed'
-      ];
-      
-      const hasIncorrectPasswordIndicator = incorrectPasswordIndicators.some(indicator => 
-        message.includes(indicator)
-      );
-      
-      console.log('🔍 [authService] Incorrect password check result:', hasIncorrectPasswordIndicator);
-      return hasIncorrectPasswordIndicator;
-    }
+  // Only process error responses
+  if (status >= 400 && errorData && errorData.message) {
+    const message = errorData.message.toLowerCase();
+    
+    const incorrectPasswordIndicators = [
+      'invalid credentials',
+      'wrong password',
+      'incorrect password',
+      'mật khẩu không đúng',
+      'sai mật khẩu',
+      'credentials do not match',
+      'authentication failed',
+      'login failed'
+    ];
+    
+    const hasIncorrectPasswordIndicator = incorrectPasswordIndicators.some(indicator => 
+      message.includes(indicator)
+    );
+    
+    console.log('🔍 [authService] Incorrect password check result:', hasIncorrectPasswordIndicator);
+    return hasIncorrectPasswordIndicator;
   }
   
   return false;
 };
 
-// Login API call with improved error handling - REORDERED LOGIC
+// Login API call with improved error handling and success detection
 export const loginUser = async (credentials: LoginRequest): Promise<LoginResponse> => {
   console.log('🚀 [authService] Starting login process for:', credentials.email);
   
@@ -304,125 +302,82 @@ export const loginUser = async (credentials: LoginRequest): Promise<LoginRespons
   });
 
   console.log('📨 [authService] Response status:', response.status);
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    console.error('❌ [authService] Login failed with status:', response.status);
-    console.error('❌ [authService] Full error response:', JSON.stringify(errorData, null, 2));
-    
-    // REORDERED ERROR HANDLING - CHECK SPECIFIC CASES FIRST
-    
-    // 1. FIRST: Check for email not found (highest priority)
-    if (isEmailNotFoundError(response.status, errorData)) {
-      throw new Error('Email không tồn tại trong hệ thống. Vui lòng đăng ký tài khoản mới.');
-    }
-    
-    // 2. SECOND: Check for unverified email
-    if (isUnverifiedEmailError(response.status, errorData)) {
-      throw new Error('Email chưa được xác thực. Vui lòng kiểm tra email và xác thực tài khoản trước khi đăng nhập.');
-    }
-    
-    // 3. THIRD: Check for incorrect password (user exists but wrong password)
-    if (isIncorrectPasswordError(response.status, errorData)) {
-      throw new Error('Thông tin đăng nhập không chính xác. Vui lòng kiểm tra lại email và mật khẩu.');
-    }
-    
-    // 4. FOURTH: Handle 401 - Generic authentication failure (if not caught above)
-    if (response.status === 401) {
-      throw new Error('Thông tin đăng nhập không chính xác. Vui lòng kiểm tra lại email và mật khẩu.');
-    }
-    
-    // 5. FIFTH: Handle validation errors (422) ONLY for actual format issues
-    if (response.status === 422 && errorData.errors) {
-      // Check if this is actually a format validation error (not credential error)
-      if (errorData.errors.email) {
-        const emailErrorMessage = Array.isArray(errorData.errors.email) 
-          ? errorData.errors.email[0].toLowerCase() 
-          : errorData.errors.email.toLowerCase();
-        
-        // Only treat as format error if message indicates actual format issues
-        const formatErrorIndicators = [
-          'invalid email format',
-          'email must be valid',
-          'email không đúng định dạng',
-          'định dạng email',
-          'format email',
-          'email address is invalid',
-          'please enter a valid email'
-        ];
-        
-        const isActualFormatError = formatErrorIndicators.some(indicator => 
-          emailErrorMessage.includes(indicator)
-        );
-        
-        if (isActualFormatError) {
-          console.log('🔍 [authService] Actual email format validation error detected');
-          throw new Error('Email không đúng định dạng.');
-        }
-      }
-      
-      if (errorData.errors.password) {
-        const passwordErrorMessage = Array.isArray(errorData.errors.password) 
-          ? errorData.errors.password[0].toLowerCase() 
-          : errorData.errors.password.toLowerCase();
-        
-        // Only treat as format error if message indicates actual format issues
-        const formatErrorIndicators = [
-          'password must be',
-          'password should be',
-          'mật khẩu phải',
-          'độ dài mật khẩu',
-          'password length',
-          'password format'
-        ];
-        
-        const isActualFormatError = formatErrorIndicators.some(indicator => 
-          passwordErrorMessage.includes(indicator)
-        );
-        
-        if (isActualFormatError) {
-          console.log('🔍 [authService] Actual password format validation error detected');
-          throw new Error('Mật khẩu không hợp lệ.');
-        }
-      }
-    }
-    
-    // 6. Handle server errors
-    if (response.status >= 500) {
-      throw new Error('Lỗi server. Vui lòng thử lại sau.');
-    }
-    
-    // 7. Default error message with more details for debugging
-    const defaultMessage = errorData.message || 'Đăng nhập thất bại. Vui lòng thử lại.';
-    console.error('❌ [authService] Unhandled error case:', { status: response.status, message: defaultMessage });
-    throw new Error(defaultMessage);
-  }
+  console.log('📨 [authService] Response headers:', Object.fromEntries(response.headers.entries()));
 
   const data = await response.json();
   console.log('📦 [authService] Full API response:', JSON.stringify(data, null, 2));
+
+  // SUCCESS CASE: Handle successful login (200 OK)
+  if (response.ok) {
+    console.log('✅ [authService] Login request successful, processing response...');
+    
+    // Extract token from successful response
+    const token = extractTokenFromResponse(data);
+    if (!token) {
+      console.error('❌ [authService] No token found in successful response');
+      throw new Error('Không nhận được token từ server. Vui lòng thử lại.');
+    }
+    
+    console.log('✅ [authService] Token extracted successfully:', token.substring(0, 20) + '...');
+    
+    // Store token
+    storeToken(token);
+    
+    const loginResponse: LoginResponse = {
+      access_token: token,
+      token_type: data.token_type || 'Bearer',
+      expires_in: data.expires_in || 3600,
+      user: data.user
+    };
+    
+    console.log('✅ [authService] Login successful for:', credentials.email);
+    return loginResponse;
+  }
+
+  // ERROR CASE: Handle error responses only
+  console.error('❌ [authService] Login failed with status:', response.status);
+  console.error('❌ [authService] Full error response:', JSON.stringify(data, null, 2));
   
-  // Extract token using improved method
-  const token = extractTokenFromResponse(data);
-  if (!token) {
-    console.error('❌ [authService] No token found in API response');
-    console.error('❌ [authService] Available fields in response:', Object.keys(data));
-    throw new Error('Không nhận được token từ server. Vui lòng thử lại.');
+  // Check for specific error types (only for error responses)
+  if (isEmailNotFoundError(response.status, data)) {
+    throw new Error('Email không tồn tại trong hệ thống. Vui lòng đăng ký tài khoản mới.');
   }
   
-  console.log('✅ [authService] Token extracted successfully:', token.substring(0, 20) + '...');
+  if (isUnverifiedEmailError(response.status, data)) {
+    throw new Error('Email chưa được xác thực. Vui lòng kiểm tra email và xác thực tài khoản trước khi đăng nhập.');
+  }
   
-  // Store token
-  storeToken(token);
+  if (isIncorrectPasswordError(response.status, data)) {
+    throw new Error('Thông tin đăng nhập không chính xác. Vui lòng kiểm tra lại email và mật khẩu.');
+  }
   
-  const loginResponse: LoginResponse = {
-    access_token: token,
-    token_type: data.token_type || 'Bearer',
-    expires_in: data.expires_in || 3600,
-    user: data.user
-  };
+  // Handle specific HTTP status codes
+  if (response.status === 401) {
+    throw new Error('Thông tin đăng nhập không chính xác. Vui lòng kiểm tra lại email và mật khẩu.');
+  }
   
-  console.log('✅ [authService] Login successful for:', credentials.email);
-  return loginResponse;
+  if (response.status === 422 && data.errors) {
+    // Handle validation errors
+    const errorMessages = [];
+    if (data.errors.email) {
+      errorMessages.push('Email không hợp lệ');
+    }
+    if (data.errors.password) {
+      errorMessages.push('Mật khẩu không hợp lệ');
+    }
+    if (errorMessages.length > 0) {
+      throw new Error(errorMessages.join(', '));
+    }
+  }
+  
+  if (response.status >= 500) {
+    throw new Error('Lỗi server. Vui lòng thử lại sau.');
+  }
+  
+  // Default error message
+  const defaultMessage = data.message || 'Đăng nhập thất bại. Vui lòng thử lại.';
+  console.error('❌ [authService] Unhandled error case:', { status: response.status, message: defaultMessage });
+  throw new Error(defaultMessage);
 };
 
 // Forgot Password API
