@@ -1,5 +1,5 @@
 
-export type UserRole = 'erp-admin' | 'voucher-admin' | 'telesales' | 'custom' | 'platform-admin';
+export type UserRole = 'erp-admin' | 'voucher-admin' | 'telesales' | 'custom' | 'platform-admin' | 'affiliate-referrer' | 'affiliate-admin';
 
 export type UserStatus = 'active' | 'inactive' | 'locked' | 'pending' | 'pending_verification';
 
@@ -12,6 +12,7 @@ export type ERPModule =
   | 'hr'
   | 'voucher'
   | 'marketing'
+  | 'affiliate'
   | 'system-settings'
   | 'user-management';
 
@@ -24,6 +25,14 @@ export type VoucherFeature =
   | 'voucher-leaderboard'
   | 'voucher-settings';
 
+export type AffiliateFeature = 
+  | 'affiliate-dashboard'
+  | 'referrer-management'
+  | 'voucher-monitoring'
+  | 'commission-tracking'
+  | 'affiliate-analytics'
+  | 'affiliate-reports';
+
 export interface ModulePermission {
   module: ERPModule;
   label: string;
@@ -34,6 +43,7 @@ export interface ModulePermission {
 export interface UserPermissions {
   modules: ERPModule[];
   voucherFeatures: VoucherFeature[];
+  affiliateFeatures: AffiliateFeature[];
   canManageUsers: boolean;
   canViewAllVouchers: boolean;
 }

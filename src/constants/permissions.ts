@@ -1,23 +1,24 @@
-import { ModulePermission, UserRole, ERPModule, VoucherFeature } from '@/types/auth';
+
+import { ModulePermission } from '@/types/auth';
 
 export const MODULE_PERMISSIONS: ModulePermission[] = [
   {
     module: 'dashboard',
     label: 'Tổng Quan',
     icon: 'LayoutDashboard',
-    allowedRoles: ['erp-admin', 'voucher-admin', 'telesales', 'custom']
+    allowedRoles: ['erp-admin', 'voucher-admin', 'telesales', 'custom', 'affiliate-admin']
   },
   {
     module: 'customers',
     label: 'Khách Hàng',
     icon: 'Users',
-    allowedRoles: ['erp-admin', 'custom']
+    allowedRoles: ['erp-admin', 'voucher-admin', 'telesales', 'custom']
   },
   {
     module: 'sales',
-    label: 'Hóa đơn',
-    icon: 'TrendingUp',
-    allowedRoles: ['erp-admin', 'custom']
+    label: 'Bán Hàng',
+    icon: 'ShoppingCart',
+    allowedRoles: ['erp-admin', 'voucher-admin', 'telesales', 'custom']
   },
   {
     module: 'inventory',
@@ -40,68 +41,31 @@ export const MODULE_PERMISSIONS: ModulePermission[] = [
   {
     module: 'voucher',
     label: 'Voucher',
-    icon: 'Ticket',
+    icon: 'Gift',
     allowedRoles: ['erp-admin', 'voucher-admin', 'telesales', 'custom']
   },
   {
     module: 'marketing',
     label: 'Marketing',
-    icon: 'Target',
+    icon: 'Megaphone',
     allowedRoles: ['erp-admin', 'custom']
   },
   {
+    module: 'affiliate',
+    label: 'Affiliate',
+    icon: 'Network',
+    allowedRoles: ['erp-admin', 'affiliate-admin', 'custom']
+  },
+  {
     module: 'system-settings',
-    label: 'Cài Đặt Hệ Thống',
+    label: 'Cài Đặt',
     icon: 'Settings',
-    allowedRoles: ['erp-admin']
+    allowedRoles: ['erp-admin', 'custom']
   },
   {
     module: 'user-management',
-    label: 'Quản Lý Người Dùng',
-    icon: 'Shield',
-    allowedRoles: ['erp-admin']
+    label: 'Quản Lý User',
+    icon: 'Users',
+    allowedRoles: ['erp-admin', 'custom']
   }
 ];
-
-export const VOUCHER_FEATURES = [
-  { id: 'voucher-dashboard', label: 'Tổng Quan', allowedRoles: ['erp-admin', 'voucher-admin', 'telesales'] },
-  { id: 'campaign-management', label: 'Quản Lý Chiến Dịch', allowedRoles: ['erp-admin', 'voucher-admin'] },
-  { id: 'issue-voucher', label: 'Phát Hành Voucher', allowedRoles: ['erp-admin', 'voucher-admin', 'telesales'] },
-  { id: 'voucher-list', label: 'Danh Sách Voucher', allowedRoles: ['erp-admin', 'voucher-admin', 'telesales'] },
-  { id: 'voucher-analytics', label: 'Báo Cáo Phân Tích', allowedRoles: ['erp-admin', 'voucher-admin'] },
-  { id: 'voucher-leaderboard', label: 'Bảng Xếp Hạng', allowedRoles: ['erp-admin', 'voucher-admin', 'telesales'] },
-  { id: 'voucher-settings', label: 'Cài Đặt', allowedRoles: ['erp-admin', 'voucher-admin'] },
-] as const;
-
-export const DEFAULT_PERMISSIONS = {
-  'erp-admin': {
-    modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'marketing', 'system-settings', 'user-management'] as ERPModule[],
-    voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'] as VoucherFeature[],
-    canManageUsers: true,
-    canViewAllVouchers: true
-  },
-  'voucher-admin': {
-    modules: ['dashboard', 'voucher'] as ERPModule[],
-    voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'] as VoucherFeature[],
-    canManageUsers: false,
-    canViewAllVouchers: true
-  },
-  'telesales': {
-    modules: ['dashboard', 'voucher'] as ERPModule[],
-    voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list', 'voucher-leaderboard'] as VoucherFeature[],
-    canManageUsers: false,
-    canViewAllVouchers: false
-  },
-  'custom': {
-    modules: ['dashboard', 'marketing'] as ERPModule[],
-    voucherFeatures: [] as VoucherFeature[],
-    canManageUsers: false,
-    canViewAllVouchers: false
-  },
-  'platform-admin': {
-    modules: ['dashboard'] as ERPModule[],
-    voucherFeatures: [] as VoucherFeature[],
-    canManageUsers: true,
-    canViewAllVouchers: true
-  }
-};
