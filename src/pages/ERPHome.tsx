@@ -1,24 +1,24 @@
+
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { Sidebar } from '@/components/layout/Sidebar';
-import { Topbar } from '@/components/layout/Topbar';
-import { Dashboard } from '@/components/pages/erp/Dashboard';
-import { CustomerPage } from '@/components/pages/erp/CustomerPage';
-import { SalesPage } from '@/components/pages/erp/SalesPage';
-import { InventoryPage } from '@/components/pages/erp/InventoryPage';
-import { ProductDetailPage } from '@/components/pages/erp/ProductDetailPage';
-import { InvoiceDetailPage } from '@/components/pages/erp/InvoiceDetailPage';
-import { MarketingPage } from '@/components/pages/erp/MarketingPage';
-import { VoucherPage } from '@/components/pages/erp/voucher/VoucherPage';
-import { AffiliatePage } from '@/components/pages/affiliate/AffiliatePage';
-import { Settings } from '@/components/pages/erp/Settings';
-import { SystemSettings } from '@/components/pages/erp/SystemSettings';
-import { AuditLog } from '@/components/pages/erp/AuditLog';
-import { RolePermissions } from '@/components/pages/erp/RolePermissions';
-import { UserManagement } from '@/components/pages/admin/UserManagement';
+import { Dashboard } from '@/components/pages/Dashboard';
+import { CustomerPage } from '@/pages/CustomerPage';
+import { SalesPage } from '@/pages/SalesPage';
+import { InventoryPage } from '@/pages/InventoryPage';
+import { ProductDetailPage } from '@/pages/ProductDetailPage';
+import { InvoiceDetailPage } from '@/pages/InvoiceDetailPage';
+import { MarketingPage } from '@/pages/MarketingPage';
+import { VoucherPage } from '@/pages/VoucherPage';
+import { AffiliatePage } from '@/pages/AffiliatePage';
+import { Settings } from '@/modules/admin/pages/Settings';
+import { SystemSettings } from '@/modules/admin/pages/SystemSettings';
+import { AuditLog } from '@/modules/admin/pages/AuditLog';
+import { RolePermissions } from '@/modules/admin/pages/RolePermissions';
+import { UserManagement } from '@/modules/admin/pages/UserManagement';
 import { UserProfilePage } from '@/pages/UserProfilePage';
 import { InvitationManagementPage } from './InvitationManagementPage';
-import { NotFound } from '@/components/ui/not-found';
+import { NotFound } from '@/pages/NotFound';
 import { useAuth } from '@/components/auth/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,6 +47,20 @@ const ModuleEmptyState: React.FC<ModuleEmptyStateProps> = ({ module, onBackToDas
           </CardContent>
         </Card>
       </div>
+    </div>
+  );
+};
+
+// Simple topbar component
+const Topbar: React.FC<{ onSidebarToggle: () => void }> = ({ onSidebarToggle }) => {
+  return (
+    <div className="bg-white border-b px-4 py-3 flex items-center">
+      <Button variant="ghost" size="sm" onClick={onSidebarToggle}>
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </Button>
+      <h1 className="ml-4 font-semibold">ERP System</h1>
     </div>
   );
 };
@@ -86,6 +100,13 @@ export function ERPHome() {
     navigate('/login');
   };
 
+  // Convert user role to sidebar compatible format
+  const sidebarUser = {
+    username: currentUser.username,
+    role: currentUser.role === 'erp-admin' ? 'admin' as const : 'telesales' as const,
+    fullName: currentUser.fullName
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="flex h-screen">
@@ -93,7 +114,7 @@ export function ERPHome() {
         {isSidebarOpen && (
           <Sidebar
             onLogout={handleLogout}
-            currentUser={currentUser}
+            currentUser={sidebarUser}
             location={location}
           />
         )}

@@ -96,9 +96,9 @@ export const updateUserProfile = async (profileData: any) => {
   return updatedUser;
 };
 
-export const updatePassword = async (passwordData: { currentPassword: string; newPassword: string }) => {
+export const updatePassword = async (currentPassword: string, newPassword: string) => {
   // Mock password update
-  if (passwordData.currentPassword === 'password') {
+  if (currentPassword === 'password') {
     return { success: true };
   } else {
     throw new Error('Current password is incorrect');
@@ -120,7 +120,7 @@ export const forgotPassword = async (email: string) => {
   return { success: true };
 };
 
-export const resetPassword = async (resetData: { email: string; password: string; password_confirmation: string; token: string }) => {
+export const resetPassword = async (token: string) => {
   // Mock reset password
   return { success: true };
 };
