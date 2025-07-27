@@ -18,11 +18,11 @@ import { RolePermissions } from '@/modules/admin/pages/RolePermissions';
 import { UserManagement } from '@/modules/admin/pages/UserManagement';
 import { UserProfilePage } from '@/pages/UserProfilePage';
 import { InvitationManagementPage } from './InvitationManagementPage';
-import { NotFound } from '@/pages/NotFound';
+import NotFound from '@/pages/NotFound';
 import { useAuth } from '@/components/auth/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { VoucherFeature } from '@/types/auth';
 
 interface ModuleEmptyStateProps {
   module: string;
@@ -70,6 +70,7 @@ export function ERPHome() {
   const location = useLocation();
   const { currentUser, logout } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [currentPage, setCurrentPage] = useState<VoucherFeature>('voucher-dashboard');
 
   useEffect(() => {
     const handleResize = () => {
@@ -100,10 +101,31 @@ export function ERPHome() {
     navigate('/login');
   };
 
+  const handlePageChange = (page: VoucherFeature) => {
+    setCurrentPage(page);
+    // Convert VoucherFeature to route path
+    const routeMap: Record<VoucherFeature, string> = {
+      'voucher-dashboard': '/erp/dashboard',
+      'campaign-management': '/erp/voucher/Campaign',
+      'issue-voucher': '/erp/voucher/Issue',
+      'voucher-list': '/erp/voucher/List',
+      'voucher-analytics': '/erp/voucher/Report',
+      'voucher-leaderboard': '/erp/voucher/Ranking',
+      'voucher-settings': '/erp/voucher/Setting'
+    };
+    
+    const route = routeMap[page];
+    if (route) {
+      navigate(route);
+    }
+  };
+
   // Convert user role to sidebar compatible format
+  const sidebarUserRole = currentUser.role === 'erp-admin' ? 'admin' as const : 'telesales' as const;
+
   const sidebarUser = {
     username: currentUser.username,
-    role: currentUser.role === 'erp-admin' ? 'admin' as const : 'telesales' as const,
+    role: sidebarUserRole,
     fullName: currentUser.fullName
   };
 
@@ -113,9 +135,12 @@ export function ERPHome() {
         {/* Sidebar */}
         {isSidebarOpen && (
           <Sidebar
-            onLogout={handleLogout}
+            currentPage={currentPage}
+            onPageChange={handlePageChange}
+            isOpen={isSidebarOpen}
+            onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+            userRole={sidebarUserRole}
             currentUser={sidebarUser}
-            location={location}
           />
         )}
 

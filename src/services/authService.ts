@@ -120,7 +120,7 @@ export const forgotPassword = async (email: string) => {
   return { success: true };
 };
 
-export const resetPassword = async (token: string) => {
-  // Mock reset password
+export const resetPassword = async (token: string, password: string, passwordConfirmation: string, email: string) => {
+  // Mock reset password with proper signature
   return { success: true };
 };
