@@ -9,6 +9,10 @@ export interface ApiResponse<T> {
   success?: boolean;
 }
 
+interface RequestOptions {
+  requiresBusinessId?: boolean;
+}
+
 class ApiClient {
   private client: AxiosInstance;
 
@@ -68,22 +72,22 @@ class ApiClient {
     );
   }
 
-  async get<T>(url: string): Promise<T> {
+  async get<T>(url: string, options?: RequestOptions): Promise<T> {
     const response = await this.client.get<T>(url);
     return response as T;
   }
 
-  async post<T>(url: string, data?: any): Promise<T> {
+  async post<T>(url: string, data?: any, options?: RequestOptions): Promise<T> {
     const response = await this.client.post<T>(url, data);
     return response as T;
   }
 
-  async put<T>(url: string, data?: any): Promise<T> {
+  async put<T>(url: string, data?: any, options?: RequestOptions): Promise<T> {
     const response = await this.client.put<T>(url, data);
     return response as T;
   }
 
-  async delete<T>(url: string): Promise<T> {
+  async delete<T>(url: string, options?: RequestOptions): Promise<T> {
     const response = await this.client.delete<T>(url);
     return response as T;
   }

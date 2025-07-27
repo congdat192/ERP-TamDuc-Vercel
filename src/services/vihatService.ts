@@ -23,9 +23,7 @@ export const testVihatConnection = async (config: TestVihatConnectionRequest): P
   console.log('🔄 [vihatService] Testing ViHat connection');
   
   try {
-    const response = await api.post<TestVihatConnectionResponse>('/integrations/vihat/test', config, {
-      requiresBusinessId: true,
-    });
+    const response = await api.post<TestVihatConnectionResponse>('/integrations/vihat/test', config);
     
     console.log('✅ [vihatService] ViHat connection test successful');
     return response;
@@ -76,9 +74,7 @@ export const createVihatPipeline = async (data: CreatePipelineRequest): Promise<
   });
   
   try {
-    const pipeline = await api.post<Pipeline>('/pipelines', payload, {
-      requiresBusinessId: true,
-    });
+    const pipeline = await api.post<Pipeline>('/pipelines', payload);
     
     console.log('✅ [vihatService] Created ViHat pipeline:', pipeline.id);
     return pipeline;
@@ -114,9 +110,7 @@ export const updateVihatPipeline = async (
   });
   
   try {
-    const pipeline = await api.put<Pipeline>(`/pipelines/${pipelineId}`, data, {
-      requiresBusinessId: true,
-    });
+    const pipeline = await api.put<Pipeline>(`/pipelines/${pipelineId}`, data);
     
     console.log('✅ [vihatService] Updated ViHat pipeline:', pipeline.id);
     return pipeline;

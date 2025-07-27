@@ -12,12 +12,16 @@ export interface LoginResponse {
 }
 
 export const loginUser = async (credentials: LoginCredentials): Promise<LoginResponse> => {
-  const response = await apiClient.post('/login', credentials);
+  const response = await apiClient.post<LoginResponse>('/login', credentials);
   
-  // Save token to localStorage
-  localStorage.setItem('auth_token', response.token);
+  // Handle the response properly
+  if (response && typeof response === 'object' && 'token' in response) {
+    // Save token to localStorage
+    localStorage.setItem('auth_token', response.token);
+    return response as LoginResponse;
+  }
   
-  return response;
+  throw new Error('Invalid login response');
 };
 
 export const logoutUser = async (): Promise<void> => {
