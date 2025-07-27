@@ -48,28 +48,33 @@ export const updateUserProfile = async (userData: {
   return response;
 };
 
-export const verifyEmail = async (data: { email: string; hash: string }): Promise<any> => {
-  const response = await apiClient.post('/email/verify', data);
+export const verifyEmail = async (email: string, hash: string): Promise<any> => {
+  const response = await apiClient.post('/email/verify', { email, hash });
   return response;
 };
 
-export const resendVerificationEmail = async (data: { email: string }): Promise<any> => {
-  const response = await apiClient.post('/email/resend', data);
+export const resendVerificationEmail = async (email: string): Promise<any> => {
+  const response = await apiClient.post('/email/resend', { email });
   return response;
 };
 
-export const forgotPassword = async (data: { email: string }): Promise<any> => {
-  const response = await apiClient.post('/password/email', data);
+export const forgotPassword = async (email: string): Promise<any> => {
+  const response = await apiClient.post('/password/email', { email });
   return response;
 };
 
-export const resetPassword = async (data: {
-  email: string;
-  password: string;
-  password_confirmation: string;
-  token: string;
-}): Promise<any> => {
-  const response = await apiClient.post('/password/reset', data);
+export const resetPassword = async (
+  email: string,
+  password: string,
+  password_confirmation: string,
+  token: string
+): Promise<any> => {
+  const response = await apiClient.post('/password/reset', {
+    email,
+    password,
+    password_confirmation,
+    token
+  });
   return response;
 };
 
