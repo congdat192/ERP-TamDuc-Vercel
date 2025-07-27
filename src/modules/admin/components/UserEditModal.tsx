@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -7,8 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { User, UserRole, UpdateUserData, ERPModule, VoucherFeature } from '@/types/auth';
-import { DEFAULT_PERMISSIONS, MODULE_PERMISSIONS, VOUCHER_FEATURES } from '@/constants/permissions';
+import { User, UserRole, UpdateUserData, ERPModule, VoucherFeature, AffiliateFeature } from '@/types/auth';
+import { DEFAULT_PERMISSIONS, MODULE_PERMISSIONS, VOUCHER_FEATURES, AFFILIATE_FEATURES } from '@/constants/permissions';
 
 interface UserEditModalProps {
   isOpen: boolean;
@@ -27,6 +26,7 @@ export function UserEditModal({ isOpen, onClose, user, onUserUpdated }: UserEdit
     permissions: {
       modules: [],
       voucherFeatures: [],
+      affiliateFeatures: [],
       canManageUsers: false,
       canViewAllVouchers: false
     }
@@ -143,11 +143,27 @@ export function UserEditModal({ isOpen, onClose, user, onUserUpdated }: UserEdit
     }));
   };
 
+  const handleAffiliateFeatureChange = (feature: AffiliateFeature, checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      permissions: {
+        ...prev.permissions!,
+        affiliateFeatures: checked 
+          ? [...(prev.permissions!.affiliateFeatures || []), feature]
+          : (prev.permissions!.affiliateFeatures || []).filter(f => f !== feature)
+      }
+    }));
+  };
+
   const availableModules = MODULE_PERMISSIONS.filter(module => 
     module.allowedRoles.includes(formData.role)
   );
 
   const availableVoucherFeatures = VOUCHER_FEATURES.filter(feature => 
+    (feature.allowedRoles as readonly UserRole[]).includes(formData.role)
+  );
+
+  const availableAffiliateFeatures = AFFILIATE_FEATURES.filter(feature => 
     (feature.allowedRoles as readonly UserRole[]).includes(formData.role)
   );
 
@@ -270,6 +286,27 @@ export function UserEditModal({ isOpen, onClose, user, onUserUpdated }: UserEdit
                             onCheckedChange={(checked) => handleVoucherFeatureChange(feature.id as VoucherFeature, !!checked)}
                           />
                           <Label htmlFor={`voucher-${feature.id}`} className="text-sm">
+                            {feature.label}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Affiliate Features */}
+                {formData.permissions?.modules.includes('affiliate') && (
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-gray-900">Tính Năng Affiliate</h4>
+                    <div className="space-y-2 max-h-40 overflow-y-auto border rounded p-3">
+                      {availableAffiliateFeatures.map((feature) => (
+                        <div key={feature.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`affiliate-${feature.id}`}
+                            checked={formData.permissions?.affiliateFeatures?.includes(feature.id as AffiliateFeature) || false}
+                            onCheckedChange={(checked) => handleAffiliateFeatureChange(feature.id as AffiliateFeature, !!checked)}
+                          />
+                          <Label htmlFor={`affiliate-${feature.id}`} className="text-sm">
                             {feature.label}
                           </Label>
                         </div>

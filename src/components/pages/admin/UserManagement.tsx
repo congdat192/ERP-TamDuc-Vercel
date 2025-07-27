@@ -39,7 +39,14 @@ const mockUsers = [
     email: 'nguyenvana@company.com',
     phone: '0901234567',
     createdDate: '15/03/2024',
-    lastLogin: '29/05/2024 14:30'
+    lastLogin: '29/05/2024 14:30',
+    permissions: {
+      modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'marketing', 'system-settings', 'user-management'],
+      voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
+      affiliateFeatures: ['affiliate-dashboard', 'referrer-management', 'voucher-monitoring', 'commission-tracking', 'affiliate-analytics', 'affiliate-reports'],
+      canManageUsers: true,
+      canViewAllVouchers: true,
+    }
   },
   {
     id: 2,
@@ -50,7 +57,14 @@ const mockUsers = [
     email: 'tranthib@company.com',
     phone: '0901234568',
     createdDate: '10/03/2024',
-    lastLogin: '29/05/2024 16:45'
+    lastLogin: '29/05/2024 16:45',
+    permissions: {
+      modules: ['dashboard', 'voucher'],
+      voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
+      affiliateFeatures: [],
+      canManageUsers: false,
+      canViewAllVouchers: true,
+    }
   },
   {
     id: 3,
@@ -61,7 +75,32 @@ const mockUsers = [
     email: 'levancuong@company.com',
     phone: '0901234569',
     createdDate: '05/03/2024',
-    lastLogin: '25/05/2024 09:15'
+    lastLogin: '25/05/2024 09:15',
+    permissions: {
+      modules: ['dashboard', 'customers', 'voucher'],
+      voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list'],
+      affiliateFeatures: [],
+      canManageUsers: false,
+      canViewAllVouchers: false,
+    }
+  },
+  {
+    id: 4,
+    username: 'phamthid',
+    fullName: 'Phạm Thị Dung',
+    role: 'Affiliate Admin',
+    status: 'Hoạt động',
+    email: 'phamthid@company.com',
+    phone: '0901234570',
+    createdDate: '20/04/2024',
+    lastLogin: '28/05/2024 10:20',
+    permissions: {
+      modules: ['dashboard'],
+      voucherFeatures: [],
+      affiliateFeatures: [],
+      canManageUsers: false,
+      canViewAllVouchers: false,
+    }
   }
 ];
 
