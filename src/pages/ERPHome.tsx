@@ -56,7 +56,7 @@ export function ERPHome() {
       case 'system-settings':
         return <AdminModule />;
       default:
-        return <ModuleEmptyState module={currentModule} />;
+        return <ModuleEmptyState module={currentModule} onBackToDashboard={handleBackToModules} />;
     }
   };
 
