@@ -138,57 +138,48 @@ export function AffiliateDashboard() {
       )}
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <UniversalStatCard
           title="Tổng F0 đã đăng ký"
-          value={stats?.totalF0Registered || 0}
-          icon={<Users className="h-4 w-4" />}
-          trend={stats?.newF0ThisMonth || 0}
-          trendLabel="F0 mới tháng này"
-          variant="primary"
+          value={(stats?.totalF0Registered || 0).toString()}
+          change={`+${stats?.newF0ThisMonth || 0} F0 mới tháng này`}
+          icon={Users}
+          colorIndex={0}
         />
         <UniversalStatCard
           title="Tổng F1 được mời"
-          value={stats?.totalF1Invited || 0}
-          icon={<UserCheck className="h-4 w-4" />}
-          trend={stats?.newF1ThisMonth || 0}
-          trendLabel="F1 mới tháng này"
-          variant="secondary"
+          value={(stats?.totalF1Invited || 0).toString()}
+          change={`+${stats?.newF1ThisMonth || 0} F1 mới tháng này`}
+          icon={UserCheck}
+          colorIndex={1}
         />
         <UniversalStatCard
           title="Giới thiệu thành công"
-          value={stats?.totalSuccessfulReferrals || 0}
-          icon={<TrendingUp className="h-4 w-4" />}
-          trend={((stats?.totalSuccessfulReferrals || 0) / (stats?.totalF1Invited || 1) * 100)}
-          trendLabel="Tỷ lệ thành công"
-          variant="success"
-          isTrendPercentage={true}
+          value={(stats?.totalSuccessfulReferrals || 0).toString()}
+          change={`${((stats?.totalSuccessfulReferrals || 0) / (stats?.totalF1Invited || 1) * 100).toFixed(1)}% tỷ lệ thành công`}
+          icon={TrendingUp}
+          colorIndex={2}
         />
         <UniversalStatCard
           title="Hoa hồng đã chi trả"
-          value={stats?.totalCommissionPaid || 0}
-          icon={<DollarSign className="h-4 w-4" />}
-          trend={stats?.totalCommissionPending || 0}
-          trendLabel="Đang chờ xử lý"
-          variant="warning"
-          isCurrency={true}
+          value={`₫${(stats?.totalCommissionPaid || 0).toLocaleString()}`}
+          change={`₫${(stats?.totalCommissionPending || 0).toLocaleString()} đang chờ xử lý`}
+          icon={DollarSign}
+          colorIndex={3}
         />
         <UniversalStatCard
           title="Hoa hồng chờ xử lý"
-          value={stats?.totalCommissionPending || 0}
-          icon={<Wallet className="h-4 w-4" />}
-          trend={stats?.newF0Today || 0}
-          trendLabel="F0 mới hôm nay"
-          variant="error"
-          isCurrency={true}
+          value={`₫${(stats?.totalCommissionPending || 0).toLocaleString()}`}
+          change={`+${stats?.newF0Today || 0} F0 mới hôm nay`}
+          icon={Wallet}
+          colorIndex={0}
         />
         <UniversalStatCard
           title="Voucher đã phát"
-          value={stats?.totalVouchersIssued || 0}
-          icon={<Gift className="h-4 w-4" />}
-          trend={stats?.newF1Today || 0}
-          trendLabel="F1 mới hôm nay"
-          variant="purple"
+          value={(stats?.totalVouchersIssued || 0).toString()}
+          change={`+${stats?.newF1Today || 0} F1 mới hôm nay`}
+          icon={Gift}
+          colorIndex={1}
         />
       </div>
 
