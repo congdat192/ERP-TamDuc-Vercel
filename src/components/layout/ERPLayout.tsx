@@ -47,6 +47,8 @@ export function ERPLayout({
       accounting: 'Kế Toán',
       hr: 'Nhân Sự',
       voucher: 'Voucher',
+      marketing: 'Marketing',
+      affiliate: 'Affiliate',
       'system-settings': 'Cài Đặt Hệ Thống',
       'user-management': 'Quản Lý Người Dùng',
       'security-settings': 'Cài Đặt Bảo Mật'
