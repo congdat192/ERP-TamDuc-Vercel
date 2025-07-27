@@ -26,6 +26,10 @@ export interface PipelineResponse {
   business_id: string;
   created_at: string;
   updated_at: string;
+  access_token: {
+    token: string;
+    refresh_token: string;
+  };
 }
 
 export const getPipelines = async (): Promise<PipelineResponse[]> => {
