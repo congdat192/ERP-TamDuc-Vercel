@@ -1,3 +1,4 @@
+
 import { ModulePermission, UserRole, ERPModule, VoucherFeature } from '@/types/auth';
 
 export const MODULE_PERMISSIONS: ModulePermission[] = [
@@ -44,6 +45,12 @@ export const MODULE_PERMISSIONS: ModulePermission[] = [
     allowedRoles: ['erp-admin', 'voucher-admin', 'telesales', 'custom']
   },
   {
+    module: 'affiliate',
+    label: 'Affiliate',
+    icon: 'Users2',
+    allowedRoles: ['erp-admin', 'custom']
+  },
+  {
     module: 'marketing',
     label: 'Marketing',
     icon: 'Target',
@@ -75,7 +82,7 @@ export const VOUCHER_FEATURES = [
 
 export const DEFAULT_PERMISSIONS = {
   'erp-admin': {
-    modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'marketing', 'system-settings', 'user-management'] as ERPModule[],
+    modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'affiliate', 'marketing', 'system-settings', 'user-management'] as ERPModule[],
     voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'] as VoucherFeature[],
     canManageUsers: true,
     canViewAllVouchers: true
@@ -93,7 +100,7 @@ export const DEFAULT_PERMISSIONS = {
     canViewAllVouchers: false
   },
   'custom': {
-    modules: ['dashboard', 'marketing'] as ERPModule[],
+    modules: ['dashboard', 'affiliate', 'marketing'] as ERPModule[],
     voucherFeatures: [] as VoucherFeature[],
     canManageUsers: false,
     canViewAllVouchers: false
