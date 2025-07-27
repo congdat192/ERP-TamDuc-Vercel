@@ -43,3 +43,37 @@ export const updateUserProfile = async (userData: {
   const response = await apiClient.put('/me', userData);
   return response.data;
 };
+
+export const verifyEmail = async (email: string, hash: string): Promise<any> => {
+  const response = await apiClient.post('/email/verify', { email, hash });
+  return response.data;
+};
+
+export const resendVerificationEmail = async (email: string): Promise<any> => {
+  const response = await apiClient.post('/email/resend', { email });
+  return response.data;
+};
+
+export const forgotPassword = async (email: string): Promise<any> => {
+  const response = await apiClient.post('/password/email', { email });
+  return response.data;
+};
+
+export const resetPassword = async (data: {
+  email: string;
+  password: string;
+  password_confirmation: string;
+  token: string;
+}): Promise<any> => {
+  const response = await apiClient.post('/password/reset', data);
+  return response.data;
+};
+
+export const updatePassword = async (data: {
+  current_password: string;
+  password: string;
+  password_confirmation: string;
+}): Promise<any> => {
+  const response = await apiClient.put('/password', data);
+  return response.data;
+};

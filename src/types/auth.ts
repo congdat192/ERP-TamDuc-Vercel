@@ -1,22 +1,16 @@
 
 export interface User {
-  id: number;
+  id: string;
   username: string;
   fullName: string;
   email: string;
   phone?: string;
-  role: string;
-  permissions: {
-    modules: string[];
-    actions: string[];
-    voucherFeatures: VoucherFeature[];
-    canManageUsers: boolean;
-    canViewAllVouchers: boolean;
-  };
-  businessId: number | null;
-  departmentId: number | null;
-  groupId: number | null;
-  status: string;
+  role: UserRole;
+  permissions: UserPermissions;
+  businessId: string | null;
+  departmentId: string | null;
+  groupId: string | null;
+  status: UserStatus;
   email_verified_at: string | null;
   emailVerified: boolean;
   isActive: boolean;
@@ -96,6 +90,8 @@ export type VoucherFeature =
   | 'voucher-settings';
 
 export type UserRole = 'erp-admin' | 'voucher-admin' | 'telesales' | 'custom';
+
+export type UserStatus = 'active' | 'inactive' | 'pending_verification' | 'locked';
 
 export interface UserPermissions {
   modules: string[];

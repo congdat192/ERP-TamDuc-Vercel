@@ -80,6 +80,7 @@ export function UserManagement() {
       role: 'erp-admin',
       permissions: {
         modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'marketing', 'system-settings', 'user-management'],
+        actions: ['view', 'create', 'edit', 'delete'],
         voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
         canManageUsers: true,
         canViewAllVouchers: true
@@ -90,6 +91,10 @@ export function UserManagement() {
       lastLogin: '2024-05-29T16:30:00Z',
       avatarPath: undefined,
       emailVerified: true,
+      email_verified_at: '2024-01-15T08:00:00Z',
+      businessId: null,
+      departmentId: null,
+      groupId: null,
       securitySettings: {
         twoFactorEnabled: true,
         loginAttemptLimit: 5,
@@ -108,6 +113,7 @@ export function UserManagement() {
       role: 'voucher-admin',
       permissions: {
         modules: ['dashboard', 'voucher'],
+        actions: ['view', 'create', 'edit'],
         voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
         canManageUsers: false,
         canViewAllVouchers: true
@@ -118,6 +124,10 @@ export function UserManagement() {
       lastLogin: '2024-05-29T14:20:00Z',
       avatarPath: undefined,
       emailVerified: true,
+      email_verified_at: '2024-02-01T08:00:00Z',
+      businessId: null,
+      departmentId: null,
+      groupId: null,
       securitySettings: {
         twoFactorEnabled: false,
         loginAttemptLimit: 3,
@@ -135,6 +145,7 @@ export function UserManagement() {
       role: 'telesales',
       permissions: {
         modules: ['dashboard', 'customers', 'voucher'],
+        actions: ['view', 'create'],
         voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list'],
         canManageUsers: false,
         canViewAllVouchers: false
@@ -145,6 +156,10 @@ export function UserManagement() {
       lastLogin: '2024-05-29T12:00:00Z',
       avatarPath: undefined,
       emailVerified: true,
+      email_verified_at: '2024-03-01T08:00:00Z',
+      businessId: null,
+      departmentId: null,
+      groupId: null,
       securitySettings: {
         twoFactorEnabled: false,
         loginAttemptLimit: 3,
@@ -162,6 +177,7 @@ export function UserManagement() {
       role: 'custom',
       permissions: {
         modules: ['dashboard'],
+        actions: ['view'],
         voucherFeatures: [],
         canManageUsers: false,
         canViewAllVouchers: false
@@ -171,6 +187,10 @@ export function UserManagement() {
       createdAt: '2024-04-01T08:00:00Z',
       avatarPath: undefined,
       emailVerified: false,
+      email_verified_at: null,
+      businessId: null,
+      departmentId: null,
+      groupId: null,
       securitySettings: {
         twoFactorEnabled: false,
         loginAttemptLimit: 3,

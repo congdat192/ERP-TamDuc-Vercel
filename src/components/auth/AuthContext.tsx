@@ -73,7 +73,7 @@ const checkAuthentication = () => {
 const convertApiUserToUser = (apiUser: any): User => {
   console.log('🔄 [AuthContext] Converting API user to internal User type');
   return {
-    id: apiUser.id,
+    id: apiUser.id.toString(), // Convert to string
     username: apiUser.email,
     fullName: apiUser.name,
     role: 'erp-admin',
@@ -91,7 +91,7 @@ const convertApiUserToUser = (apiUser: any): User => {
     groupId: null,
     permissions: {
       modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'affiliate', 'marketing', 'system-settings', 'user-management'],
-      actions: [],
+      actions: ['view', 'create', 'edit', 'delete'],
       voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
       canManageUsers: true,
       canViewAllVouchers: true,
