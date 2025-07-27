@@ -1,4 +1,3 @@
-
 // Authentication service for API calls
 import { User, getAvatarUrl } from '@/types/auth';
 import { api } from './apiService';
@@ -360,13 +359,13 @@ export const loginUser = async (credentials: LoginRequest): Promise<LoginRespons
     // Handle validation errors
     const errorMessages = [];
     if (data.errors.email) {
-      errorMessages.push('Email không hợp lệ');
+      errorMessages.push('Thông tin đăng nhập chưa chính xác');
     }
     if (data.errors.password) {
-      errorMessages.push('Mật khẩu không hợp lệ');
+      errorMessages.push('Thông tin đăng nhập chưa chính xác');
     }
     if (errorMessages.length > 0) {
-      throw new Error(errorMessages.join(', '));
+      throw new Error(errorMessages[0]);
     }
   }
   
@@ -375,7 +374,7 @@ export const loginUser = async (credentials: LoginRequest): Promise<LoginRespons
   }
   
   // Default error message
-  const defaultMessage = data.message || 'Đăng nhập thất bại. Vui lòng thử lại.';
+  const defaultMessage = data.message || 'Thông tin đăng nhập không chính xác. Vui lòng thử lại.';
   console.error('❌ [authService] Unhandled error case:', { status: response.status, message: defaultMessage });
   throw new Error(defaultMessage);
 };
