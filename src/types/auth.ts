@@ -1,107 +1,70 @@
+export interface User {
+  id: number;
+  fullName: string;
+  email: string;
+  role: string;
+  permissions: {
+    modules: string[];
+    actions: string[];
+  };
+  businessId: number | null;
+  departmentId: number | null;
+  groupId: number | null;
+  status: string;
+  email_verified_at: string | null;
+}
 
-export type UserRole = 'erp-admin' | 'voucher-admin' | 'telesales' | 'custom' | 'platform-admin';
-
-export type UserStatus = 'active' | 'inactive' | 'locked' | 'pending' | 'pending_verification';
+export interface Business {
+  id: number;
+  name: string;
+  phone: string;
+  email: string;
+  address: string;
+  logo: string | null;
+  coverImage: string | null;
+  description: string | null;
+  website: string | null;
+  socialLinks: {
+    facebook: string | null;
+    twitter: string | null;
+    linkedin: string | null;
+    instagram: string | null;
+  };
+  timezone: string;
+  currency: string;
+  language: string;
+  industry: string;
+  numberOfEmployees: number;
+  annualRevenue: number;
+  country: string;
+  city: string;
+  postalCode: string;
+  ownerId: number;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export type ERPModule = 
   | 'dashboard'
   | 'customers'
   | 'sales'
   | 'inventory'
-  | 'accounting'
-  | 'hr'
   | 'voucher'
   | 'affiliate'
   | 'marketing'
+  | 'user-management'
   | 'system-settings'
-  | 'user-management';
+  | 'profile';
 
-export type VoucherFeature = 
-  | 'voucher-dashboard'
-  | 'campaign-management'
-  | 'issue-voucher'
-  | 'voucher-list'
-  | 'voucher-analytics'
-  | 'voucher-leaderboard'
-  | 'voucher-settings';
-
-export interface ModulePermission {
-  module: ERPModule;
-  label: string;
-  icon: string;
-  allowedRoles: UserRole[];
-}
-
-export interface UserPermissions {
-  modules: ERPModule[];
-  voucherFeatures: VoucherFeature[];
-  canManageUsers: boolean;
-  canViewAllVouchers: boolean;
-}
-
-export interface UserSecuritySettings {
-  twoFactorEnabled: boolean;
-  loginAttemptLimit: number;
-  passwordChangeRequired: boolean;
-  lastPasswordChange?: string;
-}
-
-export interface User {
-  id: string;
-  fullName: string;
-  username: string;
+export interface Invitation {
+  id: number;
   email: string;
-  phone?: string;
-  role: UserRole;
-  permissions: UserPermissions;
-  isActive: boolean;
-  status: UserStatus;
+  businessId: number;
+  role: string;
+  modules: string[];
+  status: 'pending' | 'accepted' | 'declined';
+  invitedBy: number;
   createdAt: string;
-  lastLogin?: string;
-  avatarPath?: string; // Changed from avatar to avatarPath to match API
-  emailVerified: boolean;
-  securitySettings: UserSecuritySettings;
-  activities: any[];
-  notes?: string;
-}
-
-// Helper function to construct full avatar URL
-export const getAvatarUrl = (avatarPath?: string): string | undefined => {
-  if (!avatarPath) return undefined;
-  return `https://matkinhtamducxyz.sgp1.digitaloceanspaces.com/${avatarPath}`;
-};
-
-export interface AuthState {
-  isAuthenticated: boolean;
-  currentUser: User | null;
-  isLoading: boolean;
-}
-
-export interface LoginCredentials {
-  username: string;
-  password: string;
-}
-
-export interface CreateUserData {
-  username: string;
-  fullName: string;
-  email: string;
-  phone?: string;
-  role: UserRole;
-  permissions: UserPermissions;
-  notes?: string;
-  password: string;
-  sendVerificationEmail: boolean;
-  requirePasswordReset: boolean;
-}
-
-export interface UpdateUserData {
-  fullName?: string;
-  email?: string;
-  phone?: string;
-  role?: UserRole;
-  permissions?: UserPermissions;
-  notes?: string;
-  isActive?: boolean;
-  status?: UserStatus;
+  updatedAt: string;
 }
