@@ -33,6 +33,7 @@ import { UserProfilePage } from "./pages/UserProfilePage";
 import { PlatformAdmin } from "./modules/platform-admin";
 import { Settings } from "./modules/admin/pages/Settings";
 import { UserManagementLayout, MembersPage, DepartmentsPage, RolesPage, GroupsPage, InvitationsPage, UserManagementDashboard } from "./modules/user-management";
+import { AffiliateModule } from "./modules/affiliate";
 import { ERPLayout } from "@/components/layout/ERPLayout";
 import { useAuth } from "@/components/auth/AuthContext";
 import { useBusiness } from "@/contexts/BusinessContext";
@@ -82,6 +83,9 @@ const ProtectedERPRoute = ({ children, module }: { children: React.ReactNode; mo
         break;
       case 'marketing':
         navigate('/ERP/Marketing');
+        break;
+      case 'affiliate':
+        navigate('/ERP/Affiliate');
         break;
       case 'user-management':
         navigate('/ERP/UserManagement');
@@ -304,6 +308,14 @@ const App = () => (
                     element={
                       <ProtectedERPRoute module="marketing">
                         <MarketingPage />
+                      </ProtectedERPRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/ERP/Affiliate/*" 
+                    element={
+                      <ProtectedERPRoute module="affiliate">
+                        <AffiliateModule />
                       </ProtectedERPRoute>
                     } 
                   />
