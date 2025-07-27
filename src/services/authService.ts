@@ -15,9 +15,9 @@ export const loginUser = async (credentials: LoginCredentials): Promise<LoginRes
   const response = await apiClient.post('/login', credentials);
   
   // Save token to localStorage
-  localStorage.setItem('auth_token', response.data.token);
+  localStorage.setItem('auth_token', response.token);
   
-  return response.data;
+  return response;
 };
 
 export const logoutUser = async (): Promise<void> => {
@@ -31,7 +31,7 @@ export const logoutUser = async (): Promise<void> => {
 
 export const getUserProfile = async (): Promise<any> => {
   const response = await apiClient.get('/me');
-  return response.data;
+  return response;
 };
 
 export const updateUserProfile = async (userData: {
@@ -41,22 +41,22 @@ export const updateUserProfile = async (userData: {
   avatar_path?: string;
 }): Promise<any> => {
   const response = await apiClient.put('/me', userData);
-  return response.data;
+  return response;
 };
 
 export const verifyEmail = async (email: string, hash: string): Promise<any> => {
   const response = await apiClient.post('/email/verify', { email, hash });
-  return response.data;
+  return response;
 };
 
 export const resendVerificationEmail = async (email: string): Promise<any> => {
   const response = await apiClient.post('/email/resend', { email });
-  return response.data;
+  return response;
 };
 
 export const forgotPassword = async (email: string): Promise<any> => {
   const response = await apiClient.post('/password/email', { email });
-  return response.data;
+  return response;
 };
 
 export const resetPassword = async (data: {
@@ -66,7 +66,7 @@ export const resetPassword = async (data: {
   token: string;
 }): Promise<any> => {
   const response = await apiClient.post('/password/reset', data);
-  return response.data;
+  return response;
 };
 
 export const updatePassword = async (data: {
@@ -75,5 +75,5 @@ export const updatePassword = async (data: {
   password_confirmation: string;
 }): Promise<any> => {
   const response = await apiClient.put('/password', data);
-  return response.data;
+  return response;
 };

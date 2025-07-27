@@ -89,7 +89,7 @@ export type VoucherFeature =
   | 'voucher-leaderboard'
   | 'voucher-settings';
 
-export type UserRole = 'erp-admin' | 'voucher-admin' | 'telesales' | 'custom';
+export type UserRole = 'erp-admin' | 'voucher-admin' | 'telesales' | 'custom' | 'platform-admin';
 
 export type UserStatus = 'active' | 'inactive' | 'pending_verification' | 'locked';
 

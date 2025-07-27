@@ -133,5 +133,12 @@ export const DEFAULT_PERMISSIONS: Record<UserRole, UserPermissions> = {
     voucherFeatures: [],
     canManageUsers: false,
     canViewAllVouchers: false
+  },
+  'platform-admin': {
+    modules: ['dashboard', 'customers', 'sales', 'inventory', 'voucher', 'affiliate', 'marketing', 'user-management', 'system-settings'],
+    actions: ['view', 'create', 'edit', 'delete'],
+    voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
+    canManageUsers: true,
+    canViewAllVouchers: true
   }
 };
