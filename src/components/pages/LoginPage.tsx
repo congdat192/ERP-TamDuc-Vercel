@@ -185,7 +185,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
 
               {/* Action Links */}
               <div className="text-center space-y-2">
-                <div className="flex justify-center space-x-4">
+                <div className="flex items-center justify-center space-x-4">
                   <Link 
                     to="/forgot-password"
                     className="text-sm text-blue-600 hover:text-blue-800 underline-offset-4 hover:underline"
@@ -193,13 +193,13 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                     Quên mật khẩu?
                   </Link>
                   
-                  <Button 
-                    variant="link" 
-                    className="text-sm text-blue-600 hover:text-blue-800"
+                  <button
+                    type="button"
                     onClick={() => setShowResendVerification(true)}
+                    className="text-sm text-blue-600 hover:text-blue-800 underline-offset-4 hover:underline bg-transparent border-none cursor-pointer p-0"
                   >
                     Gửi lại email xác thực
-                  </Button>
+                  </button>
                 </div>
                 
                 <p className="text-sm text-gray-600">
