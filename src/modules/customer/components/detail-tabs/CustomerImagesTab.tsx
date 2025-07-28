@@ -1,5 +1,5 @@
 
-import { useState, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,21 +12,16 @@ import {
   Upload, 
   Image as ImageIcon, 
   Calendar, 
-  FileText, 
-  Eye, 
-  Download,
-  Trash2,
+  Eye,
   Plus
 } from 'lucide-react';
 
 interface CustomerImage {
   id: string;
   url: string;
-  filename: string;
-  uploadDate: string;
-  size: number;
-  type: string;
   description?: string;
+  updatedAt: string;
+  position: number; // Vị trí từ 1-10
 }
 
 interface CustomerImagesTabProps {
@@ -35,290 +30,281 @@ interface CustomerImagesTabProps {
 }
 
 export function CustomerImagesTab({ customerId, images = [] }: CustomerImagesTabProps) {
-  const [customerImages, setCustomerImages] = useState<CustomerImage[]>(images);
+  // Initialize with 10 empty slots
+  const [imageSlots, setImageSlots] = useState<(CustomerImage | null)[]>(() => {
+    const slots = new Array(10).fill(null);
+    
+    // Fill existing images into correct positions
+    images.forEach((image) => {
+      if (image.position >= 1 && image.position <= 10) {
+        slots[image.position - 1] = image;
+      }
+    });
+    
+    return slots;
+  });
+
   const [selectedImage, setSelectedImage] = useState<CustomerImage | null>(null);
-  const [uploadDescription, setUploadDescription] = useState('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [newImageUrl, setNewImageUrl] = useState('');
+  const [newImageDescription, setNewImageDescription] = useState('');
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
+  // Demo URLs for placeholder images
+  const demoImages = [
+    'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=400&h=400&fit=crop',
+  ];
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
-
-    Array.from(files).forEach((file) => {
-      if (!file.type.startsWith('image/')) {
-        toast({
-          title: "Lỗi",
-          description: "Chỉ chấp nhận file hình ảnh",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const newImage: CustomerImage = {
-          id: `img_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          url: e.target?.result as string,
-          filename: file.name,
-          uploadDate: new Date().toLocaleString('vi-VN'),
-          size: file.size,
-          type: file.type,
-          description: uploadDescription || undefined
-        };
-
-        setCustomerImages(prev => [...prev, newImage]);
-        setUploadDescription('');
-        
-        toast({
-          title: "Thành công",
-          description: `Đã tải lên ${file.name}`,
-        });
+  // Load demo data for testing
+  useEffect(() => {
+    // Simulate some demo images for the first few slots
+    const demoSlots = [...imageSlots];
+    for (let i = 0; i < Math.min(3, demoImages.length); i++) {
+      demoSlots[i] = {
+        id: `demo_${i + 1}`,
+        url: demoImages[i],
+        description: `Ảnh demo ${i + 1}`,
+        updatedAt: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN'),
+        position: i + 1
       };
-      reader.readAsDataURL(file);
-    });
-
-    // Reset input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
     }
-  };
+    setImageSlots(demoSlots);
+  }, []);
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const files = Array.from(e.dataTransfer.files);
-    files.forEach((file) => {
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const newImage: CustomerImage = {
-            id: `img_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            url: event.target?.result as string,
-            filename: file.name,
-            uploadDate: new Date().toLocaleString('vi-VN'),
-            size: file.size,
-            type: file.type,
-            description: uploadDescription || undefined
-          };
-
-          setCustomerImages(prev => [...prev, newImage]);
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-
-    if (files.length > 0) {
+  const handleAddImage = () => {
+    if (!newImageUrl.trim()) {
       toast({
-        title: "Thành công",
-        description: `Đã tải lên ${files.length} hình ảnh`,
+        title: "Lỗi",
+        description: "Vui lòng nhập URL hình ảnh",
+        variant: "destructive"
       });
-      setUploadDescription('');
+      return;
     }
-  };
 
-  const handleDeleteImage = (imageId: string) => {
-    setCustomerImages(prev => prev.filter(img => img.id !== imageId));
+    // Find the next position (rotating mechanism)
+    let nextPosition = 1;
+    const occupiedPositions = imageSlots.map((slot, index) => slot ? index + 1 : null).filter(Boolean);
+    
+    if (occupiedPositions.length >= 10) {
+      // If all slots are full, replace the oldest (position 1, then shift all)
+      nextPosition = 1;
+    } else {
+      // Find first empty slot
+      for (let i = 1; i <= 10; i++) {
+        if (!imageSlots[i - 1]) {
+          nextPosition = i;
+          break;
+        }
+      }
+    }
+
+    const newImage: CustomerImage = {
+      id: `img_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      url: newImageUrl.trim(),
+      description: newImageDescription.trim() || undefined,
+      updatedAt: new Date().toLocaleDateString('vi-VN'),
+      position: nextPosition
+    };
+
+    // Update slots with rotation logic
+    const updatedSlots = [...imageSlots];
+    
+    if (occupiedPositions.length >= 10) {
+      // Shift all images to the right, new image goes to position 1
+      for (let i = 9; i >= 1; i--) {
+        updatedSlots[i] = updatedSlots[i - 1] ? { ...updatedSlots[i - 1]!, position: i + 1 } : null;
+      }
+      updatedSlots[0] = newImage;
+    } else {
+      // Simply add to the next available slot
+      updatedSlots[nextPosition - 1] = newImage;
+    }
+
+    setImageSlots(updatedSlots);
+    setNewImageUrl('');
+    setNewImageDescription('');
+    
     toast({
-      title: "Đã xóa",
-      description: "Hình ảnh đã được xóa khỏi danh sách",
+      title: "Thành công",
+      description: `Đã thêm hình ảnh vào vị trí ${nextPosition}`,
     });
   };
+
+  const totalImages = imageSlots.filter(slot => slot !== null).length;
 
   return (
     <div className="space-y-6">
-      {/* Upload Section */}
+      {/* Add Image Section */}
       <Card className="theme-card border-2 theme-border-primary">
         <CardHeader>
           <CardTitle className="flex items-center space-x-2 theme-text">
             <Upload className="w-5 h-5" />
-            <span>Tải lên hình ảnh mới</span>
+            <span>Thêm hình ảnh mới</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
+            <Label htmlFor="imageUrl" className="theme-text text-sm">URL hình ảnh</Label>
+            <Input
+              id="imageUrl"
+              value={newImageUrl}
+              onChange={(e) => setNewImageUrl(e.target.value)}
+              placeholder="https://example.com/image.jpg"
+              className="voucher-input"
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="description" className="theme-text text-sm">Mô tả (tùy chọn)</Label>
             <Textarea
               id="description"
-              value={uploadDescription}
-              onChange={(e) => setUploadDescription(e.target.value)}
+              value={newImageDescription}
+              onChange={(e) => setNewImageDescription(e.target.value)}
               placeholder="Mô tả về hình ảnh..."
               className="voucher-input"
               rows={2}
             />
           </div>
 
-          {/* Drag & Drop Area */}
-          <div
-            className="border-2 border-dashed theme-border-primary rounded-lg p-6 text-center hover:bg-muted/50 transition-colors cursor-pointer"
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <ImageIcon className="w-12 h-12 mx-auto theme-text-muted mb-2" />
-            <p className="theme-text text-sm mb-2">
-              Kéo thả hình ảnh vào đây hoặc click để chọn file
-            </p>
-            <p className="theme-text-muted text-xs">
-              Chấp nhận: JPG, PNG, GIF (tối đa 10MB)
-            </p>
-          </div>
-
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={handleFileUpload}
-            className="hidden"
-          />
-
           <Button
-            onClick={() => fileInputRef.current?.click()}
+            onClick={handleAddImage}
             className="w-full"
             variant="outline"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Chọn hình ảnh từ máy tính
+            Thêm hình ảnh
           </Button>
         </CardContent>
       </Card>
 
-      {/* Images Gallery */}
+      {/* Images Grid - Fixed 10 slots */}
       <Card className="theme-card border-2 theme-border-primary">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center space-x-2 theme-text">
               <ImageIcon className="w-5 h-5" />
-              <span>Thư viện hình ảnh</span>
+              <span>Thư viện hình ảnh (10 vị trí cố định)</span>
             </div>
             <Badge variant="outline" className="theme-badge-secondary">
-              {customerImages.length} hình ảnh
+              {totalImages}/10 ảnh
             </Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {customerImages.length === 0 ? (
-            <div className="text-center py-12">
-              <ImageIcon className="w-16 h-16 mx-auto theme-text-muted mb-4" />
-              <p className="theme-text-muted">Chưa có hình ảnh nào</p>
-              <p className="theme-text-muted text-sm mt-1">Tải lên hình ảnh đầu tiên</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {customerImages.map((image) => (
-                <div key={image.id} className="relative group">
-                  <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                    <img
-                      src={image.url}
-                      alt={image.filename}
-                      className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                    />
+          <div className="grid grid-cols-5 gap-4">
+            {imageSlots.map((imageSlot, index) => {
+              const position = index + 1;
+              
+              return (
+                <div key={`slot-${position}`} className="relative group">
+                  <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-dashed border-gray-300">
+                    {imageSlot ? (
+                      <>
+                        <img
+                          src={imageSlot.url}
+                          alt={imageSlot.description || `Ảnh ${position}`}
+                          className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                          onError={(e) => {
+                            e.currentTarget.src = '/placeholder.svg';
+                          }}
+                        />
+                        
+                        {/* Image Overlay */}
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="bg-white/90 hover:bg-white text-gray-900"
+                                onClick={() => setSelectedImage(imageSlot)}
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-3xl">
+                              <DialogHeader>
+                                <DialogTitle>Ảnh vị trí {imageSlot.position}</DialogTitle>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <div className="flex justify-center">
+                                  <img
+                                    src={imageSlot.url}
+                                    alt={imageSlot.description || `Ảnh ${imageSlot.position}`}
+                                    className="max-w-full max-h-96 object-contain"
+                                    onError={(e) => {
+                                      e.currentTarget.src = '/placeholder.svg';
+                                    }}
+                                  />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                  <div>
+                                    <p className="theme-text-muted">Vị trí:</p>
+                                    <p className="theme-text font-medium">Ô số {imageSlot.position}</p>
+                                  </div>
+                                  <div>
+                                    <p className="theme-text-muted">Cập nhật:</p>
+                                    <p className="theme-text font-medium">{imageSlot.updatedAt}</p>
+                                  </div>
+                                  {imageSlot.description && (
+                                    <div className="col-span-2">
+                                      <p className="theme-text-muted">Mô tả:</p>
+                                      <p className="theme-text">{imageSlot.description}</p>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-400">
+                        <div className="text-center">
+                          <ImageIcon className="w-8 h-8 mx-auto mb-1" />
+                          <p className="text-xs">Ô {position}</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
-                  {/* Image Overlay */}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
-                    <div className="flex space-x-2">
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="bg-white/90 hover:bg-white text-gray-900"
-                            onClick={() => setSelectedImage(image)}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-3xl">
-                          <DialogHeader>
-                            <DialogTitle>{selectedImage?.filename}</DialogTitle>
-                          </DialogHeader>
-                          {selectedImage && (
-                            <div className="space-y-4">
-                              <div className="flex justify-center">
-                                <img
-                                  src={selectedImage.url}
-                                  alt={selectedImage.filename}
-                                  className="max-w-full max-h-96 object-contain"
-                                />
-                              </div>
-                              <div className="grid grid-cols-2 gap-4 text-sm">
-                                <div>
-                                  <p className="theme-text-muted">Tên file:</p>
-                                  <p className="theme-text font-medium">{selectedImage.filename}</p>
-                                </div>
-                                <div>
-                                  <p className="theme-text-muted">Kích thước:</p>
-                                  <p className="theme-text font-medium">{formatFileSize(selectedImage.size)}</p>
-                                </div>
-                                <div>
-                                  <p className="theme-text-muted">Ngày tải lên:</p>
-                                  <p className="theme-text font-medium">{selectedImage.uploadDate}</p>
-                                </div>
-                                <div>
-                                  <p className="theme-text-muted">Loại file:</p>
-                                  <p className="theme-text font-medium">{selectedImage.type}</p>
-                                </div>
-                                {selectedImage.description && (
-                                  <div className="col-span-2">
-                                    <p className="theme-text-muted">Mô tả:</p>
-                                    <p className="theme-text">{selectedImage.description}</p>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </DialogContent>
-                      </Dialog>
-
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="bg-red-500/90 hover:bg-red-600 text-white"
-                        onClick={() => handleDeleteImage(image.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+                  {/* Position Label */}
+                  <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-1 py-0.5 rounded">
+                    {position}
                   </div>
 
                   {/* Image Info */}
-                  <div className="mt-2 space-y-1">
-                    <p className="text-xs theme-text font-medium truncate" title={image.filename}>
-                      {image.filename}
-                    </p>
-                    <div className="flex items-center space-x-2 text-xs theme-text-muted">
-                      <Calendar className="w-3 h-3" />
-                      <span>{image.uploadDate}</span>
-                    </div>
-                    <div className="flex items-center space-x-2 text-xs theme-text-muted">
-                      <FileText className="w-3 h-3" />
-                      <span>{formatFileSize(image.size)}</span>
-                    </div>
-                    {image.description && (
-                      <p className="text-xs theme-text-muted truncate" title={image.description}>
-                        {image.description}
-                      </p>
+                  <div className="mt-2 text-center">
+                    {imageSlot ? (
+                      <>
+                        <div className="flex items-center justify-center space-x-1 text-xs theme-text-muted">
+                          <Calendar className="w-3 h-3" />
+                          <span>{imageSlot.updatedAt}</span>
+                        </div>
+                        {imageSlot.description && (
+                          <p className="text-xs theme-text-muted truncate mt-1" title={imageSlot.description}>
+                            {imageSlot.description}
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-xs theme-text-muted">Trống</p>
                     )}
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
+              );
+            })}
+          </div>
+          
+          {/* Info about rotation mechanism */}
+          <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+            <p className="text-xs text-blue-800">
+              <strong>Lưu ý:</strong> Hệ thống lưu trữ tối đa 10 ảnh mới nhất. 
+              Khi thêm ảnh thứ 11, ảnh cũ nhất (ô 1) sẽ bị thay thế và các ảnh khác sẽ dịch chuyển.
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>
