@@ -1,19 +1,13 @@
 
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { toast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
 import { 
-  Upload, 
   Image as ImageIcon, 
   Calendar, 
-  Eye,
-  Plus
+  Eye
 } from 'lucide-react';
 
 interface CustomerImage {
@@ -45,147 +39,53 @@ export function CustomerImagesTab({ customerId, images = [] }: CustomerImagesTab
   });
 
   const [selectedImage, setSelectedImage] = useState<CustomerImage | null>(null);
-  const [newImageUrl, setNewImageUrl] = useState('');
-  const [newImageDescription, setNewImageDescription] = useState('');
 
-  // Demo URLs for placeholder images
+  // Demo URLs for placeholder images - more variety for testing rotation
   const demoImages = [
     'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=400&h=400&fit=crop',
     'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=400&h=400&fit=crop',
     'https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&h=400&fit=crop',
     'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400&h=400&fit=crop',
     'https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1485833077590-4278bba3f111?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1472396961693-142e6e269027?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1500673922987-e212871fec22?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=400&fit=crop',
+    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=400&fit=crop'
   ];
 
-  // Load demo data for testing
+  // Simulate automatic API updates - load demo data for testing
   useEffect(() => {
-    // Simulate some demo images for the first few slots
+    // Simulate automatic image loading from API
     const demoSlots = [...imageSlots];
-    for (let i = 0; i < Math.min(3, demoImages.length); i++) {
+    
+    // Fill first 7 slots with demo images to show the mechanism
+    for (let i = 0; i < Math.min(7, demoImages.length); i++) {
       demoSlots[i] = {
-        id: `demo_${i + 1}`,
+        id: `auto_${i + 1}`,
         url: demoImages[i],
-        description: `Ảnh demo ${i + 1}`,
-        updatedAt: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN'),
+        description: `Ảnh tự động ${i + 1} từ hệ thống`,
+        updatedAt: new Date(Date.now() - i * 2 * 24 * 60 * 60 * 1000).toLocaleDateString('vi-VN'),
         position: i + 1
       };
     }
+    
     setImageSlots(demoSlots);
-  }, []);
-
-  const handleAddImage = () => {
-    if (!newImageUrl.trim()) {
-      toast({
-        title: "Lỗi",
-        description: "Vui lòng nhập URL hình ảnh",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Find the next position (rotating mechanism)
-    let nextPosition = 1;
-    const occupiedPositions = imageSlots.map((slot, index) => slot ? index + 1 : null).filter(Boolean);
-    
-    if (occupiedPositions.length >= 10) {
-      // If all slots are full, replace the oldest (position 1, then shift all)
-      nextPosition = 1;
-    } else {
-      // Find first empty slot
-      for (let i = 1; i <= 10; i++) {
-        if (!imageSlots[i - 1]) {
-          nextPosition = i;
-          break;
-        }
-      }
-    }
-
-    const newImage: CustomerImage = {
-      id: `img_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      url: newImageUrl.trim(),
-      description: newImageDescription.trim() || undefined,
-      updatedAt: new Date().toLocaleDateString('vi-VN'),
-      position: nextPosition
-    };
-
-    // Update slots with rotation logic
-    const updatedSlots = [...imageSlots];
-    
-    if (occupiedPositions.length >= 10) {
-      // Shift all images to the right, new image goes to position 1
-      for (let i = 9; i >= 1; i--) {
-        updatedSlots[i] = updatedSlots[i - 1] ? { ...updatedSlots[i - 1]!, position: i + 1 } : null;
-      }
-      updatedSlots[0] = newImage;
-    } else {
-      // Simply add to the next available slot
-      updatedSlots[nextPosition - 1] = newImage;
-    }
-
-    setImageSlots(updatedSlots);
-    setNewImageUrl('');
-    setNewImageDescription('');
-    
-    toast({
-      title: "Thành công",
-      description: `Đã thêm hình ảnh vào vị trí ${nextPosition}`,
-    });
-  };
+  }, [customerId]);
 
   const totalImages = imageSlots.filter(slot => slot !== null).length;
 
   return (
     <div className="space-y-6">
-      {/* Add Image Section */}
-      <Card className="theme-card border-2 theme-border-primary">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2 theme-text">
-            <Upload className="w-5 h-5" />
-            <span>Thêm hình ảnh mới</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="imageUrl" className="theme-text text-sm">URL hình ảnh</Label>
-            <Input
-              id="imageUrl"
-              value={newImageUrl}
-              onChange={(e) => setNewImageUrl(e.target.value)}
-              placeholder="https://example.com/image.jpg"
-              className="voucher-input"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description" className="theme-text text-sm">Mô tả (tùy chọn)</Label>
-            <Textarea
-              id="description"
-              value={newImageDescription}
-              onChange={(e) => setNewImageDescription(e.target.value)}
-              placeholder="Mô tả về hình ảnh..."
-              className="voucher-input"
-              rows={2}
-            />
-          </div>
-
-          <Button
-            onClick={handleAddImage}
-            className="w-full"
-            variant="outline"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Thêm hình ảnh
-          </Button>
-        </CardContent>
-      </Card>
-
       {/* Images Grid - Fixed 10 slots */}
       <Card className="theme-card border-2 theme-border-primary">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center space-x-2 theme-text">
               <ImageIcon className="w-5 h-5" />
-              <span>Thư viện hình ảnh (10 vị trí cố định)</span>
+              <span>Thư viện hình ảnh tự động (10 vị trí cố định)</span>
             </div>
             <Badge variant="outline" className="theme-badge-secondary">
               {totalImages}/10 ảnh
@@ -298,11 +198,11 @@ export function CustomerImagesTab({ customerId, images = [] }: CustomerImagesTab
             })}
           </div>
           
-          {/* Info about rotation mechanism */}
+          {/* Info about automatic mechanism */}
           <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
             <p className="text-xs text-blue-800">
-              <strong>Lưu ý:</strong> Hệ thống lưu trữ tối đa 10 ảnh mới nhất. 
-              Khi thêm ảnh thứ 11, ảnh cũ nhất (ô 1) sẽ bị thay thế và các ảnh khác sẽ dịch chuyển.
+              <strong>Cơ chế tự động:</strong> Hệ thống tự động cập nhật 10 ảnh mới nhất của khách hàng từ API. 
+              Ảnh mới sẽ được gắn vào ô trống tiếp theo theo thứ tự 1→10. Khi đầy, ảnh mới sẽ ghi đè ảnh cũ nhất (quay vòng).
             </p>
           </div>
         </CardContent>
