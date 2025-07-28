@@ -24,6 +24,7 @@ interface Customer {
   totalSpent: number;
   totalDebt: number;
   status: string;
+  gender: string; // Thêm trường giới tính
 }
 
 interface CustomerInfoTabProps {
@@ -117,7 +118,7 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
           />
         </div>
 
-        {/* Dòng 3: Ngày sinh, Ngày tạo, Người tạo, Chi nhánh */}
+        {/* Dòng 3: Ngày sinh, Ngày tạo, Người tạo, Giới tính */}
         <div className="space-y-2">
           <Label htmlFor="birthday" className="theme-text text-sm font-medium">Ngày sinh</Label>
           <Input 
@@ -145,13 +146,17 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="branch" className="theme-text text-sm font-medium">Chi nhánh</Label>
-          <Input 
-            id="branch"
-            value="Chi nhánh HCM" 
-            readOnly
-            className="voucher-input h-9"
-          />
+          <Label htmlFor="gender" className="theme-text text-sm font-medium">Giới tính</Label>
+          <Select defaultValue={customer.gender}>
+            <SelectTrigger className="voucher-input h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Nam">Nam</SelectItem>
+              <SelectItem value="Nữ">Nữ</SelectItem>
+              <SelectItem value="Khác">Khác</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Dòng 4: Địa chỉ (span 4 cột) */}
@@ -164,7 +169,7 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
           />
         </div>
 
-        {/* Dòng 5: Tên công ty, Mã số thuế, (2 cột trống) */}
+        {/* Dòng 5: Tên công ty, Mã số thuế, Chi nhánh, (1 cột trống) */}
         <div className="space-y-2">
           <Label htmlFor="company" className="theme-text text-sm font-medium">Tên công ty</Label>
           <Input 
@@ -182,7 +187,13 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
           />
         </div>
         <div className="space-y-2">
-          {/* Cột trống */}
+          <Label htmlFor="branch" className="theme-text text-sm font-medium">Chi nhánh</Label>
+          <Input 
+            id="branch"
+            value="Chi nhánh HCM" 
+            readOnly
+            className="voucher-input h-9"
+          />
         </div>
         <div className="space-y-2">
           {/* Cột trống */}

@@ -1,4 +1,3 @@
-
 // Mock data với dữ liệu liên thông giữa các module
 export interface MockCustomer {
   id: string;
@@ -19,6 +18,18 @@ export interface MockCustomer {
   totalSpent: number;
   totalDebt: number;
   status: string;
+  gender: string; // Thêm trường giới tính
+  images: CustomerImage[]; // Thêm mảng hình ảnh
+}
+
+export interface CustomerImage {
+  id: string;
+  url: string;
+  filename: string;
+  uploadDate: string;
+  size: number;
+  type: string;
+  description?: string;
 }
 
 export interface MockSale {
@@ -103,7 +114,28 @@ export const mockCustomers: MockCustomer[] = [
     points: 1500,
     totalSpent: 15000000,
     totalDebt: 0,
-    status: 'Hoạt động'
+    status: 'Hoạt động',
+    gender: 'Nam',
+    images: [
+      {
+        id: 'img1',
+        url: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&h=400&fit=crop&crop=center',
+        filename: 'profile_2024_01.jpg',
+        uploadDate: '01/01/2024 10:00',
+        size: 245760,
+        type: 'image/jpeg',
+        description: 'Ảnh hồ sơ khách hàng'
+      },
+      {
+        id: 'img2',
+        url: 'https://images.unsplash.com/photo-1434494878577-86c23bcb06b9?w=400&h=400&fit=crop&crop=center',
+        filename: 'profile_2024_06.jpg',
+        uploadDate: '15/06/2024 14:30',
+        size: 312540,
+        type: 'image/jpeg',
+        description: 'Cập nhật ảnh hồ sơ'
+      }
+    ]
   },
   {
     id: 'KH002',
@@ -123,7 +155,18 @@ export const mockCustomers: MockCustomer[] = [
     points: 800,
     totalSpent: 8500000,
     totalDebt: 500000,
-    status: 'Hoạt động'
+    status: 'Hoạt động',
+    gender: 'Nữ',
+    images: [
+      {
+        id: 'img3',
+        url: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=400&h=400&fit=crop&crop=center',
+        filename: 'avatar_initial.jpg',
+        uploadDate: '02/01/2024 09:15',
+        size: 189432,
+        type: 'image/jpeg'
+      }
+    ]
   },
   {
     id: 'KH003',
@@ -143,9 +186,20 @@ export const mockCustomers: MockCustomer[] = [
     points: 2200,
     totalSpent: 25000000,
     totalDebt: 1000000,
-    status: 'Hoạt động'
+    status: 'Hoạt động',
+    gender: 'Nam',
+    images: [
+      {
+        id: 'img4',
+        url: 'https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?w=400&h=400&fit=crop&crop=center',
+        filename: 'business_profile.jpg',
+        uploadDate: '03/01/2024 11:20',
+        size: 267890,
+        type: 'image/jpeg',
+        description: 'Ảnh đại diện doanh nghiệp'
+      }
+    ]
   },
-  // ... continuing with 47 more customers
   {
     id: 'KH004',
     name: 'Phạm Thị Dung',
@@ -164,7 +218,9 @@ export const mockCustomers: MockCustomer[] = [
     points: 500,
     totalSpent: 3200000,
     totalDebt: 0,
-    status: 'Hoạt động'
+    status: 'Hoạt động',
+    gender: 'Nữ',
+    images: []
   },
   {
     id: 'KH005',
@@ -184,7 +240,19 @@ export const mockCustomers: MockCustomer[] = [
     points: 300,
     totalSpent: 1800000,
     totalDebt: 0,
-    status: 'Hoạt động'
+    status: 'Hoạt động',
+    gender: 'Nam',
+    images: [
+      {
+        id: 'img5',
+        url: 'https://images.unsplash.com/photo-1581090464777-f3220bbe1b8b?w=400&h=400&fit=crop&crop=center',
+        filename: 'young_customer.jpg',
+        uploadDate: '05/01/2024 16:45',
+        size: 198765,
+        type: 'image/jpeg',
+        description: 'Ảnh khách hàng trẻ'
+      }
+    ]
   }
   // ... Tôi sẽ tạo đầy đủ 50 customers nhưng rút gọn để tiết kiệm chỗ
 ];

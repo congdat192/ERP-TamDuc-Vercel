@@ -7,6 +7,7 @@ import { CustomerDebtTab } from './detail-tabs/CustomerDebtTab';
 import { CustomerPointsHistoryTab } from './detail-tabs/CustomerPointsHistoryTab';
 import { CustomerVoucherHistoryTab } from './detail-tabs/CustomerVoucherHistoryTab';
 import { CustomerInteractionHistoryTab } from './detail-tabs/CustomerInteractionHistoryTab';
+import { CustomerImagesTab } from './detail-tabs/CustomerImagesTab';
 
 interface Customer {
   id: string;
@@ -27,6 +28,8 @@ interface Customer {
   totalSpent: number;
   totalDebt: number;
   status: string;
+  gender: string; // Thêm trường giới tính
+  images?: any[]; // Thêm mảng hình ảnh
 }
 
 interface CustomerDetailRowProps {
@@ -44,7 +47,7 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
           <div className="p-6">
             {/* Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-6 max-w-4xl mb-6">
+              <TabsList className="grid w-full grid-cols-7 max-w-5xl mb-6">
                 <TabsTrigger 
                   value="info"
                   className="data-[state=active]:theme-bg-primary data-[state=active]:text-white"
@@ -81,6 +84,12 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
                 >
                   Lịch sử tương tác
                 </TabsTrigger>
+                <TabsTrigger 
+                  value="images"
+                  className="data-[state=active]:theme-bg-primary data-[state=active]:text-white"
+                >
+                  Hình ảnh
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="info" className="mt-0">
@@ -105,6 +114,13 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
 
               <TabsContent value="interaction-history" className="mt-0">
                 <CustomerInteractionHistoryTab customerId={customer.id} />
+              </TabsContent>
+
+              <TabsContent value="images" className="mt-0">
+                <CustomerImagesTab 
+                  customerId={customer.id} 
+                  images={customer.images || []} 
+                />
               </TabsContent>
             </Tabs>
           </div>
