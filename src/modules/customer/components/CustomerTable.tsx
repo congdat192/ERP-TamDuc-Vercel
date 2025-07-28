@@ -25,6 +25,7 @@ interface Customer {
   totalSpent: number;
   totalDebt: number;
   status: string;
+  gender: string;
 }
 
 interface CustomerTableProps {
@@ -129,7 +130,7 @@ export function CustomerTable({
       case 'customerGroup':
         return customer.group;
       case 'gender':
-        return <span className="whitespace-nowrap">Nam</span>;
+        return <span className="whitespace-nowrap">{customer.gender}</span>;
       case 'birthDate':
         return <span className="whitespace-nowrap">{customer.birthday}</span>;
       case 'email':
