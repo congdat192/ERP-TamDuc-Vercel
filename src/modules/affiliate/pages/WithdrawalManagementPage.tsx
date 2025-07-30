@@ -8,14 +8,18 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CheckCircle, XCircle, Search, Filter, Eye, CreditCard } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 import { affiliateService } from '../services/affiliateService';
 import { WithdrawalRequest } from '../types';
+import { WithdrawalDetailModal } from '../components/WithdrawalDetailModal';
 
 export function WithdrawalManagementPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedWithdrawal, setSelectedWithdrawal] = useState<WithdrawalRequest | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
-  const { data: withdrawals, isLoading } = useQuery({
+  const { data: withdrawals, isLoading, refetch } = useQuery({
     queryKey: ['all-withdrawal-requests'],
     queryFn: affiliateService.getAllWithdrawalRequests,
   });
@@ -49,18 +53,36 @@ export function WithdrawalManagementPage() {
   };
 
   const handleApprove = (withdrawalId: string) => {
-    console.log('Approving withdrawal:', withdrawalId);
-    // Mock approval action
+    toast({
+      title: "Thành công",
+      description: "Đã duyệt yêu cầu rút tiền",
+    });
+    refetch();
+    setIsDetailModalOpen(false);
   };
 
   const handleReject = (withdrawalId: string) => {
-    console.log('Rejecting withdrawal:', withdrawalId);
-    // Mock rejection action
+    toast({
+      title: "Đã từ chối",
+      description: "Đã từ chối yêu cầu rút tiền",
+      variant: "destructive",
+    });
+    refetch();
+    setIsDetailModalOpen(false);
   };
 
   const handleProcess = (withdrawalId: string) => {
-    console.log('Processing withdrawal:', withdrawalId);
-    // Mock processing action
+    toast({
+      title: "Thành công",
+      description: "Đã chuyển tiền thành công",
+    });
+    refetch();
+    setIsDetailModalOpen(false);
+  };
+
+  const handleViewDetail = (withdrawal: WithdrawalRequest) => {
+    setSelectedWithdrawal(withdrawal);
+    setIsDetailModalOpen(true);
   };
 
   if (isLoading) {
@@ -164,7 +186,11 @@ export function WithdrawalManagementPage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleViewDetail(withdrawal)}
+                      >
                         <Eye className="h-4 w-4" />
                       </Button>
                       {withdrawal.status === 'pending' && (
@@ -205,6 +231,15 @@ export function WithdrawalManagementPage() {
           </Table>
         </CardContent>
       </Card>
+
+      <WithdrawalDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        withdrawal={selectedWithdrawal}
+        onApprove={handleApprove}
+        onReject={handleReject}
+        onProcess={handleProcess}
+      />
     </div>
   );
 }

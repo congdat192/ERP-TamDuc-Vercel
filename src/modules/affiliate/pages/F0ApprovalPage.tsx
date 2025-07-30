@@ -8,14 +8,18 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CheckCircle, XCircle, Search, Filter, Eye } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 import { affiliateService } from '../services/affiliateService';
 import { F0User } from '../types';
+import { F0DetailModal } from '../components/F0DetailModal';
 
 export function F0ApprovalPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedF0, setSelectedF0] = useState<F0User | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
-  const { data: f0Users, isLoading } = useQuery({
+  const { data: f0Users, isLoading, refetch } = useQuery({
     queryKey: ['all-f0-users'],
     queryFn: affiliateService.getAllF0Users,
   });
@@ -47,13 +51,27 @@ export function F0ApprovalPage() {
   };
 
   const handleApprove = (f0Id: string) => {
-    console.log('Approving F0:', f0Id);
-    // Mock approval action
+    toast({
+      title: "Thành công",
+      description: "Đã duyệt F0 thành công",
+    });
+    refetch();
+    setIsDetailModalOpen(false);
   };
 
   const handleReject = (f0Id: string) => {
-    console.log('Rejecting F0:', f0Id);
-    // Mock rejection action
+    toast({
+      title: "Đã từ chối",
+      description: "Đã từ chối F0",
+      variant: "destructive",
+    });
+    refetch();
+    setIsDetailModalOpen(false);
+  };
+
+  const handleViewDetail = (f0: F0User) => {
+    setSelectedF0(f0);
+    setIsDetailModalOpen(true);
   };
 
   if (isLoading) {
@@ -148,7 +166,11 @@ export function F0ApprovalPage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleViewDetail(f0)}
+                      >
                         <Eye className="h-4 w-4" />
                       </Button>
                       {f0.status === 'pending' && (
@@ -179,6 +201,14 @@ export function F0ApprovalPage() {
           </Table>
         </CardContent>
       </Card>
+
+      <F0DetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        f0User={selectedF0}
+        onApprove={handleApprove}
+        onReject={handleReject}
+      />
     </div>
   );
 }

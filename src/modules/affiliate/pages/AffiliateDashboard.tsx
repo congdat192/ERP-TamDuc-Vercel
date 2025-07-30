@@ -1,6 +1,6 @@
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +16,7 @@ export function AffiliateDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateRange, setDateRange] = useState('7d');
+  const navigate = useNavigate();
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['affiliate-stats'],
@@ -46,6 +47,20 @@ export function AffiliateDashboard() {
     queryKey: ['recent-commissions'],
     queryFn: affiliateService.getRecentCommissions,
   });
+
+  const handleViewAll = (page: string) => {
+    navigate(`/affiliate/${page}`);
+  };
+
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+    // Filter logic can be implemented here
+  };
+
+  const handleDateRangeChange = (range: string) => {
+    setDateRange(range);
+    // Refetch data with new date range
+  };
 
   const getAlertIcon = (type: string) => {
     switch (type) {
@@ -88,10 +103,10 @@ export function AffiliateDashboard() {
           <Input
             placeholder="Tìm kiếm nhanh..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => handleSearch(e.target.value)}
             className="w-64"
           />
-          <Select value={dateRange} onValueChange={setDateRange}>
+          <Select value={dateRange} onValueChange={handleDateRangeChange}>
             <SelectTrigger className="w-32">
               <SelectValue />
             </SelectTrigger>
@@ -229,7 +244,13 @@ export function AffiliateDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>F0 chờ duyệt</CardTitle>
-            <Button variant="outline" size="sm">Xem tất cả</Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => handleViewAll('f0-approval')}
+            >
+              Xem tất cả
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -260,7 +281,13 @@ export function AffiliateDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Yêu cầu rút tiền</CardTitle>
-            <Button variant="outline" size="sm">Xem tất cả</Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => handleViewAll('withdrawal-management')}
+            >
+              Xem tất cả
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -291,7 +318,13 @@ export function AffiliateDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Hoa hồng mới nhất</CardTitle>
-            <Button variant="outline" size="sm">Xem tất cả</Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => handleViewAll('referral-management')}
+            >
+              Xem tất cả
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">

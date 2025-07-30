@@ -1,16 +1,25 @@
-
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Download, FileText, TrendingUp, Users, DollarSign, Gift } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { CalendarIcon, Download, FileText, TrendingUp, Users, DollarSign, Gift } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import { toast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
+import { vi } from 'date-fns/locale';
 import { affiliateService } from '../services/affiliateService';
+import * as XLSX from 'xlsx';
 
 export function ReportsPage() {
   const [dateRange, setDateRange] = useState('7d');
   const [reportType, setReportType] = useState('overview');
+  const [customDateRange, setCustomDateRange] = useState<{
+    from: Date | undefined;
+    to: Date | undefined;
+  }>({ from: undefined, to: undefined });
 
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['affiliate-stats'],
@@ -37,9 +46,57 @@ export function ReportsPage() {
     { name: 'F0 Từ chối', value: 8, color: '#F44336' }
   ];
 
-  const handleExportReport = (type: string) => {
-    console.log(`Exporting ${type} report...`);
-    // Mock export functionality
+  const handleExportReport = (type: 'excel' | 'pdf') => {
+    if (type === 'excel') {
+      // Create workbook
+      const wb = XLSX.utils.book_new();
+      
+      // Add overview stats
+      const statsData = [
+        ['Chỉ số', 'Giá trị'],
+        ['Tổng F0', stats?.totalF0Registered || 0],
+        ['Tổng F1', stats?.totalF1Invited || 0],
+        ['Hoa hồng (VND)', stats?.totalCommissionPaid || 0],
+        ['Voucher phát hành', stats?.totalVouchersIssued || 0]
+      ];
+      const ws = XLSX.utils.aoa_to_sheet(statsData);
+      XLSX.utils.book_append_sheet(wb, ws, 'Tổng quan');
+
+      // Add performance data if selected
+      if (reportType === 'performance') {
+        const perfData = [
+          ['F0', 'Số F1', 'Hoa hồng (VND)', 'Voucher'],
+          ...performanceData.map(f0 => [f0.name, f0.f1Count, f0.commission, f0.vouchers])
+        ];
+        const perfWs = XLSX.utils.aoa_to_sheet(perfData);
+        XLSX.utils.book_append_sheet(wb, perfWs, 'Hiệu suất F0');
+      }
+
+      // Save file
+      XLSX.writeFile(wb, `affiliate-report-${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+      
+      toast({
+        title: "Thành công",
+        description: "Đã xuất báo cáo Excel",
+      });
+    } else {
+      // PDF export would require additional library like jsPDF
+      toast({
+        title: "Đang phát triển",
+        description: "Tính năng xuất PDF đang được phát triển",
+      });
+    }
+  };
+
+  const handleCustomDateSelect = () => {
+    if (customDateRange.from && customDateRange.to) {
+      setDateRange('custom');
+      // Refetch data with custom date range
+      toast({
+        title: "Đã cập nhật",
+        description: `Báo cáo từ ${format(customDateRange.from, 'dd/MM/yyyy')} đến ${format(customDateRange.to, 'dd/MM/yyyy')}`,
+      });
+    }
   };
 
   if (statsLoading || chartLoading) {
@@ -96,13 +153,43 @@ export function ReportsPage() {
                 <SelectItem value="30d">30 ngày qua</SelectItem>
                 <SelectItem value="90d">3 tháng qua</SelectItem>
                 <SelectItem value="1y">1 năm qua</SelectItem>
+                <SelectItem value="custom">Tùy chỉnh</SelectItem>
               </SelectContent>
             </Select>
 
-            <Button variant="outline" className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              Chọn ngày tùy chỉnh
-            </Button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <CalendarIcon className="h-4 w-4" />
+                  Chọn ngày tùy chỉnh
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <div className="p-4 space-y-4">
+                  <div>
+                    <label className="text-sm font-medium">Từ ngày:</label>
+                    <Calendar
+                      mode="single"
+                      selected={customDateRange.from}
+                      onSelect={(date) => setCustomDateRange(prev => ({ ...prev, from: date }))}
+                      disabled={(date) => date > new Date()}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Đến ngày:</label>
+                    <Calendar
+                      mode="single"
+                      selected={customDateRange.to}
+                      onSelect={(date) => setCustomDateRange(prev => ({ ...prev, to: date }))}
+                      disabled={(date) => date > new Date() || (customDateRange.from && date < customDateRange.from)}
+                    />
+                  </div>
+                  <Button onClick={handleCustomDateSelect} className="w-full">
+                    Áp dụng
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </CardContent>
       </Card>

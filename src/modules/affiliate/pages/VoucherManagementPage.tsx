@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Search, Filter, Eye, Plus, Gift, Calendar, Users } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
+import { CreateVoucherModal } from '../components/CreateVoucherModal';
 
 // Mock data for affiliate vouchers
 const mockVouchers = [
@@ -59,6 +60,7 @@ const mockVouchers = [
 export function VoucherManagementPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const filteredVouchers = mockVouchers.filter(voucher => {
     const matchesSearch = voucher.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -88,6 +90,14 @@ export function VoucherManagementPage() {
   const totalVouchers = mockVouchers.length;
   const activeVouchers = mockVouchers.filter(v => v.status === 'active').length;
   const totalUsed = mockVouchers.reduce((sum, v) => sum + v.usedCount, 0);
+
+  const handleCreateVoucher = (voucherData: any) => {
+    console.log('Creating voucher:', voucherData);
+    toast({
+      title: "Thành công",
+      description: "Đã tạo voucher mới",
+    });
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -142,7 +152,7 @@ export function VoucherManagementPage() {
               <Filter className="h-5 w-5" />
               Bộ lọc
             </div>
-            <Button>
+            <Button onClick={() => setIsCreateModalOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Tạo voucher mới
             </Button>
@@ -256,6 +266,12 @@ export function VoucherManagementPage() {
           </Table>
         </CardContent>
       </Card>
+
+      <CreateVoucherModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSubmit={handleCreateVoucher}
+      />
     </div>
   );
 }
