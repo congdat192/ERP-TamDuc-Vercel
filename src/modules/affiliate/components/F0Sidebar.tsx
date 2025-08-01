@@ -5,29 +5,25 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { 
   LayoutDashboard, 
-  UserCheck, 
-  Users, 
-  Ticket, 
+  UserPlus, 
+  History, 
   Wallet, 
-  Activity, 
-  FileText,
+  User, 
+  Bell,
   ChevronLeft,
-  ChevronRight,
-  UserCircle
+  ChevronRight
 } from 'lucide-react';
 
 const menuItems = [
-  { id: 'dashboard', label: 'Tổng Quan', icon: LayoutDashboard, path: '/ERP/Affiliate' },
-  { id: 'f0-approval', label: 'Duyệt F0', icon: UserCheck, path: '/ERP/Affiliate/f0-approval' },
-  { id: 'referral-management', label: 'Quản Lý Giới Thiệu', icon: Users, path: '/ERP/Affiliate/referral-management' },
-  { id: 'voucher-management', label: 'Quản Lý Voucher', icon: Ticket, path: '/ERP/Affiliate/voucher-management' },
-  { id: 'withdrawal-management', label: 'Quản Lý Rút Tiền', icon: Wallet, path: '/ERP/Affiliate/withdrawal-management' },
-  { id: 'activity-log', label: 'Nhật Ký Hoạt Động', icon: Activity, path: '/ERP/Affiliate/activity-log' },
-  { id: 'reports', label: 'Báo Cáo/Xuất File', icon: FileText, path: '/ERP/Affiliate/reports' },
-  { id: 'f0-portal', label: 'Portal F0', icon: UserCircle, path: '/ERP/Affiliate/f0-dashboard' }
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/ERP/Affiliate/f0-dashboard' },
+  { id: 'referral', label: 'Giới Thiệu KH', icon: UserPlus, path: '/ERP/Affiliate/f0-referral' },
+  { id: 'history', label: 'Lịch Sử Giới Thiệu', icon: History, path: '/ERP/Affiliate/f0-referral-history' },
+  { id: 'withdrawal', label: 'Rút Tiền', icon: Wallet, path: '/ERP/Affiliate/f0-withdrawal' },
+  { id: 'account', label: 'Thông Tin Tài Khoản', icon: User, path: '/ERP/Affiliate/f0-account-info' },
+  { id: 'notifications', label: 'Thông Báo', icon: Bell, path: '/ERP/Affiliate/f0-notifications' }
 ];
 
-export function AffiliateModuleSidebar() {
+export function F0Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const location = useLocation();
 
@@ -45,7 +41,7 @@ export function AffiliateModuleSidebar() {
         <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
           {!isCollapsed && (
             <h2 className="text-lg font-semibold text-sidebar-foreground">
-              Affiliate
+              Portal F0
             </h2>
           )}
           <Button
@@ -62,8 +58,7 @@ export function AffiliateModuleSidebar() {
         <nav className="flex-1 p-4 space-y-2">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname === item.path || 
-              (item.path === '/ERP/Affiliate' && location.pathname === '/ERP/Affiliate/');
+            const isActive = location.pathname === item.path;
             
             return (
               <Link key={item.id} to={item.path}>
