@@ -10,6 +10,7 @@ import { WithdrawalManagementPage } from './pages/WithdrawalManagementPage';
 import { ActivityLogPage } from './pages/ActivityLogPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { F0DashboardPage } from './pages/F0DashboardPage';
+import { F0LinkGenerationPage } from './pages/F0LinkGenerationPage';
 import { F0ReferralPage } from './pages/F0ReferralPage';
 import { F0ReferralHistoryPage } from './pages/F0ReferralHistoryPage';
 import { F0WithdrawalPage } from './pages/F0WithdrawalPage';
@@ -33,6 +34,9 @@ export function AffiliateModule() {
           {/* F0 Portal Routes */}
           <Route path="f0-dashboard" element={<F0PortalLayout />}>
             <Route index element={<F0DashboardPage />} />
+          </Route>
+          <Route path="f0-link-generation" element={<F0PortalLayout />}>
+            <Route index element={<F0LinkGenerationPage />} />
           </Route>
           <Route path="f0-referral" element={<F0PortalLayout />}>
             <Route index element={<F0ReferralPage />} />

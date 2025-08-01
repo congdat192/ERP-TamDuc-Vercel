@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { 
   LayoutDashboard, 
+  Link2,
   UserPlus, 
   History, 
   Wallet, 
@@ -16,6 +17,7 @@ import {
 
 const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/ERP/Affiliate/f0-dashboard' },
+  { id: 'link-generation', label: 'Tạo Link Giới Thiệu', icon: Link2, path: '/ERP/Affiliate/f0-link-generation' },
   { id: 'referral', label: 'Giới Thiệu KH', icon: UserPlus, path: '/ERP/Affiliate/f0-referral' },
   { id: 'history', label: 'Lịch Sử Giới Thiệu', icon: History, path: '/ERP/Affiliate/f0-referral-history' },
   { id: 'withdrawal', label: 'Rút Tiền', icon: Wallet, path: '/ERP/Affiliate/f0-withdrawal' },
