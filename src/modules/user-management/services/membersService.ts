@@ -1,5 +1,4 @@
-
-import { api } from '@/services/apiService';
+// Mock Members Service - No real API calls
 import { Member, MembersResponse } from '../types';
 
 interface MemberFilters {
@@ -9,163 +8,108 @@ interface MemberFilters {
   orderDirection?: 'asc' | 'desc';
 }
 
-// Simple role interface matching API response
 interface ApiRole {
   id: number;
   name: string;
   description: string;
 }
 
-// Enhanced Member type with API roles information
 export interface MemberWithRoles extends Omit<Member, 'roles'> {
   roles: ApiRole[];
 }
 
-export const getMembers = async (filters: MemberFilters = {}): Promise<MembersResponse> => {
-  console.log('🔍 [MembersService] Fetching members...');
-  
-  try {
-    const params = new URLSearchParams();
-    
-    if (filters.perPage) params.append('perPage', filters.perPage.toString());
-    else params.append('perPage', '20');
-    
-    if (filters.page) params.append('page', filters.page.toString());
-    else params.append('page', '1');
-    
-    if (filters.orderBy) params.append('orderBy', filters.orderBy);
-    else params.append('orderBy', 'created_at');
-    
-    if (filters.orderDirection) params.append('orderDirection', filters.orderDirection);
-    else params.append('orderDirection', 'asc');
-
-    const response = await api.get<MembersResponse>(`/members?${params.toString()}`);
-    console.log('✅ [MembersService] Raw response:', response);
-    
-    return response;
-  } catch (error) {
-    console.error('❌ [MembersService] Error fetching members:', error);
-    throw error;
+const mockMembers: Member[] = [
+  {
+    id: 1,
+    name: 'Nguyễn Văn A',
+    email: 'nguyenvana@example.com',
+    status: 'ACTIVE',
+    is_owner: false,
+    roles: [{ id: 1, name: 'Admin', description: 'Quản trị viên', permissions: [], created_at: new Date().toISOString(), updated_at: new Date().toISOString() }],
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: 2,
+    name: 'Trần Thị B',
+    email: 'tranthib@example.com',
+    status: 'ACTIVE',
+    is_owner: false,
+    roles: [{ id: 2, name: 'Manager', description: 'Quản lý', permissions: [], created_at: new Date().toISOString(), updated_at: new Date().toISOString() }],
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   }
+];
+
+export const getMembers = async (filters: MemberFilters = {}): Promise<MembersResponse> => {
+  console.log('🔍 [mockMembersService] Fetching members');
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  return {
+    data: [...mockMembers],
+    total: mockMembers.length,
+    per_page: filters.perPage || 20,
+    current_page: filters.page || 1
+  };
 };
 
 export const getMembersWithRoles = async (): Promise<MemberWithRoles[]> => {
-  console.log('🔍 [MembersService] Fetching all members with roles...');
+  console.log('🔍 [mockMembersService] Fetching members with roles');
+  await new Promise(resolve => setTimeout(resolve, 500));
   
-  try {
-    let allMembers: MemberWithRoles[] = [];
-    let currentPage = 1;
-    let hasMorePages = true;
-    
-    // Fetch all members with pagination (respecting API limit of 100 per page)
-    while (hasMorePages) {
-      console.log(`📄 [MembersService] Fetching page ${currentPage}...`);
-      
-      const response = await getMembers({
-        perPage: 100, // Respect API limit
-        page: currentPage,
-        orderBy: 'created_at',
-        orderDirection: 'asc'
-      });
-      
-      // Convert members to MemberWithRoles format
-      const membersWithRoles: MemberWithRoles[] = response.data.map(member => ({
-        ...member,
-        roles: (member.roles || []).map(role => ({
-          id: role.id,
-          name: role.name,
-          description: role.description || '' // Ensure description is always a string
-        }))
-      }));
-      
-      allMembers = [...allMembers, ...membersWithRoles];
-      
-      // Check if we have more pages
-      const totalPages = Math.ceil(response.total / 100);
-      hasMorePages = currentPage < totalPages;
-      currentPage++;
-      
-      console.log(`📊 [MembersService] Page ${currentPage - 1}: ${membersWithRoles.length} members, Total so far: ${allMembers.length}`);
-    }
-    
-    console.log('✅ [MembersService] All members with roles fetched:', allMembers.length);
-    
-    // Log role distribution for debugging
-    const roleDistribution: Record<string, number> = {};
-    allMembers.forEach(member => {
-      if (member.status === 'ACTIVE' && !member.is_owner && member.roles) {
-        member.roles.forEach(role => {
-          roleDistribution[role.name] = (roleDistribution[role.name] || 0) + 1;
-        });
-      }
-    });
-    console.log('📈 [MembersService] Role distribution:', roleDistribution);
-    
-    return allMembers;
-  } catch (error) {
-    console.error('❌ [MembersService] Error fetching members with roles:', error);
-    throw error;
-  }
+  return mockMembers.map(member => ({
+    ...member,
+    roles: member.roles.map(role => ({
+      id: role.id,
+      name: role.name,
+      description: role.description || ''
+    }))
+  }));
 };
 
 export const getMember = async (id: number): Promise<Member> => {
-  console.log('🔍 [MembersService] Fetching member:', id);
+  console.log('🔍 [mockMembersService] Fetching member:', id);
+  await new Promise(resolve => setTimeout(resolve, 500));
   
-  try {
-    const response = await api.get<Member>(`/members/${id}`);
-    console.log('✅ [MembersService] Member fetched:', response);
-    
-    return response;
-  } catch (error) {
-    console.error('❌ [MembersService] Error fetching member:', error);
-    throw error;
-  }
+  const member = mockMembers.find(m => m.id === id);
+  if (!member) throw new Error('Member not found');
+  return member;
 };
 
 export const updateMember = async (id: number, data: { status: 'ACTIVE' | 'INACTIVE' }): Promise<Member> => {
-  console.log('📝 [MembersService] Updating member:', id, data);
+  console.log('📝 [mockMembersService] Updating member:', id);
+  await new Promise(resolve => setTimeout(resolve, 500));
   
-  try {
-    const response = await api.put<Member>(`/members/${id}`, data);
-    console.log('✅ [MembersService] Member updated:', response);
-    
-    return response;
-  } catch (error) {
-    console.error('❌ [MembersService] Error updating member:', error);
-    throw error;
-  }
+  const member = mockMembers.find(m => m.id === id);
+  if (!member) throw new Error('Member not found');
+  
+  member.status = data.status;
+  member.updated_at = new Date().toISOString();
+  return member;
 };
 
 export const updateMemberRole = async (id: number, roleId: number): Promise<Member> => {
-  console.log('👤 [MembersService] Updating member role:', id, 'to role:', roleId);
+  console.log('👤 [mockMembersService] Updating member role:', id);
+  await new Promise(resolve => setTimeout(resolve, 500));
   
-  try {
-    // Fix: Use correct API payload format with role_ids array
-    const response = await api.put<Member>(`/members/${id}`, {
-      role_ids: [roleId] // API expects array format
-    });
-    console.log('✅ [MembersService] Member role updated:', response);
-    
-    return response;
-  } catch (error) {
-    console.error('❌ [MembersService] Error updating member role:', error);
-    throw error;
-  }
+  const member = mockMembers.find(m => m.id === id);
+  if (!member) throw new Error('Member not found');
+  
+  member.roles = [{ id: roleId, name: 'Role ' + roleId, description: 'Role description', permissions: [], created_at: new Date().toISOString(), updated_at: new Date().toISOString() }];
+  member.updated_at = new Date().toISOString();
+  return member;
 };
 
 export const deleteMember = async (id: number): Promise<void> => {
-  console.log('🗑️ [MembersService] Deleting member:', id);
+  console.log('🗑️ [mockMembersService] Deleting member:', id);
+  await new Promise(resolve => setTimeout(resolve, 500));
   
-  try {
-    await api.delete<void>(`/members/${id}`);
-    console.log('✅ [MembersService] Member deleted successfully');
-  } catch (error) {
-    console.error('❌ [MembersService] Error deleting member:', error);
-    throw error;
+  const index = mockMembers.findIndex(m => m.id === id);
+  if (index > -1) {
+    mockMembers.splice(index, 1);
   }
 };
 
-// Export all functions as a service object for backward compatibility
 export const membersService = {
   getMembers,
   getMembersWithRoles,

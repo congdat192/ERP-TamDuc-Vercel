@@ -210,9 +210,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Clear business context including cbi
       clearSelectedBusinessId();
-      if (window.clearBusinessContext) {
-        window.clearBusinessContext();
-      }
       
       setIsLoading(false);
       

@@ -1,8 +1,9 @@
+// Mock Register Service - No real API calls
 
 export interface RegisterRequest {
   name: string;
   email: string;
-  phone: string; // Required field now
+  phone: string;
   password: string;
   password_confirmation: string;
 }
@@ -18,24 +19,20 @@ export interface RegisterResponse {
 }
 
 export const registerUser = async (data: RegisterRequest): Promise<RegisterResponse> => {
-  const response = await fetch('https://api.matkinhtamduc.xyz/api/v1/register', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Đăng ký thất bại');
-  }
-
-  return response.json();
+  console.log('📝 [mockRegisterService] Mock registration');
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  return {
+    message: 'Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.',
+    user: {
+      id: '1',
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+    }
+  };
 };
 
-// Validation functions
 export const validatePassword = (password: string): string[] => {
   const errors: string[] = [];
   
@@ -59,7 +56,6 @@ export const validatePassword = (password: string): string[] => {
 };
 
 export const validatePhone = (phone: string): boolean => {
-  // Format: +84xxxxxxxxx (10-11 digits after +84)
   const phoneRegex = /^\+84[0-9]{9,10}$/;
   return phoneRegex.test(phone);
 };
