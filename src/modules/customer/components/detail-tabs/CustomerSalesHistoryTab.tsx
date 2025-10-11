@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { InvoiceDetailDialog } from '../InvoiceDetailDialog';
 
 interface CustomerSalesHistoryTabProps {
-  customerId: string;
-  customerPhone?: string;
-  customerCode?: string;
+  invoices: Invoice[];
+  customer: Customer | null;
+  isLoading: boolean;
+  error: string | null;
 }
 
 interface InvoiceDetail {
@@ -40,55 +40,9 @@ interface Customer {
   address: string;
 }
 
-export function CustomerSalesHistoryTab({ customerId, customerPhone, customerCode }: CustomerSalesHistoryTabProps) {
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
-  const [customer, setCustomer] = useState<Customer | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export function CustomerSalesHistoryTab({ invoices, customer, isLoading, error }: CustomerSalesHistoryTabProps) {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  useEffect(() => {
-    const fetchInvoices = async () => {
-      if (!customerPhone) {
-        console.warn('[CustomerSalesHistoryTab] No phone number provided');
-        return;
-      }
-
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        console.log('[CustomerSalesHistoryTab] Fetching invoices for phone:', customerPhone);
-        
-        const { data, error } = await supabase.functions.invoke('get-invoices-by-phone', {
-          body: { phone: customerPhone }
-        });
-
-        if (error) {
-          console.error('[CustomerSalesHistoryTab] Error:', error);
-          setError('Không thể tải lịch sử hóa đơn');
-          return;
-        }
-
-        if (data?.success && data?.data?.data?.invoices) {
-          setInvoices(data.data.data.invoices);
-          setCustomer(data.data.data.customer);
-          console.log('[CustomerSalesHistoryTab] Loaded invoices:', data.data.data.invoices.length);
-        } else {
-          setInvoices([]);
-          setCustomer(null);
-        }
-      } catch (err) {
-        console.error('[CustomerSalesHistoryTab] Exception:', err);
-        setError('Đã xảy ra lỗi khi tải dữ liệu');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchInvoices();
-  }, [customerPhone]);
 
   const handleInvoiceClick = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
