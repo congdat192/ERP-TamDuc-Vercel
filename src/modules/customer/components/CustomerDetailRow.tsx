@@ -145,13 +145,13 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
                   value="sales-history"
                   className="data-[state=active]:theme-bg-primary data-[state=active]:text-white"
                 >
-                  Lịch sử bán/trả hàng
+                  Lịch sử
                 </TabsTrigger>
                 <TabsTrigger 
                   value="debt"
                   className="data-[state=active]:theme-bg-primary data-[state=active]:text-white"
                 >
-                  Nợ cần thu từ khách
+                  Nợ cần thu
                 </TabsTrigger>
                 <TabsTrigger 
                   value="points-history"
