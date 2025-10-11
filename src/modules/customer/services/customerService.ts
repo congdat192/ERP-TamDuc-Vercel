@@ -77,11 +77,11 @@ export async function fetchCustomerByPhone(phone: string): Promise<CustomerRespo
  */
 export function mapCustomerData(customer: CustomerData): any {
   return {
-    id: customer.code,
-    customerCode: customer.code,
-    customerName: customer.name,
+    id: customer.code || '',
+    customerCode: customer.code || '',
+    customerName: customer.name || '',
     customerType: 'Cá nhân',
-    phone: customer.contactNumber,
+    phone: customer.contactNumber || '',
     customerGroup: customer.groups || 'Khách lẻ',
     gender: customer.gender ? 'Nam' : 'Nữ',
     birthDate: customer.birthDate ? new Date(customer.birthDate).toLocaleDateString('vi-VN') : '',
@@ -98,12 +98,21 @@ export function mapCustomerData(customer: CustomerData): any {
     notes: customer.comments || '',
     lastTransactionDate: customer.modifiedDate ? new Date(customer.modifiedDate).toLocaleDateString('vi-VN') : '',
     createBranch: '',
-    currentDebt: customer.debt,
+    currentDebt: customer.debt || 0,
     debtDays: 0,
-    totalSales: customer.totalRevenue,
-    currentPoints: customer.rewardPoint,
-    totalPoints: customer.totalPoint,
-    totalSalesMinusReturns: customer.totalRevenue,
-    status: 'Hoạt động'
+    totalSales: customer.totalRevenue || 0,
+    currentPoints: customer.rewardPoint || 0,
+    totalPoints: customer.totalPoint || 0,
+    totalSalesMinusReturns: customer.totalRevenue || 0,
+    status: 'Hoạt động',
+    // For CustomerInfoTab
+    name: customer.name || '',
+    group: customer.groups || 'Khách lẻ',
+    birthday: customer.birthDate ? new Date(customer.birthDate).toLocaleDateString('vi-VN') : '',
+    createdDate: customer.createdDate ? new Date(customer.createdDate).toLocaleDateString('vi-VN') : '',
+    note: customer.comments || '',
+    points: customer.rewardPoint || 0,
+    totalSpent: customer.totalRevenue || 0,
+    totalDebt: customer.debt || 0
   };
 }

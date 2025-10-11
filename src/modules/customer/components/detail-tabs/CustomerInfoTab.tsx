@@ -33,6 +33,7 @@ interface CustomerInfoTabProps {
 
 export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
   const getInitials = (name: string) => {
+    if (!name || typeof name !== 'string') return 'NA';
     return name.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2);
   };
 

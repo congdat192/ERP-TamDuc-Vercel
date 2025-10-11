@@ -18,7 +18,6 @@ interface CustomerManagementProps {
 export function CustomerManagement({ currentUser, onBackToModules }: CustomerManagementProps) {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
-  const [phoneSearch, setPhoneSearch] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -90,50 +89,46 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
     }
   };
 
-  const handlePhoneSearch = async () => {
-    if (!phoneSearch.trim()) {
-      toast({
-        title: "Lỗi",
-        description: "Vui lòng nhập số điện thoại",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoadingApi(true);
-    try {
-      const response = await fetchCustomerByPhone(phoneSearch);
-      
-      if (response && response.success && response.data) {
-        const mappedCustomer = mapCustomerData(response.data);
-        setApiCustomerData([mappedCustomer]);
-        setCurrentPage(1);
+  const handleSearch = async () => {
+    // Check if search term looks like a phone number
+    const isPhoneNumber = /^[\d\s\-\+\(\)]+$/.test(searchTerm.trim());
+    
+    if (isPhoneNumber && searchTerm.trim()) {
+      setIsLoadingApi(true);
+      try {
+        const response = await fetchCustomerByPhone(searchTerm);
+        
+        if (response && response.success && response.data) {
+          const mappedCustomer = mapCustomerData(response.data);
+          setApiCustomerData([mappedCustomer]);
+          setCurrentPage(1);
+          toast({
+            title: "Thành công",
+            description: `Tìm thấy khách hàng: ${response.data.name}`,
+          });
+        } else {
+          setApiCustomerData([]);
+          toast({
+            title: "Không tìm thấy",
+            description: "Không tìm thấy khách hàng với số điện thoại này",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching customer:', error);
         toast({
-          title: "Thành công",
-          description: `Tìm thấy khách hàng: ${response.data.name}`,
-        });
-      } else {
-        setApiCustomerData([]);
-        toast({
-          title: "Không tìm thấy",
-          description: "Không tìm thấy khách hàng với số điện thoại này",
+          title: "Lỗi",
+          description: "Không thể tải thông tin khách hàng",
           variant: "destructive",
         });
+      } finally {
+        setIsLoadingApi(false);
       }
-    } catch (error) {
-      console.error('Error fetching customer:', error);
-      toast({
-        title: "Lỗi",
-        description: "Không thể tải thông tin khách hàng",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoadingApi(false);
     }
   };
 
   const handleResetSearch = () => {
-    setPhoneSearch('');
+    setSearchTerm('');
     setApiCustomerData([]);
     setCurrentPage(1);
   };
@@ -197,9 +192,7 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
             <CustomerSearchActions 
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
-              phoneSearch={phoneSearch}
-              setPhoneSearch={setPhoneSearch}
-              onPhoneSearch={handlePhoneSearch}
+              onSearch={handleSearch}
               onResetSearch={handleResetSearch}
               isLoadingApi={isLoadingApi}
               columns={columns}
