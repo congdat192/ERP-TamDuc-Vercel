@@ -1,15 +1,80 @@
+import { useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { ProductCodeLink } from '@/modules/sales/components/ProductCodeLink';
-import { InvoiceCodeLink } from '@/modules/sales/components/InvoiceCodeLink';
-import { mockSales, mockInventory, getProductById } from '@/data/mockData';
+import { supabase } from '@/integrations/supabase/client';
+import { Loader2 } from 'lucide-react';
 
 interface CustomerSalesHistoryTabProps {
   customerId: string;
+  customerPhone?: string;
+  customerCode?: string;
 }
 
-export function CustomerSalesHistoryTab({ customerId }: CustomerSalesHistoryTabProps) {
-  // Filter sales data for this customer
-  const customerSales = mockSales.filter(sale => sale.customerId === customerId);
+interface InvoiceDetail {
+  productcode: string;
+  productname: string;
+  quantity: number;
+  price: number;
+  discount: number;
+  discountratio: number;
+  subtotal: number;
+}
+
+interface Invoice {
+  code: string;
+  created_at_vn: string;
+  soldbyname: string;
+  branchname: string;
+  total: number;
+  totalpayment: number;
+  status: number;
+  statusvalue: string;
+  details: InvoiceDetail[];
+}
+
+export function CustomerSalesHistoryTab({ customerId, customerPhone, customerCode }: CustomerSalesHistoryTabProps) {
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchInvoices = async () => {
+      if (!customerPhone) {
+        console.warn('[CustomerSalesHistoryTab] No phone number provided');
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        console.log('[CustomerSalesHistoryTab] Fetching invoices for phone:', customerPhone);
+        
+        const { data, error } = await supabase.functions.invoke('get-invoices-by-phone', {
+          body: { phone: customerPhone }
+        });
+
+        if (error) {
+          console.error('[CustomerSalesHistoryTab] Error:', error);
+          setError('Không thể tải lịch sử hóa đơn');
+          return;
+        }
+
+        if (data?.success && data?.data?.data?.invoices) {
+          setInvoices(data.data.data.invoices);
+          console.log('[CustomerSalesHistoryTab] Loaded invoices:', data.data.data.invoices.length);
+        } else {
+          setInvoices([]);
+        }
+      } catch (err) {
+        console.error('[CustomerSalesHistoryTab] Exception:', err);
+        setError('Đã xảy ra lỗi khi tải dữ liệu');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchInvoices();
+  }, [customerPhone]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -18,104 +83,136 @@ export function CustomerSalesHistoryTab({ customerId }: CustomerSalesHistoryTabP
     }).format(amount);
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
+  const getStatusBadge = (statusvalue: string) => {
+    switch (statusvalue) {
+      case 'Completed':
       case 'Hoàn thành':
-        return <Badge className="theme-badge-success">Hoàn thành</Badge>;
+        return <Badge className="theme-badge-success">{statusvalue}</Badge>;
       case 'Đang xử lý':
-        return <Badge className="bg-orange-100 text-orange-800 border-orange-200">Đang xử lý</Badge>;
+        return <Badge className="bg-orange-100 text-orange-800 border-orange-200">{statusvalue}</Badge>;
       case 'Đã hủy':
-        return <Badge className="berry-error-light">Đã hủy</Badge>;
+        return <Badge className="berry-error-light">{statusvalue}</Badge>;
       default:
-        return <Badge variant="secondary">{status}</Badge>;
+        return <Badge variant="secondary">{statusvalue}</Badge>;
     }
   };
 
-  const getProductsForSale = (sale: any) => {
-    return sale.items?.map((itemId: string) => getProductById(itemId)).filter(Boolean) || [];
+  const formatDate = (dateString: string) => {
+    try {
+      return new Date(dateString).toLocaleString('vi-VN');
+    } catch {
+      return dateString;
+    }
   };
 
-  const getTotalQuantityForSale = (sale: any) => {
-    const products = getProductsForSale(sale);
-    return products.length; // Since we don't have quantity info, use product count
-  };
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin theme-text-primary" />
+        <span className="ml-2 theme-text">Đang tải...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-red-600">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 font-sans">
       <div className="flex items-center justify-between">
         <h4 className="text-lg font-semibold theme-text font-sans">Lịch sử bán hàng</h4>
         <div className="text-sm theme-text-muted font-sans">
-          Tổng {customerSales.length} giao dịch
+          Tổng {invoices.length} giao dịch
         </div>
       </div>
 
-      <div className="theme-card rounded-lg border theme-border-primary overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full font-sans">
-            <thead className="bg-gray-50 border-b theme-border-primary/20">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider font-sans">
-                  Mã hóa đơn
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider font-sans">
-                  Ngày bán
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider font-sans">
-                  Sản phẩm
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider font-sans">
-                  Số lượng
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider font-sans">
-                  Tổng tiền
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider font-sans">
-                  Trạng thái
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y theme-border-primary/10">
-              {customerSales.map((sale) => {
-                const products = getProductsForSale(sale);
-                return (
-                  <tr key={sale.id} className="hover:theme-bg-primary/5">
-                    <td className="px-4 py-3 text-sm theme-text font-sans">
-                      <InvoiceCodeLink invoiceCode={sale.id} className="text-sm font-sans" />
+      {invoices.length === 0 ? (
+        <div className="text-center py-12 theme-text-muted">
+          Chưa có giao dịch nào
+        </div>
+      ) : (
+        <div className="theme-card rounded-lg border theme-border-primary overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full font-sans">
+              <thead className="bg-gray-50 border-b theme-border-primary/20">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider font-sans">
+                    Mã hóa đơn
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider font-sans">
+                    Ngày bán
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider font-sans">
+                    Chi nhánh
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider font-sans">
+                    Nhân viên
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider font-sans">
+                    Sản phẩm
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider font-sans">
+                    Tổng tiền
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider font-sans">
+                    Thanh toán
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider font-sans">
+                    Trạng thái
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y theme-border-primary/10">
+                {invoices.map((invoice) => (
+                  <tr key={invoice.code} className="hover:theme-bg-primary/5">
+                    <td className="px-4 py-3 text-sm theme-text-primary font-medium font-sans">
+                      {invoice.code}
                     </td>
                     <td className="px-4 py-3 text-sm theme-text-muted font-sans">
-                      {sale.date}
+                      {formatDate(invoice.created_at_vn)}
+                    </td>
+                    <td className="px-4 py-3 text-sm theme-text font-sans">
+                      {invoice.branchname}
+                    </td>
+                    <td className="px-4 py-3 text-sm theme-text font-sans">
+                      {invoice.soldbyname}
                     </td>
                     <td className="px-4 py-3 text-sm theme-text font-sans">
                       <div className="space-y-1">
-                        {products.slice(0, 2).map((product, idx) => (
-                          <div key={idx} className="flex items-center space-x-2">
-                            <ProductCodeLink productCode={product.productCode} className="text-xs font-sans" />
-                            <span className="text-xs theme-text-muted font-sans">- {product.name}</span>
+                        {invoice.details.slice(0, 2).map((detail, idx) => (
+                          <div key={idx} className="flex items-start space-x-2">
+                            <span className="text-xs theme-text-primary font-medium">{detail.productcode}</span>
+                            <span className="text-xs theme-text-muted">- {detail.productname}</span>
                           </div>
                         ))}
-                        {products.length > 2 && (
+                        {invoice.details.length > 2 && (
                           <div className="text-xs theme-text-muted font-sans">
-                            +{products.length - 2} sản phẩm khác
+                            +{invoice.details.length - 2} sản phẩm khác
                           </div>
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm theme-text text-center font-sans">
-                      {getTotalQuantityForSale(sale)}
+                    <td className="px-4 py-3 text-sm theme-text font-medium font-sans">
+                      {formatCurrency(invoice.total)}
                     </td>
                     <td className="px-4 py-3 text-sm theme-text font-medium font-sans">
-                      {formatCurrency(sale.totalAmount)}
+                      {formatCurrency(invoice.totalpayment)}
                     </td>
                     <td className="px-4 py-3 text-sm font-sans">
-                      {getStatusBadge(sale.status)}
+                      {getStatusBadge(invoice.statusvalue)}
                     </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

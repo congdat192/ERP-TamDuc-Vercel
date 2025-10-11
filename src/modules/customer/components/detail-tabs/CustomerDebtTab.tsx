@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 
 interface CustomerDebtTabProps {
   customerId: string;
+  customerDebt?: number;
 }
 
 interface DebtRecord {
@@ -17,7 +18,7 @@ interface DebtRecord {
   status: 'overdue' | 'due_soon' | 'normal';
 }
 
-export function CustomerDebtTab({ customerId }: CustomerDebtTabProps) {
+export function CustomerDebtTab({ customerId, customerDebt = 0 }: CustomerDebtTabProps) {
   // Mock debt data
   const debtRecords: DebtRecord[] = [
     {
@@ -82,8 +83,8 @@ export function CustomerDebtTab({ customerId }: CustomerDebtTabProps) {
       {/* Tổng quan nợ */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="theme-card rounded-lg border theme-border-primary p-4">
-          <div className="text-sm theme-text-muted mb-1">Tổng nợ hiện tại</div>
-          <div className="text-2xl font-bold theme-text-primary">{formatCurrency(totalDebt)}</div>
+          <div className="text-sm theme-text-muted mb-1">Tổng nợ hiện tại (từ API)</div>
+          <div className="text-2xl font-bold theme-text-primary">{formatCurrency(customerDebt)}</div>
         </div>
         <div className="theme-card rounded-lg border theme-border-primary p-4">
           <div className="text-sm theme-text-muted mb-1">Nợ quá hạn</div>

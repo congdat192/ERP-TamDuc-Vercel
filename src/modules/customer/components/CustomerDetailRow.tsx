@@ -28,8 +28,9 @@ interface Customer {
   totalSpent: number;
   totalDebt: number;
   status: string;
-  gender: string; // Thêm trường giới tính
-  images?: any[]; // Thêm mảng hình ảnh
+  gender: string;
+  images?: any[];
+  customerCode?: string; // Add this
 }
 
 interface CustomerDetailRowProps {
@@ -97,15 +98,25 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
               </TabsContent>
 
               <TabsContent value="sales-history" className="mt-0">
-                <CustomerSalesHistoryTab customerId={customer.id} />
+                <CustomerSalesHistoryTab 
+                  customerId={customer.id}
+                  customerPhone={customer.phone}
+                  customerCode={customer.customerCode}
+                />
               </TabsContent>
 
               <TabsContent value="debt" className="mt-0">
-                <CustomerDebtTab customerId={customer.id} />
+                <CustomerDebtTab 
+                  customerId={customer.id}
+                  customerDebt={customer.totalDebt}
+                />
               </TabsContent>
 
               <TabsContent value="points-history" className="mt-0">
-                <CustomerPointsHistoryTab customerId={customer.id} />
+                <CustomerPointsHistoryTab 
+                  customerId={customer.id}
+                  currentPoints={customer.points}
+                />
               </TabsContent>
 
               <TabsContent value="voucher-history" className="mt-0">

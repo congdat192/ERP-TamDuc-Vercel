@@ -105,7 +105,7 @@ export function mapCustomerData(customer: CustomerData): any {
     totalPoints: customer.totalPoint || 0,
     totalSalesMinusReturns: customer.totalRevenue || 0,
     status: 'Hoạt động',
-    // For CustomerInfoTab
+    // For CustomerInfoTab and CustomerDetailRow
     name: customer.name || '',
     group: customer.groups || 'Khách lẻ',
     birthday: customer.birthDate ? new Date(customer.birthDate).toLocaleDateString('vi-VN') : '',

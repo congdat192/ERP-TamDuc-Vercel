@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 
 interface CustomerPointsHistoryTabProps {
   customerId: string;
+  currentPoints?: number;
 }
 
 interface PointsRecord {
@@ -15,7 +16,7 @@ interface PointsRecord {
   invoiceCode?: string;
 }
 
-export function CustomerPointsHistoryTab({ customerId }: CustomerPointsHistoryTabProps) {
+export function CustomerPointsHistoryTab({ customerId, currentPoints = 0 }: CustomerPointsHistoryTabProps) {
   // Mock points history data
   const pointsHistory: PointsRecord[] = [
     {
@@ -82,7 +83,7 @@ export function CustomerPointsHistoryTab({ customerId }: CustomerPointsHistoryTa
     return points > 0 ? `+${points.toLocaleString('vi-VN')}` : points.toLocaleString('vi-VN');
   };
 
-  const currentBalance = pointsHistory[0]?.balance || 0;
+  const pointsBalance = currentPoints > 0 ? currentPoints : (pointsHistory[0]?.balance || 0);
   const totalEarned = pointsHistory
     .filter(record => record.type === 'earn')
     .reduce((sum, record) => sum + record.points, 0);
@@ -95,8 +96,8 @@ export function CustomerPointsHistoryTab({ customerId }: CustomerPointsHistoryTa
       {/* Tổng quan điểm */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="theme-card rounded-lg border theme-border-primary p-4">
-          <div className="text-sm theme-text-muted mb-1">Điểm hiện tại</div>
-          <div className="text-2xl font-bold theme-text-primary">{currentBalance.toLocaleString('vi-VN')}</div>
+          <div className="text-sm theme-text-muted mb-1">Điểm hiện tại (từ API)</div>
+          <div className="text-2xl font-bold theme-text-primary">{pointsBalance.toLocaleString('vi-VN')}</div>
         </div>
         <div className="theme-card rounded-lg border theme-border-primary p-4">
           <div className="text-sm theme-text-muted mb-1">Tổng điểm tích lũy</div>
