@@ -181,9 +181,6 @@ export function CustomerSalesHistoryTab({ customerId, customerPhone, customerCod
                     Nhân viên
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider font-sans">
-                    Sản phẩm
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider font-sans">
                     Tổng tiền
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider font-sans">
@@ -213,21 +210,6 @@ export function CustomerSalesHistoryTab({ customerId, customerPhone, customerCod
                     </td>
                     <td className="px-4 py-3 text-sm theme-text font-sans">
                       {invoice.soldbyname}
-                    </td>
-                    <td className="px-4 py-3 text-sm theme-text font-sans">
-                      <div className="space-y-1">
-                        {invoice.details.slice(0, 2).map((detail, idx) => (
-                          <div key={idx} className="flex items-start space-x-2">
-                            <span className="text-xs theme-text-primary font-medium">{detail.productcode}</span>
-                            <span className="text-xs theme-text-muted">- {detail.productname}</span>
-                          </div>
-                        ))}
-                        {invoice.details.length > 2 && (
-                          <div className="text-xs theme-text-muted font-sans">
-                            +{invoice.details.length - 2} sản phẩm khác
-                          </div>
-                        )}
-                      </div>
                     </td>
                     <td className="px-4 py-3 text-sm theme-text font-medium font-sans">
                       {formatCurrency(invoice.total)}
