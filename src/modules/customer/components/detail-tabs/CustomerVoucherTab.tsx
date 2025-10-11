@@ -55,7 +55,7 @@ export function CustomerVoucherTab({
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   // Fetch history
   useEffect(() => {
@@ -70,7 +70,7 @@ export function CustomerVoucherTab({
           customerPhone,
           currentPage,
           20,
-          statusFilter || undefined
+          statusFilter === 'all' ? undefined : statusFilter
         );
         setHistoryData(data);
       } catch (err) {
@@ -241,7 +241,7 @@ export function CustomerVoucherTab({
               <SelectValue placeholder="Tất cả trạng thái" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Tất cả trạng thái</SelectItem>
+              <SelectItem value="all">Tất cả trạng thái</SelectItem>
               <SelectItem value="da_kich_hoat">Đã kích hoạt</SelectItem>
               <SelectItem value="da_su_dung">Đã sử dụng</SelectItem>
               <SelectItem value="het_han">Hết hạn</SelectItem>
@@ -249,11 +249,11 @@ export function CustomerVoucherTab({
             </SelectContent>
           </Select>
 
-          {statusFilter && (
+          {statusFilter && statusFilter !== 'all' && (
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setStatusFilter('')}
+              onClick={() => setStatusFilter('all')}
             >
               Xóa bộ lọc
             </Button>
