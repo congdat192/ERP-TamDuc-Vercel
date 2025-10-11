@@ -1,4 +1,4 @@
-import { getOAuthToken } from '@/services/oauthService';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface InvoiceDetail {
   productcode: string;
@@ -66,32 +66,25 @@ export async function fetchInvoicesByPhone(phone: string): Promise<InvoiceHistor
       return null;
     }
 
-    // Get OAuth token
-    const oauthToken = await getOAuthToken();
-    
-    if (!oauthToken) {
-      console.error('[invoiceService] Failed to get OAuth token');
-      return null;
-    }
+    console.log('[invoiceService] Calling edge function to fetch invoices...');
 
-    // Call the API with OAuth token
-    const apiUrl = `https://kcirpjxbjqagrqrjfldu.supabase.co/functions/v1/invoices-history-customer?phone=${encodeURIComponent(phone.trim())}`;
-    
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${oauthToken}`,
-        'Content-Type': 'application/json',
-      },
+    // Call edge function
+    const { data, error } = await supabase.functions.invoke('get-invoices-by-phone', {
+      body: { phone: phone.trim() }
     });
 
-    if (!response.ok) {
-      console.error('[invoiceService] HTTP error:', response.status, response.statusText);
+    if (error) {
+      console.error('[invoiceService] Edge function error:', error);
       return null;
     }
 
-    const data = await response.json();
-    return data as InvoiceHistoryResponse;
+    if (!data || !data.success) {
+      console.error('[invoiceService] Invalid response from edge function:', data);
+      return null;
+    }
+
+    console.log('[invoiceService] Successfully fetched invoices:', data.data.data?.summary?.total_invoices || 0);
+    return data.data as InvoiceHistoryResponse;
   } catch (error) {
     console.error('[invoiceService] Exception while fetching invoices:', error);
     return null;
