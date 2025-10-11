@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ThemedSalesStats } from '../components/ThemedSalesStats';
 import { SalesFilters } from '../components/SalesFilters';
@@ -7,6 +7,8 @@ import { SalesTable } from '../components/SalesTable';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ColumnConfig } from '../components/ColumnVisibilityFilter';
 import { mockSales } from '@/data/mockData';
+import { fetchInvoicesByPhone, mapInvoiceToSalesData } from '../services/invoiceService';
+import { toast } from 'sonner';
 
 interface SalesManagementProps {
   currentUser: any;
@@ -15,11 +17,14 @@ interface SalesManagementProps {
 
 export function SalesManagement({ currentUser, onBackToModules }: SalesManagementProps) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [phoneSearch, setPhoneSearch] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedSales, setSelectedSales] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
+  const [isLoadingApi, setIsLoadingApi] = useState(false);
+  const [apiSalesData, setApiSalesData] = useState<any[]>([]);
 
   // Column visibility state - All 27 required columns exactly as requested
   const [columns, setColumns] = useState<ColumnConfig[]>([
@@ -57,8 +62,46 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
   // Get visible columns
   const visibleColumns = columns.filter(col => col.visible);
 
-  // Use mock data
-  const salesData = mockSales;
+  // Use API data if available, otherwise mock data
+  const salesData = apiSalesData.length > 0 ? apiSalesData : mockSales;
+
+  // Handle phone search
+  const handlePhoneSearch = async () => {
+    if (!phoneSearch || phoneSearch.trim() === '') {
+      toast.error('Vui lòng nhập số điện thoại');
+      return;
+    }
+
+    setIsLoadingApi(true);
+    try {
+      const response = await fetchInvoicesByPhone(phoneSearch);
+      
+      if (response && response.success && response.data.invoices.length > 0) {
+        // Map API data to internal format
+        const mappedData = response.data.invoices.map(invoice => 
+          mapInvoiceToSalesData(invoice, response.data.customer)
+        );
+        setApiSalesData(mappedData);
+        setCurrentPage(1); // Reset to first page
+        toast.success(`Tìm thấy ${mappedData.length} hóa đơn cho ${response.data.customer.name}`);
+      } else {
+        setApiSalesData([]);
+        toast.info('Không tìm thấy hóa đơn nào');
+      }
+    } catch (error) {
+      console.error('Error searching invoices:', error);
+      toast.error('Có lỗi xảy ra khi tìm kiếm');
+    } finally {
+      setIsLoadingApi(false);
+    }
+  };
+
+  // Reset to mock data
+  const handleResetSearch = () => {
+    setPhoneSearch('');
+    setApiSalesData([]);
+    setCurrentPage(1);
+  };
 
   const handleColumnToggle = (columnKey: string) => {
     setColumns(prev => prev.map(col => 
@@ -161,6 +204,11 @@ export function SalesManagement({ currentUser, onBackToModules }: SalesManagemen
             <SalesSearchAndActions
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
+              phoneSearch={phoneSearch}
+              setPhoneSearch={setPhoneSearch}
+              onPhoneSearch={handlePhoneSearch}
+              onResetSearch={handleResetSearch}
+              isLoadingApi={isLoadingApi}
               columns={columns}
               handleColumnToggle={handleColumnToggle}
               isFilterOpen={isFilterOpen}

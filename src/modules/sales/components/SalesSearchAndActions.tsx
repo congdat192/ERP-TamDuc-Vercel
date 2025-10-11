@@ -11,6 +11,11 @@ import { SalesFilters } from './SalesFilters';
 interface SalesSearchAndActionsProps {
   searchTerm: string;
   setSearchTerm: (value: string) => void;
+  phoneSearch?: string;
+  setPhoneSearch?: (value: string) => void;
+  onPhoneSearch?: () => void;
+  onResetSearch?: () => void;
+  isLoadingApi?: boolean;
   columns: ColumnConfig[];
   handleColumnToggle: (columnKey: string) => void;
   isFilterOpen: boolean;
@@ -24,6 +29,11 @@ interface SalesSearchAndActionsProps {
 export function SalesSearchAndActions({
   searchTerm,
   setSearchTerm,
+  phoneSearch = '',
+  setPhoneSearch,
+  onPhoneSearch,
+  onResetSearch,
+  isLoadingApi = false,
   columns,
   handleColumnToggle,
   isFilterOpen,
@@ -35,9 +45,9 @@ export function SalesSearchAndActions({
 }: SalesSearchAndActionsProps) {
   return (
     <div className="theme-card rounded-lg border theme-border-primary">
-      <div className="p-4">
+      <div className="p-4 space-y-3">
+        {/* First Row: Search by Invoice Code */}
         <div className="flex flex-col lg:flex-row items-center space-y-3 lg:space-y-0 lg:space-x-4">
-          {/* Search Input */}
           <div className="flex-1 relative max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 theme-text-muted h-4 w-4" />
             <Input
@@ -46,6 +56,46 @@ export function SalesSearchAndActions({
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 voucher-input"
             />
+          </div>
+        </div>
+
+        {/* Second Row: Search by Phone with API */}
+        <div className="flex flex-col lg:flex-row items-center space-y-3 lg:space-y-0 lg:space-x-4">
+          <div className="flex-1 flex gap-2 items-center max-w-md">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 theme-text-muted h-4 w-4" />
+              <Input
+                placeholder="Tra cứu theo số điện thoại..."
+                value={phoneSearch}
+                onChange={(e) => setPhoneSearch?.(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    onPhoneSearch?.();
+                  }
+                }}
+                className="pl-10 voucher-input"
+                disabled={isLoadingApi}
+              />
+            </div>
+            <Button 
+              size="sm" 
+              onClick={onPhoneSearch}
+              disabled={isLoadingApi || !phoneSearch}
+              className="voucher-button-primary"
+            >
+              {isLoadingApi ? 'Đang tìm...' : 'Tra cứu'}
+            </Button>
+            {phoneSearch && (
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={onResetSearch}
+                disabled={isLoadingApi}
+                className="theme-border-primary"
+              >
+                Reset
+              </Button>
+            )}
           </div>
           
           {/* Action Buttons */}
