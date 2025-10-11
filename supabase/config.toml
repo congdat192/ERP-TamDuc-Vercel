@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.get-invoices-by-phone]
 verify_jwt = false
+
+[functions.get-customer-by-phone]
+verify_jwt = false
