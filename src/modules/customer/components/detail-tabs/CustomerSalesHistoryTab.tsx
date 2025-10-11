@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
+import { InvoiceDetailDialog } from '../InvoiceDetailDialog';
 
 interface CustomerSalesHistoryTabProps {
   customerId: string;
@@ -31,10 +32,21 @@ interface Invoice {
   details: InvoiceDetail[];
 }
 
+interface Customer {
+  code: string;
+  name: string;
+  phone: string;
+  email: string;
+  address: string;
+}
+
 export function CustomerSalesHistoryTab({ customerId, customerPhone, customerCode }: CustomerSalesHistoryTabProps) {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [customer, setCustomer] = useState<Customer | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchInvoices = async () => {
@@ -61,9 +73,11 @@ export function CustomerSalesHistoryTab({ customerId, customerPhone, customerCod
 
         if (data?.success && data?.data?.data?.invoices) {
           setInvoices(data.data.data.invoices);
+          setCustomer(data.data.data.customer);
           console.log('[CustomerSalesHistoryTab] Loaded invoices:', data.data.data.invoices.length);
         } else {
           setInvoices([]);
+          setCustomer(null);
         }
       } catch (err) {
         console.error('[CustomerSalesHistoryTab] Exception:', err);
@@ -75,6 +89,11 @@ export function CustomerSalesHistoryTab({ customerId, customerPhone, customerCod
 
     fetchInvoices();
   }, [customerPhone]);
+
+  const handleInvoiceClick = (invoice: Invoice) => {
+    setSelectedInvoice(invoice);
+    setIsDialogOpen(true);
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -123,13 +142,21 @@ export function CustomerSalesHistoryTab({ customerId, customerPhone, customerCod
   }
 
   return (
-    <div className="space-y-4 font-sans">
-      <div className="flex items-center justify-between">
-        <h4 className="text-lg font-semibold theme-text font-sans">Lịch sử bán hàng</h4>
-        <div className="text-sm theme-text-muted font-sans">
-          Tổng {invoices.length} giao dịch
+    <>
+      <InvoiceDetailDialog 
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        invoice={selectedInvoice}
+        customer={customer}
+      />
+      
+      <div className="space-y-4 font-sans">
+        <div className="flex items-center justify-between">
+          <h4 className="text-lg font-semibold theme-text font-sans">Lịch sử bán hàng</h4>
+          <div className="text-sm theme-text-muted font-sans">
+            Tổng {invoices.length} giao dịch
+          </div>
         </div>
-      </div>
 
       {invoices.length === 0 ? (
         <div className="text-center py-12 theme-text-muted">
@@ -170,8 +197,13 @@ export function CustomerSalesHistoryTab({ customerId, customerPhone, customerCod
               <tbody className="divide-y theme-border-primary/10">
                 {invoices.map((invoice) => (
                   <tr key={invoice.code} className="hover:theme-bg-primary/5">
-                    <td className="px-4 py-3 text-sm theme-text-primary font-medium font-sans">
-                      {invoice.code}
+                    <td className="px-4 py-3 text-sm font-sans">
+                      <button
+                        onClick={() => handleInvoiceClick(invoice)}
+                        className="theme-text-primary font-medium hover:underline cursor-pointer"
+                      >
+                        {invoice.code}
+                      </button>
                     </td>
                     <td className="px-4 py-3 text-sm theme-text-muted font-sans">
                       {formatDate(invoice.created_at_vn)}
@@ -214,5 +246,6 @@ export function CustomerSalesHistoryTab({ customerId, customerPhone, customerCod
         </div>
       )}
     </div>
+    </>
   );
 }
