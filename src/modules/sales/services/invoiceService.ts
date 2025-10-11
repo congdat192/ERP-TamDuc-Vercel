@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { getOAuthToken } from '@/services/oauthService';
 
 export interface InvoiceDetail {
   productcode: string;
@@ -66,21 +66,21 @@ export async function fetchInvoicesByPhone(phone: string): Promise<InvoiceHistor
       return null;
     }
 
-    // Get current session token
-    const { data: { session } } = await supabase.auth.getSession();
+    // Get OAuth token
+    const oauthToken = await getOAuthToken();
     
-    if (!session) {
-      console.error('[invoiceService] No active session found');
+    if (!oauthToken) {
+      console.error('[invoiceService] Failed to get OAuth token');
       return null;
     }
 
-    // Call the API directly
+    // Call the API with OAuth token
     const apiUrl = `https://kcirpjxbjqagrqrjfldu.supabase.co/functions/v1/invoices-history-customer?phone=${encodeURIComponent(phone.trim())}`;
     
     const response = await fetch(apiUrl, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${session.access_token}`,
+        'Authorization': `Bearer ${oauthToken}`,
         'Content-Type': 'application/json',
       },
     });
