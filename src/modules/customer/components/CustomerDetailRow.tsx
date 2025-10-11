@@ -64,11 +64,20 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
 
       if (error) throw error;
 
-      setInvoicesData(data.invoices);
-      setCustomerData(data.customer);
+      // Parse nested structure: data.data.data
+      if (data?.data?.data) {
+        setInvoicesData(data.data.data.invoices || []);
+        setCustomerData(data.data.data.customer || null);
+      } else {
+        console.warn('[fetchInvoicesData] Unexpected response structure:', data);
+        setInvoicesData([]);
+        setCustomerData(null);
+      }
     } catch (err) {
       console.error('Error fetching invoices:', err);
       setInvoicesError(err instanceof Error ? err.message : 'Lỗi khi tải dữ liệu hóa đơn');
+      setInvoicesData([]);
+      setCustomerData(null);
     } finally {
       setIsLoadingInvoices(false);
     }
@@ -81,10 +90,11 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
     setVouchersError(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke('check-voucher-eligibility', {
-        method: 'GET',
-        body: { phone: customer.phone }
-      });
+      // Use query params instead of body for GET request
+      const params = new URLSearchParams({ phone: customer.phone });
+      const { data, error } = await supabase.functions.invoke(
+        `check-voucher-eligibility?${params.toString()}`
+      );
 
       if (error) throw error;
 
