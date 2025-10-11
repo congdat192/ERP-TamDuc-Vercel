@@ -4,7 +4,7 @@ import { Loader2 } from 'lucide-react';
 import { InvoiceDetailDialog } from '../InvoiceDetailDialog';
 
 interface CustomerSalesHistoryTabProps {
-  invoices: Invoice[];
+  invoices: Invoice[] | null;
   customer: Customer | null;
   isLoading: boolean;
   error: string | null;
@@ -108,11 +108,11 @@ export function CustomerSalesHistoryTab({ invoices, customer, isLoading, error }
         <div className="flex items-center justify-between">
           <h4 className="text-lg font-semibold theme-text font-sans">Lịch sử bán hàng</h4>
           <div className="text-sm theme-text-muted font-sans">
-            Tổng {invoices.length} giao dịch
+            Tổng {invoices?.length || 0} giao dịch
           </div>
         </div>
 
-      {invoices.length === 0 ? (
+      {!invoices || invoices.length === 0 ? (
         <div className="text-center py-12 theme-text-muted">
           Chưa có giao dịch nào
         </div>

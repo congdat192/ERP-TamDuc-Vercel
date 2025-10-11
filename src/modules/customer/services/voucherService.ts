@@ -117,10 +117,10 @@ export interface VoucherHistoryResponse {
 export const voucherService = {
   // Check voucher eligibility
   checkVoucherEligibility: async (phone: string): Promise<VoucherEligibilityResponse> => {
-    const { data, error } = await supabase.functions.invoke('check-voucher-eligibility', {
-      method: 'GET',
-      body: { phone }
-    });
+    const params = new URLSearchParams({ phone });
+    const { data, error } = await supabase.functions.invoke(
+      `check-voucher-eligibility?${params.toString()}`
+    );
 
     if (error) throw error;
     return data;
@@ -154,8 +154,7 @@ export const voucherService = {
     });
 
     const { data, error } = await supabase.functions.invoke(
-      `voucher-history-customer?${params.toString()}`,
-      { method: 'GET' }
+      `voucher-history-customer?${params.toString()}`
     );
 
     if (error) throw error;
