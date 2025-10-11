@@ -5,7 +5,7 @@ import { CustomerInfoTab } from './detail-tabs/CustomerInfoTab';
 import { CustomerSalesHistoryTab } from './detail-tabs/CustomerSalesHistoryTab';
 import { CustomerDebtTab } from './detail-tabs/CustomerDebtTab';
 import { CustomerPointsHistoryTab } from './detail-tabs/CustomerPointsHistoryTab';
-import { CustomerVoucherHistoryTab } from './detail-tabs/CustomerVoucherHistoryTab';
+import { CustomerVoucherTab } from './detail-tabs/CustomerVoucherTab';
 import { CustomerInteractionHistoryTab } from './detail-tabs/CustomerInteractionHistoryTab';
 import { CustomerImagesTab } from './detail-tabs/CustomerImagesTab';
 import { supabase } from '@/integrations/supabase/client';
@@ -47,47 +47,59 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
   const [customerData, setCustomerData] = useState<any>(null);
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(false);
   const [invoicesError, setInvoicesError] = useState<string | null>(null);
+  const [voucherEligibilityData, setVoucherEligibilityData] = useState<any>(null);
+  const [isLoadingVouchers, setIsLoadingVouchers] = useState(false);
+  const [vouchersError, setVouchersError] = useState<string | null>(null);
 
   const fetchInvoicesData = async () => {
-    if (!customer.phone) {
-      console.warn('[CustomerDetailRow] No phone number provided');
-      return;
-    }
+    if (!customer.phone) return;
 
     setIsLoadingInvoices(true);
     setInvoicesError(null);
-    
+
     try {
-      console.log('[CustomerDetailRow] Fetching invoices for phone:', customer.phone);
-      
       const { data, error } = await supabase.functions.invoke('get-invoices-by-phone', {
         body: { phone: customer.phone }
       });
 
-      if (error) {
-        console.error('[CustomerDetailRow] Error:', error);
-        setInvoicesError('Không thể tải lịch sử hóa đơn');
-        return;
-      }
+      if (error) throw error;
 
-      if (data?.success && data?.data?.data?.invoices) {
-        setInvoicesData(data.data.data.invoices);
-        setCustomerData(data.data.data.customer);
-        console.log('[CustomerDetailRow] Loaded invoices:', data.data.data.invoices.length);
-      } else {
-        setInvoicesData([]);
-        setCustomerData(null);
-      }
+      setInvoicesData(data.invoices);
+      setCustomerData(data.customer);
     } catch (err) {
-      console.error('[CustomerDetailRow] Exception:', err);
-      setInvoicesError('Đã xảy ra lỗi khi tải dữ liệu');
+      console.error('Error fetching invoices:', err);
+      setInvoicesError(err instanceof Error ? err.message : 'Lỗi khi tải dữ liệu hóa đơn');
     } finally {
       setIsLoadingInvoices(false);
     }
   };
 
+  const fetchVoucherEligibility = async () => {
+    if (!customer.phone) return;
+
+    setIsLoadingVouchers(true);
+    setVouchersError(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('check-voucher-eligibility', {
+        method: 'GET',
+        body: { phone: customer.phone }
+      });
+
+      if (error) throw error;
+
+      setVoucherEligibilityData(data);
+    } catch (err) {
+      console.error('Error fetching voucher eligibility:', err);
+      setVouchersError(err instanceof Error ? err.message : 'Lỗi khi tải dữ liệu voucher');
+    } finally {
+      setIsLoadingVouchers(false);
+    }
+  };
+
   useEffect(() => {
     fetchInvoicesData();
+    fetchVoucherEligibility();
   }, [customer.phone]);
 
   return (
@@ -138,10 +150,10 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
                   Lịch sử tích điểm
                 </TabsTrigger>
                 <TabsTrigger 
-                  value="voucher-history"
+                  value="voucher"
                   className="data-[state=active]:theme-bg-primary data-[state=active]:text-white"
                 >
-                  Lịch sử voucher
+                  Voucher
                 </TabsTrigger>
                 <TabsTrigger 
                   value="interaction-history"
@@ -184,8 +196,14 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
                 />
               </TabsContent>
 
-              <TabsContent value="voucher-history" className="mt-0">
-                <CustomerVoucherHistoryTab customerId={customer.id} />
+              <TabsContent value="voucher" className="mt-0">
+                <CustomerVoucherTab 
+                  customerPhone={customer.phone}
+                  voucherData={voucherEligibilityData}
+                  isLoading={isLoadingVouchers}
+                  error={vouchersError}
+                  onRefresh={fetchVoucherEligibility}
+                />
               </TabsContent>
 
               <TabsContent value="interaction-history" className="mt-0">

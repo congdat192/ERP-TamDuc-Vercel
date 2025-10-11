@@ -8,3 +8,12 @@ verify_jwt = false
 
 [functions.get-customer-by-phone]
 verify_jwt = false
+
+[functions.check-voucher-eligibility]
+verify_jwt = false
+
+[functions.claim-voucher]
+verify_jwt = false
+
+[functions.voucher-history-customer]
+verify_jwt = false
