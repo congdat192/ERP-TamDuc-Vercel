@@ -49,9 +49,7 @@ export function InvoiceDetailDialog({ open, onOpenChange, invoice, customer }: I
 
   const formatDate = (dateString: string) => {
     try {
-      const date = new Date(dateString);
-      return date.toLocaleString('vi-VN', {
-        timeZone: 'Asia/Ho_Chi_Minh',
+      return new Date(dateString).toLocaleString('vi-VN', {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',

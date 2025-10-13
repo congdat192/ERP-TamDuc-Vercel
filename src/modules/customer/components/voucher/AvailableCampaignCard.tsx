@@ -12,17 +12,7 @@ interface AvailableCampaignCardProps {
 
 export function AvailableCampaignCard({ campaign, onClaim, isLoading }: AvailableCampaignCardProps) {
   const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('vi-VN', {
-        timeZone: 'Asia/Ho_Chi_Minh',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-      });
-    } catch {
-      return dateString;
-    }
+    return new Date(dateString).toLocaleDateString('vi-VN');
   };
 
   const formatCurrency = (amount: number) => {

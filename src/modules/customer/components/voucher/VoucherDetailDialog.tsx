@@ -95,31 +95,13 @@ export function VoucherDetailDialog({ voucher, open, onOpenChange }: VoucherDeta
   };
 
   const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      
-      // Nếu có giờ phút giây (ISO format)
-      if (dateString.includes('T')) {
-        return date.toLocaleString('vi-VN', {
-          timeZone: 'Asia/Ho_Chi_Minh',
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit'
-        });
-      }
-      
-      // Chỉ có ngày
-      return date.toLocaleDateString('vi-VN', {
-        timeZone: 'Asia/Ho_Chi_Minh',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-      });
-    } catch {
-      return dateString;
-    }
+    return new Date(dateString).toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   return (
