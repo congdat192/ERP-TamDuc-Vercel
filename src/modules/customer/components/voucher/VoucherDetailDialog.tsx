@@ -95,13 +95,24 @@ export function VoucherDetailDialog({ voucher, open, onOpenChange }: VoucherDeta
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    try {
+      // API trả về: "2025-01-15 14:30:00" hoặc "2025-01-15"
+      // Chuyển sang: "15/01/2025 14:30" hoặc "15/01/2025"
+      const parts = dateString.split(' ');
+      const datePart = parts[0];
+      const timePart = parts[1];
+      
+      const [year, month, day] = datePart.split('-');
+      
+      if (timePart) {
+        const [hour, minute] = timePart.split(':');
+        return `${day}/${month}/${year} ${hour}:${minute}`;
+      }
+      
+      return `${day}/${month}/${year}`;
+    } catch {
+      return dateString;
+    }
   };
 
   return (

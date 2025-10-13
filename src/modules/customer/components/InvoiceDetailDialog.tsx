@@ -49,13 +49,16 @@ export function InvoiceDetailDialog({ open, onOpenChange, invoice, customer }: I
 
   const formatDate = (dateString: string) => {
     try {
-      return new Date(dateString).toLocaleString('vi-VN', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
+      // API trả về: "2025-01-15 14:30:00" (giờ VN)
+      // Chuyển sang: "15/01/2025 14:30"
+      const parts = dateString.split(' ');
+      if (parts.length !== 2) return dateString;
+      
+      const [datePart, timePart] = parts;
+      const [year, month, day] = datePart.split('-');
+      const [hour, minute] = timePart.split(':');
+      
+      return `${day}/${month}/${year} ${hour}:${minute}`;
     } catch {
       return dateString;
     }

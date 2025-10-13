@@ -39,7 +39,15 @@ export function VoucherCard({ voucher, onClick }: VoucherCardProps) {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('vi-VN');
+    try {
+      // API trả về: "2025-01-15" hoặc "2025-01-15 14:30:00"
+      // Chuyển sang: "15/01/2025"
+      const datePart = dateString.split(' ')[0];
+      const [year, month, day] = datePart.split('-');
+      return `${day}/${month}/${year}`;
+    } catch {
+      return dateString;
+    }
   };
 
   return (

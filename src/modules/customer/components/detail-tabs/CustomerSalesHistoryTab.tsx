@@ -72,7 +72,16 @@ export function CustomerSalesHistoryTab({ invoices, customer, isLoading, error }
 
   const formatDate = (dateString: string) => {
     try {
-      return new Date(dateString).toLocaleString('vi-VN');
+      // API trả về: "2025-01-15 14:30:00" (giờ VN)
+      // Chuyển sang: "15/01/2025 14:30"
+      const parts = dateString.split(' ');
+      if (parts.length !== 2) return dateString;
+      
+      const [datePart, timePart] = parts;
+      const [year, month, day] = datePart.split('-');
+      const [hour, minute] = timePart.split(':');
+      
+      return `${day}/${month}/${year} ${hour}:${minute}`;
     } catch {
       return dateString;
     }
