@@ -13,11 +13,13 @@ interface AvailableCampaignCardProps {
 export function AvailableCampaignCard({ campaign, onClaim, isLoading }: AvailableCampaignCardProps) {
   const formatDate = (dateString: string) => {
     try {
-      // API trả về: "2025-01-15" hoặc "2025-01-15 14:30:00"
-      // Chuyển sang: "15/01/2025"
-      const datePart = dateString.split(' ')[0];
-      const [year, month, day] = datePart.split('-');
-      return `${day}/${month}/${year}`;
+      const date = new Date(dateString);
+      return date.toLocaleDateString('vi-VN', {
+        timeZone: 'Asia/Ho_Chi_Minh',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
     } catch {
       return dateString;
     }

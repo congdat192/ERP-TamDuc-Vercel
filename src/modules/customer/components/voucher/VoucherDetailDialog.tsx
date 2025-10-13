@@ -96,20 +96,27 @@ export function VoucherDetailDialog({ voucher, open, onOpenChange }: VoucherDeta
 
   const formatDate = (dateString: string) => {
     try {
-      // API trả về: "2025-01-15 14:30:00" hoặc "2025-01-15"
-      // Chuyển sang: "15/01/2025 14:30" hoặc "15/01/2025"
-      const parts = dateString.split(' ');
-      const datePart = parts[0];
-      const timePart = parts[1];
+      const date = new Date(dateString);
       
-      const [year, month, day] = datePart.split('-');
-      
-      if (timePart) {
-        const [hour, minute] = timePart.split(':');
-        return `${day}/${month}/${year} ${hour}:${minute}`;
+      // Nếu có giờ phút giây (ISO format)
+      if (dateString.includes('T')) {
+        return date.toLocaleString('vi-VN', {
+          timeZone: 'Asia/Ho_Chi_Minh',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
       }
       
-      return `${day}/${month}/${year}`;
+      // Chỉ có ngày
+      return date.toLocaleDateString('vi-VN', {
+        timeZone: 'Asia/Ho_Chi_Minh',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
     } catch {
       return dateString;
     }
