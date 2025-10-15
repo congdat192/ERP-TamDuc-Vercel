@@ -76,7 +76,7 @@ export const navigationConfig: NavItem[] = [
     path: '/ERP/UserManagement',
     requiredPermission: 'user-management',
     subItems: [
-      { id: 'um-dashboard', label: 'Tổng Quan', path: '/ERP/UserManagement/Dashboard' },
+      { id: 'um-dashboard', label: 'Tổng Quan', path: '/ERP/UserManagement' },
       { id: 'members', label: 'Thành Viên', path: '/ERP/UserManagement/Members' },
       { id: 'departments', label: 'Phòng Ban', path: '/ERP/UserManagement/Departments' },
       { id: 'roles', label: 'Vai Trò', path: '/ERP/UserManagement/Roles' },
