@@ -19,12 +19,7 @@ export function ERPLayout({
     <div className="flex flex-col h-screen bg-background">
       <DoubleTopNavigation
         currentUser={currentUser}
-        onNotificationClick={() => {
-          console.log('Notifications clicked');
-        }}
-        onProfileClick={() => {
-          console.log('Profile clicked');
-        }}
+        onLogout={onLogout}
       />
       
       <main className="flex-1 overflow-auto">

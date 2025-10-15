@@ -1,27 +1,24 @@
 import { useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { Menu, Bell } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { TopNavItem } from './TopNavItem';
 import { MobileNavDrawer } from './MobileNavDrawer';
+import { UtilityBar } from './UtilityBar';
 import { navigationConfig, NavItem } from '@/config/navigation';
 import { isPathActive, isModuleActive } from '@/lib/navigationUtils';
 import { User } from '@/types/auth';
 import { cn } from '@/lib/utils';
-import { getAvatarUrl } from '@/types/auth';
 
 interface DoubleTopNavigationProps {
   currentUser: User;
-  onNotificationClick?: () => void;
-  onProfileClick?: () => void;
+  onLogout?: () => void;
 }
 
 export function DoubleTopNavigation({
   currentUser,
-  onNotificationClick,
-  onProfileClick
+  onLogout
 }: DoubleTopNavigationProps) {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -58,12 +55,13 @@ export function DoubleTopNavigation({
   const visibleSubItems = activeModule ? getVisibleSubItems(activeModule) : [];
   const hasSubNav = visibleSubItems.length > 0;
 
-  const avatarUrl = getAvatarUrl(currentUser.avatarPath);
-
   return (
     <>
+      {/* Utility Bar */}
+      <UtilityBar currentUser={currentUser} onLogout={onLogout} />
+
       {/* Level 1 Navigation */}
-      <div className="fixed top-0 left-0 right-0 z-40 bg-background border-b border-border shadow-sm">
+      <div className="fixed top-10 left-0 right-0 z-40 bg-background border-b border-border shadow-sm">
         <div className="flex items-center justify-between h-14 px-4">
           {/* Left Section: Menu + Logo + Nav Items (Desktop) */}
           <div className="flex items-center gap-4 flex-1 min-w-0">
@@ -100,30 +98,6 @@ export function DoubleTopNavigation({
               </div>
             </ScrollArea>
           </div>
-
-          {/* Right Section: Notifications + Avatar */}
-          <div className="flex items-center gap-2 shrink-0">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onNotificationClick}
-            >
-              <Bell className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full"
-              onClick={onProfileClick}
-            >
-              <Avatar className="h-8 w-8">
-                <AvatarImage src={avatarUrl} alt={currentUser.fullName} />
-                <AvatarFallback>
-                  {currentUser.fullName.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-            </Button>
-          </div>
         </div>
 
         {/* Level 2 Navigation (Submenu) */}
@@ -152,7 +126,7 @@ export function DoubleTopNavigation({
       </div>
 
       {/* Spacer to prevent content from hiding under fixed nav */}
-      <div className={cn("h-14", hasSubNav && "lg:h-[5.5rem]")} />
+      <div className={cn("h-24", hasSubNav && "lg:h-[8.5rem]")} />
 
       {/* Mobile Navigation Drawer */}
       <MobileNavDrawer

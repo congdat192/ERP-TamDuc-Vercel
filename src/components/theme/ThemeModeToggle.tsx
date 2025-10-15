@@ -4,8 +4,47 @@ import { Button } from '@/components/ui/button';
 import { useTheme } from '@/contexts/ThemeContext';
 import { cn } from '@/lib/utils';
 
-export function ThemeModeToggle() {
+interface ThemeModeToggleProps {
+  compact?: boolean;
+}
+
+export function ThemeModeToggle({ compact = false }: ThemeModeToggleProps) {
   const { theme, setThemeMode } = useTheme();
+
+  if (compact) {
+    return (
+      <div className="flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setThemeMode('light')}
+          className={cn(
+            "h-8 px-2 gap-1.5 transition-all duration-200",
+            theme.mode === 'light' 
+              ? "bg-primary text-primary-foreground hover:bg-primary/90" 
+              : "text-foreground hover:bg-accent"
+          )}
+        >
+          <Sun className="h-4 w-4" />
+          <span className="text-xs hidden sm:inline">Light</span>
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setThemeMode('dark')}
+          className={cn(
+            "h-8 px-2 gap-1.5 transition-all duration-200",
+            theme.mode === 'dark' 
+              ? "bg-primary text-primary-foreground hover:bg-primary/90" 
+              : "text-foreground hover:bg-accent"
+          )}
+        >
+          <Moon className="h-4 w-4" />
+          <span className="text-xs hidden sm:inline">Dark</span>
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">
