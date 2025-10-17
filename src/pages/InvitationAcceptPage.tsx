@@ -31,10 +31,15 @@ export function InvitationAcceptPage() {
 
   const loadInvitation = async () => {
     try {
+      console.log('🔍 Fetching invitation with token:', token);
+      
       // Fetch invitation details (no auth required for pending invitations)
       const data = await InvitationService.getInvitationByToken(token!);
 
+      console.log('📦 Invitation data:', data);
+
       if (!data) {
+        console.error('❌ No invitation data returned');
         setError('Lời mời không hợp lệ hoặc đã hết hạn');
         return;
       }
@@ -61,7 +66,7 @@ export function InvitationAcceptPage() {
         }
       }
     } catch (err: any) {
-      console.error('Error loading invitation:', err);
+      console.error('💥 Exception in loadInvitation:', err);
       setError(err.message || 'Có lỗi xảy ra khi tải lời mời');
     } finally {
       setIsLoading(false);

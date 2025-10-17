@@ -153,7 +153,8 @@ export class InvitationService {
         )
       `)
       .eq('token', token)
-      .single();
+      .eq('status', 'pending')
+      .maybeSingle();
 
     if (error) {
       console.error('Error fetching invitation by token:', error);
