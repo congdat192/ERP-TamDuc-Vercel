@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/components/auth/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Loader2, CheckCircle, XCircle, Mail } from 'lucide-react';
 import { InvitationService, Invitation } from '@/modules/user-management/services/invitationService';
 import { useToast } from '@/hooks/use-toast';
+import { InvitationAuthForm } from '@/components/invitation/InvitationAuthForm';
 
 export function InvitationAcceptPage() {
   const [searchParams] = useSearchParams();
@@ -30,23 +31,11 @@ export function InvitationAcceptPage() {
 
   const loadInvitation = async () => {
     try {
-      if (!currentUser) {
-        // Redirect to login with return URL
-        navigate(`/login?redirect=/invitation/accept?token=${token}`);
-        return;
-      }
-
-      // Fetch invitation details
+      // Fetch invitation details (no auth required for pending invitations)
       const data = await InvitationService.getInvitationByToken(token!);
 
       if (!data) {
         setError('Lời mời không hợp lệ hoặc đã hết hạn');
-        return;
-      }
-
-      // Check if invitation is for current user's email
-      if (data.email !== currentUser.email) {
-        setError('Lời mời này không dành cho tài khoản của bạn');
         return;
       }
 
@@ -63,6 +52,14 @@ export function InvitationAcceptPage() {
       }
 
       setInvitation(data);
+
+      // If user is logged in, check if email matches
+      if (currentUser) {
+        if (data.email !== currentUser.email) {
+          setError('Lời mời này không dành cho tài khoản của bạn');
+          return;
+        }
+      }
     } catch (err: any) {
       console.error('Error loading invitation:', err);
       setError(err.message || 'Có lỗi xảy ra khi tải lời mời');
@@ -151,6 +148,34 @@ export function InvitationAcceptPage() {
     );
   }
 
+  // If user is not logged in, show auth form
+  if (!currentUser && invitation) {
+    return (
+      <div className="flex items-center justify-center min-h-screen p-4 bg-background">
+        <Card className="max-w-2xl w-full">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Mail className="w-5 h-5 mr-2 text-primary" />
+              Lời Mời Tham Gia Doanh Nghiệp
+            </CardTitle>
+            <CardDescription>
+              Vui lòng đăng ký hoặc đăng nhập để chấp nhận lời mời
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <InvitationAuthForm
+              invitationEmail={invitation.email}
+              businessName={(invitation as any).businesses?.name || 'Doanh nghiệp'}
+              roleName={(invitation as any).roles?.name || 'Thành viên'}
+              onAuthSuccess={handleAccept}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // If user is logged in, show invitation details and accept/reject buttons
   return (
     <div className="flex items-center justify-center min-h-screen p-4 bg-background">
       <Card className="max-w-md w-full">
@@ -163,14 +188,14 @@ export function InvitationAcceptPage() {
         <CardContent className="space-y-4">
           <div className="p-4 bg-muted rounded-lg">
             <p className="text-sm text-muted-foreground mb-1">Doanh nghiệp:</p>
-            <p className="font-semibold text-lg">{invitation.businesses?.name}</p>
+            <p className="font-semibold text-lg">{(invitation as any).businesses?.name}</p>
           </div>
           
           <div className="p-4 bg-muted rounded-lg">
             <p className="text-sm text-muted-foreground mb-1">Vai trò:</p>
-            <p className="font-semibold">{invitation.roles?.name}</p>
-            {invitation.roles?.description && (
-              <p className="text-sm text-muted-foreground mt-1">{invitation.roles.description}</p>
+            <p className="font-semibold">{(invitation as any).roles?.name}</p>
+            {(invitation as any).roles?.description && (
+              <p className="text-sm text-muted-foreground mt-1">{(invitation as any).roles.description}</p>
             )}
           </div>
 

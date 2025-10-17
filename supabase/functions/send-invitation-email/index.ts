@@ -54,7 +54,8 @@ serve(async (req: Request) => {
     const inviterName = (invitation.profiles as any)?.full_name || 'Quản trị viên';
     const roleName = (invitation.roles as any)?.name || 'Thành viên';
     const siteUrl = Deno.env.get('SITE_URL') || 'https://tam-duc-erp-final.lovable.app';
-    const acceptLink = `${siteUrl}/invitation/accept?token=${invitation.token}`;
+    const baseUrl = siteUrl.endsWith('/') ? siteUrl.slice(0, -1) : siteUrl;
+    const acceptLink = `${baseUrl}/invitation/accept?token=${invitation.token}`;
 
     console.log('Sending invitation email to:', invitation.email);
     console.log('Business:', businessName);
