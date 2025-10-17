@@ -32,94 +32,147 @@ export const getBusinesses = async (): Promise<Business[]> => {
 };
 
 export const createBusiness = async (data: CreateBusinessRequest): Promise<Business> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.error('❌ [createBusiness] User not authenticated');
+      throw new Error('Bạn cần đăng nhập để tạo doanh nghiệp');
+    }
+    
+    console.log('📝 [createBusiness] Creating business for user:', user.id);
+    
+    // 1. Create business
+    const { data: business, error: businessError } = await supabase
+      .from('businesses')
+      .insert({
+        name: data.name,
+        description: data.description,
+        owner_id: user.id,
+        address: data.address,
+        phone_number: data.phone_number,
+        email_address: data.email_address,
+        website_url: data.website_url,
+        tax_number: data.tax_number,
+        logo_path: data.logo_path
+      })
+      .select()
+      .single();
+    
+    if (businessError) {
+      console.error('❌ [createBusiness] Error creating business:', businessError);
+      throw new Error(`Không thể tạo doanh nghiệp: ${businessError.message}`);
+    }
+    
+    console.log('✅ [createBusiness] Business created:', business.id);
   
-  // 1. Create business
-  const { data: business, error: businessError } = await supabase
-    .from('businesses')
-    .insert({
-      name: data.name,
-      description: data.description,
-      owner_id: user.id,
-      address: data.address,
-      phone_number: data.phone_number,
-      email_address: data.email_address,
-      website_url: data.website_url,
-      tax_number: data.tax_number,
-      logo_path: data.logo_path
-    })
-    .select()
-    .single();
+    // 2. Create default "ERP Admin" role for this business
+    console.log('📝 [createBusiness] Creating ERP Admin role...');
+    const { data: role, error: roleError } = await supabase
+      .from('roles')
+      .insert({
+        business_id: business.id,
+        name: 'ERP Admin',
+        description: 'Quản trị viên với đầy đủ quyền hạn',
+        is_system: true
+      })
+      .select()
+      .single();
+    
+    if (roleError) {
+      console.error('❌ [createBusiness] Error creating role:', roleError);
+      throw new Error(`Không thể tạo vai trò quản trị: ${roleError.message}`);
+    }
+    
+    console.log('✅ [createBusiness] Role created:', role.id);
   
-  if (businessError) throw businessError;
+    // 3. Get all features to assign to ERP Admin role
+    console.log('📝 [createBusiness] Fetching features...');
+    const { data: features, error: featuresError } = await supabase
+      .from('features')
+      .select('id');
+    
+    if (featuresError) {
+      console.error('❌ [createBusiness] Error fetching features:', featuresError);
+      throw new Error(`Không thể lấy danh sách tính năng: ${featuresError.message}`);
+    }
+    
+    // 4. Assign all permissions to ERP Admin role
+    if (features && features.length > 0) {
+      console.log(`📝 [createBusiness] Assigning ${features.length} permissions...`);
+      const { error: permissionsError } = await supabase
+        .from('role_permissions')
+        .insert(features.map(f => ({
+          role_id: role.id,
+          feature_id: f.id
+        })));
+      
+      if (permissionsError) {
+        console.error('❌ [createBusiness] Error assigning permissions:', permissionsError);
+        throw new Error(`Không thể gán quyền: ${permissionsError.message}`);
+      }
+      
+      console.log('✅ [createBusiness] Permissions assigned');
+    }
   
-  // 2. Create default "ERP Admin" role for this business
-  const { data: role, error: roleError } = await supabase
-    .from('roles')
-    .insert({
-      business_id: business.id,
-      name: 'ERP Admin',
-      description: 'Quản trị viên với đầy đủ quyền hạn',
-      is_system: true
-    })
-    .select()
-    .single();
-  
-  if (roleError) throw roleError;
-  
-  // 3. Get all features to assign to ERP Admin role
-  const { data: features } = await supabase
-    .from('features')
-    .select('id');
-  
-  // 4. Assign all permissions to ERP Admin role
-  if (features && features.length > 0) {
-    await supabase
-      .from('role_permissions')
-      .insert(features.map(f => ({
+    // 5. Add owner as member with ERP Admin role
+    console.log('📝 [createBusiness] Adding owner as member...');
+    const { error: memberError } = await supabase
+      .from('business_members')
+      .insert({
+        business_id: business.id,
+        user_id: user.id,
         role_id: role.id,
-        feature_id: f.id
-      })));
+        status: 'ACTIVE'
+      });
+    
+    if (memberError) {
+      console.error('❌ [createBusiness] Error adding member:', memberError);
+      throw new Error(`Không thể thêm thành viên: ${memberError.message}`);
+    }
+    
+    console.log('✅ [createBusiness] Owner added as member');
+    
+    // 6. Assign business_owner platform role if not already assigned
+    console.log('📝 [createBusiness] Assigning business_owner role...');
+    const { error: userRoleError } = await supabase
+      .from('user_roles')
+      .upsert({
+        user_id: user.id,
+        role: 'business_owner'
+      }, {
+        onConflict: 'user_id,role',
+        ignoreDuplicates: true
+      });
+    
+    if (userRoleError) {
+      console.error('❌ [createBusiness] Error assigning user role:', userRoleError);
+      // Don't throw here, this is not critical
+    } else {
+      console.log('✅ [createBusiness] business_owner role assigned');
+    }
+    
+    console.log('✅ [createBusiness] Business creation completed successfully');
+    
+    return {
+      id: business.id,
+      name: business.name,
+      description: business.description || '',
+      owner_id: business.owner_id,
+      address: business.address,
+      phone_number: business.phone_number,
+      email_address: business.email_address,
+      website_url: business.website_url,
+      tax_number: business.tax_number,
+      logo_path: business.logo_path,
+      user_role: 'owner',
+      is_owner: true,
+      created_at: business.created_at,
+      updated_at: business.updated_at
+    };
+  } catch (error: any) {
+    console.error('❌ [createBusiness] Exception:', error);
+    throw error;
   }
-  
-  // 5. Add owner as member with ERP Admin role
-  await supabase
-    .from('business_members')
-    .insert({
-      business_id: business.id,
-      user_id: user.id,
-      role_id: role.id,
-      status: 'ACTIVE'
-    });
-  
-  // 6. Assign business_owner platform role if not already assigned
-  await supabase
-    .from('user_roles')
-    .upsert({
-      user_id: user.id,
-      role: 'business_owner'
-    }, {
-      onConflict: 'user_id,role',
-      ignoreDuplicates: true
-    });
-  
-  return {
-    id: business.id,
-    name: business.name,
-    description: business.description || '',
-    owner_id: business.owner_id,
-    address: business.address,
-    phone_number: business.phone_number,
-    email_address: business.email_address,
-    website_url: business.website_url,
-    tax_number: business.tax_number,
-    logo_path: business.logo_path,
-    user_role: 'owner',
-    is_owner: true,
-    created_at: business.created_at,
-    updated_at: business.updated_at
-  };
 };
 
 export const getBusiness = async (businessId: string): Promise<Business> => {
