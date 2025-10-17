@@ -1,8 +1,10 @@
 import { serve } from 'https://deno.land/std@0.190.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.74.0';
+import { Resend } from 'https://esm.sh/resend@2.0.0';
 
 const supabaseUrl = Deno.env.get('VITE_SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const resend = new Resend(Deno.env.get('RESEND_API_KEY')!);
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -59,48 +61,59 @@ serve(async (req: Request) => {
     console.log('Role:', roleName);
     console.log('Accept link:', acceptLink);
 
-    // For now, just log the email content
-    // In production, integrate with Resend or other email service
-    const emailContent = {
-      from: 'ERP System <noreply@erp.com>',
+    // Send email via Resend
+    const emailResponse = await resend.emails.send({
+      from: 'ERP System <onboarding@resend.dev>',
       to: invitation.email,
       subject: `Lời mời tham gia ${businessName}`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h1 style="color: #333;">Lời mời tham gia doanh nghiệp</h1>
-          <p>Xin chào,</p>
-          <p><strong>${inviterName}</strong> đã mời bạn tham gia doanh nghiệp <strong>${businessName}</strong> với vai trò <strong>${roleName}</strong>.</p>
-          
-          <div style="margin: 30px 0;">
-            <a href="${acceptLink}" 
-               style="background-color: #0070f3; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
-              Chấp nhận lời mời
-            </a>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;">
+          <div style="background-color: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h1 style="color: #1f2937; margin-bottom: 20px;">Lời mời tham gia doanh nghiệp</h1>
+            <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">Xin chào,</p>
+            <p style="color: #4b5563; font-size: 16px; line-height: 1.6;">
+              <strong style="color: #1f2937;">${inviterName}</strong> đã mời bạn tham gia doanh nghiệp 
+              <strong style="color: #1f2937;">${businessName}</strong> với vai trò 
+              <strong style="color: #1f2937;">${roleName}</strong>.
+            </p>
+            
+            <div style="margin: 30px 0; text-align: center;">
+              <a href="${acceptLink}" 
+                 style="background-color: #0070f3; color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 16px;">
+                Chấp nhận lời mời
+              </a>
+            </div>
+            
+            <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px; margin: 20px 0;">
+              <p style="color: #92400e; font-size: 14px; margin: 0;">
+                ⏰ Lời mời này sẽ hết hạn vào <strong>${new Date(invitation.expires_at).toLocaleDateString('vi-VN')}</strong>
+              </p>
+            </div>
+            
+            <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">
+              Hoặc copy link sau vào trình duyệt:
+            </p>
+            <p style="color: #3b82f6; font-size: 13px; word-break: break-all; background-color: #f3f4f6; padding: 10px; border-radius: 4px;">
+              ${acceptLink}
+            </p>
+            
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;" />
+            
+            <p style="color: #9ca3af; font-size: 13px; margin: 0;">
+              Nếu bạn không mong đợi email này, vui lòng bỏ qua. Không có thay đổi nào được thực hiện với tài khoản của bạn.
+            </p>
           </div>
-          
-          <p style="color: #666; font-size: 14px;">
-            Lời mời này sẽ hết hạn vào ${new Date(invitation.expires_at).toLocaleDateString('vi-VN')}.
-          </p>
-          
-          <p style="color: #666; font-size: 14px;">
-            Hoặc copy link sau vào trình duyệt: <br/>
-            <a href="${acceptLink}">${acceptLink}</a>
-          </p>
-          
-          <p style="color: #666; font-size: 14px;">
-            Nếu bạn không mong đợi email này, vui lòng bỏ qua.
-          </p>
         </div>
       `,
-    };
+    });
 
-    console.log('Email content prepared:', emailContent);
+    console.log('Email sent successfully:', emailResponse);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Invitation email logged (email service not configured)',
-        emailContent 
+        message: 'Invitation email sent successfully',
+        response: emailResponse
       }),
       {
         status: 200,
