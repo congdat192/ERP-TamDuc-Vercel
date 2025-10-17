@@ -24,35 +24,34 @@ export function EmailVerificationPage() {
     const performVerification = async () => {
       console.log('🔍 [EmailVerification] Starting verification with params:', { id, hash, email });
       
-      if (!hash) {
-        console.error('❌ [EmailVerification] Missing hash parameter');
-        setError('Link xác thực không hợp lệ - thiếu mã hash');
-        setIsVerifying(false);
-        return;
-      }
-
-      // Extract email from URL parameters
-      // Handle both URL formats:
-      // 1. /email/verify/:id/:hash (standard API format - use id as email)
-      // 2. /xac-nhan-tai-khoan/:email/:hash (email URL format)
-      let verificationEmail = email;
-      
-      if (!verificationEmail && id) {
-        // If we have id instead of email, decode it as email
-        console.log('🔄 [EmailVerification] Using id as email:', id);
-        verificationEmail = decodeURIComponent(id);
-      }
-
-      if (!verificationEmail) {
-        console.error('❌ [EmailVerification] Missing email parameter');
-        setError('Link xác thực không hợp lệ - thiếu thông tin email');
-        setIsVerifying(false);
-        return;
-      }
-
       try {
-        console.log('📧 [EmailVerification] Calling verifyEmail API with:', { verificationEmail, hash });
-        await verifyEmail(verificationEmail, hash);
+        // Try to parse hash fragments from Supabase (new format)
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        let tokenHash = hashParams.get('token_hash');
+        let type = hashParams.get('type') || 'email';
+        
+        // Fallback to query params
+        if (!tokenHash) {
+          const queryParams = new URLSearchParams(window.location.search);
+          tokenHash = queryParams.get('token_hash');
+          type = queryParams.get('type') || 'email';
+        }
+        
+        // Fallback to route params (legacy format)
+        if (!tokenHash && hash) {
+          console.log('🔄 [EmailVerification] Using legacy route params');
+          tokenHash = hash;
+        }
+
+        if (!tokenHash) {
+          console.error('❌ [EmailVerification] Missing token hash');
+          setError('Link xác thực không hợp lệ - thiếu mã xác thực');
+          setIsVerifying(false);
+          return;
+        }
+
+        console.log('📧 [EmailVerification] Calling verifyEmail with token');
+        await verifyEmail(tokenHash, type);
         console.log('✅ [EmailVerification] Verification successful');
         setIsVerified(true);
         toast({

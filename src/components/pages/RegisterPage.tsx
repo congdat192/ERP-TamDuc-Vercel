@@ -5,10 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Building2, Eye, EyeOff, User, Mail, Lock, Phone } from 'lucide-react';
+import { Building2, Eye, EyeOff, User, Mail, Lock, Phone, MailCheck } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { registerUser } from '@/services/registerService';
+import { resendVerificationEmail } from '@/services/authService';
+import { useEffect } from 'react';
 
 export function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -22,11 +24,39 @@ export function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [resendCountdown, setResendCountdown] = useState(0);
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (resendCountdown > 0) {
+      const timer = setTimeout(() => setResendCountdown(resendCountdown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendCountdown]);
+
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleResendVerification = async () => {
+    if (resendCountdown > 0 || !formData.email) return;
+
+    try {
+      await resendVerificationEmail(formData.email);
+      setResendCountdown(60);
+      toast({
+        title: "Email đã được gửi",
+        description: "Vui lòng kiểm tra hộp thư của bạn.",
+      });
+    } catch (error) {
+      toast({
+        title: "Lỗi",
+        description: error instanceof Error ? error.message : "Không thể gửi lại email",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -62,15 +92,15 @@ export function RegisterPage() {
         password_confirmation: formData.confirmPassword,
       });
 
+      // Show success message without auto-navigation
+      setShowSuccessMessage(true);
+      setResendCountdown(60);
+
       toast({
         title: "Đăng ký thành công! 🎉",
-        description: "Vui lòng kiểm tra email và nhấp vào liên kết xác thực để hoàn tất đăng ký. Sau đó quay lại đăng nhập.",
+        description: "Vui lòng kiểm tra email và nhấp vào liên kết xác thực.",
         duration: 8000,
       });
-
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
 
     } catch (error) {
       console.error('Registration error:', error);
@@ -134,13 +164,55 @@ export function RegisterPage() {
         {/* Right Side - Register Form */}
         <Card className="w-full max-w-md mx-auto">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold text-center">Đăng Ký</CardTitle>
+            <CardTitle className="text-2xl font-bold text-center">
+              {showSuccessMessage ? 'Kiểm tra email của bạn' : 'Đăng Ký'}
+            </CardTitle>
             <CardDescription className="text-center">
-              Tạo tài khoản mới để bắt đầu
+              {showSuccessMessage 
+                ? 'Chúng tôi đã gửi email xác thực đến địa chỉ của bạn'
+                : 'Tạo tài khoản mới để bắt đầu'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <form onSubmit={handleSubmit} className="space-y-4">
+            {showSuccessMessage ? (
+              <div className="space-y-4">
+                <div className="flex flex-col items-center space-y-4 py-6">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                    <MailCheck className="w-8 h-8 text-green-600" />
+                  </div>
+                  <div className="text-center space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      Email xác thực đã được gửi đến
+                    </p>
+                    <p className="font-medium">{formData.email}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Vui lòng kiểm tra hộp thư và nhấp vào liên kết xác thực để hoàn tất đăng ký.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleResendVerification}
+                    disabled={resendCountdown > 0}
+                  >
+                    {resendCountdown > 0 
+                      ? `Gửi lại sau ${resendCountdown}s` 
+                      : 'Gửi lại email xác thực'}
+                  </Button>
+                  
+                  <Button
+                    className="w-full"
+                    onClick={() => navigate('/login')}
+                  >
+                    Đi đến trang đăng nhập
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4">
               {/* Name Field */}
               <div className="space-y-2">
                 <Label htmlFor="name">Họ và Tên</Label>
@@ -287,19 +359,22 @@ export function RegisterPage() {
                 {isLoading ? 'Đang xử lý...' : 'Đăng Ký'}
               </Button>
             </form>
+            )}
 
-            {/* Login Link */}
-            <div className="text-center">
-              <p className="text-sm text-gray-600">
-                Đã có tài khoản?{' '}
-                <Link
-                  to="/login"
-                  className="text-blue-600 hover:text-blue-800 font-medium"
-                >
-                  Đăng nhập ngay
-                </Link>
-              </p>
-            </div>
+            {/* Login Link - Always visible */}
+            {!showSuccessMessage && (
+              <div className="text-center">
+                <p className="text-sm text-gray-600">
+                  Đã có tài khoản?{' '}
+                  <Link
+                    to="/login"
+                    className="text-blue-600 hover:text-blue-800 font-medium"
+                  >
+                    Đăng nhập ngay
+                  </Link>
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

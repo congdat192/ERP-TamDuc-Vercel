@@ -15,6 +15,7 @@ import NotFound from "./pages/NotFound";
 import { ForbiddenPage, ServerErrorPage, NetworkErrorPage } from "./pages/ErrorPages";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
+import { AuthCallbackPage } from "./pages/AuthCallbackPage";
 import { EmailVerificationPage } from "./pages/EmailVerificationPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
@@ -205,6 +206,7 @@ const App = () => (
                   <Route path="/" element={<Index />} />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/auth/callback" element={<AuthCallbackPage />} />
                   <Route path="/email/verify/:id/:hash" element={<EmailVerificationPage />} />
                   <Route path="/xac-nhan-tai-khoan/:email/:hash" element={<EmailVerificationPage />} />
                   <Route path="/forgot-password" element={<ForgotPasswordPage />} />

@@ -169,9 +169,22 @@ export const resendVerificationEmail = async (email: string): Promise<ResendVeri
   return { message: 'Email xác thực đã được gửi lại' };
 };
 
-export const verifyEmail = async (email: string, hash: string): Promise<void> => {
-  // Email verification is handled automatically by Supabase via email link
-  // This function is kept for compatibility
+export const verifyEmail = async (tokenHash: string, type: string = 'email'): Promise<void> => {
+  const { data, error } = await supabase.auth.verifyOtp({
+    token_hash: tokenHash,
+    type: type as any
+  });
+  
+  if (error) {
+    console.error('❌ [verifyEmail] Error:', error);
+    throw new Error(error.message || 'Email verification failed');
+  }
+  
+  if (!data.session) {
+    throw new Error('Verification failed - no session created');
+  }
+  
+  console.log('✅ [verifyEmail] Verification successful');
 };
 
 export const updatePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
