@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -25,7 +24,7 @@ export function CreateInvitationModal({ isOpen, onClose, onInvitationSent }: Cre
   const [roles, setRoles] = useState<CustomRole[]>([]);
   const [formData, setFormData] = useState<CreateInvitationRequest>({
     email: '',
-    role_id: undefined
+    role_id: 0
   });
 
   // Load roles khi modal mở
@@ -102,7 +101,7 @@ export function CreateInvitationModal({ isOpen, onClose, onInvitationSent }: Cre
   };
 
   const handleClose = () => {
-    setFormData({ email: '', role_id: undefined });
+    setFormData({ email: '', role_id: 0 });
     onClose();
   };
 
