@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Trash2, Mail, Clock, User } from 'lucide-react';
-import { Invitation } from '../../types/invitation';
+import { Invitation } from '../../services/invitationService';
 import { format } from 'date-fns';
 
 interface InvitationsTableProps {
@@ -52,6 +52,7 @@ export function InvitationsTable({ invitations, isLoading, onDelete }: Invitatio
       <TableHeader>
         <TableRow>
           <TableHead>Email</TableHead>
+          <TableHead>Vai trò</TableHead>
           <TableHead>Trạng thái</TableHead>
           <TableHead>Ngày gửi</TableHead>
           <TableHead>Người gửi</TableHead>
@@ -67,6 +68,13 @@ export function InvitationsTable({ invitations, isLoading, onDelete }: Invitatio
                 <span>{invitation.email}</span>
               </div>
             </TableCell>
+            <TableCell>
+              {invitation.roles ? (
+                <Badge variant="outline">{invitation.roles.name}</Badge>
+              ) : (
+                <span className="text-gray-400">N/A</span>
+              )}
+            </TableCell>
             <TableCell>{getStatusBadge(invitation.status)}</TableCell>
             <TableCell>
               <div className="flex items-center space-x-2">
@@ -77,11 +85,11 @@ export function InvitationsTable({ invitations, isLoading, onDelete }: Invitatio
               </div>
             </TableCell>
             <TableCell>
-              {invitation.invited_by ? (
+              {invitation.profiles ? (
                 <div className="flex items-center space-x-2">
                   <User className="w-4 h-4 text-gray-400" />
                   <div className="text-sm">
-                    <p className="font-medium">{invitation.invited_by.name}</p>
+                    <p className="font-medium">{invitation.profiles.full_name}</p>
                   </div>
                 </div>
               ) : (
@@ -89,14 +97,16 @@ export function InvitationsTable({ invitations, isLoading, onDelete }: Invitatio
               )}
             </TableCell>
             <TableCell className="text-right">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onDelete?.(invitation.id)}
-                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
+              {invitation.status === 'pending' && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onDelete?.(invitation.id)}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              )}
             </TableCell>
           </TableRow>
         ))}

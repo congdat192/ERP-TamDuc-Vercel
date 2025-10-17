@@ -79,7 +79,8 @@ export function CreateInvitationModal({ isOpen, onClose, onInvitationSent }: Cre
     setIsLoading(true);
     try {
       console.log('📧 [CreateInvitationModal] Sending invitation with role:', formData);
-      const invitation = await InvitationService.createInvitation(formData);
+      const businessId = localStorage.getItem('cbi') || '';
+      const invitation = await InvitationService.createInvitation(businessId, formData);
       
       toast({
         title: "Thành công",

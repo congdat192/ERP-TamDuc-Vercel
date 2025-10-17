@@ -214,7 +214,10 @@ const App = () => (
                   <Route path="/doi-mat-khau/" element={<ResetPasswordPage />} />
                   <Route path="/change-password" element={<ChangePasswordPage />} />
                   <Route path="/business-selection" element={<BusinessSelectionPage />} />
-                  <Route path="/create-business" element={<CreateBusinessPage />} />
+  <Route path="/create-business" element={<CreateBusinessPage />} />
+                  
+                  {/* Public Invitation Accept Page */}
+                  <Route path="/invitation/accept" element={<InvitationAcceptPage />} />
                   
                   {/* Protected Invitation Management */}
                   <Route 

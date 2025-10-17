@@ -6,8 +6,8 @@ import { Mail, Plus, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } fr
 import { InvitationsTable } from './InvitationsTable';
 import { InvitationFilters } from './InvitationFilters';
 import { CreateInvitationModal } from '../modals/CreateInvitationModal';
-import { InvitationService } from '../../services/invitationService';
-import { Invitation, InvitationFilters as IInvitationFilters } from '../../types/invitation';
+import { InvitationService, Invitation } from '../../services/invitationService';
+import { InvitationFilters as IInvitationFilters } from '../../types/invitation';
 import { useToast } from '@/hooks/use-toast';
 
 export function InvitationsTab() {
@@ -30,19 +30,34 @@ export function InvitationsTab() {
   const loadInvitations = async () => {
     try {
       setIsLoading(true);
-      const response = await InvitationService.getInvitations({
-        ...filters,
-        page: pagination.page,
-        perPage: pagination.perPage
-      });
+      const businessId = localStorage.getItem('cbi') || '';
+      if (!businessId) {
+        throw new Error('Không tìm thấy business context');
+      }
       
-      setInvitations(response.data);
+      const data = await InvitationService.getInvitations(businessId);
+      
+      // Apply client-side filtering
+      let filtered = data;
+      if (filters.status && filters.status.length > 0) {
+        filtered = filtered.filter(inv => filters.status?.includes(inv.status));
+      }
+      if (filters.search) {
+        const search = filters.search.toLowerCase();
+        filtered = filtered.filter(inv => 
+          inv.email.toLowerCase().includes(search) ||
+          inv.roles?.name.toLowerCase().includes(search)
+        );
+      }
+      
+      setInvitations(filtered);
       setPagination(prev => ({
         ...prev,
-        total: response.total,
-        totalPages: response.totalPages
+        total: filtered.length,
+        totalPages: Math.ceil(filtered.length / prev.perPage)
       }));
     } catch (error: any) {
+      console.error('Error loading invitations:', error);
       toast({
         title: "Lỗi",
         description: error.message || "Không thể tải danh sách lời mời",

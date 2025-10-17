@@ -1,109 +1,167 @@
-// Mock Invitation Service - No real API calls
+import { supabase } from '@/integrations/supabase/client';
 
 export interface CreateInvitationRequest {
   email: string;
-  role_id?: number;
-}
-
-export interface InvitationFilters {
-  page?: number;
-  perPage?: number;
-  orderBy?: string;
-  orderDirection?: 'asc' | 'desc';
-  search?: string;
-  status?: string[];
+  role_id: number;
 }
 
 export interface Invitation {
   id: string;
+  business_id: string;
   email: string;
-  name: string;
-  role?: string;
+  role_id: number;
   status: 'pending' | 'accepted' | 'rejected' | 'expired';
+  invited_by: string;
+  token: string;
+  expires_at: string;
   created_at: string;
-  updated_at?: string;
-  expires_at?: string;
-  invited_by?: {
-    id: string;
+  updated_at: string;
+  accepted_at?: string;
+  roles?: {
+    id: number;
     name: string;
-    email: string;
+    description: string;
+  };
+  profiles?: {
+    full_name: string;
   };
 }
 
-export interface InvitationResponse {
-  data: Invitation[];
-  total: number;
-  page: number;
-  perPage: number;
-  totalPages: number;
-}
-
-const mockInvitations: Invitation[] = [
-  {
-    id: '1',
-    email: 'user1@example.com',
-    name: '',
-    status: 'pending',
-    created_at: new Date().toISOString(),
-    invited_by: { id: '1', name: 'Admin', email: 'admin@example.com' }
-  }
-];
-
 export class InvitationService {
-  static async getInvitations(filters: InvitationFilters = {}): Promise<InvitationResponse> {
-    console.log('🔍 [mockInvitationService] Fetching invitations');
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    let filteredInvitations = [...mockInvitations];
-    
-    if (filters.status && filters.status.length > 0) {
-      filteredInvitations = filteredInvitations.filter(inv => 
-        filters.status!.includes(inv.status)
-      );
+  static async getInvitations(businessId: string): Promise<Invitation[]> {
+    const { data, error } = await supabase
+      .from('business_invitations')
+      .select(`
+        *,
+        roles!inner (
+          id,
+          name,
+          description
+        ),
+        profiles!business_invitations_invited_by_fkey (
+          full_name
+        )
+      `)
+      .eq('business_id', businessId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching invitations:', error);
+      throw error;
     }
     
-    if (filters.search) {
-      const search = filters.search.toLowerCase();
-      filteredInvitations = filteredInvitations.filter(inv => 
-        inv.email.toLowerCase().includes(search)
-      );
-    }
-    
-    const page = filters.page || 1;
-    const perPage = filters.perPage || 20;
-    
-    return {
-      data: filteredInvitations,
-      total: filteredInvitations.length,
-      page,
-      perPage,
-      totalPages: Math.ceil(filteredInvitations.length / perPage)
-    };
+    return (data || []) as unknown as Invitation[];
   }
 
-  static async createInvitation(data: CreateInvitationRequest): Promise<Invitation> {
-    console.log('🔧 [mockInvitationService] Creating invitation');
-    await new Promise(resolve => setTimeout(resolve, 500));
+  static async createInvitation(businessId: string, data: CreateInvitationRequest): Promise<Invitation> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    // Create invitation record with unique token
+    const token = crypto.randomUUID();
     
-    const newInvitation: Invitation = {
-      id: Date.now().toString(),
-      email: data.email,
-      name: '',
-      status: 'pending',
-      created_at: new Date().toISOString()
-    };
-    
-    mockInvitations.push(newInvitation);
-    return newInvitation;
+    const { data: invitation, error: invError } = await supabase
+      .from('business_invitations')
+      .insert({
+        business_id: businessId,
+        email: data.email,
+        role_id: data.role_id,
+        invited_by: user.id,
+        token: token
+      })
+      .select()
+      .single();
+
+    if (invError) {
+      console.error('Error creating invitation:', invError);
+      throw invError;
+    }
+
+    const typedInvitation = invitation as unknown as Invitation;
+
+    // Call edge function to send email
+    try {
+      const { error: emailError } = await supabase.functions.invoke('send-invitation-email', {
+        body: { invitationId: invitation.id }
+      });
+
+      if (emailError) {
+        console.error('Failed to send invitation email:', emailError);
+        // Don't throw - invitation is created, just email failed
+      }
+    } catch (emailErr) {
+      console.error('Email sending error:', emailErr);
+    }
+
+    return typedInvitation;
   }
 
   static async deleteInvitation(invitationId: string): Promise<void> {
-    console.log('🗑️ [mockInvitationService] Deleting invitation');
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const index = mockInvitations.findIndex(inv => inv.id === invitationId);
-    if (index > -1) {
-      mockInvitations.splice(index, 1);
+    const { error } = await supabase
+      .from('business_invitations')
+      .delete()
+      .eq('id', invitationId);
+
+    if (error) {
+      console.error('Error deleting invitation:', error);
+      throw error;
     }
+  }
+
+  static async resendInvitation(invitationId: string): Promise<void> {
+    const { error } = await supabase.functions.invoke('send-invitation-email', {
+      body: { invitationId }
+    });
+
+    if (error) {
+      console.error('Error resending invitation:', error);
+      throw error;
+    }
+  }
+
+  static async getInvitationByToken(token: string): Promise<Invitation | null> {
+    const { data, error } = await supabase
+      .from('business_invitations')
+      .select(`
+        *,
+        businesses!inner (
+          name
+        ),
+        roles!inner (
+          name,
+          description
+        )
+      `)
+      .eq('token', token)
+      .single();
+
+    if (error) {
+      console.error('Error fetching invitation by token:', error);
+      return null;
+    }
+
+    return data as unknown as Invitation;
+  }
+
+  static async processInvitation(token: string, action: 'accept' | 'reject'): Promise<{ success: boolean; business_id?: string; message: string }> {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      throw new Error('User not authenticated');
+    }
+
+    const { data, error } = await supabase.functions.invoke('process-invitation', {
+      body: { token, action },
+      headers: {
+        Authorization: `Bearer ${session.access_token}`
+      }
+    });
+
+    if (error) {
+      console.error('Error processing invitation:', error);
+      throw error;
+    }
+
+    return data;
   }
 }
