@@ -27,6 +27,7 @@ import { SalesPage } from "./pages/SalesPage";
 import { VoucherPage } from "./pages/VoucherPage";
 import { InventoryPage } from "./pages/InventoryPage";
 import { MarketingPage } from "./pages/MarketingPage";
+import { HRPage } from "./pages/HRPage";
 import { ProductDetailPage } from "./pages/ProductDetailPage";
 import { InvoiceDetailPage } from "./pages/InvoiceDetailPage";
 import { UserProfilePage } from "./pages/UserProfilePage";

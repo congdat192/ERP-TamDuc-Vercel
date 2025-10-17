@@ -9,7 +9,9 @@ import {
   Calculator, 
   UserCheck, 
   Ticket, 
-  AlertCircle 
+  AlertCircle,
+  Megaphone,
+  Settings
 } from 'lucide-react';
 import { User, ERPModule } from '@/types/auth';
 import { useAuth } from '@/components/auth/AuthContext';
@@ -47,6 +49,12 @@ export function ERPHome({ currentUser: propCurrentUser, onModuleChange: propOnMo
           break;
         case 'inventory':
           navigate('/ERP/Products');
+          break;
+        case 'marketing':
+          navigate('/ERP/Marketing');
+          break;
+        case 'hr':
+          navigate('/ERP/HR');
           break;
         case 'user-management':
           navigate('/ERP/UserManagement');
@@ -94,6 +102,30 @@ export function ERPHome({ currentUser: propCurrentUser, onModuleChange: propOnMo
       color: 'berry-secondary-light',
       action: () => handleModuleChange('inventory'),
       available: currentUser.permissions.modules.includes('inventory')
+    },
+    {
+      title: 'Marketing',
+      description: 'Chiến dịch và phân khúc khách hàng',
+      icon: Megaphone,
+      color: 'theme-bg-secondary',
+      action: () => handleModuleChange('marketing'),
+      available: currentUser.permissions.modules.includes('marketing')
+    },
+    {
+      title: 'Nhân Sự',
+      description: 'Quản lý hồ sơ và hiệu suất nhân viên',
+      icon: Users,
+      color: 'theme-bg-secondary',
+      action: () => handleModuleChange('hr'),
+      available: currentUser.permissions.modules.includes('hr')
+    },
+    {
+      title: 'Quản Trị Hệ Thống',
+      description: 'Cấu hình và quản lý người dùng',
+      icon: Settings,
+      color: 'theme-bg-secondary',
+      action: () => handleModuleChange('system-settings'),
+      available: currentUser.permissions.modules.includes('system-settings')
     }
   ];
 

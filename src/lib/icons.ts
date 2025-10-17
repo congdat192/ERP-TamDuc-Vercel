@@ -12,7 +12,8 @@ import {
   Building2,
   Home,
   Target,
-  UserPlus
+  UserPlus,
+  Megaphone
 } from 'lucide-react';
 
 const iconMap = {
@@ -28,7 +29,8 @@ const iconMap = {
   Building2,
   Home,
   Target,
-  UserPlus
+  UserPlus,
+  Megaphone
 };
 
 export function getIconComponent(iconName: string) {
