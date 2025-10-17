@@ -305,6 +305,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_business_safe: {
+        Args: {
+          _address?: string
+          _description?: string
+          _email_address?: string
+          _logo_path?: string
+          _name: string
+          _phone_number?: string
+          _tax_number?: string
+          _website_url?: string
+        }
+        Returns: string
+      }
       get_user_businesses: {
         Args: { _user_id: string }
         Returns: {

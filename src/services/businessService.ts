@@ -41,29 +41,42 @@ export const createBusiness = async (data: CreateBusinessRequest): Promise<Busin
     
     console.log('📝 [createBusiness] Creating business for user:', user.id);
     
-    // 1. Create business
-    const { data: business, error: businessError } = await supabase
-      .from('businesses')
-      .insert({
-        name: data.name,
-        description: data.description,
-        owner_id: user.id,
-        address: data.address,
-        phone_number: data.phone_number,
-        email_address: data.email_address,
-        website_url: data.website_url,
-        tax_number: data.tax_number,
-        logo_path: data.logo_path
-      })
-      .select()
-      .single();
+    // 1. Create business using security definer function
+    const { data: businessId, error: businessError } = await supabase
+      .rpc('create_business_safe', {
+        _name: data.name,
+        _description: data.description || null,
+        _logo_path: data.logo_path || null,
+        _address: data.address || null,
+        _phone_number: data.phone_number || null,
+        _email_address: data.email_address || null,
+        _website_url: data.website_url || null,
+        _tax_number: data.tax_number || null
+      });
     
     if (businessError) {
       console.error('❌ [createBusiness] Error creating business:', businessError);
       throw new Error(`Không thể tạo doanh nghiệp: ${businessError.message}`);
     }
     
-    console.log('✅ [createBusiness] Business created:', business.id);
+    if (!businessId) {
+      console.error('❌ [createBusiness] No business ID returned');
+      throw new Error('Không thể tạo doanh nghiệp: Không nhận được ID');
+    }
+    
+    console.log('✅ [createBusiness] Business created:', businessId);
+    
+    // Fetch the created business to return complete data
+    const { data: business, error: fetchError } = await supabase
+      .from('businesses')
+      .select()
+      .eq('id', businessId)
+      .single();
+    
+    if (fetchError || !business) {
+      console.error('❌ [createBusiness] Error fetching created business:', fetchError);
+      throw new Error('Không thể lấy thông tin doanh nghiệp vừa tạo');
+    }
   
     // 2. Create default "ERP Admin" role for this business
     console.log('📝 [createBusiness] Creating ERP Admin role...');
