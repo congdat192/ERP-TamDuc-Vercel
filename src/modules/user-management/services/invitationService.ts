@@ -57,6 +57,26 @@ export class InvitationService {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
+    // Check for existing pending invitations for this email
+    const { data: existingInvitations } = await supabase
+      .from('business_invitations')
+      .select('id, status')
+      .eq('business_id', businessId)
+      .eq('email', data.email)
+      .eq('status', 'pending');
+
+    // Cancel existing pending invitations
+    if (existingInvitations && existingInvitations.length > 0) {
+      await supabase
+        .from('business_invitations')
+        .update({ status: 'expired' })
+        .eq('business_id', businessId)
+        .eq('email', data.email)
+        .eq('status', 'pending');
+      
+      console.log('Cancelled existing pending invitations for:', data.email);
+    }
+
     // Create invitation record with unique token
     const token = crypto.randomUUID();
     
