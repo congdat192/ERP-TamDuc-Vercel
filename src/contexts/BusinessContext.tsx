@@ -196,6 +196,10 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
       console.log('🏢 [BusinessProvider] Selecting business:', business.name);
       setSelectedBusiness(business);
       setSelectedBusinessId(business.id.toString());
+      
+      // Dispatch custom event to trigger permission refresh
+      window.dispatchEvent(new Event('businessChanged'));
+      
       console.log('✅ [BusinessProvider] Business selected successfully');
     } catch (error: any) {
       console.error('❌ [BusinessProvider] Failed to select business:', error);

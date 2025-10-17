@@ -110,16 +110,36 @@ const fetchUserWithPermissions = async (supabaseUser: SupabaseUser, businessId?:
       canViewAllVouchers: true
     };
   } else if (businessId) {
-    // Regular user - fetch permissions from database
-    const { data: perms, error: permsError } = await supabase.rpc('get_user_permissions', {
-      _user_id: supabaseUser.id,
-      _business_id: businessId
-    });
+    // Check if user is owner of the business
+    const { data: businessData } = await supabase
+      .from('businesses')
+      .select('owner_id')
+      .eq('id', businessId)
+      .single();
     
-    if (permsError) {
-      console.error('❌ [AuthContext] Error fetching permissions:', permsError);
+    const isOwner = businessData?.owner_id === supabaseUser.id;
+    
+    if (isOwner) {
+      // Owner gets full permissions automatically
+      console.log('✅ [AuthContext] User is owner - granting full permissions');
+      permissions = {
+        modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'marketing', 'affiliate', 'system-settings', 'user-management'],
+        voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
+        canManageUsers: true,
+        canViewAllVouchers: true
+      };
     } else {
-      permissions = transformPermissions(perms || []);
+      // Regular user - fetch permissions from database
+      const { data: perms, error: permsError } = await supabase.rpc('get_user_permissions', {
+        _user_id: supabaseUser.id,
+        _business_id: businessId
+      });
+      
+      if (permsError) {
+        console.error('❌ [AuthContext] Error fetching permissions:', permsError);
+      } else {
+        permissions = transformPermissions(perms || []);
+      }
     }
   }
   
@@ -208,6 +228,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Cleanup subscription on unmount
     return () => {
       subscription.unsubscribe();
+    };
+  }, []);
+
+  // Listen for business context changes
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'cbi' && e.newValue !== e.oldValue) {
+        console.log('🔄 [AuthContext] Business context changed, refreshing permissions');
+        refreshUserProfile();
+      }
+    };
+    
+    // Listen for localStorage changes from other tabs/windows
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Listen for custom event from same tab
+    const handleBusinessChange = () => {
+      console.log('🔄 [AuthContext] Business selected, refreshing permissions');
+      refreshUserProfile();
+    };
+    
+    window.addEventListener('businessChanged', handleBusinessChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('businessChanged', handleBusinessChange);
     };
   }, []);
 
