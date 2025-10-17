@@ -316,7 +316,22 @@ export type Database = {
           _tax_number?: string
           _website_url?: string
         }
-        Returns: string
+        Returns: {
+          address: string
+          created_at: string
+          description: string
+          email_address: string
+          id: string
+          is_owner: boolean
+          logo_path: string
+          name: string
+          owner_id: string
+          phone_number: string
+          tax_number: string
+          updated_at: string
+          user_role: string
+          website_url: string
+        }[]
       }
       get_user_businesses: {
         Args: { _user_id: string }
