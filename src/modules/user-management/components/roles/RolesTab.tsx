@@ -45,7 +45,8 @@ export function RolesTab() {
       setIsLoading(true);
       console.log('🔍 [RolesTab] Loading roles...');
       
-      const rolesData = await RoleService.getRoles();
+      const businessId = localStorage.getItem('cbi') || '';
+      const rolesData = await RoleService.getRoles(businessId);
       console.log('📋 [RolesTab] Roles loaded:', rolesData);
       
       setRoles(rolesData);
@@ -128,7 +129,7 @@ export function RolesTab() {
     if (confirm(`Bạn có chắc chắn muốn xóa vai trò "${role.name}"?`)) {
       try {
         console.log('🗑️ [RolesTab] Deleting role:', role.id);
-        await RoleService.deleteRole(role.id.toString());
+        await RoleService.deleteRole(role.id);
         toast({
           title: "Thành công",
           description: "Đã xóa vai trò",

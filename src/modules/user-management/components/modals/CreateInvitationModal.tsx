@@ -39,7 +39,8 @@ export function CreateInvitationModal({ isOpen, onClose, onInvitationSent }: Cre
     setIsLoadingRoles(true);
     try {
       console.log('📋 [CreateInvitationModal] Loading roles...');
-      const rolesData = await RoleService.getRoles();
+      const businessId = localStorage.getItem('cbi') || '';
+      const rolesData = await RoleService.getRoles(businessId);
       setRoles(rolesData);
       console.log('✅ [CreateInvitationModal] Roles loaded:', rolesData);
     } catch (error: any) {

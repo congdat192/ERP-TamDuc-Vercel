@@ -14,16 +14,335 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      business_members: {
+        Row: {
+          business_id: string
+          id: string
+          invited_by: string | null
+          joined_at: string | null
+          role_id: number | null
+          status: Database["public"]["Enums"]["member_status"] | null
+          user_id: string
+        }
+        Insert: {
+          business_id: string
+          id?: string
+          invited_by?: string | null
+          joined_at?: string | null
+          role_id?: number | null
+          status?: Database["public"]["Enums"]["member_status"] | null
+          user_id: string
+        }
+        Update: {
+          business_id?: string
+          id?: string
+          invited_by?: string | null
+          joined_at?: string | null
+          role_id?: number | null
+          status?: Database["public"]["Enums"]["member_status"] | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_members_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_members_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      businesses: {
+        Row: {
+          address: string | null
+          created_at: string | null
+          description: string | null
+          email_address: string | null
+          id: string
+          is_active: boolean | null
+          logo_path: string | null
+          name: string
+          owner_id: string
+          phone_number: string | null
+          tax_number: string | null
+          updated_at: string | null
+          website_url: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string | null
+          description?: string | null
+          email_address?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_path?: string | null
+          name: string
+          owner_id: string
+          phone_number?: string | null
+          tax_number?: string | null
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string | null
+          description?: string | null
+          email_address?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_path?: string | null
+          name?: string
+          owner_id?: string
+          phone_number?: string | null
+          tax_number?: string | null
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Relationships: []
+      }
+      features: {
+        Row: {
+          code: string
+          created_at: string | null
+          description: string | null
+          feature_type: string | null
+          id: number
+          module_id: number
+          name: string
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          description?: string | null
+          feature_type?: string | null
+          id?: number
+          module_id: number
+          name: string
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          description?: string | null
+          feature_type?: string | null
+          id?: number
+          module_id?: number
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "features_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      modules: {
+        Row: {
+          code: string
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          icon: string | null
+          id: number
+          is_active: boolean | null
+          name: string
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          icon?: string | null
+          id?: number
+          is_active?: boolean | null
+          name: string
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          icon?: string | null
+          id?: number
+          is_active?: boolean | null
+          name?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_path: string | null
+          created_at: string | null
+          full_name: string
+          id: string
+          phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_path?: string | null
+          created_at?: string | null
+          full_name: string
+          id: string
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_path?: string | null
+          created_at?: string | null
+          full_name?: string
+          id?: string
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      role_permissions: {
+        Row: {
+          created_at: string | null
+          feature_id: number
+          id: number
+          role_id: number
+        }
+        Insert: {
+          created_at?: string | null
+          feature_id: number
+          id?: number
+          role_id: number
+        }
+        Update: {
+          created_at?: string | null
+          feature_id?: number
+          id?: number
+          role_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_feature_id_fkey"
+            columns: ["feature_id"]
+            isOneToOne: false
+            referencedRelation: "features"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "role_permissions_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roles: {
+        Row: {
+          business_id: string
+          created_at: string | null
+          description: string | null
+          id: number
+          is_system: boolean | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          business_id: string
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          is_system?: boolean | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          business_id?: string
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          is_system?: boolean | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roles_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_businesses: {
+        Args: { _user_id: string }
+        Returns: {
+          description: string
+          id: string
+          is_owner: boolean
+          logo_path: string
+          member_status: Database["public"]["Enums"]["member_status"]
+          name: string
+          owner_id: string
+          role_name: string
+          user_role: string
+        }[]
+      }
+      get_user_permissions: {
+        Args: { _business_id: string; _user_id: string }
+        Returns: {
+          feature_code: string
+          feature_name: string
+          feature_type: string
+          module_code: string
+        }[]
+      }
+      has_permission: {
+        Args: { _business_id: string; _feature_code: string; _user_id: string }
+        Returns: boolean
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "user" | "business_owner" | "super_admin"
+      member_status: "ACTIVE" | "INACTIVE" | "PENDING" | "SUSPENDED"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +469,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["user", "business_owner", "super_admin"],
+      member_status: ["ACTIVE", "INACTIVE", "PENDING", "SUSPENDED"],
+    },
   },
 } as const

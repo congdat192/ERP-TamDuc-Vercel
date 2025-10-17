@@ -186,7 +186,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     await initializeBusinessContext();
   }, [isAuthenticated, initializeBusinessContext]);
 
-  const selectBusiness = useCallback(async (businessId: number): Promise<void> => {
+  const selectBusiness = useCallback(async (businessId: string): Promise<void> => {
     const business = businesses.find(b => b.id === businessId);
     if (!business) {
       throw new Error(`Business with ID ${businessId} not found`);

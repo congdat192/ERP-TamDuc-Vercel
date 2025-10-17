@@ -1,5 +1,5 @@
-// Mock Authentication Service - No real API calls
-import { User } from '@/types/auth';
+// Real Authentication Service with Supabase
+import { supabase } from '@/integrations/supabase/client';
 
 export interface LoginRequest {
   email: string;
@@ -50,121 +50,146 @@ export interface ResetPasswordResponse {
   message: string;
 }
 
-const STORAGE_KEYS = {
-  TOKEN: 'auth_token',
-  USER: 'erp_current_user',
-};
-
-const storeToken = (token: string): void => {
-  try {
-    localStorage.setItem(STORAGE_KEYS.TOKEN, token);
-  } catch {}
-};
-
-const removeToken = (): void => {
-  try {
-    localStorage.removeItem(STORAGE_KEYS.TOKEN);
-  } catch {}
-};
-
-const getStoredToken = (): string | null => {
-  try {
-    return localStorage.getItem(STORAGE_KEYS.TOKEN);
-  } catch {
-    return null;
-  }
-};
-
-// Mock login - always succeeds
+// Real login with Supabase
 export const loginUser = async (credentials: LoginRequest): Promise<LoginResponse> => {
-  console.log('🔐 [mockAuthService] Mock login for:', credentials.email);
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: credentials.email,
+    password: credentials.password
+  });
   
-  await new Promise(resolve => setTimeout(resolve, 500));
+  if (error) throw error;
   
-  const mockToken = 'mock-token-' + Date.now();
-  storeToken(mockToken);
+  // Fetch user profile
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', data.user.id)
+    .single();
+  
+  if (profileError) throw profileError;
   
   return {
-    access_token: mockToken,
+    access_token: data.session.access_token,
     token_type: 'Bearer',
-    expires_in: 3600,
+    expires_in: data.session.expires_in || 3600,
     user: {
-      id: '1',
-      name: 'Mock User',
-      email: credentials.email,
-      email_verified_at: new Date().toISOString(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      id: data.user.id,
+      name: profile.full_name,
+      email: data.user.email!,
+      email_verified_at: data.user.email_confirmed_at,
+      created_at: data.user.created_at,
+      updated_at: profile.updated_at
     }
   };
 };
 
-export const forgotPassword = async (email: string): Promise<ForgotPasswordResponse> => {
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return { message: 'Email đặt lại mật khẩu đã được gửi' };
-};
-
-export const resendVerificationEmail = async (email: string): Promise<ResendVerificationResponse> => {
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return { message: 'Email xác thực đã được gửi lại' };
-};
-
-export const verifyEmail = async (email: string, hash: string): Promise<void> => {
-  await new Promise(resolve => setTimeout(resolve, 500));
-};
-
-export const updatePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
-  await new Promise(resolve => setTimeout(resolve, 500));
-};
-
 export const logoutUser = async (): Promise<void> => {
-  removeToken();
+  const { error } = await supabase.auth.signOut();
+  if (error) throw error;
 };
 
 export const getUserProfile = async (): Promise<UserProfile> => {
-  await new Promise(resolve => setTimeout(resolve, 500));
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+  
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single();
+  
+  if (error) throw error;
+  
   return {
-    id: '1',
-    name: 'Mock User',
-    email: 'mock@example.com',
-    phone: '+84901234567',
-    avatar_path: null,
-    email_verified_at: new Date().toISOString(),
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    id: user.id,
+    name: profile.full_name,
+    email: user.email!,
+    phone: profile.phone || '',
+    avatar_path: profile.avatar_path,
+    email_verified_at: user.email_confirmed_at,
+    created_at: user.created_at,
+    updated_at: profile.updated_at
   };
 };
 
 export const updateUserProfile = async (data: UpdateProfileRequest): Promise<UserProfile> => {
-  await new Promise(resolve => setTimeout(resolve, 500));
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+  
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .update({
+      full_name: data.name,
+      phone: data.phone,
+      avatar_path: data.avatar_path
+    })
+    .eq('id', user.id)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  
   return {
-    id: '1',
-    name: data.name,
-    email: data.email,
-    phone: data.phone,
-    avatar_path: data.avatar_path || null,
-    email_verified_at: new Date().toISOString(),
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    id: user.id,
+    name: profile.full_name,
+    email: user.email!,
+    phone: profile.phone || '',
+    avatar_path: profile.avatar_path,
+    email_verified_at: user.email_confirmed_at,
+    created_at: user.created_at,
+    updated_at: profile.updated_at
   };
 };
 
-export const isAuthenticated = (): boolean => {
-  return !!getStoredToken();
+export const forgotPassword = async (email: string): Promise<ForgotPasswordResponse> => {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/reset-password`
+  });
+  
+  if (error) throw error;
+  return { message: 'Email đặt lại mật khẩu đã được gửi' };
 };
 
-export const resetPassword = async (
-  email: string, 
-  password: string, 
-  password_confirmation: string, 
-  token: string
-): Promise<ResetPasswordResponse> => {
-  await new Promise(resolve => setTimeout(resolve, 500));
+export const resetPassword = async (password: string): Promise<ResetPasswordResponse> => {
+  const { error } = await supabase.auth.updateUser({
+    password: password
+  });
+  
+  if (error) throw error;
   return { message: 'Mật khẩu đã được đặt lại thành công' };
 };
 
-export const getAuthToken = (): string | null => {
-  return getStoredToken();
+export const resendVerificationEmail = async (email: string): Promise<ResendVerificationResponse> => {
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email: email
+  });
+  
+  if (error) throw error;
+  return { message: 'Email xác thực đã được gửi lại' };
+};
+
+export const verifyEmail = async (email: string, hash: string): Promise<void> => {
+  // Email verification is handled automatically by Supabase via email link
+  // This function is kept for compatibility
+};
+
+export const updatePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
+  const { error } = await supabase.auth.updateUser({
+    password: newPassword
+  });
+  
+  if (error) throw error;
+};
+
+export const isAuthenticated = async (): Promise<boolean> => {
+  const { data: { session } } = await supabase.auth.getSession();
+  return !!session;
+};
+
+export const getAuthToken = async (): Promise<string | null> => {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.access_token || null;
 };
 
 export function clearSelectedBusinessId(): void {

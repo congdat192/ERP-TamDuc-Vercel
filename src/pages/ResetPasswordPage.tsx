@@ -56,7 +56,7 @@ export const ResetPasswordPage = () => {
     setError(null);
 
     try {
-      await resetPassword(email, data.password, data.password_confirmation, token);
+      await resetPassword(data.password);
       setSuccess(true);
       
       // Redirect to login after 3 seconds

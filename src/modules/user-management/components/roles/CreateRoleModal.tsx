@@ -132,7 +132,8 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
       console.log('🔧 [CreateRoleModal] Submitting role data:', roleData);
       console.log('🔧 [CreateRoleModal] Selected permissions:', permissions);
       
-      const newRole = await RoleService.createRole(roleData);
+      const businessId = localStorage.getItem('cbi') || '';
+      const newRole = await RoleService.createRole(businessId, roleData);
       console.log('✅ [CreateRoleModal] Role created successfully:', newRole);
       
       // Call callback TRƯỚC khi đóng modal

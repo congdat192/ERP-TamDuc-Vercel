@@ -14,7 +14,7 @@ import { getBusinessLogoUrl } from '@/services/businessService';
 export function BusinessSelectionPage() {
   const { businesses, hasOwnBusiness, selectBusiness, isLoading, error, refreshBusinesses } = useBusiness();
   const { currentUser, isAuthenticated, logout } = useAuth();
-  const [selectedBusinessId, setSelectedBusinessId] = useState<number | null>(null);
+  const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null);
   const [isSelecting, setIsSelecting] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pendingInvitationsCount, setPendingInvitationsCount] = useState(0);

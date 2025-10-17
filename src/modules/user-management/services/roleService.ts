@@ -1,85 +1,200 @@
-// Mock Role Service - No real API calls
+// Real Role Service with Supabase
+import { supabase } from '@/integrations/supabase/client';
 import { CustomRole, RoleCreationData } from '../types/role-management';
 
-const mockRoles: CustomRole[] = [
-  {
-    id: 1,
-    name: 'Admin',
-    description: 'Quản trị viên hệ thống',
-    permissions: ['view_customers', 'create_customers', 'view_members'],
-    userCount: 5,
-    isSystem: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  },
-  {
-    id: 2,
-    name: 'Manager',
-    description: 'Quản lý',
-    permissions: ['view_customers', 'view_members'],
-    userCount: 10,
-    isSystem: false,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  }
-];
-
 export class RoleService {
-  static async getRoles(): Promise<CustomRole[]> {
-    console.log('🔍 [mockRoleService] Fetching roles');
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return [...mockRoles];
-  }
-
-  static async getRoleById(roleId: string): Promise<CustomRole> {
-    console.log('🔍 [mockRoleService] Fetching role by ID:', roleId);
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const role = mockRoles.find(r => r.id.toString() === roleId);
-    if (!role) throw new Error('Role not found');
-    return role;
-  }
-
-  static async createRole(roleData: RoleCreationData): Promise<CustomRole> {
-    console.log('🔧 [mockRoleService] Creating role');
-    await new Promise(resolve => setTimeout(resolve, 500));
+  static async getRoles(businessId: string): Promise<CustomRole[]> {
+    const { data, error } = await supabase
+      .from('roles')
+      .select(`
+        id,
+        name,
+        description,
+        is_system,
+        created_at,
+        updated_at,
+        role_permissions (
+          features (
+            code
+          )
+        )
+      `)
+      .eq('business_id', businessId)
+      .order('created_at', { ascending: false });
     
-    const newRole: CustomRole = {
-      id: mockRoles.length + 1,
-      name: roleData.name,
-      description: roleData.description || '',
+    if (error) throw error;
+    
+    // Get user counts for each role
+    const { data: memberCounts } = await supabase
+      .from('business_members')
+      .select('role_id')
+      .eq('business_id', businessId)
+      .eq('status', 'ACTIVE');
+    
+    const countMap = (memberCounts || []).reduce((acc: Record<number, number>, m: any) => {
+      acc[m.role_id] = (acc[m.role_id] || 0) + 1;
+      return acc;
+    }, {});
+    
+    return (data || []).map(role => ({
+      id: role.id,
+      name: role.name,
+      description: role.description || '',
+      permissions: (role.role_permissions as any[] || []).map((rp: any) => rp.features.code),
+      userCount: countMap[role.id] || 0,
+      isSystem: role.is_system,
+      created_at: role.created_at,
+      updated_at: role.updated_at
+    }));
+  }
+
+  static async getRoleById(businessId: string, roleId: number): Promise<CustomRole> {
+    const { data, error } = await supabase
+      .from('roles')
+      .select(`
+        id,
+        name,
+        description,
+        is_system,
+        created_at,
+        updated_at,
+        role_permissions (
+          features (
+            code
+          )
+        )
+      `)
+      .eq('id', roleId)
+      .eq('business_id', businessId)
+      .single();
+    
+    if (error) throw error;
+    
+    return {
+      id: data.id,
+      name: data.name,
+      description: data.description || '',
+      permissions: (data.role_permissions as any[] || []).map((rp: any) => rp.features.code),
+      userCount: 0,
+      isSystem: data.is_system,
+      created_at: data.created_at,
+      updated_at: data.updated_at
+    };
+  }
+
+  static async createRole(businessId: string, roleData: RoleCreationData): Promise<CustomRole> {
+    // 1. Create role
+    const { data: role, error: roleError } = await supabase
+      .from('roles')
+      .insert({
+        business_id: businessId,
+        name: roleData.name,
+        description: roleData.description
+      })
+      .select()
+      .single();
+    
+    if (roleError) throw roleError;
+    
+    // 2. Get feature IDs from codes
+    const { data: features, error: featuresError } = await supabase
+      .from('features')
+      .select('id, code')
+      .in('code', roleData.permissions);
+    
+    if (featuresError) throw featuresError;
+    
+    // 3. Create role_permissions
+    if (features && features.length > 0) {
+      const { error: permError } = await supabase
+        .from('role_permissions')
+        .insert(features.map(f => ({
+          role_id: role.id,
+          feature_id: f.id
+        })));
+      
+      if (permError) throw permError;
+    }
+    
+    return {
+      id: role.id,
+      name: role.name,
+      description: role.description || '',
       permissions: roleData.permissions,
       userCount: 0,
       isSystem: false,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      created_at: role.created_at,
+      updated_at: role.updated_at
     };
-    
-    mockRoles.push(newRole);
-    return newRole;
   }
 
-  static async updateRole(roleId: string, roleData: Partial<RoleCreationData>): Promise<CustomRole> {
-    console.log('🔧 [mockRoleService] Updating role:', roleId);
-    await new Promise(resolve => setTimeout(resolve, 500));
+  static async updateRole(roleId: number, roleData: Partial<RoleCreationData>): Promise<CustomRole> {
+    // Update basic info
+    const { data: role, error: roleError } = await supabase
+      .from('roles')
+      .update({
+        name: roleData.name,
+        description: roleData.description
+      })
+      .eq('id', roleId)
+      .select()
+      .single();
     
-    const role = mockRoles.find(r => r.id.toString() === roleId);
-    if (!role) throw new Error('Role not found');
+    if (roleError) throw roleError;
     
-    if (roleData.name) role.name = roleData.name;
-    if (roleData.description !== undefined) role.description = roleData.description;
-    if (roleData.permissions) role.permissions = roleData.permissions;
-    role.updated_at = new Date().toISOString();
-    
-    return role;
-  }
-
-  static async deleteRole(roleId: string): Promise<void> {
-    console.log('🗑️ [mockRoleService] Deleting role:', roleId);
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const index = mockRoles.findIndex(r => r.id.toString() === roleId);
-    if (index > -1) {
-      mockRoles.splice(index, 1);
+    // Update permissions if provided
+    if (roleData.permissions) {
+      // Delete existing permissions
+      await supabase
+        .from('role_permissions')
+        .delete()
+        .eq('role_id', roleId);
+      
+      // Insert new permissions
+      const { data: features } = await supabase
+        .from('features')
+        .select('id, code')
+        .in('code', roleData.permissions);
+      
+      if (features && features.length > 0) {
+        await supabase
+          .from('role_permissions')
+          .insert(features.map(f => ({
+            role_id: roleId,
+            feature_id: f.id
+          })));
+      }
     }
+    
+    return {
+      id: role.id,
+      name: role.name,
+      description: role.description || '',
+      permissions: roleData.permissions || [],
+      userCount: 0,
+      isSystem: role.is_system,
+      created_at: role.created_at,
+      updated_at: role.updated_at
+    };
+  }
+
+  static async deleteRole(roleId: number): Promise<void> {
+    // Check if role has members
+    const { data: members } = await supabase
+      .from('business_members')
+      .select('id')
+      .eq('role_id', roleId)
+      .limit(1);
+    
+    if (members && members.length > 0) {
+      throw new Error('Không thể xóa vai trò đang được sử dụng');
+    }
+    
+    const { error } = await supabase
+      .from('roles')
+      .delete()
+      .eq('id', roleId);
+    
+    if (error) throw error;
   }
 }

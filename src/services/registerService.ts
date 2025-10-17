@@ -1,4 +1,5 @@
-// Mock Register Service - No real API calls
+// Real Register Service with Supabase
+import { supabase } from '@/integrations/supabase/client';
 
 export interface RegisterRequest {
   name: string;
@@ -19,16 +20,27 @@ export interface RegisterResponse {
 }
 
 export const registerUser = async (data: RegisterRequest): Promise<RegisterResponse> => {
-  console.log('📝 [mockRegisterService] Mock registration');
-  await new Promise(resolve => setTimeout(resolve, 500));
+  const { data: authData, error } = await supabase.auth.signUp({
+    email: data.email,
+    password: data.password,
+    options: {
+      emailRedirectTo: `${window.location.origin}/`,
+      data: {
+        full_name: data.name,
+        phone: data.phone
+      }
+    }
+  });
+  
+  if (error) throw error;
   
   return {
     message: 'Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.',
     user: {
-      id: '1',
+      id: authData.user?.id || '',
       name: data.name,
       email: data.email,
-      phone: data.phone,
+      phone: data.phone
     }
   };
 };

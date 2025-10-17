@@ -1,79 +1,217 @@
-// Mock Business Service - No real API calls
-import { Business, BusinessListResponse, CreateBusinessRequest, UpdateBusinessRequest } from '@/types/business';
-
-const mockBusinesses: Business[] = [
-  {
-    id: 1,
-    name: 'Công ty Demo',
-    description: 'Công ty mẫu',
-    owner_id: 1,
-    address: '123 Đường Demo, Quận 1, TP.HCM',
-    phone_number: '+84901234567',
-    email_address: 'demo@company.com',
-    tax_number: '0123456789',
-    logo_path: null,
-    user_role: 'owner',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    is_owner: true,
-  }
-];
+// Real Business Service with Supabase
+import { supabase } from '@/integrations/supabase/client';
+import { Business, CreateBusinessRequest, UpdateBusinessRequest } from '@/types/business';
 
 export const getBusinesses = async (): Promise<Business[]> => {
-  console.log('🏢 [mockBusinessService] Getting businesses list');
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return mockBusinesses;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+  
+  // Use the security definer function to get user's businesses
+  const { data, error } = await supabase.rpc('get_user_businesses', {
+    _user_id: user.id
+  });
+  
+  if (error) throw error;
+  
+  return (data || []).map((b: any) => ({
+    id: b.id,
+    name: b.name,
+    description: b.description || '',
+    owner_id: b.owner_id,
+    address: null,
+    phone_number: null,
+    email_address: null,
+    website_url: null,
+    tax_number: null,
+    logo_path: b.logo_path,
+    user_role: b.user_role,
+    is_owner: b.is_owner,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  }));
 };
 
 export const createBusiness = async (data: CreateBusinessRequest): Promise<Business> => {
-  console.log('🏗️ [mockBusinessService] Creating new business');
-  await new Promise(resolve => setTimeout(resolve, 500));
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
   
-  const newBusiness: Business = {
-    id: mockBusinesses.length + 1,
+  // 1. Create business
+  const { data: business, error: businessError } = await supabase
+    .from('businesses')
+    .insert({
+      name: data.name,
+      description: data.description,
+      owner_id: user.id,
+      address: data.address,
+      phone_number: data.phone_number,
+      email_address: data.email_address,
+      website_url: data.website_url,
+      tax_number: data.tax_number,
+      logo_path: data.logo_path
+    })
+    .select()
+    .single();
+  
+  if (businessError) throw businessError;
+  
+  // 2. Create default "ERP Admin" role for this business
+  const { data: role, error: roleError } = await supabase
+    .from('roles')
+    .insert({
+      business_id: business.id,
+      name: 'ERP Admin',
+      description: 'Quản trị viên với đầy đủ quyền hạn',
+      is_system: true
+    })
+    .select()
+    .single();
+  
+  if (roleError) throw roleError;
+  
+  // 3. Get all features to assign to ERP Admin role
+  const { data: features } = await supabase
+    .from('features')
+    .select('id');
+  
+  // 4. Assign all permissions to ERP Admin role
+  if (features && features.length > 0) {
+    await supabase
+      .from('role_permissions')
+      .insert(features.map(f => ({
+        role_id: role.id,
+        feature_id: f.id
+      })));
+  }
+  
+  // 5. Add owner as member with ERP Admin role
+  await supabase
+    .from('business_members')
+    .insert({
+      business_id: business.id,
+      user_id: user.id,
+      role_id: role.id,
+      status: 'ACTIVE'
+    });
+  
+  // 6. Assign business_owner platform role if not already assigned
+  await supabase
+    .from('user_roles')
+    .upsert({
+      user_id: user.id,
+      role: 'business_owner'
+    }, {
+      onConflict: 'user_id,role',
+      ignoreDuplicates: true
+    });
+  
+  return {
+    id: business.id,
+    name: business.name,
+    description: business.description || '',
+    owner_id: business.owner_id,
+    address: business.address,
+    phone_number: business.phone_number,
+    email_address: business.email_address,
+    website_url: business.website_url,
+    tax_number: business.tax_number,
+    logo_path: business.logo_path,
+    user_role: 'owner',
+    is_owner: true,
+    created_at: business.created_at,
+    updated_at: business.updated_at
+  };
+};
+
+export const getBusiness = async (businessId: string): Promise<Business> => {
+  const { data, error } = await supabase
+    .from('businesses')
+    .select('*')
+    .eq('id', businessId)
+    .single();
+  
+  if (error) throw error;
+  
+  const { data: { user } } = await supabase.auth.getUser();
+  const isOwner = user?.id === data.owner_id;
+  
+  return {
+    id: data.id,
     name: data.name,
     description: data.description || '',
-    owner_id: 1,
-    address: data.address || null,
-    phone_number: data.phone_number || null,
-    email_address: data.email_address || null,
-    tax_number: data.tax_number || null,
-    logo_path: data.logo_path || null,
-    user_role: 'owner',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    is_owner: true,
+    owner_id: data.owner_id,
+    address: data.address,
+    phone_number: data.phone_number,
+    email_address: data.email_address,
+    website_url: data.website_url,
+    tax_number: data.tax_number,
+    logo_path: data.logo_path,
+    user_role: isOwner ? 'owner' : 'member',
+    is_owner: isOwner,
+    created_at: data.created_at,
+    updated_at: data.updated_at
   };
+};
+
+export const updateBusiness = async (businessId: string, data: UpdateBusinessRequest): Promise<Business> => {
+  const { data: business, error } = await supabase
+    .from('businesses')
+    .update({
+      name: data.name,
+      description: data.description,
+      address: data.address,
+      phone_number: data.phone_number,
+      email_address: data.email_address,
+      website_url: data.website_url,
+      tax_number: data.tax_number,
+      logo_path: data.logo_path
+    })
+    .eq('id', businessId)
+    .select()
+    .single();
   
-  mockBusinesses.push(newBusiness);
-  return newBusiness;
+  if (error) throw error;
+  
+  const { data: { user } } = await supabase.auth.getUser();
+  const isOwner = user?.id === business.owner_id;
+  
+  return {
+    id: business.id,
+    name: business.name,
+    description: business.description || '',
+    owner_id: business.owner_id,
+    address: business.address,
+    phone_number: business.phone_number,
+    email_address: business.email_address,
+    website_url: business.website_url,
+    tax_number: business.tax_number,
+    logo_path: business.logo_path,
+    user_role: isOwner ? 'owner' : 'member',
+    is_owner: isOwner,
+    created_at: business.created_at,
+    updated_at: business.updated_at
+  };
 };
 
-export const getBusiness = async (businessId: number): Promise<Business> => {
-  console.log('🏢 [mockBusinessService] Getting business details');
-  await new Promise(resolve => setTimeout(resolve, 500));
-  const business = mockBusinesses.find(b => b.id === businessId);
-  return business || mockBusinesses[0];
-};
-
-export const updateBusiness = async (businessId: number, data: UpdateBusinessRequest): Promise<Business> => {
-  console.log('📝 [mockBusinessService] Updating business');
-  await new Promise(resolve => setTimeout(resolve, 500));
-  const business = mockBusinesses.find(b => b.id === businessId);
-  if (business) {
-    Object.assign(business, data);
-    business.updated_at = new Date().toISOString();
-  }
-  return business || mockBusinesses[0];
-};
-
-export const uploadBusinessLogo = async (businessId: number, file: File): Promise<{ path: string }> => {
-  console.log('📷 [mockBusinessService] Uploading logo');
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return { path: 'mock/logo/path.jpg' };
+export const uploadBusinessLogo = async (businessId: string, file: File): Promise<{ path: string }> => {
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${businessId}-${Date.now()}.${fileExt}`;
+  const filePath = `business-logos/${fileName}`;
+  
+  const { error: uploadError } = await supabase.storage
+    .from('business-assets')
+    .upload(filePath, file);
+  
+  if (uploadError) throw uploadError;
+  
+  return { path: filePath };
 };
 
 export const getBusinessLogoUrl = (logoPath: string | null | undefined): string | null => {
   if (!logoPath) return null;
-  return `/mock-logo/${logoPath}`;
+  
+  const { data } = supabase.storage
+    .from('business-assets')
+    .getPublicUrl(logoPath);
+  
+  return data.publicUrl;
 };

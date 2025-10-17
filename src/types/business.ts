@@ -1,9 +1,9 @@
 
 export interface Business {
-  id: number;
+  id: string;
   name: string;
   description: string;
-  owner_id: number;
+  owner_id: string;
   user_role: 'owner' | 'admin' | 'member';
   is_owner: boolean;
   created_at: string;
@@ -50,9 +50,9 @@ export interface BusinessContextType {
   error: string | null;
   setCurrentBusiness: (business: Business) => void;
   fetchBusinesses: () => Promise<void>;
-  selectBusiness: (businessId: number) => Promise<void>;
+  selectBusiness: (businessId: string) => Promise<void>;
   createBusiness: (data: CreateBusinessRequest) => Promise<Business>;
-  updateBusiness: (businessId: number, data: UpdateBusinessRequest) => Promise<Business>;
+  updateBusiness: (businessId: string, data: UpdateBusinessRequest) => Promise<Business>;
   refreshBusinesses: () => Promise<void>;
   refreshCurrentBusiness: () => Promise<void>;
   clearCurrentBusiness: () => void;

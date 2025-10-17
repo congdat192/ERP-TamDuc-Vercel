@@ -130,7 +130,8 @@ export function MembersPage() {
     try {
       setIsLoadingRoles(true);
       console.log('🔍 [MembersPage] Fetching roles...');
-      const rolesData = await RoleService.getRoles();
+      const businessId = localStorage.getItem('cbi') || '';
+      const rolesData = await RoleService.getRoles(businessId);
       console.log('✅ [MembersPage] Roles loaded:', rolesData);
       setRoles(rolesData);
     } catch (err: any) {
