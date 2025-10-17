@@ -39,16 +39,20 @@ export function AuthCallbackPage() {
           type 
         });
 
-        // If we have access_token, session is already set
+        // If we have access_token, email is verified but force re-login
         if (accessToken) {
-          console.log('✅ [AuthCallback] Access token found, session already established');
+          console.log('✅ [AuthCallback] Email verified, logging out session for security...');
+          
+          // Sign out to force user to login again (more secure)
+          await supabase.auth.signOut();
+          
           setIsVerified(true);
           toast({
             title: "Xác thực thành công",
-            description: "Email của bạn đã được xác thực. Đang chuyển hướng...",
+            description: "Email của bạn đã được xác thực. Vui lòng đăng nhập để tiếp tục.",
           });
           setTimeout(() => {
-            navigate('/business-selection', { replace: true });
+            navigate('/login?verified=true', { replace: true });
           }, 2000);
           return;
         }

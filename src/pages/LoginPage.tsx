@@ -1,13 +1,27 @@
-
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LoginPage as LoginComponent } from '@/components/pages/LoginPage';
 import { useAuth } from '@/components/auth/AuthContext';
-import { useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 export function LoginPage() {
   const { isAuthenticated, currentUser, login } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Show success message if just verified email
+  useEffect(() => {
+    if (searchParams.get('verified') === 'true') {
+      toast({
+        title: "Xác thực thành công",
+        description: "Email của bạn đã được xác thực. Vui lòng đăng nhập.",
+        duration: 6000,
+      });
+      // Clear query params for clean URL
+      setSearchParams({});
+    }
+  }, [searchParams, setSearchParams, toast]);
 
   useEffect(() => {
     if (isAuthenticated && currentUser) {
