@@ -3,6 +3,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* HR Module - Green Forest Theme */
+.hr-gradient {
+  background: linear-gradient(135deg, #4BCB9A, #455A64);
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
