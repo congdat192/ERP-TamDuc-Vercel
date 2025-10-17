@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { MembersTab } from '../components/members/MembersTab';
-import { api } from '@/services/apiService';
 import { useToast } from '@/hooks/use-toast';
 import { useBusiness } from '@/contexts/BusinessContext';
 import { RoleService } from '../services/roleService';
+import { MembersService, SupabaseMember } from '../services/membersService';
 import { getAvatarUrl } from '@/types/auth';
 import { UserManagementFilters } from '../types';
 
@@ -24,24 +24,6 @@ interface UIMember {
   department?: { name: string; description?: string } | null;
 }
 
-interface Member {
-  id: number;
-  name: string;
-  email: string;
-  status: 'ACTIVE' | 'INACTIVE';
-  is_owner: boolean;
-  avatarPath?: string;
-  roles?: Array<{ id: number; name: string; description?: string }>;
-  created_at: string;
-  updated_at: string;
-}
-
-interface MembersResponse {
-  total: number;
-  per_page: number;
-  current_page: number;
-  data: Member[];
-}
 
 interface Role {
   id: number;
@@ -72,7 +54,7 @@ const generateFallbackAvatarUrl = (name: string, email: string): string => {
 };
 
 // Client-side filtering function
-const applyClientSideFilters = (members: Member[], filters: UserManagementFilters): Member[] => {
+const applyClientSideFilters = (members: SupabaseMember[], filters: UserManagementFilters): SupabaseMember[] => {
   console.log('🔧 [MembersPage] Applying client-side filters:', filters);
   console.log('🔧 [MembersPage] Before filtering:', members.length, 'members');
   
@@ -82,8 +64,8 @@ const applyClientSideFilters = (members: Member[], filters: UserManagementFilter
   if (filters.search && filters.search.trim()) {
     const searchTerm = filters.search.toLowerCase().trim();
     filteredMembers = filteredMembers.filter(member => 
-      member.name?.toLowerCase().includes(searchTerm) || 
-      member.email?.toLowerCase().includes(searchTerm)
+      member.profiles?.full_name?.toLowerCase().includes(searchTerm) || 
+      member.user_id?.toLowerCase().includes(searchTerm)
     );
     console.log('🔍 [MembersPage] After search filter:', filteredMembers.length, 'members');
   }
@@ -100,7 +82,7 @@ const applyClientSideFilters = (members: Member[], filters: UserManagementFilter
   // Apply role filter
   if (filters.roleIds && filters.roleIds.length > 0) {
     filteredMembers = filteredMembers.filter(member => 
-      member.roles?.some(role => filters.roleIds!.includes(role.id))
+      filters.roleIds!.includes(member.role_id)
     );
     console.log('👤 [MembersPage] After role filter:', filteredMembers.length, 'members');
   }
@@ -110,8 +92,8 @@ const applyClientSideFilters = (members: Member[], filters: UserManagementFilter
 };
 
 export function MembersPage() {
-  const [allMembers, setAllMembers] = useState<Member[]>([]); // Store all members from API
-  const [filteredMembers, setFilteredMembers] = useState<Member[]>([]); // Store filtered members
+  const [allMembers, setAllMembers] = useState<SupabaseMember[]>([]); // Store all members from API
+  const [filteredMembers, setFilteredMembers] = useState<SupabaseMember[]>([]); // Store filtered members
   const [currentFilters, setCurrentFilters] = useState<UserManagementFilters>({}); // Store current filters
   const [roles, setRoles] = useState<Role[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -147,20 +129,16 @@ export function MembersPage() {
       setIsLoading(true);
       setError(null);
       
-      // For now, we'll fetch all members without server-side filtering
-      // since the API doesn't seem to handle filters correctly
-      const params = new URLSearchParams();
-      params.append('perPage', '100'); // Get more members to ensure we have all data
-      params.append('page', '1');
-      params.append('orderBy', 'created_at');
-      params.append('orderDirection', 'asc');
+      const businessId = localStorage.getItem('cbi') || '';
+      if (!businessId) {
+        throw new Error('Không tìm thấy business context');
+      }
 
-      const fullUrl = `/members?${params.toString()}`;
-      console.log('🌐 [MembersPage] Fetching all members from API:', fullUrl);
+      console.log('🌐 [MembersPage] Fetching members from Supabase...');
       
-      const response = await api.get<MembersResponse>(fullUrl);
+      const response = await MembersService.getMembers(businessId);
       
-      console.log('📊 [MembersPage] Raw API response:', response);
+      console.log('📊 [MembersPage] Raw response:', response);
       console.log('👥 [MembersPage] Members data:', response.data);
 
       // Store all members from API
@@ -171,29 +149,19 @@ export function MembersPage() {
       setFilteredMembers(filtered);
 
       setPagination({
-        total: filtered.length, // Use filtered count for pagination
+        total: filtered.length,
         perPage: response.per_page,
         currentPage: response.current_page
       });
       
     } catch (err: any) {
-      console.error('❌ [MembersPage] Error fetching members:', err);
-      
-      if (err.message?.includes('not a member of this business')) {
-        setError('Bạn không có quyền xem danh sách thành viên của doanh nghiệp này.');
-        toast({
-          title: "Không có quyền truy cập",
-          description: "Bạn không phải là thành viên của doanh nghiệp này",
-          variant: "destructive",
-        });
-      } else {
-        setError(err.message || 'Có lỗi xảy ra khi tải danh sách thành viên');
-        toast({
-          title: "Lỗi",
-          description: "Không thể tải danh sách thành viên",
-          variant: "destructive",
-        });
-      }
+      console.error('❌ [MembersPage] Error:', err);
+      setError(err.message || 'Có lỗi xảy ra khi tải danh sách thành viên');
+      toast({
+        title: "Lỗi",
+        description: err.message || "Không thể tải danh sách thành viên",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -203,19 +171,18 @@ export function MembersPage() {
     try {
       console.log('🔧 [MembersPage] Updating member:', memberId, data);
       
-      // Convert UI action to API status format
-      const updateData = {
-        status: data.isActive ? 'ACTIVE' as const : 'INACTIVE' as const
-      };
+      const updateData: any = {};
+      if (data.isActive !== undefined) {
+        updateData.status = data.isActive ? 'ACTIVE' : 'INACTIVE';
+      }
 
-      await api.put(`/members/${memberId}`, updateData);
+      await MembersService.updateMember(memberId, updateData);
       
       toast({
         title: "Thành công",
         description: "Cập nhật trạng thái thành viên thành công",
       });
       
-      // Refresh the members list
       await fetchMembers();
     } catch (err: any) {
       console.error('❌ [MembersPage] Error updating member:', err);
@@ -231,18 +198,13 @@ export function MembersPage() {
     try {
       console.log('👤 [MembersPage] Updating member role:', memberId, 'to role ID:', roleId);
       
-      // Use the correct API payload format
-      await api.put(`/members/${memberId}`, {
-        role_ids: [roleId] // API expects array format
-      });
+      await MembersService.updateMember(memberId, { role_id: roleId });
       
       toast({
         title: "Thành công",
         description: "Cập nhật vai trò thành viên thành công",
       });
       
-      // Refresh the members list to get updated role information
-      console.log('🔄 [MembersPage] Refreshing members list after role update...');
       await fetchMembers();
     } catch (err: any) {
       console.error('❌ [MembersPage] Error updating member role:', err);
@@ -251,21 +213,20 @@ export function MembersPage() {
         description: err.message || "Không thể cập nhật vai trò thành viên",
         variant: "destructive",
       });
-      throw err; // Re-throw to let modal handle the error
+      throw err;
     }
   };
 
   const handleDeleteMember = async (memberId: string) => {
     try {
       console.log('🗑️ [MembersPage] Deleting member:', memberId);
-      await api.delete(`/members/${memberId}`);
+      await MembersService.deleteMember(memberId);
       
       toast({
         title: "Thành công",
         description: "Xóa thành viên thành công",
       });
       
-      // Refresh the members list
       await fetchMembers();
     } catch (err: any) {
       console.error('❌ [MembersPage] Error deleting member:', err);
@@ -308,56 +269,43 @@ export function MembersPage() {
     }
   }, [currentBusiness]);
 
-  // Transform API data to match UI expectations với avatar logic giống UserProfile
+  // Transform API data to match UI expectations
   const transformedMembers: UIMember[] = filteredMembers.map(member => {
-    // Get role name from roles array if available, otherwise fallback
-    let roleName = 'Thành Viên'; // Default role name
+    // Check if user is owner
+    const isOwner = member.businesses.owner_id === member.user_id;
     
-    if (member.is_owner) {
+    // Get role name
+    let roleName = member.roles?.name || 'Thành Viên';
+    if (isOwner) {
       roleName = 'Chủ Sở Hữu';
-    } else if (member.roles && member.roles.length > 0) {
-      // Use the first role if multiple roles exist
-      roleName = member.roles[0].name;
     }
     
-    // Use avatar logic similar to UserProfile
+    // Handle avatar
     let avatarUrl: string | undefined;
-    
-    if (member.avatarPath) {
-      // If API provides avatarPath, use getAvatarUrl() like in UserProfile
-      avatarUrl = getAvatarUrl(member.avatarPath);
-      console.log(`🖼️ [MembersPage] Using real avatar for ${member.name}:`, avatarUrl);
+    if (member.profiles?.avatar_path) {
+      avatarUrl = getAvatarUrl(member.profiles.avatar_path);
     } else {
-      // If no avatarPath, use fallback generator with working service
-      avatarUrl = generateFallbackAvatarUrl(member.name || 'User', member.email);
-      console.log(`🎨 [MembersPage] Using fallback avatar for ${member.name}:`, avatarUrl);
+      avatarUrl = generateFallbackAvatarUrl(
+        member.profiles?.full_name || 'User',
+        member.user_id
+      );
     }
     
-    const transformedMember = {
-      id: member.id.toString(),
-      fullName: member.name || 'N/A',
-      username: member.email?.split('@')[0] || 'N/A',
-      email: member.email || 'N/A',
-      phone: undefined, // API doesn't provide this
+    return {
+      id: member.id,
+      fullName: member.profiles?.full_name || 'N/A',
+      username: member.profiles?.full_name?.split(' ')[0] || 'N/A',
+      email: member.user_id,
+      phone: member.profiles?.phone || undefined,
       avatar: avatarUrl,
       status: member.status === 'ACTIVE' ? 'active' : 'inactive',
       isActive: member.status === 'ACTIVE',
-      isOwner: member.is_owner,
-      createdAt: member.created_at,
-      lastLogin: null, // API doesn't provide this
-      role: { 
-        name: roleName 
-      },
-      department: null // API doesn't provide this
+      isOwner: isOwner,
+      createdAt: member.joined_at,
+      lastLogin: null,
+      role: { name: roleName },
+      department: null
     };
-    
-    console.log(`🔄 [MembersPage] Transformed member ${member.id}:`, {
-      id: transformedMember.id,
-      name: transformedMember.fullName,
-      hasRealAvatar: !!member.avatarPath,
-      avatarUrl: transformedMember.avatar
-    });
-    return transformedMember;
   });
 
   if (error) {

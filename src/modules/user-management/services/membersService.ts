@@ -1,120 +1,155 @@
-// Mock Members Service - No real API calls
-import { Member, MembersResponse } from '../types';
+import { supabase } from '@/integrations/supabase/client';
 
-interface MemberFilters {
-  perPage?: number;
-  page?: number;
-  orderBy?: string;
-  orderDirection?: 'asc' | 'desc';
-}
-
-interface ApiRole {
-  id: number;
-  name: string;
-  description: string;
-}
-
-export interface MemberWithRoles extends Omit<Member, 'roles'> {
-  roles: ApiRole[];
-}
-
-const mockMembers: Member[] = [
-  {
-    id: 1,
-    name: 'Nguyễn Văn A',
-    email: 'nguyenvana@example.com',
-    status: 'ACTIVE',
-    is_owner: false,
-    roles: [{ id: 1, name: 'Admin', description: 'Quản trị viên', permissions: [], created_at: new Date().toISOString(), updated_at: new Date().toISOString() }],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  },
-  {
-    id: 2,
-    name: 'Trần Thị B',
-    email: 'tranthib@example.com',
-    status: 'ACTIVE',
-    is_owner: false,
-    roles: [{ id: 2, name: 'Manager', description: 'Quản lý', permissions: [], created_at: new Date().toISOString(), updated_at: new Date().toISOString() }],
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  }
-];
-
-export const getMembers = async (filters: MemberFilters = {}): Promise<MembersResponse> => {
-  console.log('🔍 [mockMembersService] Fetching members');
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  return {
-    data: [...mockMembers],
-    total: mockMembers.length,
-    per_page: filters.perPage || 20,
-    current_page: filters.page || 1
+export interface SupabaseMember {
+  id: string;
+  user_id: string;
+  business_id: string;
+  role_id: number;
+  status: 'ACTIVE' | 'INACTIVE';
+  joined_at: string;
+  profiles: {
+    id: string;
+    full_name: string;
+    phone: string | null;
+    avatar_path: string | null;
   };
-};
+  roles: {
+    id: number;
+    name: string;
+    description: string | null;
+  };
+  businesses: {
+    owner_id: string;
+  };
+}
 
-export const getMembersWithRoles = async (): Promise<MemberWithRoles[]> => {
-  console.log('🔍 [mockMembersService] Fetching members with roles');
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  return mockMembers.map(member => ({
-    ...member,
-    roles: member.roles.map(role => ({
-      id: role.id,
-      name: role.name,
-      description: role.description || ''
-    }))
-  }));
-};
+export interface MembersResponse {
+  data: SupabaseMember[];
+  total: number;
+  per_page: number;
+  current_page: number;
+}
 
-export const getMember = async (id: number): Promise<Member> => {
-  console.log('🔍 [mockMembersService] Fetching member:', id);
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  const member = mockMembers.find(m => m.id === id);
-  if (!member) throw new Error('Member not found');
-  return member;
-};
+export class MembersService {
+  static async getMembers(businessId: string): Promise<MembersResponse> {
+    console.log('🔍 [MembersService] Fetching members for business:', businessId);
 
-export const updateMember = async (id: number, data: { status: 'ACTIVE' | 'INACTIVE' }): Promise<Member> => {
-  console.log('📝 [mockMembersService] Updating member:', id);
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  const member = mockMembers.find(m => m.id === id);
-  if (!member) throw new Error('Member not found');
-  
-  member.status = data.status;
-  member.updated_at = new Date().toISOString();
-  return member;
-};
+    const { data, error } = await supabase
+      .from('business_members')
+      .select(`
+        id,
+        user_id,
+        business_id,
+        role_id,
+        status,
+        joined_at,
+        profiles!inner (
+          id,
+          full_name,
+          phone,
+          avatar_path
+        ),
+        roles!inner (
+          id,
+          name,
+          description
+        ),
+        businesses!inner (
+          owner_id
+        )
+      `)
+      .eq('business_id', businessId)
+      .eq('status', 'ACTIVE')
+      .order('joined_at', { ascending: false });
 
-export const updateMemberRole = async (id: number, roleId: number): Promise<Member> => {
-  console.log('👤 [mockMembersService] Updating member role:', id);
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  const member = mockMembers.find(m => m.id === id);
-  if (!member) throw new Error('Member not found');
-  
-  member.roles = [{ id: roleId, name: 'Role ' + roleId, description: 'Role description', permissions: [], created_at: new Date().toISOString(), updated_at: new Date().toISOString() }];
-  member.updated_at = new Date().toISOString();
-  return member;
-};
+    if (error) {
+      console.error('❌ [MembersService] Error:', error);
+      throw new Error(error.message);
+    }
 
-export const deleteMember = async (id: number): Promise<void> => {
-  console.log('🗑️ [mockMembersService] Deleting member:', id);
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  const index = mockMembers.findIndex(m => m.id === id);
-  if (index > -1) {
-    mockMembers.splice(index, 1);
+    console.log('✅ [MembersService] Members loaded:', data?.length);
+
+    return {
+      data: (data || []) as unknown as SupabaseMember[],
+      total: data?.length || 0,
+      per_page: 100,
+      current_page: 1
+    };
   }
-};
 
-export const membersService = {
-  getMembers,
-  getMembersWithRoles,
-  getMember,
-  updateMember,
-  updateMemberRole,
-  deleteMember
-};
+  static async updateMember(memberId: string, updates: { status?: 'ACTIVE' | 'INACTIVE'; role_id?: number }): Promise<void> {
+    console.log('🔧 [MembersService] Updating member:', memberId, updates);
+    
+    const { error } = await supabase
+      .from('business_members')
+      .update(updates)
+      .eq('id', memberId);
+
+    if (error) {
+      console.error('❌ [MembersService] Update error:', error);
+      throw new Error(error.message);
+    }
+    
+    console.log('✅ [MembersService] Member updated successfully');
+  }
+
+  static async deleteMember(memberId: string): Promise<void> {
+    console.log('🗑️ [MembersService] Deleting member:', memberId);
+    
+    const { error } = await supabase
+      .from('business_members')
+      .delete()
+      .eq('id', memberId);
+
+    if (error) {
+      console.error('❌ [MembersService] Delete error:', error);
+      throw new Error(error.message);
+    }
+    
+    console.log('✅ [MembersService] Member deleted successfully');
+  }
+}
+
+// Helper function for RolesTab to count members by role
+export interface MemberWithRoles {
+  id: string;
+  status: 'ACTIVE' | 'INACTIVE';
+  is_owner: boolean;
+  roles: Array<{ id: number; name: string; description: string | null }>;
+}
+
+export async function getMembersWithRoles(): Promise<MemberWithRoles[]> {
+  const businessId = localStorage.getItem('cbi') || '';
+  if (!businessId) {
+    throw new Error('Business context not found');
+  }
+
+  const { data, error } = await supabase
+    .from('business_members')
+    .select(`
+      id,
+      status,
+      user_id,
+      businesses!inner (
+        owner_id
+      ),
+      roles!inner (
+        id,
+        name,
+        description
+      )
+    `)
+    .eq('business_id', businessId);
+
+  if (error) {
+    console.error('❌ [getMembersWithRoles] Error:', error);
+    throw new Error(error.message);
+  }
+
+  return (data || []).map((member: any) => ({
+    id: member.id,
+    status: member.status,
+    is_owner: member.businesses.owner_id === member.user_id,
+    roles: [member.roles]
+  }));
+}
