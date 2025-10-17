@@ -1,9 +1,9 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User } from '@/types/auth';
-import { loginUser, logoutUser, getUserProfile } from '@/services/authService';
+import { User, UserPermissions, ERPModule, VoucherFeature } from '@/types/auth';
+import { supabase } from '@/integrations/supabase/client';
 import { clearSelectedBusinessId } from '@/services/apiService';
 import { useToast } from '@/hooks/use-toast';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 interface AuthContextType {
   currentUser: User | null;
@@ -24,79 +24,125 @@ export const useAuth = () => {
   return context;
 };
 
-// Storage keys
-const STORAGE_KEYS = {
-  TOKEN: 'auth_token',
-  USER: 'erp_current_user',
-};
-
-// Utility functions for localStorage
-const saveToStorage = (key: string, value: any) => {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-    console.log('💾 [AuthContext] Saved to storage:', key);
-  } catch (error) {
-    console.warn('❌ [AuthContext] Failed to save to localStorage:', error);
-    throw new Error('Không thể lưu dữ liệu vào trình duyệt');
-  }
-};
-
-const loadFromStorage = (key: string) => {
-  try {
-    const item = localStorage.getItem(key);
-    const result = item ? JSON.parse(item) : null;
-    console.log('📁 [AuthContext] Loaded from storage:', key, result ? 'Data found' : 'No data');
-    return result;
-  } catch (error) {
-    console.warn('❌ [AuthContext] Failed to load from localStorage:', error);
-    return null;
-  }
-};
-
-const removeFromStorage = (key: string) => {
-  try {
-    localStorage.removeItem(key);
-    console.log('🗑️ [AuthContext] Removed from storage:', key);
-  } catch (error) {
-    console.warn('❌ [AuthContext] Failed to remove from localStorage:', error);
-  }
-};
-
-// Simple auth check - just check if token exists
-const checkAuthentication = () => {
-  const hasToken = !!localStorage.getItem(STORAGE_KEYS.TOKEN);
-  console.log('🔐 [AuthContext] Auth check - Token:', hasToken ? 'exists' : 'missing');
-  return hasToken;
-};
-
-// Convert API user to internal User type
-const convertApiUserToUser = (apiUser: any): User => {
-  console.log('🔄 [AuthContext] Converting API user to internal User type');
+// Transform database permissions to frontend format
+const transformPermissions = (dbPermissions: any[]): UserPermissions => {
+  const modules = new Set<ERPModule>();
+  const voucherFeatures = new Set<VoucherFeature>();
+  let canManageUsers = false;
+  let canViewAllVouchers = false;
+  
+  (dbPermissions || []).forEach((p: any) => {
+    // Add module if user has any permission in it
+    if (p.module_code) {
+      modules.add(p.module_code as ERPModule);
+    }
+    
+    // Check for voucher-specific features
+    if (p.module_code === 'voucher') {
+      // Map feature codes to voucher features
+      if (p.feature_code === 'view_voucher') {
+        voucherFeatures.add('voucher-list');
+        canViewAllVouchers = true;
+      }
+      if (p.feature_code === 'create_voucher') {
+        voucherFeatures.add('issue-voucher');
+      }
+      if (p.feature_code === 'approve_voucher') {
+        voucherFeatures.add('campaign-management');
+      }
+      // Add dashboard and analytics for anyone with voucher access
+      voucherFeatures.add('voucher-dashboard');
+      voucherFeatures.add('voucher-analytics');
+    }
+    
+    // Check for user management permissions
+    if (p.feature_code === 'manage_members' || p.feature_code === 'manage_roles') {
+      canManageUsers = true;
+    }
+  });
+  
   return {
-    id: apiUser.id,
-    username: apiUser.email,
-    fullName: apiUser.name,
-    role: 'erp-admin',
-    email: apiUser.email,
-    phone: apiUser.phone,
-    status: 'active',
-    createdAt: apiUser.created_at,
-    lastLogin: new Date().toISOString(),
-    emailVerified: !!apiUser.email_verified_at,
-    isActive: true,
-    avatarPath: apiUser.avatar_path, // Ensure avatarPath is mapped correctly
-    permissions: {
+    modules: Array.from(modules),
+    voucherFeatures: Array.from(voucherFeatures),
+    canManageUsers,
+    canViewAllVouchers
+  };
+};
+
+// Fetch user with all permissions from database
+const fetchUserWithPermissions = async (supabaseUser: SupabaseUser, businessId?: string): Promise<User> => {
+  console.log('🔄 [AuthContext] Fetching user with permissions');
+  
+  // Get profile
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', supabaseUser.id)
+    .single();
+  
+  if (profileError) {
+    console.error('❌ [AuthContext] Error fetching profile:', profileError);
+    throw profileError;
+  }
+  
+  // Get platform roles
+  const { data: roles } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', supabaseUser.id);
+  
+  const isPlatformAdmin = roles?.some(r => r.role === 'super_admin');
+  
+  // Get permissions for current business
+  let permissions: UserPermissions = {
+    modules: [],
+    voucherFeatures: [],
+    canManageUsers: false,
+    canViewAllVouchers: false
+  };
+  
+  // If platform admin, grant all permissions
+  if (isPlatformAdmin) {
+    permissions = {
       modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'marketing', 'affiliate', 'system-settings', 'user-management'],
       voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
       canManageUsers: true,
-      canViewAllVouchers: true,
-    },
+      canViewAllVouchers: true
+    };
+  } else if (businessId) {
+    // Regular user - fetch permissions from database
+    const { data: perms, error: permsError } = await supabase.rpc('get_user_permissions', {
+      _user_id: supabaseUser.id,
+      _business_id: businessId
+    });
+    
+    if (permsError) {
+      console.error('❌ [AuthContext] Error fetching permissions:', permsError);
+    } else {
+      permissions = transformPermissions(perms || []);
+    }
+  }
+  
+  return {
+    id: supabaseUser.id,
+    fullName: profile.full_name || 'User',
+    username: supabaseUser.email?.split('@')[0] || '',
+    email: supabaseUser.email!,
+    phone: profile.phone,
+    role: isPlatformAdmin ? 'platform-admin' : 'custom',
+    permissions,
+    isActive: true,
+    status: supabaseUser.email_confirmed_at ? 'active' : 'pending_verification',
+    createdAt: supabaseUser.created_at,
+    lastLogin: new Date().toISOString(),
+    emailVerified: !!supabaseUser.email_confirmed_at,
+    avatarPath: profile.avatar_path,
     securitySettings: {
       twoFactorEnabled: false,
-      loginAttemptLimit: 3,
-      passwordChangeRequired: false,
+      loginAttemptLimit: 5,
+      passwordChangeRequired: false
     },
-    activities: [],
+    activities: []
   };
 };
 
@@ -106,34 +152,63 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  // Initialize auth state on mount
+  // Setup Supabase auth state listener (CRITICAL!)
   useEffect(() => {
-    const initializeAuth = async () => {
-      console.log('🚀 [AuthContext] Initializing auth state');
-      setIsLoading(true);
-      
-      try {
-        const storedUser = loadFromStorage(STORAGE_KEYS.USER);
+    console.log('🚀 [AuthContext] Setting up auth state listener');
+    
+    // Subscribe to auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('🔔 [AuthContext] Auth state changed:', event);
         
-        // Only restore user if token exists and user email is verified
-        if (checkAuthentication() && storedUser && storedUser.emailVerified) {
-          setCurrentUser(storedUser);
-          console.log('✅ [AuthContext] Restored user session:', storedUser.username);
-        } else if (storedUser && !storedUser.emailVerified) {
-          console.log('⚠️ [AuthContext] User session found but email not verified, clearing session');
-          removeFromStorage(STORAGE_KEYS.USER);
-          removeFromStorage(STORAGE_KEYS.TOKEN);
+        if (session?.user) {
+          // User logged in - fetch profile and permissions
+          // Use setTimeout to avoid blocking the auth callback
+          setTimeout(async () => {
+            try {
+              const businessId = localStorage.getItem('cbi') || undefined;
+              const user = await fetchUserWithPermissions(session.user, businessId);
+              setCurrentUser(user);
+              console.log('✅ [AuthContext] User state updated:', user.email);
+            } catch (error) {
+              console.error('❌ [AuthContext] Error fetching user:', error);
+              setCurrentUser(null);
+            }
+          }, 0);
+        } else {
+          // User logged out
+          console.log('👋 [AuthContext] User logged out');
+          setCurrentUser(null);
+          clearSelectedBusinessId();
+        }
+      }
+    );
+    
+    // Check for existing session on mount
+    const checkSession = async () => {
+      try {
+        console.log('🔍 [AuthContext] Checking for existing session');
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          const businessId = localStorage.getItem('cbi') || undefined;
+          const user = await fetchUserWithPermissions(session.user, businessId);
+          setCurrentUser(user);
+          console.log('✅ [AuthContext] Session restored:', user.email);
         }
       } catch (error) {
-        console.warn('❌ [AuthContext] Failed to initialize auth:', error);
+        console.error('❌ [AuthContext] Error checking session:', error);
       } finally {
-        setIsLoading(false);
         setIsInitialized(true);
-        console.log('✅ [AuthContext] Auth initialization completed');
       }
     };
-
-    initializeAuth();
+    
+    checkSession();
+    
+    // Cleanup subscription on unmount
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
@@ -141,13 +216,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     
     try {
-      const response = await loginUser({ email, password });
-      console.log('📨 [AuthContext] Login API response received');
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
       
-      const user = convertApiUserToUser(response.user);
+      if (error) throw error;
+      
+      console.log('📨 [AuthContext] Login successful');
+      
+      // Fetch user with permissions
+      const businessId = localStorage.getItem('cbi') || undefined;
+      const user = await fetchUserWithPermissions(data.user, businessId);
       
       // Check if email is verified
       if (!user.emailVerified) {
+        await supabase.auth.signOut();
+        
         toast({
           title: "Email chưa xác thực",
           description: "Vui lòng kiểm tra email và xác thực tài khoản trước khi đăng nhập.",
@@ -160,9 +245,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       setCurrentUser(user);
       
-      // Save to localStorage
-      saveToStorage(STORAGE_KEYS.USER, user);
-      
       console.log('✅ [AuthContext] User logged in successfully:', email);
       
       toast({
@@ -172,11 +254,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.log('❌ [AuthContext] Login failed for:', email, error);
       
       let errorMessage = "Thông tin đăng nhập không chính xác";
-      if (error instanceof Error) {
+      if (error?.message) {
         errorMessage = error.message;
       }
       
@@ -198,40 +280,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     
     try {
-      await logoutUser();
+      await supabase.auth.signOut();
       console.log('✅ [AuthContext] User logged out:', currentUser?.username);
-    } catch (error) {
-      console.warn('⚠️ [AuthContext] Logout error:', error);
-    } finally {
-      setCurrentUser(null);
       
-      // Clear localStorage
-      removeFromStorage(STORAGE_KEYS.USER);
-      
-      // Clear business context including cbi
-      clearSelectedBusinessId();
-      
-      setIsLoading(false);
-      
+      // State will be cleared by onAuthStateChange listener
       toast({
         title: "Đăng xuất thành công",
         description: "Bạn đã đăng xuất khỏi hệ thống",
         duration: 4000,
       });
+    } catch (error) {
+      console.warn('⚠️ [AuthContext] Logout error:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const refreshUserProfile = async () => {
-    if (!currentUser) return;
-    
     console.log('🔄 [AuthContext] Refreshing user profile');
+    
     try {
-      const apiUser = await getUserProfile();
-      const updatedUser = convertApiUserToUser(apiUser);
+      const { data: { user: supabaseUser } } = await supabase.auth.getUser();
+      
+      if (!supabaseUser) {
+        console.log('⚠️ [AuthContext] No user to refresh');
+        return;
+      }
+      
+      const businessId = localStorage.getItem('cbi') || undefined;
+      const updatedUser = await fetchUserWithPermissions(supabaseUser, businessId);
       
       setCurrentUser(updatedUser);
-      saveToStorage(STORAGE_KEYS.USER, updatedUser);
-      
       console.log('✅ [AuthContext] User profile refreshed:', updatedUser.username);
     } catch (error) {
       console.warn('❌ [AuthContext] Failed to refresh user profile:', error);
@@ -254,7 +333,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider
       value={{
         currentUser,
-        isAuthenticated: checkAuthentication() && !!currentUser && currentUser.emailVerified,
+        isAuthenticated: !!currentUser && currentUser.emailVerified,
         login,
         logout,
         refreshUserProfile,
