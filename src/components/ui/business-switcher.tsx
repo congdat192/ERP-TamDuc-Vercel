@@ -18,10 +18,9 @@ import { getBusinessLogoUrl } from '@/services/businessService';
 
 interface BusinessSwitcherProps {
   className?: string;
-  compact?: boolean;
 }
 
-export function BusinessSwitcher({ className, compact = false }: BusinessSwitcherProps) {
+export function BusinessSwitcher({ className }: BusinessSwitcherProps) {
   const { businesses, currentBusiness, hasOwnBusiness, selectBusiness } = useBusiness();
   const [isSelectingBusiness, setIsSelectingBusiness] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -97,92 +96,6 @@ export function BusinessSwitcher({ className, compact = false }: BusinessSwitche
   };
 
   if (!currentBusiness) return null;
-
-  if (compact) {
-    return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button 
-            variant="ghost" 
-            size="sm"
-            className={`flex items-center gap-1.5 h-8 px-2 ${className}`}
-          >
-            <BusinessLogo business={currentBusiness} size="w-5 h-5" />
-            <span className="text-xs max-w-24 truncate hidden sm:inline">
-              {currentBusiness.name}
-            </span>
-            <ChevronDown className="w-3 h-3 flex-shrink-0 hidden sm:inline" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-80" align="start">
-          <div className="p-2">
-            <div className="text-xs text-muted-foreground mb-2 px-2">
-              Doanh nghiệp của bạn ({businesses.length})
-            </div>
-            
-            {businesses.map((business) => (
-              <DropdownMenuItem
-                key={business.id}
-                onClick={() => handleBusinessSelect(business)}
-                disabled={isSelectingBusiness}
-                className="p-3 cursor-pointer"
-              >
-                <div className="flex items-center space-x-3 w-full">
-                  <BusinessLogo business={business} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-sm truncate">
-                        {business.name}
-                      </span>
-                      {business.id === currentBusiness.id && (
-                        <Check className="w-4 h-4 text-green-600" />
-                      )}
-                    </div>
-                    <div className="flex items-center space-x-2 mt-1">
-                      <Badge className={`text-xs px-1 py-0 ${getRoleBadgeColor(business.user_role)}`}>
-                        {business.is_owner && <Crown className="w-2 h-2 mr-1" />}
-                        {getRoleDisplayName(business.user_role)}
-                      </Badge>
-                      {business.description && (
-                        <span className="text-xs text-muted-foreground truncate">
-                          {business.description}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </DropdownMenuItem>
-            ))}
-            
-            <DropdownMenuSeparator />
-            
-            <DropdownMenuItem
-              onClick={handleCreateBusiness}
-              disabled={isSelectingBusiness}
-              className="p-3 cursor-pointer"
-            >
-              <div className="flex items-center space-x-3 w-full">
-                <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                  <Plus className="w-4 h-4 text-gray-600" />
-                </div>
-                <div>
-                  <span className="font-medium text-sm">
-                    {hasOwnBusiness ? 'Tạo Doanh Nghiệp' : 'Tạo Doanh Nghiệp Mới'}
-                  </span>
-                  <div className="text-xs text-muted-foreground">
-                    {hasOwnBusiness 
-                      ? 'Bạn đã có doanh nghiệp riêng' 
-                      : 'Tạo doanh nghiệp của riêng bạn'
-                    }
-                  </div>
-                </div>
-              </div>
-            </DropdownMenuItem>
-          </div>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    );
-  }
 
   return (
     <>
