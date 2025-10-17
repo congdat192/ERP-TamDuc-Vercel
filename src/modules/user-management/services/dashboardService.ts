@@ -19,52 +19,53 @@ export class DashboardService {
     console.log('🔍 [DashboardService] Fetching counts for business:', businessId);
 
     try {
-      // Fetch all counts in parallel
-      const [membersResult, rolesResult, invitationsResult] = await Promise.all([
-        supabase
-          .from('business_members')
-          .select('id', { count: 'exact', head: true })
-          .eq('business_id', businessId)
-          .eq('status', 'ACTIVE'),
-        supabase
-          .from('roles')
-          .select('id', { count: 'exact', head: true })
-          .eq('business_id', businessId),
-        supabase
-          .from('business_invitations')
-          .select('id', { count: 'exact', head: true })
-          .eq('business_id', businessId)
-          .eq('status', 'pending')
-      ]);
+      // Fetch members count
+      const { count: membersCount, error: membersError } = await supabase
+        .from('business_members')
+        .select('id', { count: 'exact', head: true })
+        .eq('business_id', businessId)
+        .eq('status', 'ACTIVE');
 
-      console.log('✅ [DashboardService] Counts fetched:', {
-        members: membersResult.count,
-        roles: rolesResult.count,
-        invitations: invitationsResult.count
-      });
-
-      if (membersResult.error) {
-        console.error('❌ [DashboardService] Members error:', membersResult.error);
-        throw membersResult.error;
-      }
-      if (rolesResult.error) {
-        console.error('❌ [DashboardService] Roles error:', rolesResult.error);
-        throw rolesResult.error;
-      }
-      if (invitationsResult.error) {
-        console.error('❌ [DashboardService] Invitations error:', invitationsResult.error);
-        throw invitationsResult.error;
+      if (membersError) {
+        console.error('❌ [DashboardService] Members error:', membersError);
+        throw new Error(`Members: ${membersError.message}`);
       }
 
-      return {
-        members: membersResult.count || 0,
-        departments: 0, // Not implemented yet
-        roles: rolesResult.count || 0,
-        groups: 0, // Not implemented yet
-        invitations: invitationsResult.count || 0
+      // Fetch roles count
+      const { count: rolesCount, error: rolesError } = await supabase
+        .from('roles')
+        .select('id', { count: 'exact', head: true })
+        .eq('business_id', businessId);
+
+      if (rolesError) {
+        console.error('❌ [DashboardService] Roles error:', rolesError);
+        throw new Error(`Roles: ${rolesError.message}`);
+      }
+
+      // Fetch invitations count
+      const { count: invitationsCount, error: invitationsError } = await supabase
+        .from('business_invitations')
+        .select('id', { count: 'exact', head: true })
+        .eq('business_id', businessId)
+        .eq('status', 'pending');
+
+      if (invitationsError) {
+        console.error('❌ [DashboardService] Invitations error:', invitationsError);
+        throw new Error(`Invitations: ${invitationsError.message}`);
+      }
+
+      const counts = {
+        members: membersCount || 0,
+        departments: 0,
+        roles: rolesCount || 0,
+        groups: 0,
+        invitations: invitationsCount || 0
       };
+
+      console.log('✅ [DashboardService] Counts loaded:', counts);
+      return counts;
     } catch (error) {
-      console.error('❌ [DashboardService] Error fetching counts:', error);
+      console.error('❌ [DashboardService] Error:', error);
       throw error;
     }
   }
