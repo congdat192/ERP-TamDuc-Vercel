@@ -92,7 +92,7 @@ export function EmployeeDetailModal({ employee, open, onOpenChange }: EmployeeDe
                     </div>
                     <div>
                       <p className="text-sm theme-text-secondary">Loại Hợp Đồng</p>
-                      <p className="font-medium theme-text">{employee.contractType}</p>
+                      <p className="font-medium theme-text">{employee.employmentType}</p>
                     </div>
                     <div>
                       <p className="text-sm theme-text-secondary">Trạng Thái</p>
@@ -155,47 +155,67 @@ export function EmployeeDetailModal({ employee, open, onOpenChange }: EmployeeDe
                 <CardContent className="pt-6 space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-sm theme-text-secondary">Lương Cơ Bản (P1)</p>
+                      <p className="text-sm theme-text-secondary">Lương Cơ Bản</p>
                       <p className="text-xl font-bold theme-text">
                         {new Intl.NumberFormat('vi-VN', {
                           style: 'currency',
                           currency: 'VND'
-                        }).format(employee.salary.p1)}
+                        }).format(employee.salary.basic)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm theme-text-secondary">Hệ Số Lương (P2)</p>
-                      <p className="text-xl font-bold theme-text">{employee.salary.p2}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm theme-text-secondary">Phụ Cấp (P3)</p>
+                      <p className="text-sm theme-text-secondary">Phụ Cấp Ăn Trưa</p>
                       <p className="text-xl font-bold theme-text">
                         {new Intl.NumberFormat('vi-VN', {
                           style: 'currency',
                           currency: 'VND'
-                        }).format(employee.salary.p3)}
+                        }).format(employee.salary.allowanceMeal)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm theme-text-secondary">Tổng Lương</p>
+                      <p className="text-sm theme-text-secondary">Phụ Cấp Xăng Xe</p>
+                      <p className="text-xl font-bold theme-text">
+                        {new Intl.NumberFormat('vi-VN', {
+                          style: 'currency',
+                          currency: 'VND'
+                        }).format(employee.salary.allowanceFuel)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm theme-text-secondary">Phụ Cấp Điện Thoại</p>
+                      <p className="text-xl font-bold theme-text">
+                        {new Intl.NumberFormat('vi-VN', {
+                          style: 'currency',
+                          currency: 'VND'
+                        }).format(employee.salary.allowancePhone)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm theme-text-secondary">Phụ Cấp Khác</p>
+                      <p className="text-xl font-bold theme-text">
+                        {new Intl.NumberFormat('vi-VN', {
+                          style: 'currency',
+                          currency: 'VND'
+                        }).format(employee.salary.allowanceOther)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm theme-text-secondary">Tổng Lương Cứng</p>
                       <p className="text-2xl font-bold text-primary">
                         {new Intl.NumberFormat('vi-VN', {
                           style: 'currency',
                           currency: 'VND'
-                        }).format(employee.salary.total)}
+                        }).format(employee.salary.totalFixed)}
                       </p>
                     </div>
                   </div>
                   <div className="pt-4 border-t">
                     <p className="text-sm theme-text-secondary mb-2">Công Thức Tính Lương</p>
                     <p className="font-mono text-sm theme-text">
-                      Tổng = (P1 × P2) + P3
-                    </p>
-                    <p className="font-mono text-sm theme-text mt-1">
-                      = ({employee.salary.p1.toLocaleString('vi-VN')} × {employee.salary.p2}) + {employee.salary.p3.toLocaleString('vi-VN')}
+                      Tổng Lương Cứng = Lương Cơ Bản + Tất Cả Phụ Cấp
                     </p>
                     <p className="font-mono text-sm font-bold theme-text mt-1">
-                      = {employee.salary.total.toLocaleString('vi-VN')} VNĐ
+                      = {employee.salary.totalFixed.toLocaleString('vi-VN')} VNĐ
                     </p>
                   </div>
                 </CardContent>

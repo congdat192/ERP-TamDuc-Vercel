@@ -145,7 +145,7 @@ export function HRISPage() {
       if (filters.status && emp.status !== filters.status) return false;
 
       // Contract type filter
-      if (filters.contractType && emp.contractType !== filters.contractType) return false;
+      if (filters.contractType && emp.employmentType !== filters.contractType) return false;
 
       // Join date range filter
       if (filters.joinDateFrom) {
@@ -345,12 +345,12 @@ export function HRISPage() {
                     <TableCell className="theme-text">{employee.employeeCode}</TableCell>
                     <TableCell className="theme-text">{employee.department}</TableCell>
                     <TableCell className="theme-text">{employee.position}</TableCell>
-                    <TableCell className="theme-text">{employee.contractType}</TableCell>
+                    <TableCell className="theme-text">{employee.employmentType}</TableCell>
                     <TableCell className="font-semibold">
                       {new Intl.NumberFormat('vi-VN', {
                         style: 'currency',
                         currency: 'VND'
-                      }).format(employee.salary.total)}
+                      }).format(employee.salary.totalFixed)}
                     </TableCell>
                     <TableCell>{getStatusBadge(employee.status)}</TableCell>
                     <TableCell className="text-right">
