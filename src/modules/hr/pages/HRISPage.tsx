@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Search, Filter, Download, Eye, Trash2, RefreshCw } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Search, Download, Eye, Trash2, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { usePermissions } from '@/hooks/usePermissions';
 import { PermissionGuard } from '@/components/auth/PermissionGuard';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Table,
   TableBody,
@@ -28,15 +29,25 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Employee } from '../types';
 import { EmployeeService } from '../services/employeeService';
+import { ExportService } from '../services/exportService';
 import { CreateEmployeeModal } from '../components/CreateEmployeeModal';
 import { EditEmployeeModal } from '../components/EditEmployeeModal';
+import { EmployeeFilters, EmployeeFiltersData } from '../components/EmployeeFilters';
+import { EmployeePagination } from '../components/EmployeePagination';
+import { EmployeeDetailModal } from '../components/EmployeeDetailModal';
+import { BulkOperations } from '../components/BulkOperations';
 
 export function HRISPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState<EmployeeFiltersData>({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const { toast } = useToast();
   const { hasPermission } = usePermissions();
 
@@ -87,11 +98,87 @@ export function HRISPage() {
     }
   };
 
-  const filteredEmployees = employees.filter(emp => 
-    emp.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    emp.employeeCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    emp.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleViewDetail = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setDetailModalOpen(true);
+  };
+
+  const handleExport = () => {
+    ExportService.exportToExcel(filteredEmployees, `nhan-vien-${new Date().toISOString().split('T')[0]}.xlsx`);
+    toast({
+      title: 'Thành công',
+      description: 'Đã xuất file Excel thành công',
+    });
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(paginatedEmployees.map(emp => emp.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectOne = (id: string, checked: boolean) => {
+    if (checked) {
+      setSelectedIds([...selectedIds, id]);
+    } else {
+      setSelectedIds(selectedIds.filter(eid => eid !== id));
+    }
+  };
+
+  // Apply filters and search
+  const filteredEmployees = useMemo(() => {
+    return employees.filter(emp => {
+      // Search filter
+      const matchesSearch = 
+        emp.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        emp.employeeCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        emp.email.toLowerCase().includes(searchTerm.toLowerCase());
+
+      if (!matchesSearch) return false;
+
+      // Department filter
+      if (filters.department && emp.department !== filters.department) return false;
+
+      // Status filter
+      if (filters.status && emp.status !== filters.status) return false;
+
+      // Contract type filter
+      if (filters.contractType && emp.contractType !== filters.contractType) return false;
+
+      // Join date range filter
+      if (filters.joinDateFrom) {
+        const joinDate = new Date(emp.joinDate);
+        const fromDate = new Date(filters.joinDateFrom);
+        if (joinDate < fromDate) return false;
+      }
+      if (filters.joinDateTo) {
+        const joinDate = new Date(emp.joinDate);
+        const toDate = new Date(filters.joinDateTo);
+        if (joinDate > toDate) return false;
+      }
+
+      return true;
+    });
+  }, [employees, searchTerm, filters]);
+
+  // Get unique departments for filter
+  const departments = useMemo(() => {
+    return Array.from(new Set(employees.map(emp => emp.department))).sort();
+  }, [employees]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredEmployees.length / pageSize);
+  const paginatedEmployees = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredEmployees.slice(start, start + pageSize);
+  }, [filteredEmployees, currentPage, pageSize]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filters, pageSize]);
 
   const getStatusBadge = (status: Employee['status']) => {
     const statusMap = {
@@ -103,6 +190,9 @@ export function HRISPage() {
     const config = statusMap[status];
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
+
+  const isAllSelected = paginatedEmployees.length > 0 && 
+    paginatedEmployees.every(emp => selectedIds.includes(emp.id));
 
   return (
     <div className="space-y-6">
@@ -135,11 +225,12 @@ export function HRISPage() {
                 className="pl-10"
               />
             </div>
-            <Button variant="outline" className="gap-2">
-              <Filter className="h-4 w-4" />
-              Bộ Lọc
-            </Button>
-            <Button variant="outline" className="gap-2">
+            <EmployeeFilters 
+              filters={filters} 
+              onFiltersChange={setFilters}
+              departments={departments}
+            />
+            <Button variant="outline" className="gap-2" onClick={handleExport}>
               <Download className="h-4 w-4" />
               Xuất Excel
             </Button>
@@ -181,15 +272,32 @@ export function HRISPage() {
         </Card>
       </div>
 
+      {/* Bulk Operations */}
+      <PermissionGuard requiredPermission="delete_employees" showError={false}>
+        <BulkOperations 
+          selectedIds={selectedIds}
+          onSuccess={fetchEmployees}
+          onClearSelection={() => setSelectedIds([])}
+        />
+      </PermissionGuard>
+
       {/* Employee Table */}
       <Card className="theme-card">
         <CardHeader>
-          <CardTitle className="theme-text">Danh Sách Nhân Viên</CardTitle>
+          <CardTitle className="theme-text">
+            Danh Sách Nhân Viên ({filteredEmployees.length})
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={isAllSelected}
+                    onCheckedChange={handleSelectAll}
+                  />
+                </TableHead>
                 <TableHead>Nhân Viên</TableHead>
                 <TableHead>Mã NV</TableHead>
                 <TableHead>Phòng Ban</TableHead>
@@ -203,19 +311,25 @@ export function HRISPage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 theme-text-secondary">
+                  <TableCell colSpan={9} className="text-center py-8 theme-text-secondary">
                     Đang tải dữ liệu...
                   </TableCell>
                 </TableRow>
               ) : filteredEmployees.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 theme-text-secondary">
+                  <TableCell colSpan={9} className="text-center py-8 theme-text-secondary">
                     Không tìm thấy nhân viên
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredEmployees.map((employee) => (
+                paginatedEmployees.map((employee) => (
                   <TableRow key={employee.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedIds.includes(employee.id)}
+                        onCheckedChange={(checked) => handleSelectOne(employee.id, checked as boolean)}
+                      />
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar>
@@ -241,7 +355,12 @@ export function HRISPage() {
                     <TableCell>{getStatusBadge(employee.status)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Button variant="ghost" size="icon" title="Xem chi tiết">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          title="Xem chi tiết"
+                          onClick={() => handleViewDetail(employee)}
+                        >
                           <Eye className="h-4 w-4" />
                         </Button>
                         <PermissionGuard requiredPermission="edit_employees" showError={false}>
@@ -263,6 +382,18 @@ export function HRISPage() {
               )}
             </TableBody>
           </Table>
+
+          {/* Pagination */}
+          {filteredEmployees.length > 0 && (
+            <EmployeePagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              pageSize={pageSize}
+              totalItems={filteredEmployees.length}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={setPageSize}
+            />
+          )}
         </CardContent>
       </Card>
 
@@ -284,6 +415,13 @@ export function HRISPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Employee Detail Modal */}
+      <EmployeeDetailModal
+        employee={selectedEmployee}
+        open={detailModalOpen}
+        onOpenChange={setDetailModalOpen}
+      />
     </div>
   );
 }
