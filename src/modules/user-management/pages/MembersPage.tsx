@@ -132,7 +132,7 @@ export function MembersPage() {
       console.log('🌐 [MembersPage] Fetching members from Supabase...');
       
       // In single-tenant mode, fetch all members (no business ID needed)
-      const response = await MembersService.getMembers('');
+      const response = await MembersService.getMembers();
       
       console.log('📊 [MembersPage] Raw response:', response);
       console.log('👥 [MembersPage] Members data:', response.data);

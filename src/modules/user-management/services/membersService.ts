@@ -124,10 +124,15 @@ export class MembersService {
         throw new Error(roleError.message);
       }
 
-      // Update user_roles
+      // Update user_roles (ensure valid role type)
+      const roleName = roleData.name.toLowerCase();
+      if (roleName !== 'admin' && roleName !== 'user') {
+        throw new Error('Invalid role name');
+      }
+      
       const { error } = await supabase
         .from('user_roles')
-        .update({ role: roleData.name.toLowerCase() })
+        .update({ role: roleName as 'admin' | 'user' })
         .eq('user_id', userId);
 
       if (error) {
