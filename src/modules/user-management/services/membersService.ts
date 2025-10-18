@@ -67,6 +67,10 @@ export class MembersService {
     }
 
     // Map users data to SupabaseMember format
+    console.log('👥 [MembersService] Mapping members...');
+    console.log('   - Total users from profiles:', usersData?.length);
+    console.log('   - Total user_roles:', userRolesData?.length);
+    
     const members: SupabaseMember[] = (usersData || []).map((user: any) => {
       const userRole = userRolesData?.find((r: any) => r.user_id === user.id);
       const roleInfo = (userRole as any)?.roles || {
@@ -74,6 +78,8 @@ export class MembersService {
         name: 'User',
         description: null
       };
+      
+      console.log(`   - User ${user.full_name}: role =`, roleInfo.name);
 
       return {
         id: user.id,

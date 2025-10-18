@@ -11,6 +11,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   refreshUserProfile: () => Promise<void>;
+  refreshPermissions: () => Promise<void>;
   isLoading: boolean;
   requirePasswordChange: boolean;
   setRequirePasswordChange: (value: boolean) => void;
@@ -96,17 +97,17 @@ const fetchUserWithPermissions = async (supabaseUser: SupabaseUser): Promise<{ u
         id,
         name,
         description,
-        role_permissions (
-          features (
+      role_permissions (
+        features (
+          code,
+          module_id,
+          feature_type,
+          modules (
             code,
-            module_id,
-            feature_type,
-            modules!features_module_id_fkey (
-              code,
-              name
-            )
+            name
           )
         )
+      )
       )
     `)
     .eq('user_id', supabaseUser.id)
@@ -137,8 +138,20 @@ const fetchUserWithPermissions = async (supabaseUser: SupabaseUser): Promise<{ u
   // Log detailed feature-module mapping
   rolePermissions.forEach((rp: any, index: number) => {
     const feature = rp.features;
+    if (!feature) {
+      console.warn(`⚠️ [${index + 1}] No feature data in role_permission`);
+      return;
+    }
+    
+    const featureCode = feature.code;
     const moduleCode = feature?.modules?.code;
-    console.log(`  [${index + 1}] Feature: ${feature?.code} → Module: ${moduleCode}`);
+    
+    console.log(`🔍 [${index + 1}] Feature:`, {
+      featureCode: featureCode,
+      moduleName: feature?.modules?.name,
+      moduleCode: moduleCode,
+      moduleId: feature.module_id
+    });
   });
 
   // Map role name to legacy UserRole type
@@ -203,6 +216,8 @@ const fetchUserWithPermissions = async (supabaseUser: SupabaseUser): Promise<{ u
       if (moduleCode) {
         moduleSet.add(moduleCode as ERPModule);
         console.log(`✅ Added module: ${moduleCode} from feature: ${featureCode}`);
+      } else {
+        console.warn(`⚠️ Module code not found for feature: ${featureCode}`);
       }
       
       // Map voucher-specific features
@@ -242,13 +257,13 @@ const fetchUserWithPermissions = async (supabaseUser: SupabaseUser): Promise<{ u
       canViewAllVouchers,
     };
 
-    console.log('✅ [AuthContext] Mapped modules:', Array.from(moduleSet));
-    console.log('✅ [AuthContext] Mapped voucher features:', Array.from(voucherFeatureSet));
-    console.log('✅ [AuthContext] Final permissions:', {
-      moduleCount: permissions.modules.length,
+    console.log('✅ [AuthContext] Final modules:', Array.from(moduleSet));
+    console.log('✅ [AuthContext] Final voucher features:', Array.from(voucherFeatureSet));
+    console.log('✅ [AuthContext] User can access:', {
       modules: permissions.modules,
       voucherFeatures: permissions.voucherFeatures,
-      canManageUsers: permissions.canManageUsers
+      canManageUsers: permissions.canManageUsers,
+      canViewAllVouchers: permissions.canViewAllVouchers
     });
   }
   
@@ -457,6 +472,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const refreshPermissions = async () => {
+    console.log('🔄 [AuthContext] Force refreshing permissions...');
+    
+    try {
+      const { data: { user: supabaseUser } } = await supabase.auth.getUser();
+      
+      if (!supabaseUser) {
+        console.warn('⚠️ [AuthContext] No user found for refresh');
+        return;
+      }
+      
+      const { user: updatedUser, passwordChangeRequired } = await fetchUserWithPermissions(supabaseUser);
+      
+      setCurrentUser(updatedUser);
+      setRequirePasswordChange(passwordChangeRequired);
+      
+      console.log('✅ [AuthContext] Permissions refreshed:', updatedUser.permissions);
+    } catch (error) {
+      console.error('❌ [AuthContext] Failed to refresh permissions:', error);
+    }
+  };
+
   // Don't render children until auth state is initialized
   if (!isInitialized) {
     return (
@@ -477,6 +514,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         logout,
         refreshUserProfile,
+        refreshPermissions,
         isLoading,
         requirePasswordChange,
         setRequirePasswordChange,

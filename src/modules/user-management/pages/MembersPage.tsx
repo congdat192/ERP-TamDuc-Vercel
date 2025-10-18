@@ -106,7 +106,7 @@ export function MembersPage() {
   });
   
   const { toast } = useToast();
-  const { currentUser } = useAuth();
+  const { currentUser, refreshUserProfile } = useAuth();
 
   const fetchRoles = async () => {
     try {
@@ -202,6 +202,12 @@ export function MembersPage() {
       });
       
       await fetchMembers();
+      
+      // Nếu đang update role cho user hiện tại, refresh permissions
+      if (memberId === currentUser?.id) {
+        console.log('🔄 [MembersPage] Refreshing current user permissions...');
+        await refreshUserProfile();
+      }
     } catch (err: any) {
       console.error('❌ [MembersPage] Error updating member role:', err);
       toast({
