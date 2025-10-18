@@ -89,6 +89,7 @@ export type Database = {
         Row: {
           avatar_path: string | null
           created_at: string | null
+          email: string | null
           full_name: string
           id: string
           last_password_change: string | null
@@ -99,6 +100,7 @@ export type Database = {
         Insert: {
           avatar_path?: string | null
           created_at?: string | null
+          email?: string | null
           full_name: string
           id: string
           last_password_change?: string | null
@@ -109,6 +111,7 @@ export type Database = {
         Update: {
           avatar_path?: string | null
           created_at?: string | null
+          email?: string | null
           full_name?: string
           id?: string
           last_password_change?: string | null

@@ -9,6 +9,7 @@ export interface SupabaseMember {
   profiles: {
     id: string;
     full_name: string;
+    email: string;
     phone: string | null;
     avatar_path: string | null;
   };
@@ -37,6 +38,7 @@ export class MembersService {
       .select(`
         id,
         full_name,
+        email,
         phone,
         avatar_path,
         created_at
@@ -90,6 +92,7 @@ export class MembersService {
         profiles: {
           id: user.id,
           full_name: user.full_name,
+          email: user.email,
           phone: user.phone,
           avatar_path: user.avatar_path
         },

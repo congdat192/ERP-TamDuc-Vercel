@@ -201,13 +201,18 @@ export function MembersTable({
                         {user.fullName.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <p className="font-medium text-gray-900">{user.fullName}</p>
-                      <p className="text-sm text-gray-500">{user.email}</p>
+                  <div>
+                    <p className="font-medium text-gray-900">{user.fullName}</p>
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <span>{user.email}</span>
                       {user.phone && (
-                        <p className="text-sm text-gray-500">{user.phone}</p>
+                        <>
+                          <span>•</span>
+                          <span>{user.phone}</span>
+                        </>
                       )}
                     </div>
+                  </div>
                   </div>
                 </TableCell>
                 <TableCell>

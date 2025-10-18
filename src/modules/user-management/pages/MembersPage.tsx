@@ -297,7 +297,7 @@ export function MembersPage() {
       id: member.id,
       fullName: member.profiles?.full_name || 'N/A',
       username: member.profiles?.full_name?.split(' ')[0] || 'N/A',
-      email: member.user_id,
+      email: member.profiles?.email || 'N/A',
       phone: member.profiles?.phone || undefined,
       avatar: avatarUrl,
       status: member.status === 'ACTIVE' ? 'active' : 'inactive',
