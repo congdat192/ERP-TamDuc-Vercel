@@ -50,7 +50,7 @@ export class EmployeeService {
       fullName: emp.full_name,
       email: emp.email,
       phone: emp.phone || '',
-      avatar: emp.avatar_path || '/placeholder.svg',
+      avatar: emp.avatar_path || '',
       position: emp.position,
       department: emp.department,
       joinDate: emp.join_date,
@@ -85,7 +85,7 @@ export class EmployeeService {
       fullName: data.full_name,
       email: data.email,
       phone: data.phone || '',
-      avatar: data.avatar_path || '/placeholder.svg',
+      avatar: data.avatar_path || '',
       position: data.position,
       department: data.department,
       joinDate: data.join_date,
@@ -112,6 +112,7 @@ export class EmployeeService {
         full_name: data.full_name,
         email: data.email,
         phone: data.phone,
+        avatar_path: data.avatar_path || null,
         position: data.position,
         department: data.department,
         join_date: data.join_date,
@@ -135,6 +136,7 @@ export class EmployeeService {
     if (data.full_name) updates.full_name = data.full_name;
     if (data.email) updates.email = data.email;
     if (data.phone !== undefined) updates.phone = data.phone;
+    if (data.avatar_path !== undefined) updates.avatar_path = data.avatar_path;
     if (data.position) updates.position = data.position;
     if (data.department) updates.department = data.department;
     if (data.join_date) updates.join_date = data.join_date;
