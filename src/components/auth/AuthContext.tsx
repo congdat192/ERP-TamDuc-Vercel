@@ -93,42 +93,29 @@ const fetchUserWithPermissions = async (supabaseUser: SupabaseUser): Promise<Use
   
   const dbRole = userRoleData?.role || 'user';
   
-  // Get permissions based on role
-  let permissions: UserPermissions = {
-    modules: [],
-    voucherFeatures: [],
-    canManageUsers: false,
-    canViewAllVouchers: false
-  };
+  // Get permissions and role based on database role
+  let permissions: UserPermissions;
+  let frontendRole: UserRole;
   
-  // If super_admin or business_owner, grant all permissions
-  if (dbRole === 'super_admin' || dbRole === 'business_owner') {
+  // Map database role to frontend role and permissions
+  if (dbRole === 'admin') {
+    // Admin has full access to all modules
+    frontendRole = 'erp-admin';
     permissions = {
-      modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'marketing', 'affiliate', 'system-settings', 'user-management'],
-      voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
+      modules: MODULE_PERMISSIONS.map(m => m.module),
+      voucherFeatures: VOUCHER_FEATURES.map(f => f.id as VoucherFeature),
       canManageUsers: true,
-      canViewAllVouchers: true
+      canViewAllVouchers: true,
     };
   } else {
-    // Fetch permissions from database (pass null for business_id since single-tenant)
-    const { data: perms, error: permsError } = await supabase.rpc('get_user_permissions', {
-      _user_id: supabaseUser.id,
-      _business_id: null
-    });
-    
-    if (permsError) {
-      console.error('❌ [AuthContext] Error fetching permissions:', permsError);
-    } else {
-      permissions = transformPermissions(perms || []);
-    }
-  }
-  
-  // Map database role to frontend UserRole type
-  let frontendRole: 'erp-admin' | 'voucher-admin' | 'telesales' | 'custom' = 'custom';
-  if (dbRole === 'super_admin' || dbRole === 'business_owner') {
-    frontendRole = 'erp-admin';
-  } else {
+    // Regular users have limited access
     frontendRole = 'custom';
+    permissions = {
+      modules: [],
+      voucherFeatures: [],
+      canManageUsers: false,
+      canViewAllVouchers: false,
+    };
   }
   
   return {

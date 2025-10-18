@@ -202,15 +202,6 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                   </button>
                 </div>
                 
-                <p className="text-sm text-gray-600">
-                  Chưa có tài khoản?{' '}
-                  <Link
-                    to="/register"
-                    className="text-blue-600 hover:text-blue-800 font-medium"
-                  >
-                    Đăng ký ngay
-                  </Link>
-                </p>
               </div>
 
               {/* Footer Links */}

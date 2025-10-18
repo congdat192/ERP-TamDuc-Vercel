@@ -14,163 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      business_invitations: {
-        Row: {
-          accepted_at: string | null
-          business_id: string
-          created_at: string
-          email: string
-          expires_at: string
-          id: string
-          invited_by: string
-          role_id: number
-          status: string
-          token: string
-          updated_at: string
-        }
-        Insert: {
-          accepted_at?: string | null
-          business_id: string
-          created_at?: string
-          email: string
-          expires_at?: string
-          id?: string
-          invited_by: string
-          role_id: number
-          status?: string
-          token: string
-          updated_at?: string
-        }
-        Update: {
-          accepted_at?: string | null
-          business_id?: string
-          created_at?: string
-          email?: string
-          expires_at?: string
-          id?: string
-          invited_by?: string
-          role_id?: number
-          status?: string
-          token?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "business_invitations_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "businesses"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "business_invitations_invited_by_fkey"
-            columns: ["invited_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "business_invitations_role_id_fkey"
-            columns: ["role_id"]
-            isOneToOne: false
-            referencedRelation: "roles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      business_members: {
-        Row: {
-          business_id: string
-          id: string
-          invited_by: string | null
-          joined_at: string | null
-          role_id: number | null
-          status: Database["public"]["Enums"]["member_status"] | null
-          user_id: string
-        }
-        Insert: {
-          business_id: string
-          id?: string
-          invited_by?: string | null
-          joined_at?: string | null
-          role_id?: number | null
-          status?: Database["public"]["Enums"]["member_status"] | null
-          user_id: string
-        }
-        Update: {
-          business_id?: string
-          id?: string
-          invited_by?: string | null
-          joined_at?: string | null
-          role_id?: number | null
-          status?: Database["public"]["Enums"]["member_status"] | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "business_members_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "businesses"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "business_members_role_id_fkey"
-            columns: ["role_id"]
-            isOneToOne: false
-            referencedRelation: "roles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      businesses: {
-        Row: {
-          address: string | null
-          created_at: string | null
-          description: string | null
-          email_address: string | null
-          id: string
-          is_active: boolean | null
-          logo_path: string | null
-          name: string
-          owner_id: string
-          phone_number: string | null
-          tax_number: string | null
-          updated_at: string | null
-          website_url: string | null
-        }
-        Insert: {
-          address?: string | null
-          created_at?: string | null
-          description?: string | null
-          email_address?: string | null
-          id?: string
-          is_active?: boolean | null
-          logo_path?: string | null
-          name: string
-          owner_id: string
-          phone_number?: string | null
-          tax_number?: string | null
-          updated_at?: string | null
-          website_url?: string | null
-        }
-        Update: {
-          address?: string | null
-          created_at?: string | null
-          description?: string | null
-          email_address?: string | null
-          id?: string
-          is_active?: boolean | null
-          logo_path?: string | null
-          name?: string
-          owner_id?: string
-          phone_number?: string | null
-          tax_number?: string | null
-          updated_at?: string | null
-          website_url?: string | null
-        }
-        Relationships: []
-      }
       features: {
         Row: {
           code: string
@@ -333,15 +176,7 @@ export type Database = {
           name?: string
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "roles_business_id_fkey"
-            columns: ["business_id"]
-            isOneToOne: false
-            referencedRelation: "businesses"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       user_roles: {
         Row: {
@@ -369,61 +204,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      create_business_safe: {
-        Args: {
-          _address?: string
-          _description?: string
-          _email_address?: string
-          _logo_path?: string
-          _name: string
-          _phone_number?: string
-          _tax_number?: string
-          _website_url?: string
-        }
-        Returns: {
-          address: string
-          created_at: string
-          description: string
-          email_address: string
-          id: string
-          is_owner: boolean
-          logo_path: string
-          name: string
-          owner_id: string
-          phone_number: string
-          tax_number: string
-          updated_at: string
-          user_role: string
-          website_url: string
-        }[]
-      }
-      get_user_businesses: {
-        Args: { _user_id: string }
-        Returns: {
-          description: string
-          id: string
-          is_owner: boolean
-          logo_path: string
-          member_status: Database["public"]["Enums"]["member_status"]
-          name: string
-          owner_id: string
-          role_name: string
-          user_role: string
-        }[]
-      }
-      get_user_permissions: {
-        Args: { _business_id: string; _user_id: string }
-        Returns: {
-          feature_code: string
-          feature_name: string
-          feature_type: string
-          module_code: string
-        }[]
-      }
-      has_permission: {
-        Args: { _business_id: string; _feature_code: string; _user_id: string }
-        Returns: boolean
-      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -431,13 +211,9 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_business_member: {
-        Args: { _business_id: string; _user_id: string }
-        Returns: boolean
-      }
     }
     Enums: {
-      app_role: "user" | "business_owner" | "super_admin"
+      app_role: "admin" | "user"
       member_status: "ACTIVE" | "INACTIVE" | "PENDING" | "SUSPENDED"
     }
     CompositeTypes: {
@@ -566,7 +342,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["user", "business_owner", "super_admin"],
+      app_role: ["admin", "user"],
       member_status: ["ACTIVE", "INACTIVE", "PENDING", "SUSPENDED"],
     },
   },
