@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FileText, Plus } from 'lucide-react';
+import { FileText, Plus, FileStack } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +11,7 @@ import { DocumentTable } from '../components/administration/DocumentTable';
 import { CreateDocumentModal } from '../components/administration/CreateDocumentModal';
 import { ViewDocumentModal } from '../components/administration/ViewDocumentModal';
 import { EditDocumentModal } from '../components/administration/EditDocumentModal';
+import { TemplateManagementPage } from './TemplateManagementPage';
 import type {
   AdministrativeDocument,
   DocumentFilters,
@@ -20,6 +21,7 @@ import type {
 import { getDocTypeLabel } from '../types/administration';
 
 export function AdministrationPage() {
+  const [mainTab, setMainTab] = useState<'documents' | 'templates'>('documents');
   const [activeTab, setActiveTab] = useState<DocType | 'all'>('all');
   const [documents, setDocuments] = useState<AdministrativeDocument[]>([]);
   const [filteredDocs, setFilteredDocs] = useState<AdministrativeDocument[]>([]);
@@ -143,21 +145,38 @@ export function AdministrationPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Hồ Sơ Hành Chính</h2>
+          <h2 className="text-3xl font-bold tracking-tight">Quản Lý Văn Bản</h2>
           <p className="text-muted-foreground mt-2">
-            Quản lý văn bản hành chính và tài liệu công ty
+            Quản lý văn bản hành chính, mẫu văn bản và tài liệu công ty
           </p>
         </div>
-        {canCreate && (
-          <Button onClick={() => setShowCreateModal(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Tạo Văn Bản
-          </Button>
-        )}
       </div>
 
-      {/* Stats Cards */}
-      {stats && (
+      {/* Main Tabs */}
+      <Tabs value={mainTab} onValueChange={(v) => setMainTab(v as 'documents' | 'templates')}>
+        <TabsList>
+          <TabsTrigger value="documents">
+            <FileText className="h-4 w-4 mr-2" />
+            Hồ Sơ Hành Chính
+          </TabsTrigger>
+          <TabsTrigger value="templates">
+            <FileStack className="h-4 w-4 mr-2" />
+            Quản Lý Mẫu
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="documents" className="space-y-6 mt-6">
+          <div className="flex items-center justify-end">
+            {canCreate && (
+              <Button onClick={() => setShowCreateModal(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Tạo Văn Bản
+              </Button>
+            )}
+          </div>
+
+          {/* Stats Cards */}
+          {stats && (
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -192,14 +211,14 @@ export function AdministrationPage() {
               <div className="text-2xl font-bold">{stats.archived}</div>
             </CardContent>
           </Card>
-        </div>
-      )}
+          </div>
+          )}
 
-      {/* Filters */}
-      <DocumentFiltersComponent filters={filters} onFilterChange={setFilters} />
+          {/* Filters */}
+          <DocumentFiltersComponent filters={filters} onFilterChange={setFilters} />
 
-      {/* Documents Table */}
-      <Card>
+          {/* Documents Table */}
+          <Card>
         <CardHeader>
           <Tabs
             value={activeTab}
@@ -224,26 +243,26 @@ export function AdministrationPage() {
             </TabsList>
           </Tabs>
         </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Đang tải...
-            </div>
-          ) : (
-            <DocumentTable
-              documents={filteredDocs}
-              onView={handleView}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              canEdit={canCreate}
-              canDelete={canDelete}
-            />
-          )}
-        </CardContent>
-      </Card>
+          <CardContent>
+            {isLoading ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Đang tải...
+              </div>
+            ) : (
+              <DocumentTable
+                documents={filteredDocs}
+                onView={handleView}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                canEdit={canCreate}
+                canDelete={canDelete}
+              />
+            )}
+          </CardContent>
+          </Card>
 
-      {/* Modals */}
-      <CreateDocumentModal
+          {/* Modals */}
+          <CreateDocumentModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onSuccess={handleSuccess}
@@ -260,17 +279,23 @@ export function AdministrationPage() {
         canApprove={canApprove}
       />
 
-      {showEditModal && selectedDocument && (
-        <EditDocumentModal
-          isOpen={showEditModal}
-          onClose={() => {
-            setShowEditModal(false);
-            setSelectedDocument(null);
-          }}
-          document={selectedDocument}
-          onSuccess={handleSuccess}
-        />
-      )}
+          {showEditModal && selectedDocument && (
+            <EditDocumentModal
+              isOpen={showEditModal}
+              onClose={() => {
+                setShowEditModal(false);
+                setSelectedDocument(null);
+              }}
+              document={selectedDocument}
+              onSuccess={handleSuccess}
+            />
+          )}
+        </TabsContent>
+
+        <TabsContent value="templates" className="mt-6">
+          <TemplateManagementPage />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
