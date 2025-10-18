@@ -95,6 +95,7 @@ export type Database = {
           last_password_change: string | null
           password_change_required: boolean | null
           phone: string | null
+          status: string | null
           updated_at: string | null
         }
         Insert: {
@@ -106,6 +107,7 @@ export type Database = {
           last_password_change?: string | null
           password_change_required?: boolean | null
           phone?: string | null
+          status?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -117,6 +119,7 @@ export type Database = {
           last_password_change?: string | null
           password_change_required?: boolean | null
           phone?: string | null
+          status?: string | null
           updated_at?: string | null
         }
         Relationships: []

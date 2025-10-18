@@ -41,6 +41,7 @@ export class MembersService {
         email,
         phone,
         avatar_path,
+        status,
         created_at
       `)
       .order('created_at', { ascending: false });
@@ -87,7 +88,7 @@ export class MembersService {
         id: user.id,
         user_id: user.id,
         role_id: roleInfo.id,
-        status: 'ACTIVE' as const,
+        status: (user.status || 'ACTIVE') as 'ACTIVE' | 'INACTIVE',
         joined_at: user.created_at,
         profiles: {
           id: user.id,
@@ -127,6 +128,19 @@ export class MembersService {
 
       if (error) {
         console.error('❌ [MembersService] Update error:', error);
+        throw new Error(error.message);
+      }
+    }
+    
+    // Update status in profiles table
+    if (updates.status) {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ status: updates.status })
+        .eq('id', userId);
+
+      if (error) {
+        console.error('❌ [MembersService] Update status error:', error);
         throw new Error(error.message);
       }
     }
@@ -174,7 +188,7 @@ export interface MemberWithRoles {
 export async function getMembersWithRoles(): Promise<MemberWithRoles[]> {
   const { data: usersData, error: usersError } = await supabase
     .from('profiles')
-    .select('id, created_at');
+    .select('id, status, created_at');
 
   if (usersError) {
     console.error('❌ [getMembersWithRoles] Error:', usersError);
@@ -208,7 +222,7 @@ export async function getMembersWithRoles(): Promise<MemberWithRoles[]> {
 
     return {
       id: user.id,
-      status: 'ACTIVE' as const,
+      status: (user.status || 'ACTIVE') as 'ACTIVE' | 'INACTIVE',
       is_owner: roleInfo.name.toLowerCase() === 'admin',
       roles: [roleInfo]
     };
