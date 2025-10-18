@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      employees: {
+        Row: {
+          avatar_path: string | null
+          contract_type: Database["public"]["Enums"]["contract_type"] | null
+          created_at: string | null
+          created_by: string | null
+          department: string
+          email: string
+          employee_code: string
+          full_name: string
+          id: string
+          join_date: string
+          kpi_score: number | null
+          last_review_date: string | null
+          phone: string | null
+          position: string
+          salary_p1: number | null
+          salary_p2: number | null
+          salary_p3: number | null
+          status: Database["public"]["Enums"]["employee_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_path?: string | null
+          contract_type?: Database["public"]["Enums"]["contract_type"] | null
+          created_at?: string | null
+          created_by?: string | null
+          department: string
+          email: string
+          employee_code: string
+          full_name: string
+          id?: string
+          join_date: string
+          kpi_score?: number | null
+          last_review_date?: string | null
+          phone?: string | null
+          position: string
+          salary_p1?: number | null
+          salary_p2?: number | null
+          salary_p3?: number | null
+          status?: Database["public"]["Enums"]["employee_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_path?: string | null
+          contract_type?: Database["public"]["Enums"]["contract_type"] | null
+          created_at?: string | null
+          created_by?: string | null
+          department?: string
+          email?: string
+          employee_code?: string
+          full_name?: string
+          id?: string
+          join_date?: string
+          kpi_score?: number | null
+          last_review_date?: string | null
+          phone?: string | null
+          position?: string
+          salary_p1?: number | null
+          salary_p2?: number | null
+          salary_p3?: number | null
+          status?: Database["public"]["Enums"]["employee_status"] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       features: {
         Row: {
           code: string
@@ -238,6 +304,8 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      contract_type: "Chính Thức" | "Thử Việc" | "Hợp Đồng"
+      employee_status: "active" | "inactive" | "probation" | "terminated"
       member_status: "ACTIVE" | "INACTIVE" | "PENDING" | "SUSPENDED"
     }
     CompositeTypes: {
@@ -367,6 +435,8 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      contract_type: ["Chính Thức", "Thử Việc", "Hợp Đồng"],
+      employee_status: ["active", "inactive", "probation", "terminated"],
       member_status: ["ACTIVE", "INACTIVE", "PENDING", "SUSPENDED"],
     },
   },

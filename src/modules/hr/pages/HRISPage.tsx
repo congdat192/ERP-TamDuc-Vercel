@@ -1,5 +1,8 @@
-import { useState } from 'react';
-import { Search, Plus, Filter, Download, Eye, Edit, Trash2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, Filter, Download, Eye, Trash2, RefreshCw } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { usePermissions } from '@/hooks/usePermissions';
+import { PermissionGuard } from '@/components/auth/PermissionGuard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,58 +16,82 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Employee } from '../types';
-
-const dummyEmployees: Employee[] = [
-  {
-    id: '1',
-    employeeCode: 'NV001',
-    fullName: 'Nguyễn Văn An',
-    email: 'an.nguyen@tamduc.vn',
-    phone: '0901234567',
-    avatar: '/placeholder.svg',
-    position: 'Sales Manager',
-    department: 'Sales',
-    joinDate: '2023-01-15',
-    contractType: 'Chính Thức',
-    status: 'active',
-    salary: { p1: 15000000, p2: 1.5, p3: 3000000, total: 25500000 },
-    performance: { kpi: 85, lastReview: '2024-01-01' }
-  },
-  {
-    id: '2',
-    employeeCode: 'NV002',
-    fullName: 'Trần Thị Bình',
-    email: 'binh.tran@tamduc.vn',
-    phone: '0902345678',
-    avatar: '/placeholder.svg',
-    position: 'HR Specialist',
-    department: 'HR',
-    joinDate: '2023-03-20',
-    contractType: 'Chính Thức',
-    status: 'active',
-    salary: { p1: 12000000, p2: 1.3, p3: 2000000, total: 17600000 },
-    performance: { kpi: 90, lastReview: '2024-01-01' }
-  },
-  {
-    id: '3',
-    employeeCode: 'NV003',
-    fullName: 'Lê Minh Châu',
-    email: 'chau.le@tamduc.vn',
-    phone: '0903456789',
-    avatar: '/placeholder.svg',
-    position: 'Sales Staff',
-    department: 'Sales',
-    joinDate: '2023-06-10',
-    contractType: 'Thử Việc',
-    status: 'probation',
-    salary: { p1: 8000000, p2: 1.0, p3: 1000000, total: 9000000 },
-    performance: { kpi: 75, lastReview: '2024-01-01' }
-  },
-];
+import { EmployeeService } from '../services/employeeService';
+import { CreateEmployeeModal } from '../components/CreateEmployeeModal';
+import { EditEmployeeModal } from '../components/EditEmployeeModal';
 
 export function HRISPage() {
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const { toast } = useToast();
+  const { hasPermission } = usePermissions();
+
+  const fetchEmployees = async () => {
+    setLoading(true);
+    try {
+      const data = await EmployeeService.getEmployees();
+      setEmployees(data);
+    } catch (error: any) {
+      toast({
+        title: 'Lỗi',
+        description: error.message || 'Không thể tải danh sách nhân viên',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
+
+  const handleDeleteClick = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedEmployee) return;
+
+    try {
+      await EmployeeService.deleteEmployee(selectedEmployee.id);
+      toast({
+        title: 'Thành công',
+        description: 'Đã xóa nhân viên',
+      });
+      await fetchEmployees();
+    } catch (error: any) {
+      toast({
+        title: 'Lỗi',
+        description: error.message || 'Không thể xóa nhân viên',
+        variant: 'destructive',
+      });
+    } finally {
+      setDeleteDialogOpen(false);
+      setSelectedEmployee(null);
+    }
+  };
+
+  const filteredEmployees = employees.filter(emp => 
+    emp.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    emp.employeeCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    emp.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const getStatusBadge = (status: Employee['status']) => {
     const statusMap = {
@@ -85,10 +112,14 @@ export function HRISPage() {
           <h1 className="text-3xl font-bold theme-text">Hồ Sơ Nhân Sự</h1>
           <p className="theme-text-secondary mt-1">Quản lý thông tin nhân viên và hợp đồng</p>
         </div>
-        <Button className="gap-2">
-          <Plus className="h-4 w-4" />
-          Thêm Nhân Viên
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="icon" onClick={fetchEmployees} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          </Button>
+          <PermissionGuard requiredPermission="create_employees" showError={false}>
+            <CreateEmployeeModal onSuccess={fetchEmployees} />
+          </PermissionGuard>
+        </div>
       </div>
 
       {/* Search & Filters */}
@@ -121,14 +152,14 @@ export function HRISPage() {
         <Card className="theme-card">
           <CardContent className="p-4">
             <p className="text-sm theme-text-secondary">Tổng Nhân Viên</p>
-            <p className="text-2xl font-bold theme-text">{dummyEmployees.length}</p>
+            <p className="text-2xl font-bold theme-text">{employees.length}</p>
           </CardContent>
         </Card>
         <Card className="theme-card">
           <CardContent className="p-4">
             <p className="text-sm theme-text-secondary">Đang Làm</p>
             <p className="text-2xl font-bold theme-text">
-              {dummyEmployees.filter(e => e.status === 'active').length}
+              {employees.filter(e => e.status === 'active').length}
             </p>
           </CardContent>
         </Card>
@@ -136,7 +167,7 @@ export function HRISPage() {
           <CardContent className="p-4">
             <p className="text-sm theme-text-secondary">Thử Việc</p>
             <p className="text-2xl font-bold theme-text">
-              {dummyEmployees.filter(e => e.status === 'probation').length}
+              {employees.filter(e => e.status === 'probation').length}
             </p>
           </CardContent>
         </Card>
@@ -144,7 +175,7 @@ export function HRISPage() {
           <CardContent className="p-4">
             <p className="text-sm theme-text-secondary">Nghỉ Việc</p>
             <p className="text-2xl font-bold theme-text">
-              {dummyEmployees.filter(e => e.status === 'inactive').length}
+              {employees.filter(e => e.status === 'inactive').length}
             </p>
           </CardContent>
         </Card>
@@ -169,44 +200,83 @@ export function HRISPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {dummyEmployees.map((employee) => (
-                <TableRow key={employee.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarImage src={employee.avatar} />
-                        <AvatarFallback>{employee.fullName.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium theme-text">{employee.fullName}</p>
-                        <p className="text-sm theme-text-secondary">{employee.email}</p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="theme-text">{employee.employeeCode}</TableCell>
-                  <TableCell className="theme-text">{employee.position}</TableCell>
-                  <TableCell className="theme-text">{employee.department}</TableCell>
-                  <TableCell className="theme-text">{employee.contractType}</TableCell>
-                  <TableCell>{getStatusBadge(employee.status)}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="icon">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8 theme-text-secondary">
+                    Đang tải dữ liệu...
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : filteredEmployees.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8 theme-text-secondary">
+                    Không tìm thấy nhân viên
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredEmployees.map((employee) => (
+                  <TableRow key={employee.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                          <AvatarImage src={employee.avatar} />
+                          <AvatarFallback>{employee.fullName.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium theme-text">{employee.fullName}</p>
+                          <p className="text-sm theme-text-secondary">{employee.email}</p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="theme-text">{employee.employeeCode}</TableCell>
+                    <TableCell className="theme-text">{employee.position}</TableCell>
+                    <TableCell className="theme-text">{employee.department}</TableCell>
+                    <TableCell className="theme-text">{employee.contractType}</TableCell>
+                    <TableCell>{getStatusBadge(employee.status)}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button variant="ghost" size="icon" title="Xem chi tiết">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <PermissionGuard requiredPermission="edit_employees" showError={false}>
+                          <EditEmployeeModal employee={employee} onSuccess={fetchEmployees} />
+                        </PermissionGuard>
+                        <PermissionGuard requiredPermission="delete_employees" showError={false}>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => handleDeleteClick(employee)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </PermissionGuard>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận xóa nhân viên</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn xóa nhân viên <strong>{selectedEmployee?.fullName}</strong>?
+              Hành động này không thể hoàn tác.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive hover:bg-destructive/90">
+              Xóa
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
