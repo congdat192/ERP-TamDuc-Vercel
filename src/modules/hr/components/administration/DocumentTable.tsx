@@ -119,7 +119,7 @@ export function DocumentTable({
                         Chỉnh sửa
                       </DropdownMenuItem>
                     )}
-                    {canDelete && ['draft', 'pending', 'rejected'].includes(doc.status) && (
+                    {canDelete && (
                       <DropdownMenuItem
                         onClick={() => onDelete(doc)}
                         className="text-destructive"

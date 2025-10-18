@@ -12,6 +12,7 @@ import { CreateDocumentModal } from '../components/administration/CreateDocument
 import { ViewDocumentModal } from '../components/administration/ViewDocumentModal';
 import { EditDocumentModal } from '../components/administration/EditDocumentModal';
 import { TemplateManagementPage } from './TemplateManagementPage';
+import { ConfirmationDialog } from '@/modules/admin/components/ConfirmationDialog';
 import type {
   AdministrativeDocument,
   DocumentFilters,
@@ -31,7 +32,9 @@ export function AdministrationPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<AdministrativeDocument | null>(null);
+  const [documentToDelete, setDocumentToDelete] = useState<AdministrativeDocument | null>(null);
   const { toast } = useToast();
   const { hasFeatureAccess } = usePermissions();
 
@@ -116,15 +119,35 @@ export function AdministrationPage() {
     setShowEditModal(true);
   };
 
-  const handleDelete = async (doc: AdministrativeDocument) => {
-    if (!confirm(`Bạn có chắc muốn xóa văn bản ${doc.doc_no}?`)) return;
+  const getDeleteWarningMessage = (status: string): string => {
+    switch (status) {
+      case 'published':
+        return '⚠️ Văn bản này đã XUẤT BẢN. Việc xóa có thể ảnh hưởng đến nhân viên đã nhận văn bản này. Bạn có chắc chắn muốn xóa vĩnh viễn?';
+      case 'archived':
+        return '⚠️ Văn bản này đã được LƯU TRỮ. Bạn có chắc chắn muốn xóa vĩnh viễn không?';
+      case 'approved':
+        return 'Văn bản này đã được PHÊ DUYỆT. Bạn có chắc muốn xóa?';
+      default:
+        return `Bạn có chắc chắn muốn xóa văn bản ${documentToDelete?.doc_no || 'này'}?`;
+    }
+  };
+
+  const handleDelete = (doc: AdministrativeDocument) => {
+    setDocumentToDelete(doc);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!documentToDelete) return;
 
     try {
-      await AdminDocumentService.deleteDocument(doc.id);
+      await AdminDocumentService.deleteDocument(documentToDelete.id);
       toast({
         title: 'Thành công',
         description: 'Đã xóa văn bản',
       });
+      setShowDeleteDialog(false);
+      setDocumentToDelete(null);
       loadDocuments();
       loadStats();
     } catch (error: any) {
@@ -290,6 +313,21 @@ export function AdministrationPage() {
               onSuccess={handleSuccess}
             />
           )}
+
+          {/* Delete Confirmation Dialog */}
+          <ConfirmationDialog
+            isOpen={showDeleteDialog}
+            onClose={() => {
+              setShowDeleteDialog(false);
+              setDocumentToDelete(null);
+            }}
+            title="Xác Nhận Xóa Văn Bản"
+            message={documentToDelete ? getDeleteWarningMessage(documentToDelete.status) : ''}
+            onConfirm={confirmDelete}
+            confirmText="Xóa"
+            cancelText="Hủy"
+            variant="destructive"
+          />
         </TabsContent>
 
         <TabsContent value="templates" className="mt-6">
