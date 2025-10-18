@@ -13,6 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Label } from '@/components/ui/label';
 import { AvatarService } from '../services/avatarService';
+import { Textarea } from '@/components/ui/textarea';
 
 interface CreateEmployeeModalProps {
   onSuccess: () => void;
@@ -41,7 +42,11 @@ export function CreateEmployeeModal({ onSuccess }: CreateEmployeeModalProps) {
       salary_p2: 1.0,
       salary_p3: 0,
       kpi_score: 0,
-      last_review_date: ''
+      last_review_date: '',
+      current_address: '',
+      emergency_contact_relationship: undefined,
+      emergency_contact_name: '',
+      emergency_contact_phone: ''
     }
   });
 
@@ -298,6 +303,97 @@ export function CreateEmployeeModal({ onSuccess }: CreateEmployeeModalProps) {
                   </FormItem>
                 )}
               />
+            </div>
+
+            {/* Địa Chỉ & Liên Hệ Khẩn Cấp Section */}
+            <div className="col-span-2 border-t pt-4">
+              <h3 className="text-lg font-semibold mb-4">Địa Chỉ & Liên Hệ Khẩn Cấp</h3>
+              
+              <div className="grid grid-cols-2 gap-4">
+                {/* Current Address - Full Width */}
+                <FormField
+                  control={form.control}
+                  name="current_address"
+                  render={({ field }) => (
+                    <FormItem className="col-span-2">
+                      <FormLabel>Nơi Ở Hiện Tại</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          {...field} 
+                          placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố"
+                          rows={3}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Emergency Contact Relationship */}
+                <FormField
+                  control={form.control}
+                  name="emergency_contact_relationship"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Mối Quan Hệ</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Chọn mối quan hệ" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Cha">Cha</SelectItem>
+                          <SelectItem value="Mẹ">Mẹ</SelectItem>
+                          <SelectItem value="Vợ">Vợ</SelectItem>
+                          <SelectItem value="Chồng">Chồng</SelectItem>
+                          <SelectItem value="Anh">Anh</SelectItem>
+                          <SelectItem value="Chị">Chị</SelectItem>
+                          <SelectItem value="Em">Em</SelectItem>
+                          <SelectItem value="Khác">Khác</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Emergency Contact Name */}
+                <FormField
+                  control={form.control}
+                  name="emergency_contact_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tên Người Liên Hệ</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Nguyễn Văn B" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Emergency Contact Phone */}
+                <FormField
+                  control={form.control}
+                  name="emergency_contact_phone"
+                  render={({ field }) => (
+                    <FormItem className="col-span-2">
+                      <FormLabel>Số Điện Thoại Người Liên Hệ</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="0901234567" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* Lương Section */}
+            <div className="col-span-2 border-t pt-4">
+              <h3 className="text-lg font-semibold mb-4">Thông Tin Lương</h3>
+              <div className="grid grid-cols-2 gap-4">
 
               <FormField
                 control={form.control}
@@ -385,6 +481,7 @@ export function CreateEmployeeModal({ onSuccess }: CreateEmployeeModalProps) {
                   </FormItem>
                 )}
               />
+            </div>
             </div>
 
             <DialogFooter>

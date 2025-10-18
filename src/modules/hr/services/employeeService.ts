@@ -65,7 +65,13 @@ export class EmployeeService {
       performance: {
         kpi: Number(emp.kpi_score) || 0,
         lastReview: emp.last_review_date || ''
-      }
+      },
+      currentAddress: emp.current_address,
+      emergencyContact: emp.emergency_contact_name ? {
+        relationship: emp.emergency_contact_relationship as 'Cha' | 'Mẹ' | 'Vợ' | 'Chồng' | 'Anh' | 'Chị' | 'Em' | 'Khác',
+        name: emp.emergency_contact_name,
+        phone: emp.emergency_contact_phone
+      } : undefined
     }));
   }
 
@@ -100,7 +106,13 @@ export class EmployeeService {
       performance: {
         kpi: Number(data.kpi_score) || 0,
         lastReview: data.last_review_date || ''
-      }
+      },
+      currentAddress: data.current_address,
+      emergencyContact: data.emergency_contact_name ? {
+        relationship: data.emergency_contact_relationship as 'Cha' | 'Mẹ' | 'Vợ' | 'Chồng' | 'Anh' | 'Chị' | 'Em' | 'Khác',
+        name: data.emergency_contact_name,
+        phone: data.emergency_contact_phone
+      } : undefined
     };
   }
 
@@ -123,6 +135,10 @@ export class EmployeeService {
         salary_p3: data.salary_p3 || 0,
         kpi_score: data.kpi_score || 0,
         last_review_date: data.last_review_date,
+        current_address: data.current_address || null,
+        emergency_contact_relationship: data.emergency_contact_relationship || null,
+        emergency_contact_name: data.emergency_contact_name || null,
+        emergency_contact_phone: data.emergency_contact_phone || null,
         created_by: (await supabase.auth.getUser()).data.user?.id
       });
 
@@ -147,6 +163,10 @@ export class EmployeeService {
     if (data.salary_p3 !== undefined) updates.salary_p3 = data.salary_p3;
     if (data.kpi_score !== undefined) updates.kpi_score = data.kpi_score;
     if (data.last_review_date !== undefined) updates.last_review_date = data.last_review_date;
+    if (data.current_address !== undefined) updates.current_address = data.current_address;
+    if (data.emergency_contact_relationship !== undefined) updates.emergency_contact_relationship = data.emergency_contact_relationship;
+    if (data.emergency_contact_name !== undefined) updates.emergency_contact_name = data.emergency_contact_name;
+    if (data.emergency_contact_phone !== undefined) updates.emergency_contact_phone = data.emergency_contact_phone;
 
     const { error } = await supabase
       .from('employees')

@@ -70,8 +70,12 @@ export type Database = {
           contract_type: Database["public"]["Enums"]["contract_type"] | null
           created_at: string | null
           created_by: string | null
+          current_address: string | null
           department: string
           email: string
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          emergency_contact_relationship: string | null
           employee_code: string
           full_name: string
           id: string
@@ -91,8 +95,12 @@ export type Database = {
           contract_type?: Database["public"]["Enums"]["contract_type"] | null
           created_at?: string | null
           created_by?: string | null
+          current_address?: string | null
           department: string
           email: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relationship?: string | null
           employee_code: string
           full_name: string
           id?: string
@@ -112,8 +120,12 @@ export type Database = {
           contract_type?: Database["public"]["Enums"]["contract_type"] | null
           created_at?: string | null
           created_by?: string | null
+          current_address?: string | null
           department?: string
           email?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relationship?: string | null
           employee_code?: string
           full_name?: string
           id?: string

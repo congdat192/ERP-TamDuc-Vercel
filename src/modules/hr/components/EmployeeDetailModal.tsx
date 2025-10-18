@@ -98,10 +98,57 @@ export function EmployeeDetailModal({ employee, open, onOpenChange }: EmployeeDe
                       <p className="text-sm theme-text-secondary">Trạng Thái</p>
                       <div className="mt-1">{getStatusBadge(employee.status)}</div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Address & Emergency Contact Card */}
+        <Card>
+          <CardContent className="pt-6 space-y-4">
+            <h4 className="font-semibold text-lg theme-text border-b pb-2">
+              Địa Chỉ & Liên Hệ Khẩn Cấp
+            </h4>
+            
+            {/* Current Address */}
+            <div>
+              <p className="text-sm theme-text-secondary">Nơi Ở Hiện Tại</p>
+              <p className="font-medium theme-text mt-1">
+                {employee.currentAddress || 'Chưa cập nhật'}
+              </p>
+            </div>
+
+            {/* Emergency Contact */}
+            {employee.emergencyContact && (
+              <div className="grid grid-cols-3 gap-4 pt-2 border-t">
+                <div>
+                  <p className="text-sm theme-text-secondary">Mối Quan Hệ</p>
+                  <Badge variant="outline" className="mt-1">
+                    {employee.emergencyContact.relationship}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-sm theme-text-secondary">Tên Người Liên Hệ</p>
+                  <p className="font-medium theme-text mt-1">
+                    {employee.emergencyContact.name}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm theme-text-secondary">Số Điện Thoại</p>
+                  <p className="font-medium theme-text mt-1">
+                    {employee.emergencyContact.phone}
+                  </p>
+                </div>
+              </div>
+            )}
+            
+            {!employee.emergencyContact && (
+              <p className="text-sm theme-text-secondary italic">
+                Chưa cập nhật thông tin liên hệ khẩn cấp
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </TabsContent>
 
             <TabsContent value="salary" className="space-y-4 mt-4">
               <Card>

@@ -20,6 +20,12 @@ export interface Employee {
     kpi: number;
     lastReview: string;
   };
+  currentAddress?: string;
+  emergencyContact?: {
+    relationship: 'Cha' | 'Mẹ' | 'Vợ' | 'Chồng' | 'Anh' | 'Chị' | 'Em' | 'Khác';
+    name: string;
+    phone: string;
+  };
 }
 
 export interface Attendance {

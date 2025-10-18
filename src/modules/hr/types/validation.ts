@@ -62,7 +62,29 @@ export const employeeSchema = z.object({
   
   last_review_date: z.string().optional(),
   
-  avatar_path: z.string().optional()
+  avatar_path: z.string().optional(),
+  
+  current_address: z.string()
+    .trim()
+    .max(500, 'Địa chỉ tối đa 500 ký tự')
+    .optional()
+    .or(z.literal('')),
+  
+  emergency_contact_relationship: z.enum([
+    'Cha', 'Mẹ', 'Vợ', 'Chồng', 'Anh', 'Chị', 'Em', 'Khác'
+  ]).optional(),
+  
+  emergency_contact_name: z.string()
+    .trim()
+    .max(100, 'Tên người liên hệ tối đa 100 ký tự')
+    .optional()
+    .or(z.literal('')),
+  
+  emergency_contact_phone: z.string()
+    .trim()
+    .regex(/^0\d{9}$/, 'Số điện thoại phải có 10 chữ số và bắt đầu bằng 0')
+    .optional()
+    .or(z.literal(''))
 });
 
 export type EmployeeFormData = z.infer<typeof employeeSchema>;
