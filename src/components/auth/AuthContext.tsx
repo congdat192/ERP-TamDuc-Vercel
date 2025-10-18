@@ -92,7 +92,7 @@ const fetchUserWithPermissions = async (supabaseUser: SupabaseUser): Promise<{ u
     .from('user_roles')
     .select(`
       role_id,
-      roles (
+      roles!user_roles_role_id_fkey (
         id,
         name,
         description,
