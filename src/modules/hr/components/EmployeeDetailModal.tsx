@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Employee } from '../types';
 import { AvatarService } from '../services/avatarService';
 import { EmployeeDocumentsTab } from './detail-tabs/EmployeeDocumentsTab';
+import { EmployeeAdminDocumentsTab } from './detail-tabs/EmployeeAdminDocumentsTab';
 import { MonthlyAttendanceTab } from './MonthlyAttendanceTab';
 
 interface EmployeeDetailModalProps {
@@ -54,12 +55,13 @@ export function EmployeeDetailModal({ employee, open, onOpenChange }: EmployeeDe
 
           {/* Tabs */}
           <Tabs defaultValue="info" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="info">Thông Tin</TabsTrigger>
               <TabsTrigger value="salary">Lương</TabsTrigger>
               <TabsTrigger value="performance">Hiệu Suất</TabsTrigger>
               <TabsTrigger value="attendance">Chấm Công</TabsTrigger>
               <TabsTrigger value="documents">Chứng Từ</TabsTrigger>
+              <TabsTrigger value="admin-docs">VB Hành Chính</TabsTrigger>
             </TabsList>
 
             <TabsContent value="info" className="space-y-4 mt-4">
@@ -266,6 +268,10 @@ export function EmployeeDetailModal({ employee, open, onOpenChange }: EmployeeDe
 
             <TabsContent value="documents">
               <EmployeeDocumentsTab employeeId={employee.id} />
+            </TabsContent>
+
+            <TabsContent value="admin-docs">
+              <EmployeeAdminDocumentsTab employeeId={employee.id} />
             </TabsContent>
           </Tabs>
         </div>

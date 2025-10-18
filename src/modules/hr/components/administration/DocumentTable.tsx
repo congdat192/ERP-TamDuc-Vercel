@@ -81,16 +81,14 @@ export function DocumentTable({
               </TableCell>
               <TableCell>
                 {doc.employee ? (
-                  <div className="text-sm">
-                    <div className="font-medium">{doc.employee.full_name}</div>
-                    <div className="text-muted-foreground">
-                      {doc.employee.employee_code}
+                  <div className="flex items-center gap-2">
+                    <div>
+                      <p className="font-medium">{doc.employee.full_name}</p>
+                      <p className="text-xs text-muted-foreground">{doc.employee.employee_code}</p>
                     </div>
                   </div>
                 ) : (
-                  <span className="text-sm text-muted-foreground">
-                    Toàn công ty
-                  </span>
+                  <Badge variant="secondary">Văn bản công ty</Badge>
                 )}
               </TableCell>
               <TableCell>

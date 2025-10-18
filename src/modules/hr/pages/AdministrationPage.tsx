@@ -82,6 +82,16 @@ export function AdministrationPage() {
       filtered = filtered.filter((doc) => doc.status === filters.status);
     }
 
+    if (filters.employee_id) {
+      if (filters.employee_id === 'no-employee') {
+        // Show only company-wide documents (no specific employee)
+        filtered = filtered.filter((doc) => doc.employee_id === null);
+      } else {
+        // Show documents for specific employee
+        filtered = filtered.filter((doc) => doc.employee_id === filters.employee_id);
+      }
+    }
+
     if (filters.search) {
       const search = filters.search.toLowerCase();
       filtered = filtered.filter(

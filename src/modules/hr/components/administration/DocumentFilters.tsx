@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
@@ -7,8 +8,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 import type { DocumentFilters, DocType, DocStatus } from '../../types/administration';
 import { getDocTypeLabel, getStatusLabel } from '../../types/administration';
+import { EmployeeService } from '@/modules/hr/services/employeeService';
 
 interface DocumentFiltersProps {
   filters: DocumentFilters;
@@ -16,8 +19,30 @@ interface DocumentFiltersProps {
 }
 
 export function DocumentFiltersComponent({ filters, onFilterChange }: DocumentFiltersProps) {
+  const [employees, setEmployees] = useState<Array<{ id: string; fullName: string; employeeCode: string }>>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        setLoading(true);
+        const data = await EmployeeService.getEmployees();
+        setEmployees(data.map(e => ({ 
+          id: e.id, 
+          fullName: e.fullName,
+          employeeCode: e.employeeCode 
+        })));
+      } catch (error) {
+        console.error('Error fetching employees:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchEmployees();
+  }, []);
+
   return (
-    <div className="flex flex-col gap-4 md:flex-row md:items-center">
+    <div className="flex flex-col gap-4 md:flex-row md:items-center md:flex-wrap">
       {/* Search */}
       <div className="relative flex-1">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -73,6 +98,34 @@ export function DocumentFiltersComponent({ filters, onFilterChange }: DocumentFi
           <SelectItem value="approved">{getStatusLabel('approved')}</SelectItem>
           <SelectItem value="published">{getStatusLabel('published')}</SelectItem>
           <SelectItem value="archived">{getStatusLabel('archived')}</SelectItem>
+        </SelectContent>
+      </Select>
+
+      {/* Employee Filter */}
+      <Select
+        value={filters.employee_id || 'all'}
+        onValueChange={(value) =>
+          onFilterChange({
+            ...filters,
+            employee_id: value === 'all' ? undefined : value === 'no-employee' ? 'no-employee' : value,
+          })
+        }
+      >
+        <SelectTrigger className="w-[200px]">
+          <SelectValue placeholder="Nhân viên" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Tất cả nhân viên</SelectItem>
+          <SelectItem value="no-employee">Văn bản công ty</SelectItem>
+          {loading ? (
+            <SelectItem value="_loading" disabled>Đang tải...</SelectItem>
+          ) : (
+            employees.map(e => (
+              <SelectItem key={e.id} value={e.id}>
+                {e.fullName} ({e.employeeCode})
+              </SelectItem>
+            ))
+          )}
         </SelectContent>
       </Select>
     </div>

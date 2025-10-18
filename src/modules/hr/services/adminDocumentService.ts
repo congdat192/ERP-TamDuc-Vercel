@@ -18,7 +18,7 @@ export class AdminDocumentService {
         .from('administrative_documents')
         .select(`
           *,
-          employee:employees(full_name, employee_code, position, department)
+          employee:employees!employee_id(full_name, employee_code, position, department)
         `)
         .order('created_at', { ascending: false });
 
@@ -67,7 +67,7 @@ export class AdminDocumentService {
         .from('administrative_documents')
         .select(`
           *,
-          employee:employees(full_name, employee_code, position, department)
+          employee:employees!employee_id(full_name, employee_code, position, department)
         `)
         .eq('id', id)
         .single();
@@ -100,7 +100,7 @@ export class AdminDocumentService {
         })
         .select(`
           *,
-          employee:employees(full_name, employee_code, position, department)
+          employee:employees!employee_id(full_name, employee_code, position, department)
         `)
         .single();
 
@@ -155,7 +155,7 @@ export class AdminDocumentService {
         .eq('id', id)
         .select(`
           *,
-          employee:employees(full_name, employee_code, position, department)
+          employee:employees!employee_id(full_name, employee_code, position, department)
         `)
         .single();
 
@@ -445,6 +445,32 @@ export class AdminDocumentService {
       return data.signedUrl;
     } catch (error: any) {
       console.error('❌ Error in getFileUrl:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get documents by employee ID (for HRIS integration)
+   */
+  static async getDocumentsByEmployee(employeeId: string): Promise<AdministrativeDocument[]> {
+    try {
+      const { data, error } = await supabase
+        .from('administrative_documents')
+        .select(`
+          *,
+          employee:employees!employee_id(full_name, employee_code, position, department)
+        `)
+        .eq('employee_id', employeeId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('❌ Error fetching employee documents:', error);
+        throw new Error(`Không thể tải văn bản của nhân viên: ${error.message}`);
+      }
+
+      return (data || []) as AdministrativeDocument[];
+    } catch (error: any) {
+      console.error('❌ Error in getDocumentsByEmployee:', error);
       throw error;
     }
   }
