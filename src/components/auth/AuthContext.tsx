@@ -373,18 +373,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check for existing session on mount
     const checkSession = async () => {
       try {
-        console.log('🔍 [AuthContext] Checking for existing session');
+        console.log('🔍 [checkSession] Checking for existing session');
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
-          const { user, passwordChangeRequired } = await fetchUserWithPermissions(session.user);
-          setCurrentUser(user);
-          setRequirePasswordChange(passwordChangeRequired);
-          console.log('✅ [AuthContext] Session restored:', user.email);
+          console.log('🔍 [checkSession] Session found, checking user status');
+          
+          // Phase 1: Quick status check (same as onAuthStateChange)
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('status')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (error) {
+            console.warn('⚠️ [checkSession] Failed to check status (proceeding with login):', error.message);
+            setIsInitialized(true);
+          } else if (profile?.status === 'INACTIVE') {
+            console.log('⛔ [checkSession] INACTIVE user detected - logging out');
+            await supabase.auth.signOut();
+            toast({
+              title: "Tài khoản bị vô hiệu hóa",
+              description: "Tài khoản của bạn đã bị vô hiệu hóa.",
+              variant: "destructive",
+            });
+            setIsInitialized(true);
+            return;
+          } else {
+            console.log('✅ [checkSession] User status is ACTIVE - proceeding');
+            setIsInitialized(true);
+            
+            // Phase 2: Load full profile (non-blocking)
+            setTimeout(() => {
+              fetchUserWithPermissions(session.user).then(({ user, passwordChangeRequired }) => {
+                setCurrentUser(user);
+                setRequirePasswordChange(passwordChangeRequired);
+                console.log('✅ [checkSession] Profile loaded:', user.email);
+              }).catch((err) => {
+                console.error('❌ [checkSession] Error loading profile:', err);
+              });
+            }, 0);
+          }
+        } else {
+          console.log('ℹ️ [checkSession] No session found');
+          setIsInitialized(true);
         }
       } catch (error) {
-        console.error('❌ [AuthContext] Error checking session:', error);
-      } finally {
+        console.error('❌ [checkSession] Error:', error);
         setIsInitialized(true);
       }
     };
@@ -396,6 +431,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       subscription.unsubscribe();
     };
   }, []);
+
+  // Safety timeout: Force initialization after 5 seconds
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (!isInitialized) {
+        console.warn('⚠️ [AuthContext] Force initialization after timeout');
+        setIsInitialized(true);
+      }
+    }, 5000);
+
+    return () => clearTimeout(timeout);
+  }, [isInitialized]);
 
   // Setup realtime listener for profile status changes
   useEffect(() => {
