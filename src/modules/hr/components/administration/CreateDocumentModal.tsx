@@ -55,7 +55,7 @@ export function CreateDocumentModal({
   const [effectiveDate, setEffectiveDate] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [templates, setTemplates] = useState<DocumentTemplate[]>([]);
-  const [selectedTemplate, setSelectedTemplate] = useState<string>('');
+  const [selectedTemplate, setSelectedTemplate] = useState<string>('none');
   const [employeeId, setEmployeeId] = useState<string>('');
   const [employees, setEmployees] = useState<Array<{ id: string; fullName: string; employeeCode: string; position: string }>>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -95,7 +95,7 @@ export function CreateDocumentModal({
 
   const handleTemplateSelect = async (templateId: string) => {
     setSelectedTemplate(templateId);
-    if (!templateId) return;
+    if (!templateId || templateId === 'none') return;
 
     try {
       const generatedContent = await DocumentTemplateService.generateDocument(templateId, employeeId || undefined);
@@ -262,7 +262,7 @@ export function CreateDocumentModal({
     setEffectiveDate('');
     setEmployeeId('');
     setSelectedFile(null);
-    setSelectedTemplate('');
+    setSelectedTemplate('none');
     setErrors({});
     onClose();
   };
@@ -325,12 +325,12 @@ export function CreateDocumentModal({
             {templates.length > 0 && (
               <div>
                 <Label htmlFor="template">Chọn Mẫu (Tùy chọn)</Label>
-                <Select value={selectedTemplate} onValueChange={handleTemplateSelect}>
+                <Select value={selectedTemplate || 'none'} onValueChange={handleTemplateSelect}>
                   <SelectTrigger>
                     <SelectValue placeholder="-- Không sử dụng mẫu --" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">-- Không sử dụng mẫu --</SelectItem>
+                    <SelectItem value="none">-- Không sử dụng mẫu --</SelectItem>
                     {templates.map((t) => (
                       <SelectItem key={t.id} value={t.id}>
                         {t.name}

@@ -43,7 +43,7 @@ export function EditDocumentModal({ isOpen, onClose, onSuccess, document }: Edit
   const [changeNote, setChangeNote] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [documentTemplates, setDocumentTemplates] = useState<DocumentTemplate[]>([]);
-  const [selectedTemplate, setSelectedTemplate] = useState<string>('');
+  const [selectedTemplate, setSelectedTemplate] = useState<string>('none');
   const [employeeId, setEmployeeId] = useState<string>('');
   const [employees, setEmployees] = useState<Array<{ id: string; fullName: string; employeeCode: string; position: string }>>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -99,7 +99,7 @@ export function EditDocumentModal({ isOpen, onClose, onSuccess, document }: Edit
   const handleTemplateSelect = async (templateId: string) => {
     setSelectedTemplate(templateId);
     
-    if (!templateId) return;
+    if (!templateId || templateId === 'none') return;
     
     try {
       const template = documentTemplates.find(t => t.id === templateId);
@@ -261,7 +261,7 @@ export function EditDocumentModal({ isOpen, onClose, onSuccess, document }: Edit
     setEmployeeId('');
     setChangeNote('');
     setSelectedFile(null);
-    setSelectedTemplate('');
+    setSelectedTemplate('none');
     setErrors({});
     onClose();
   };
@@ -324,11 +324,12 @@ export function EditDocumentModal({ isOpen, onClose, onSuccess, document }: Edit
           {/* Template Selection */}
           <div className="space-y-2">
             <Label htmlFor="template">Chọn mẫu văn bản (Tùy chọn)</Label>
-            <Select value={selectedTemplate} onValueChange={handleTemplateSelect}>
+            <Select value={selectedTemplate || 'none'} onValueChange={handleTemplateSelect}>
               <SelectTrigger>
                 <SelectValue placeholder="Chọn mẫu..." />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="none">-- Không sử dụng mẫu --</SelectItem>
                 {documentTemplates.map((template) => (
                   <SelectItem key={template.id} value={template.id}>
                     {template.name}
