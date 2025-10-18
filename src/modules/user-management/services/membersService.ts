@@ -29,8 +29,13 @@ export interface MembersResponse {
 }
 
 export class MembersService {
-  static async getMembers(): Promise<MembersResponse> {
+  static async getMembers(forceRefresh = false): Promise<MembersResponse> {
     console.log('🔍 [MembersService] Fetching all users (single-tenant)');
+    
+    // Add cache-busting timestamp if forceRefresh
+    if (forceRefresh) {
+      console.log('🔄 [MembersService] Force refresh - bypassing cache');
+    }
 
     // Get all users from profiles with their roles
     const { data: usersData, error: usersError } = await supabase

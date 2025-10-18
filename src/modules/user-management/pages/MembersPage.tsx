@@ -124,15 +124,16 @@ export function MembersPage() {
     }
   };
 
-  const fetchMembers = async (filters: MemberFilters = {}) => {
+  const fetchMembers = async (options?: { forceRefresh?: boolean }) => {
     try {
       setIsLoading(true);
       setError(null);
 
-      console.log('🌐 [MembersPage] Fetching members from Supabase...');
+      console.log('🌐 [MembersPage] Fetching members from Supabase...', 
+        options?.forceRefresh ? '(Force Refresh)' : '');
       
       // In single-tenant mode, fetch all members (no business ID needed)
-      const response = await MembersService.getMembers();
+      const response = await MembersService.getMembers(options?.forceRefresh || false);
       
       console.log('📊 [MembersPage] Raw response:', response);
       console.log('👥 [MembersPage] Members data:', response.data);
@@ -184,7 +185,8 @@ export function MembersPage() {
         description: "Cập nhật trạng thái thành viên thành công",
       });
       
-      await fetchMembers();
+      // ✅ Force immediate refresh (bypass cache)
+      await fetchMembers({ forceRefresh: true });
     } catch (err: any) {
       console.error('❌ [MembersPage] Error updating member:', err);
       toast({
@@ -276,38 +278,68 @@ export function MembersPage() {
     }
   }, [currentUser]);
 
-  // Phase 1: Realtime subscription for profiles changes
+  // Phase 3: Realtime subscription with debounce and reconnection
   useEffect(() => {
     if (!currentUser) return;
+    
+    let isMounted = true; // Prevent updates after unmount
+    let reconnectTimeout: NodeJS.Timeout;
     
     console.log('🔔 [MembersPage] Setting up realtime listener for profiles changes');
     
     const channel = supabase
-      .channel('members-profiles-changes')
+      .channel('members-profiles-changes', {
+        config: {
+          broadcast: { self: false },
+          presence: { key: '' }
+        }
+      })
       .on(
         'postgres_changes',
         {
-          event: '*', // Listen to INSERT, UPDATE, DELETE
+          event: 'UPDATE', // ✅ Only listen to UPDATEs (more specific)
           schema: 'public',
           table: 'profiles'
         },
         (payload) => {
-          console.log('🔔 [MembersPage Realtime] Profiles changed:', payload);
-          console.log('   - Event:', payload.eventType);
-          console.log('   - Changed user:', (payload.new as any)?.email || (payload.old as any)?.email);
+          if (!isMounted) return; // Ignore if component unmounted
           
-          // Auto-refresh members list when any profile changes
-          fetchMembers();
+          console.log('🔔 [MembersPage Realtime] Profile updated:', payload);
+          const updatedUser = payload.new as any;
+          console.log('   - User:', updatedUser.email, '- New status:', updatedUser.status);
+          
+          // Debounce: Clear previous timeout
+          if (reconnectTimeout) clearTimeout(reconnectTimeout);
+          
+          // Add 1000ms delay to avoid race conditions with DB commit
+          reconnectTimeout = setTimeout(() => {
+            if (isMounted) {
+              console.log('🔄 [MembersPage Realtime] Refreshing members list...');
+              fetchMembers({ forceRefresh: true }); // Force refresh
+            }
+          }, 1000);
         }
       )
       .subscribe((status) => {
         console.log('📡 [MembersPage Realtime] Subscription status:', status);
+        
         if (status === 'SUBSCRIBED') {
           console.log('✅ [MembersPage Realtime] Successfully subscribed to profiles changes');
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('❌ [MembersPage Realtime] Subscription failed - retrying...');
+          // Auto-retry after 3 seconds
+          setTimeout(() => {
+            if (isMounted) {
+              console.log('🔄 [MembersPage Realtime] Retrying subscription...');
+              channel.subscribe();
+            }
+          }, 3000);
         }
       });
     
     return () => {
+      isMounted = false;
+      if (reconnectTimeout) clearTimeout(reconnectTimeout);
       console.log('🔌 [MembersPage Realtime] Unsubscribing from profiles changes');
       supabase.removeChannel(channel);
     };

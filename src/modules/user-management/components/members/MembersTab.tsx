@@ -6,7 +6,7 @@ import { MembersTable } from './MembersTable';
 import { BulkOperations } from './BulkOperations';
 import { CreateUserModal } from '../modals/CreateUserModal';
 import { UserManagementFilters } from '../../types';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, RefreshCw } from 'lucide-react';
 
 interface UIMember {
   id: string;
@@ -106,11 +106,26 @@ export function MembersTab({
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <MemberFilters 
-              filters={filters}
-              onFiltersChange={handleFiltersChange}
-              roles={roles}
-            />
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex-1">
+                <MemberFilters 
+                  filters={filters}
+                  onFiltersChange={handleFiltersChange}
+                  roles={roles}
+                />
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  console.log('🔄 [MembersTab] Manual refresh triggered');
+                  window.location.reload(); // Force full page reload
+                }}
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Làm Mới
+              </Button>
+            </div>
             
             {selectedUsers.length > 0 && (
               <BulkOperations
