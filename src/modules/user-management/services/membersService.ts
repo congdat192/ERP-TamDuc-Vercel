@@ -165,26 +165,19 @@ export class MembersService {
   static async deleteMember(userId: string): Promise<void> {
     console.log('🗑️ [MembersService] Deleting member:', userId);
     
-    // Delete from user_roles first
-    const { error: rolesError } = await supabase
-      .from('user_roles')
-      .delete()
-      .eq('user_id', userId);
-
-    if (rolesError) {
-      console.error('❌ [MembersService] Delete roles error:', rolesError);
-      throw new Error(rolesError.message);
+    // Call edge function to delete user from auth.users (cascades to profiles and user_roles)
+    const { data, error } = await supabase.functions.invoke('delete-user', {
+      body: { userId }
+    });
+    
+    if (error) {
+      console.error('❌ [MembersService] Delete user error:', error);
+      throw new Error(error.message || 'Failed to delete user');
     }
 
-    // Delete from profiles
-    const { error } = await supabase
-      .from('profiles')
-      .delete()
-      .eq('id', userId);
-
-    if (error) {
-      console.error('❌ [MembersService] Delete error:', error);
-      throw new Error(error.message);
+    if (data?.error) {
+      console.error('❌ [MembersService] Delete user error:', data.error);
+      throw new Error(data.error);
     }
     
     console.log('✅ [MembersService] Member deleted successfully');

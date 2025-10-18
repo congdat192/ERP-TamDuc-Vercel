@@ -364,6 +364,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
+  // Setup realtime listener for profile status changes
+  useEffect(() => {
+    if (!currentUser) return;
+
+    console.log('🔔 [AuthContext] Setting up realtime status listener for user:', currentUser.id);
+
+    const channel = supabase
+      .channel('profile-status-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${currentUser.id}`
+        },
+        (payload) => {
+          console.log('🔔 [AuthContext] Profile updated:', payload);
+          
+          const newStatus = payload.new.status;
+          if (newStatus === 'INACTIVE') {
+            console.log('⛔ [AuthContext] User deactivated - logging out');
+            toast({
+              title: "Tài khoản bị vô hiệu hóa",
+              description: "Tài khoản của bạn đã bị vô hiệu hóa. Bạn sẽ bị đăng xuất.",
+              variant: "destructive",
+              duration: 5000,
+            });
+            logout();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentUser]);
+
   // No business context changes in single-tenant (removed)
 
   const login = async (email: string, password: string): Promise<boolean> => {

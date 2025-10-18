@@ -68,6 +68,12 @@ export const loginUser = async (credentials: LoginRequest): Promise<LoginRespons
   
   if (profileError) throw profileError;
   
+  // Check if user is inactive
+  if (profile.status === 'INACTIVE') {
+    await supabase.auth.signOut();
+    throw new Error('Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ admin.');
+  }
+  
   return {
     access_token: data.session.access_token,
     token_type: 'Bearer',
