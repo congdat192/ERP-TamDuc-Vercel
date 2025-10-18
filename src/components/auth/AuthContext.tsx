@@ -328,6 +328,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (error) {
               // Query failed - log warning but proceed (let RLS handle access control)
               console.warn('⚠️ [Phase 1] Failed to check status (proceeding with login):', error.message);
+              setIsInitialized(true);
             } else if (profile?.status === 'INACTIVE') {
               // Query succeeded and user is INACTIVE - block access
               console.log('⛔ [Phase 1] INACTIVE user detected - logging out');
@@ -337,10 +338,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 description: "Tài khoản của bạn đã bị vô hiệu hóa.",
                 variant: "destructive",
               });
+              setIsInitialized(true);
               return; // Don't load user data
             } else {
               // Query succeeded and user is ACTIVE
               console.log('✅ [Phase 1] User status is ACTIVE - proceeding');
+              setIsInitialized(true);
             }
           }
           
