@@ -36,11 +36,17 @@ export class EmployeeService {
     return !!data;
   }
 
-  static async getEmployees(): Promise<Employee[]> {
-    const { data, error } = await supabase
+  static async getEmployees(includeDeleted = false): Promise<Employee[]> {
+    let query = supabase
       .from('employees')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .select('*');
+    
+    // Filter out soft-deleted employees by default
+    if (!includeDeleted) {
+      query = query.is('deleted_at', null);
+    }
+    
+    const { data, error } = await query.order('created_at', { ascending: false });
 
     if (error) throw error;
 
@@ -80,14 +86,23 @@ export class EmployeeService {
     }));
   }
 
-  static async getEmployeeById(id: string): Promise<Employee | null> {
-    const { data, error } = await supabase
+  static async getEmployeeById(id: string, includeDeleted = false): Promise<Employee | null> {
+    let query = supabase
       .from('employees')
       .select('*')
-      .eq('id', id)
-      .single();
+      .eq('id', id);
+    
+    // Filter out soft-deleted employees by default
+    if (!includeDeleted) {
+      query = query.is('deleted_at', null);
+    }
+    
+    const { data, error } = await query.single();
 
-    if (error) throw error;
+    if (error) {
+      if (error.code === 'PGRST116') return null;
+      throw error;
+    }
     if (!data) return null;
 
     return {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Search, Download, Eye, Trash2, RefreshCw } from 'lucide-react';
+import { Search, Download, Eye, RefreshCw, UserX, Undo2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { usePermissions } from '@/hooks/usePermissions';
 import { PermissionGuard } from '@/components/auth/PermissionGuard';
@@ -27,6 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Employee } from '../types';
 import { EmployeeService } from '../services/employeeService';
 import { ExportService } from '../services/exportService';
@@ -49,13 +50,14 @@ export function HRISPage() {
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [showDeleted, setShowDeleted] = useState(false);
   const { toast } = useToast();
   const { hasPermission } = usePermissions();
 
   const fetchEmployees = async () => {
     setLoading(true);
     try {
-      const data = await EmployeeService.getEmployees();
+      const data = await EmployeeService.getEmployees(showDeleted);
       setEmployees(data);
     } catch (error: any) {
       toast({
@@ -70,32 +72,49 @@ export function HRISPage() {
 
   useEffect(() => {
     fetchEmployees();
-  }, []);
+  }, [showDeleted]);
 
-  const handleDeleteClick = (employee: Employee) => {
+  const handleTerminateClick = (employee: Employee) => {
     setSelectedEmployee(employee);
     setDeleteDialogOpen(true);
   };
 
-  const handleDeleteConfirm = async () => {
+  const handleTerminateConfirm = async () => {
     if (!selectedEmployee) return;
 
     try {
-      await EmployeeService.deleteEmployee(selectedEmployee.id);
+      await EmployeeService.softDeleteEmployee(selectedEmployee.id);
       toast({
         title: 'Thành công',
-        description: 'Đã xóa nhân viên',
+        description: `Đã cho nghỉ việc nhân viên ${selectedEmployee.fullName}`,
       });
       await fetchEmployees();
     } catch (error: any) {
       toast({
         title: 'Lỗi',
-        description: error.message || 'Không thể xóa nhân viên',
+        description: error.message || 'Không thể cập nhật trạng thái nhân viên',
         variant: 'destructive',
       });
     } finally {
       setDeleteDialogOpen(false);
       setSelectedEmployee(null);
+    }
+  };
+
+  const handleRestoreClick = async (employee: Employee) => {
+    try {
+      await EmployeeService.restoreEmployee(employee.id);
+      toast({
+        title: 'Thành công',
+        description: `Đã khôi phục nhân viên ${employee.fullName}`,
+      });
+      await fetchEmployees();
+    } catch (error: any) {
+      toast({
+        title: 'Lỗi',
+        description: error.message || 'Không thể khôi phục nhân viên',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -212,6 +231,14 @@ export function HRISPage() {
           </PermissionGuard>
         </div>
       </div>
+
+      {/* Tabs for Active/Deleted Employees */}
+      <Tabs value={showDeleted ? "deleted" : "active"} onValueChange={(v) => setShowDeleted(v === "deleted")}>
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="active">Nhân Viên Đang Làm</TabsTrigger>
+          <TabsTrigger value="deleted">Nhân Viên Đã Nghỉ</TabsTrigger>
+        </TabsList>
+      </Tabs>
 
       {/* Search & Filters */}
       <Card className="theme-card">
@@ -369,18 +396,34 @@ export function HRISPage() {
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <PermissionGuard requiredPermission="edit_employees" showError={false}>
-                          <EditEmployeeModal employee={employee} onSuccess={fetchEmployees} />
-                        </PermissionGuard>
-                        <PermissionGuard requiredPermission="delete_employees" showError={false}>
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => handleDeleteClick(employee)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </PermissionGuard>
+                        {!showDeleted ? (
+                          <>
+                            <PermissionGuard requiredPermission="edit_employees" showError={false}>
+                              <EditEmployeeModal employee={employee} onSuccess={fetchEmployees} />
+                            </PermissionGuard>
+                            <PermissionGuard requiredPermission="delete_employees" showError={false}>
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                title="Cho nghỉ việc"
+                                onClick={() => handleTerminateClick(employee)}
+                              >
+                                <UserX className="h-4 w-4" />
+                              </Button>
+                            </PermissionGuard>
+                          </>
+                        ) : (
+                          <PermissionGuard requiredPermission="edit_employees" showError={false}>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              title="Khôi phục nhân viên"
+                              onClick={() => handleRestoreClick(employee)}
+                            >
+                              <Undo2 className="h-4 w-4" />
+                            </Button>
+                          </PermissionGuard>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -403,20 +446,21 @@ export function HRISPage() {
         </CardContent>
       </Card>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Terminate Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Xác nhận xóa nhân viên</AlertDialogTitle>
+            <AlertDialogTitle>Xác nhận cho nhân viên nghỉ việc</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn có chắc chắn muốn xóa nhân viên <strong>{selectedEmployee?.fullName}</strong>?
-              Hành động này không thể hoàn tác.
+              Bạn có chắc chắn muốn cho nhân viên <strong>{selectedEmployee?.fullName}</strong> nghỉ việc?
+              <br /><br />
+              Nhân viên sẽ chuyển sang trạng thái "Đã nghỉ việc" và có thể khôi phục lại sau này.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Hủy</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive hover:bg-destructive/90">
-              Xóa
+            <AlertDialogAction onClick={handleTerminateConfirm} className="bg-orange-600 hover:bg-orange-700">
+              Cho Nghỉ Việc
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -427,6 +471,7 @@ export function HRISPage() {
         employee={selectedEmployee}
         open={detailModalOpen}
         onOpenChange={setDetailModalOpen}
+        onEmployeeDeleted={fetchEmployees}
       />
     </div>
   );

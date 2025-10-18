@@ -5,14 +5,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Trash2 } from 'lucide-react';
+import { UserX } from 'lucide-react';
 import { Employee } from '../types';
 import { AvatarService } from '../services/avatarService';
 import { EmployeeService } from '../services/employeeService';
 import { EmployeeDocumentsTab } from './detail-tabs/EmployeeDocumentsTab';
 import { EmployeeAdminDocumentsTab } from './detail-tabs/EmployeeAdminDocumentsTab';
 import { MonthlyAttendanceTab } from './MonthlyAttendanceTab';
-import { EmployeeDeleteDialog } from './EmployeeDeleteDialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 
 interface EmployeeDetailModalProps {
@@ -25,57 +25,33 @@ interface EmployeeDetailModalProps {
 export function EmployeeDetailModal({ employee, open, onOpenChange, onEmployeeDeleted }: EmployeeDetailModalProps) {
   const { toast } = useToast();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deleteWarnings, setDeleteWarnings] = useState<{
-    documents: number;
-    attendance: number;
-    adminDocs: number;
-  }>();
 
   if (!employee) return null;
 
-  const handleDeleteClick = async () => {
-    try {
-      // Fetch warnings using Supabase client
-      const { supabase } = await import('@/integrations/supabase/client');
-      
-      const [docsResult, attendanceResult, adminDocsResult] = await Promise.all([
-        supabase.from('employee_documents').select('id', { count: 'exact', head: true }).eq('employee_id', employee.id),
-        supabase.from('monthly_attendance').select('id', { count: 'exact', head: true }).eq('employee_id', employee.id),
-        supabase.from('administrative_documents').select('id', { count: 'exact', head: true }).eq('employee_id', employee.id),
-      ]);
-
-      setDeleteWarnings({
-        documents: docsResult.count || 0,
-        attendance: attendanceResult.count || 0,
-        adminDocs: adminDocsResult.count || 0,
-      });
-
-      setDeleteDialogOpen(true);
-    } catch (error: any) {
-      toast({
-        title: "Lỗi",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+  const handleTerminateClick = () => {
+    setDeleteDialogOpen(true);
   };
 
-  const handleDeleteConfirm = async () => {
+  const handleTerminateConfirm = async () => {
     try {
-      await EmployeeService.deleteEmployee(employee.id);
+      await EmployeeService.softDeleteEmployee(employee.id);
       
       toast({
         title: "Thành công",
-        description: "Đã xóa nhân viên. Dữ liệu liên quan đã được lưu trữ.",
+        description: `Đã cho nghỉ việc nhân viên ${employee.fullName}. Có thể khôi phục lại sau này từ tab "Nhân Viên Đã Nghỉ".`,
       });
 
       setDeleteDialogOpen(false);
       onOpenChange(false);
-      onEmployeeDeleted?.();
+      
+      if (onEmployeeDeleted) {
+        onEmployeeDeleted();
+      }
     } catch (error: any) {
+      console.error('❌ Error terminating employee:', error);
       toast({
         title: "Lỗi",
-        description: error.message,
+        description: error.message || "Không thể cập nhật trạng thái nhân viên",
         variant: "destructive",
       });
     }
@@ -99,13 +75,13 @@ export function EmployeeDetailModal({ employee, open, onOpenChange, onEmployeeDe
           <div className="flex items-center justify-between">
             <DialogTitle>Chi Tiết Nhân Viên</DialogTitle>
             <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleDeleteClick}
-              className="gap-2"
+              variant="ghost"
+              size="icon"
+              className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+              onClick={handleTerminateClick}
+              title="Cho nghỉ việc"
             >
-              <Trash2 className="h-4 w-4" />
-              Xóa Nhân Viên
+              <UserX className="h-4 w-4" />
             </Button>
           </div>
         </DialogHeader>
@@ -351,13 +327,25 @@ export function EmployeeDetailModal({ employee, open, onOpenChange, onEmployeeDe
         </div>
       </DialogContent>
 
-      <EmployeeDeleteDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        onConfirm={handleDeleteConfirm}
-        employeeName={employee.fullName}
-        warnings={deleteWarnings}
-      />
+      {/* Terminate Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận cho nhân viên nghỉ việc</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn cho nhân viên <strong>{employee.fullName}</strong> nghỉ việc?
+              <br /><br />
+              Nhân viên sẽ chuyển sang trạng thái "Đã nghỉ việc" và có thể khôi phục lại sau này từ tab "Nhân Viên Đã Nghỉ".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction onClick={handleTerminateConfirm} className="bg-orange-600 hover:bg-orange-700">
+              Cho Nghỉ Việc
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
