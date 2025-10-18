@@ -10,6 +10,7 @@ import { DocumentFiltersComponent } from '../components/administration/DocumentF
 import { DocumentTable } from '../components/administration/DocumentTable';
 import { CreateDocumentModal } from '../components/administration/CreateDocumentModal';
 import { ViewDocumentModal } from '../components/administration/ViewDocumentModal';
+import { EditDocumentModal } from '../components/administration/EditDocumentModal';
 import type {
   AdministrativeDocument,
   DocumentFilters,
@@ -27,6 +28,7 @@ export function AdministrationPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<AdministrativeDocument | null>(null);
   const { toast } = useToast();
   const { hasFeatureAccess } = usePermissions();
@@ -98,10 +100,8 @@ export function AdministrationPage() {
   };
 
   const handleEdit = (doc: AdministrativeDocument) => {
-    toast({
-      title: 'Chức năng đang phát triển',
-      description: 'Chỉnh sửa văn bản sẽ sớm được cập nhật',
-    });
+    setSelectedDocument(doc);
+    setShowEditModal(true);
   };
 
   const handleDelete = async (doc: AdministrativeDocument) => {
@@ -249,6 +249,18 @@ export function AdministrationPage() {
         onSuccess={handleSuccess}
         canApprove={canApprove}
       />
+
+      {showEditModal && selectedDocument && (
+        <EditDocumentModal
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false);
+            setSelectedDocument(null);
+          }}
+          document={selectedDocument}
+          onSuccess={handleSuccess}
+        />
+      )}
     </div>
   );
 }

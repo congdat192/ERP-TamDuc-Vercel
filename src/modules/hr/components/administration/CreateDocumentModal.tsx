@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Upload, FileText } from 'lucide-react';
 import {
   Dialog,
@@ -21,8 +21,10 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { AdminDocumentService } from '../../services/adminDocumentService';
 import { DocumentTemplateService } from '../../services/documentTemplateService';
+import { EmployeeService } from '../../services/employeeService';
 import type { DocType, DocumentTemplate } from '../../types/administration';
 import { getDocTypeLabel } from '../../types/administration';
+import { Combobox } from '@/components/ui/combobox';
 import { z } from 'zod';
 
 const documentSchema = z.object({
@@ -54,9 +56,32 @@ export function CreateDocumentModal({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [templates, setTemplates] = useState<DocumentTemplate[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
+  const [employeeId, setEmployeeId] = useState<string>('');
+  const [employees, setEmployees] = useState<Array<{ id: string; fullName: string; employeeCode: string; position: string }>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const { toast } = useToast();
+
+  // Load employees on mount
+  useEffect(() => {
+    const loadEmployees = async () => {
+      try {
+        const empData = await EmployeeService.getEmployees();
+        setEmployees(empData.map(emp => ({
+          id: emp.id,
+          fullName: emp.fullName,
+          employeeCode: emp.employeeCode,
+          position: emp.position
+        })));
+      } catch (err) {
+        console.error('❌ Error loading employees:', err);
+      }
+    };
+    
+    if (isOpen) {
+      loadEmployees();
+    }
+  }, [isOpen]);
 
   const handleDocTypeChange = async (type: DocType) => {
     setDocType(type);
@@ -73,7 +98,7 @@ export function CreateDocumentModal({
     if (!templateId) return;
 
     try {
-      const generatedContent = await DocumentTemplateService.generateDocument(templateId);
+      const generatedContent = await DocumentTemplateService.generateDocument(templateId, employeeId || undefined);
       setContent(generatedContent);
       toast({
         title: 'Thành công',
@@ -164,6 +189,7 @@ export function CreateDocumentModal({
         content: content.trim(),
         issue_date: issueDate,
         effective_date: effectiveDate || undefined,
+        employee_id: employeeId || undefined,
         ...fileData,
       });
 
@@ -202,6 +228,7 @@ export function CreateDocumentModal({
         content: content.trim(),
         issue_date: issueDate,
         effective_date: effectiveDate || undefined,
+        employee_id: employeeId || undefined,
         ...fileData,
       });
 
@@ -233,6 +260,7 @@ export function CreateDocumentModal({
     setContent('');
     setIssueDate(new Date().toISOString().split('T')[0]);
     setEffectiveDate('');
+    setEmployeeId('');
     setSelectedFile(null);
     setSelectedTemplate('');
     setErrors({});
@@ -267,6 +295,30 @@ export function CreateDocumentModal({
               <p className="text-xs text-muted-foreground mt-1">
                 Số văn bản sẽ tự động: {getDocTypeLabel(docType).split(' ')[0]}-XXX/{new Date().getFullYear()}
               </p>
+            </div>
+
+            {/* Employee Selection */}
+            <div>
+              <Label htmlFor="employee">Nhân viên liên quan (Tùy chọn)</Label>
+              <Combobox
+                options={employees.map(emp => ({
+                  value: emp.id,
+                  label: emp.fullName,
+                  description: `${emp.employeeCode} - ${emp.position}`
+                }))}
+                value={employeeId}
+                onValueChange={(value) => {
+                  setEmployeeId(value);
+                  // Re-apply template if selected
+                  if (selectedTemplate && value) {
+                    handleTemplateSelect(selectedTemplate);
+                  }
+                }}
+                placeholder="Chọn nhân viên..."
+                searchPlaceholder="Tìm nhân viên..."
+                emptyMessage="Không tìm thấy nhân viên"
+                className="w-full"
+              />
             </div>
 
             {/* Template Selection */}
