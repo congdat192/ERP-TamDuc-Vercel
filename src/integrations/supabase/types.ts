@@ -231,6 +231,10 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      revoke_user_sessions: {
+        Args: { target_user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "user"

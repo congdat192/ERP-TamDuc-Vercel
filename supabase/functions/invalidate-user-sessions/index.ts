@@ -61,17 +61,19 @@ Deno.serve(async (req) => {
       throw new Error('Missing userId parameter');
     }
 
-    console.log('🔐 [invalidate-user-sessions] Invalidating all sessions for user:', userId);
+    console.log('🔐 [invalidate-user-sessions] Revoking all sessions for user:', userId);
 
-    // Revoke all refresh tokens for the user (global logout)
-    const { error: signOutError } = await supabaseAdmin.auth.admin.signOut(userId, 'global');
+    // Call database function to revoke all refresh tokens
+    const { error: rpcError } = await supabaseAdmin.rpc('revoke_user_sessions', {
+      target_user_id: userId
+    });
     
-    if (signOutError) {
-      console.error('❌ [invalidate-user-sessions] Error:', signOutError);
-      throw signOutError;
+    if (rpcError) {
+      console.error('❌ [invalidate-user-sessions] Error:', rpcError);
+      throw rpcError;
     }
 
-    console.log('✅ [invalidate-user-sessions] Successfully invalidated all sessions for:', userId);
+    console.log('✅ [invalidate-user-sessions] Successfully revoked all sessions for:', userId);
 
     return new Response(
       JSON.stringify({ 
