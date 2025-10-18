@@ -328,11 +328,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (error) {
               // Query failed - log warning but proceed (let RLS handle access control)
               console.warn('⚠️ [Phase 1] Failed to check status (proceeding with login):', error.message);
+              setCurrentUser(null); // Clear stale state
               setIsInitialized(true);
             } else if (profile?.status === 'INACTIVE') {
               // Query succeeded and user is INACTIVE - block access
               console.log('⛔ [Phase 1] INACTIVE user detected - logging out');
               await supabase.auth.signOut();
+              setCurrentUser(null); // Clear stale state
               toast({
                 title: "Tài khoản bị vô hiệu hóa",
                 description: "Tài khoản của bạn đã bị vô hiệu hóa.",
@@ -388,10 +390,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
           if (error) {
             console.warn('⚠️ [checkSession] Failed to check status (proceeding with login):', error.message);
+            setCurrentUser(null); // Clear stale state
             setIsInitialized(true);
           } else if (profile?.status === 'INACTIVE') {
             console.log('⛔ [checkSession] INACTIVE user detected - logging out');
             await supabase.auth.signOut();
+            setCurrentUser(null); // Clear stale state
             toast({
               title: "Tài khoản bị vô hiệu hóa",
               description: "Tài khoản của bạn đã bị vô hiệu hóa.",
@@ -420,6 +424,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } catch (error) {
         console.error('❌ [checkSession] Error:', error);
+        setCurrentUser(null); // Clear stale state
         setIsInitialized(true);
       }
     };
@@ -567,9 +572,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     try {
       await supabase.auth.signOut();
-      console.log('✅ [AuthContext] User logged out:', currentUser?.username);
       
-      // State will be cleared by onAuthStateChange listener
+      // Force clear all state and storage
+      setCurrentUser(null);
+      setRequirePasswordChange(false);
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      console.log('✅ [AuthContext] User logged out and storage cleared');
+      
       toast({
         title: "Đăng xuất thành công",
         description: "Bạn đã đăng xuất khỏi hệ thống",
