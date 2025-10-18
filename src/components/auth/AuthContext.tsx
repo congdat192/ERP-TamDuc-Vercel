@@ -381,11 +381,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           filter: `id=eq.${currentUser.id}`
         },
         (payload) => {
-          console.log('🔔 [AuthContext] Profile updated:', payload);
+          console.log('🔔 [Realtime] Profile updated:', payload);
+          console.log('   - Old status:', payload.old?.status);
+          console.log('   - New status:', payload.new?.status);
+          console.log('   - User ID:', currentUser.id);
           
-          const newStatus = payload.new.status;
-          if (newStatus === 'INACTIVE') {
-            console.log('⛔ [AuthContext] User deactivated - logging out');
+          const newStatus = payload.new?.status;
+          const oldStatus = payload.old?.status;
+          
+          if (newStatus === 'INACTIVE' && oldStatus !== 'INACTIVE') {
+            console.log('⛔ [Realtime] User status changed to INACTIVE - logging out');
             toast({
               title: "Tài khoản bị vô hiệu hóa",
               description: "Tài khoản của bạn đã bị vô hiệu hóa. Bạn sẽ bị đăng xuất.",
@@ -396,7 +401,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 [Realtime] Subscription status:', status);
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ [Realtime] Successfully subscribed to profile changes for user:', currentUser.id);
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('❌ [Realtime] Channel error - profile changes may not be detected');
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);
