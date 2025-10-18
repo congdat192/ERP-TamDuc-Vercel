@@ -18,11 +18,11 @@ verify_jwt = false
 [functions.voucher-history-customer]
 verify_jwt = false
 
-[functions.send-invitation-email]
-verify_jwt = false
-
-[functions.send-verification-email]
-verify_jwt = false
-
 [functions.send-password-reset-email]
+verify_jwt = false
+
+[functions.create-user-account]
+verify_jwt = true
+
+[functions.send-new-user-credentials]
 verify_jwt = false

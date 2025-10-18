@@ -82,6 +82,21 @@ Deno.serve(async (req) => {
 
     if (createError) {
       console.error('❌ Error creating user:', createError);
+      
+      // Handle duplicate email with clear message
+      if (createError.code === 'email_exists') {
+        return new Response(
+          JSON.stringify({
+            error: 'Email đã tồn tại trong hệ thống. Vui lòng sử dụng email khác.',
+            code: 'email_exists'
+          }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      }
+      
       throw createError;
     }
 

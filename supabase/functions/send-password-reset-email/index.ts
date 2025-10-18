@@ -26,7 +26,7 @@ serve(async (req: Request) => {
     console.log('Reset URL:', resetUrl);
 
     const emailResponse = await resend.emails.send({
-      from: 'ERP System <onboarding@resend.dev>',
+      from: 'ERP System <noreply@dangphuocquan.cloud>',
       to: email,
       subject: 'Đặt lại mật khẩu ERP System',
       html: `

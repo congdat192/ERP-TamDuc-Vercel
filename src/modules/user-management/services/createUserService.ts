@@ -38,6 +38,13 @@ export const createUserAccount = async (
 
   if (error) {
     console.error('❌ [createUserService] Error:', error);
+    
+    // Check for duplicate email error
+    if (error.message?.includes('email_exists') || 
+        error.message?.includes('đã tồn tại')) {
+      throw new Error('Email này đã được sử dụng. Vui lòng chọn email khác.');
+    }
+    
     throw new Error(error.message || 'Không thể tạo tài khoản người dùng');
   }
 
