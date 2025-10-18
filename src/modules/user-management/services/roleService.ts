@@ -26,11 +26,13 @@ export class RoleService {
     // Count users for each role from user_roles table
     const { data: userRoles } = await supabase
       .from('user_roles')
-      .select('role');
+      .select('role_id');
     
-    const countMap: Record<string, number> = {};
+    const countMap: Record<number, number> = {};
     (userRoles || []).forEach((ur: any) => {
-      countMap[ur.role] = (countMap[ur.role] || 0) + 1;
+      if (ur.role_id) {
+        countMap[ur.role_id] = (countMap[ur.role_id] || 0) + 1;
+      }
     });
     
     return (data || []).map(role => ({
@@ -38,7 +40,7 @@ export class RoleService {
       name: role.name,
       description: role.description || '',
       permissions: (role.role_permissions as any[] || []).map((rp: any) => rp.features.code),
-      userCount: countMap[role.name.toLowerCase()] || 0,
+      userCount: countMap[role.id] || 0,
       isSystem: role.is_system,
       created_at: role.created_at,
       updated_at: role.updated_at
@@ -175,26 +177,14 @@ export class RoleService {
 
   static async deleteRole(roleId: number): Promise<void> {
     // Check if role has users assigned via user_roles table
-    const { data: role } = await supabase
-      .from('roles')
-      .select('name')
-      .eq('id', roleId)
-      .single();
+    const { data: users } = await supabase
+      .from('user_roles')
+      .select('id')
+      .eq('role_id', roleId)
+      .limit(1);
     
-    if (role) {
-      const roleName = role.name.toLowerCase();
-      // Only check for valid role types
-      if (roleName === 'admin' || roleName === 'user') {
-        const { data: users } = await supabase
-          .from('user_roles')
-          .select('id')
-          .eq('role', roleName as 'admin' | 'user')
-          .limit(1);
-        
-        if (users && users.length > 0) {
-          throw new Error('Không thể xóa vai trò đang được sử dụng');
-        }
-      }
+    if (users && users.length > 0) {
+      throw new Error('Không thể xóa vai trò đang được sử dụng');
     }
     
     const { error } = await supabase

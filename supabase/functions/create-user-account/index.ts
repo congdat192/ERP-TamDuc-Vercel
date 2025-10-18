@@ -97,18 +97,32 @@ Deno.serve(async (req) => {
       console.error('⚠️ Warning: Could not update profile:', profileError);
     }
 
-    // Update user_roles with selected role
-    const roleToAssign = roleId === 1 ? 'admin' : 'user';
+    console.log(`📝 Assigning role_id: ${roleId} to user...`);
+
+    // Validate role exists
+    const { data: roleData, error: roleCheckError } = await supabaseAdmin
+      .from('roles')
+      .select('id, name')
+      .eq('id', roleId)
+      .single();
+
+    if (roleCheckError || !roleData) {
+      console.error('❌ Invalid role ID:', roleId, roleCheckError);
+      throw new Error(`Invalid role ID: ${roleId}`);
+    }
+
+    // Assign role_id to user
     const { error: roleError } = await supabaseAdmin
       .from('user_roles')
-      .update({ role: roleToAssign })
+      .update({ role_id: roleId })
       .eq('user_id', authUser.user.id);
 
     if (roleError) {
-      console.error('⚠️ Warning: Could not update role:', roleError);
+      console.error('❌ Could not assign role:', roleError);
+      throw new Error('Failed to assign role to user');
     }
 
-    console.log(`👤 Assigned role: ${roleToAssign}`);
+    console.log(`✅ Assigned role: ${roleData.name} (ID: ${roleId})`);
 
     // Send credentials email
     const loginUrl = `${Deno.env.get('SITE_URL')}/login`;

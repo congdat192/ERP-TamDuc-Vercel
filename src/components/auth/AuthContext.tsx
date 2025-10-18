@@ -87,23 +87,55 @@ const fetchUserWithPermissions = async (supabaseUser: SupabaseUser): Promise<{ u
     throw profileError;
   }
   
-  // Get user role from user_roles table (current enum: 'user' | 'business_owner' | 'super_admin')
+  // Fetch user role with permissions via role_id
   const { data: userRoleData } = await supabase
     .from('user_roles')
-    .select('role')
+    .select(`
+      role_id,
+      roles!inner (
+        id,
+        name,
+        description,
+        role_permissions (
+          features (
+            code,
+            module_id,
+            feature_type
+          )
+        )
+      )
+    `)
     .eq('user_id', supabaseUser.id)
     .single();
+
+  if (!userRoleData?.roles) {
+    throw new Error('User role not found');
+  }
+
+  const roleData = userRoleData.roles as any;
+  console.log('🔐 [AuthContext] User role loaded:', roleData.name, 'ID:', roleData.id);
   
-  const dbRole = userRoleData?.role || 'user';
+  // Extract permissions from role
+  const featureCodes = (roleData.role_permissions || [])
+    .map((rp: any) => rp.features?.code)
+    .filter(Boolean);
+
+  console.log('🔑 [AuthContext] Feature codes:', featureCodes);
+
+  // Map role name to legacy UserRole type
+  let userRole: UserRole = 'custom';
+  const roleName = roleData.name.toLowerCase();
+  if (roleName === 'admin') {
+    userRole = 'erp-admin';
+  } else if (roleName === 'user') {
+    userRole = 'custom';
+  }
   
-  // Get permissions and role based on database role
+  // Get permissions based on role
   let permissions: UserPermissions;
-  let frontendRole: UserRole;
   
-  // Map database role to frontend role and permissions
-  if (dbRole === 'admin') {
-    // Admin has full access to all modules
-    frontendRole = 'erp-admin';
+  if (roleName === 'admin') {
+    // Admin has full access
     permissions = {
       modules: MODULE_PERMISSIONS.map(m => m.module),
       voucherFeatures: VOUCHER_FEATURES.map(f => f.id as VoucherFeature),
@@ -112,7 +144,6 @@ const fetchUserWithPermissions = async (supabaseUser: SupabaseUser): Promise<{ u
     };
   } else {
     // Regular users have limited access
-    frontendRole = 'custom';
     permissions = {
       modules: [],
       voucherFeatures: [],
@@ -127,7 +158,7 @@ const fetchUserWithPermissions = async (supabaseUser: SupabaseUser): Promise<{ u
     username: supabaseUser.email?.split('@')[0] || '',
     email: supabaseUser.email!,
     phone: profile.phone,
-    role: frontendRole,
+    role: userRole,
     permissions,
     isActive: true,
     status: supabaseUser.email_confirmed_at ? 'active' : 'pending_verification',

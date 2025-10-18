@@ -48,31 +48,30 @@ export class MembersService {
       throw new Error(usersError.message);
     }
 
-    // Get roles for all users
+    // Get roles for all users with role details
     const { data: userRolesData, error: rolesError } = await supabase
       .from('user_roles')
-      .select('user_id, role');
+      .select(`
+        user_id,
+        role_id,
+        roles (
+          id,
+          name,
+          description
+        )
+      `);
 
     if (rolesError) {
       console.error('❌ [MembersService] Roles error:', rolesError);
       throw new Error(rolesError.message);
     }
 
-    // Get all roles definitions
-    const { data: rolesDefinitions, error: rolesDefError } = await supabase
-      .from('roles')
-      .select('id, name, description');
-
-    if (rolesDefError) {
-      console.error('❌ [MembersService] Roles definitions error:', rolesDefError);
-    }
-
     // Map users data to SupabaseMember format
     const members: SupabaseMember[] = (usersData || []).map((user: any) => {
-      const userRole = userRolesData?.find(r => r.user_id === user.id);
-      const roleInfo = rolesDefinitions?.find(r => r.name.toLowerCase() === userRole?.role) || {
+      const userRole = userRolesData?.find((r: any) => r.user_id === user.id);
+      const roleInfo = (userRole as any)?.roles || {
         id: 1,
-        name: userRole?.role || 'user',
+        name: 'User',
         description: null
       };
 
@@ -93,7 +92,7 @@ export class MembersService {
           name: roleInfo.name,
           description: roleInfo.description
         },
-        is_owner: userRole?.role === 'admin'
+        is_owner: roleInfo.name.toLowerCase() === 'admin'
       };
     });
 
@@ -110,29 +109,11 @@ export class MembersService {
   static async updateMember(userId: string, updates: { status?: 'ACTIVE' | 'INACTIVE'; role_id?: number }): Promise<void> {
     console.log('🔧 [MembersService] Updating member:', userId, updates);
     
-    // In single-tenant mode, we only update user_roles table
+    // Update role_id in user_roles table
     if (updates.role_id) {
-      // Get role name from roles table
-      const { data: roleData, error: roleError } = await supabase
-        .from('roles')
-        .select('name')
-        .eq('id', updates.role_id)
-        .single();
-
-      if (roleError) {
-        console.error('❌ [MembersService] Role lookup error:', roleError);
-        throw new Error(roleError.message);
-      }
-
-      // Update user_roles (ensure valid role type)
-      const roleName = roleData.name.toLowerCase();
-      if (roleName !== 'admin' && roleName !== 'user') {
-        throw new Error('Invalid role name');
-      }
-      
       const { error } = await supabase
         .from('user_roles')
-        .update({ role: roleName as 'admin' | 'user' })
+        .update({ role_id: updates.role_id })
         .eq('user_id', userId);
 
       if (error) {
@@ -193,33 +174,33 @@ export async function getMembersWithRoles(): Promise<MemberWithRoles[]> {
 
   const { data: userRolesData, error: rolesError } = await supabase
     .from('user_roles')
-    .select('user_id, role');
+    .select(`
+      user_id,
+      role_id,
+      roles (
+        id,
+        name,
+        description
+      )
+    `);
 
   if (rolesError) {
     console.error('❌ [getMembersWithRoles] Roles error:', rolesError);
     throw new Error(rolesError.message);
   }
 
-  const { data: rolesDefinitions, error: rolesDefError } = await supabase
-    .from('roles')
-    .select('id, name, description');
-
-  if (rolesDefError) {
-    console.error('❌ [getMembersWithRoles] Roles definitions error:', rolesDefError);
-  }
-
   return (usersData || []).map((user: any) => {
-    const userRole = userRolesData?.find(r => r.user_id === user.id);
-    const roleInfo = rolesDefinitions?.find(r => r.name.toLowerCase() === userRole?.role) || {
+    const userRole = userRolesData?.find((r: any) => r.user_id === user.id);
+    const roleInfo = (userRole as any)?.roles || {
       id: 1,
-      name: userRole?.role || 'user',
+      name: 'User',
       description: null
     };
 
     return {
       id: user.id,
       status: 'ACTIVE' as const,
-      is_owner: userRole?.role === 'admin',
+      is_owner: roleInfo.name.toLowerCase() === 'admin',
       roles: [roleInfo]
     };
   });

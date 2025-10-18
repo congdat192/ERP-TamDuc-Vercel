@@ -86,7 +86,8 @@ export interface Member {
   email: string;
   status: 'ACTIVE' | 'INACTIVE';
   is_owner: boolean;
-  roles?: Role[]; // API may include roles array
+  role_id?: number; // New: role_id FK to roles table
+  roles?: Role; // Changed: single role object (not array) from JOIN
   created_at: string;
   updated_at: string;
 }
