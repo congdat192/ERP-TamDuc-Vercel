@@ -10,6 +10,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { employeeSchema, type EmployeeFormData } from '../types/validation';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Label } from '@/components/ui/label';
+import { AvatarService } from '../services/avatarService';
 
 interface CreateEmployeeModalProps {
   onSuccess: () => void;
@@ -18,6 +21,8 @@ interface CreateEmployeeModalProps {
 export function CreateEmployeeModal({ onSuccess }: CreateEmployeeModalProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string>('');
   const { toast } = useToast();
 
   const form = useForm<EmployeeFormData>({
@@ -40,6 +45,26 @@ export function CreateEmployeeModal({ onSuccess }: CreateEmployeeModalProps) {
     }
   });
 
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const validation = AvatarService.validateFile(file);
+      if (!validation.isValid) {
+        toast({
+          title: 'Lỗi',
+          description: validation.error,
+          variant: 'destructive',
+        });
+        e.target.value = '';
+        return;
+      }
+      
+      setAvatarFile(file);
+      const previewUrl = AvatarService.createPreviewUrl(file);
+      setAvatarPreview(previewUrl);
+    }
+  };
+
   const handleSubmit = async (data: EmployeeFormData) => {
     setLoading(true);
     try {
@@ -59,7 +84,17 @@ export function CreateEmployeeModal({ onSuccess }: CreateEmployeeModalProps) {
         return;
       }
 
-      await EmployeeService.createEmployee(data);
+      // Upload avatar first if selected
+      let avatarPath = '';
+      if (avatarFile) {
+        const tempId = `temp-${Date.now()}`;
+        avatarPath = await AvatarService.uploadAvatar(avatarFile, tempId);
+      }
+
+      await EmployeeService.createEmployee({
+        ...data,
+        avatar_path: avatarPath
+      });
       
       toast({
         title: 'Thành công',
@@ -68,6 +103,8 @@ export function CreateEmployeeModal({ onSuccess }: CreateEmployeeModalProps) {
       
       setOpen(false);
       form.reset();
+      setAvatarFile(null);
+      setAvatarPreview('');
       onSuccess();
     } catch (error: any) {
       toast({
@@ -95,6 +132,27 @@ export function CreateEmployeeModal({ onSuccess }: CreateEmployeeModalProps) {
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            {/* Avatar Upload */}
+            <div className="flex items-center gap-4 pb-4 border-b">
+              <Avatar className="h-20 w-20">
+                <AvatarImage src={avatarPreview} />
+                <AvatarFallback>
+                  <Plus className="h-8 w-8" />
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 space-y-2">
+                <Label>Avatar (Tùy chọn)</Label>
+                <Input 
+                  type="file" 
+                  accept="image/jpeg,image/jpg,image/png"
+                  onChange={handleAvatarChange}
+                />
+                <p className="text-xs text-muted-foreground">
+                  JPG hoặc PNG, tối đa 2MB
+                </p>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}

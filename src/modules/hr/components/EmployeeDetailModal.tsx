@@ -4,6 +4,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Employee } from '../types';
+import { AvatarService } from '../services/avatarService';
+import { EmployeeDocumentsTab } from './detail-tabs/EmployeeDocumentsTab';
 
 interface EmployeeDetailModalProps {
   employee: Employee | null;
@@ -36,7 +38,7 @@ export function EmployeeDetailModal({ employee, open, onOpenChange }: EmployeeDe
           {/* Header with Avatar */}
           <div className="flex items-center gap-4">
             <Avatar className="h-20 w-20">
-              <AvatarImage src={employee.avatar} />
+              <AvatarImage src={AvatarService.getAvatarUrl(employee.avatar)} />
               <AvatarFallback className="text-2xl">{employee.fullName.charAt(0)}</AvatarFallback>
             </Avatar>
             <div className="flex-1">
@@ -51,10 +53,11 @@ export function EmployeeDetailModal({ employee, open, onOpenChange }: EmployeeDe
 
           {/* Tabs */}
           <Tabs defaultValue="info" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="info">Thông Tin</TabsTrigger>
               <TabsTrigger value="salary">Lương</TabsTrigger>
               <TabsTrigger value="performance">Hiệu Suất</TabsTrigger>
+              <TabsTrigger value="documents">Chứng Từ</TabsTrigger>
             </TabsList>
 
             <TabsContent value="info" className="space-y-4 mt-4">
@@ -186,6 +189,10 @@ export function EmployeeDetailModal({ employee, open, onOpenChange }: EmployeeDe
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="documents">
+              <EmployeeDocumentsTab employeeId={employee.id} />
             </TabsContent>
           </Tabs>
         </div>

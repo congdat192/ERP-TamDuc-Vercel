@@ -11,6 +11,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { employeeSchema, type EmployeeFormData } from '../types/validation';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Label } from '@/components/ui/label';
+import { AvatarService } from '../services/avatarService';
 
 interface EditEmployeeModalProps {
   employee: Employee;
@@ -20,8 +23,10 @@ interface EditEmployeeModalProps {
 export function EditEmployeeModal({ employee, onSuccess }: EditEmployeeModalProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string>('');
   const { toast } = useToast();
-
+  
   const form = useForm<EmployeeFormData>({
     resolver: zodResolver(employeeSchema),
     defaultValues: {
@@ -60,8 +65,36 @@ export function EditEmployeeModal({ employee, onSuccess }: EditEmployeeModalProp
         kpi_score: employee.performance.kpi,
         last_review_date: employee.performance.lastReview || ''
       });
+      
+      // Set avatar preview if exists
+      if (employee.avatar) {
+        setAvatarPreview(AvatarService.getAvatarUrl(employee.avatar));
+      } else {
+        setAvatarPreview('');
+      }
+      setAvatarFile(null);
     }
   }, [open, employee, form]);
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const validation = AvatarService.validateFile(file);
+      if (!validation.isValid) {
+        toast({
+          title: 'Lỗi',
+          description: validation.error,
+          variant: 'destructive',
+        });
+        e.target.value = '';
+        return;
+      }
+      
+      setAvatarFile(file);
+      const previewUrl = AvatarService.createPreviewUrl(file);
+      setAvatarPreview(previewUrl);
+    }
+  };
 
   const handleSubmit = async (data: EmployeeFormData) => {
     setLoading(true);
@@ -82,7 +115,25 @@ export function EditEmployeeModal({ employee, onSuccess }: EditEmployeeModalProp
         return;
       }
 
-      await EmployeeService.updateEmployee(employee.id, data);
+      // Upload new avatar if selected
+      let avatarPath = employee.avatar;
+      if (avatarFile) {
+        // Delete old avatar if exists
+        if (employee.avatar) {
+          try {
+            await AvatarService.deleteAvatar(employee.avatar);
+          } catch (err) {
+            console.error('Failed to delete old avatar:', err);
+          }
+        }
+        
+        avatarPath = await AvatarService.uploadAvatar(avatarFile, employee.id);
+      }
+
+      await EmployeeService.updateEmployee(employee.id, {
+        ...data,
+        avatar_path: avatarPath
+      });
       
       toast({
         title: 'Thành công',
@@ -116,6 +167,27 @@ export function EditEmployeeModal({ employee, onSuccess }: EditEmployeeModalProp
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            {/* Avatar Upload */}
+            <div className="flex items-center gap-4 pb-4 border-b">
+              <Avatar className="h-20 w-20">
+                <AvatarImage src={avatarPreview} />
+                <AvatarFallback>
+                  {employee.fullName.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 space-y-2">
+                <Label>Avatar (Tùy chọn)</Label>
+                <Input 
+                  type="file" 
+                  accept="image/jpeg,image/jpg,image/png"
+                  onChange={handleAvatarChange}
+                />
+                <p className="text-xs text-muted-foreground">
+                  JPG hoặc PNG, tối đa 2MB
+                </p>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
