@@ -31,6 +31,8 @@ export interface Employee {
     phone: string;
   };
   notes?: string;
+  deletedAt?: string | null;
+  deletedBy?: string | null;
 }
 
 export interface MonthlyAttendance {

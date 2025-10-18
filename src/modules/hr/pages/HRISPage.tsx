@@ -150,6 +150,15 @@ export function HRISPage() {
   // Apply filters and search
   const filteredEmployees = useMemo(() => {
     return employees.filter(emp => {
+      // Filter by deleted status based on active tab
+      if (showDeleted) {
+        // "Nhân viên đã xóa" tab: only show deleted
+        if (!emp.deletedAt) return false;
+      } else {
+        // "Nhân viên đang làm" tab: only show active
+        if (emp.deletedAt) return false;
+      }
+
       // Search filter
       const matchesSearch = 
         emp.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -181,7 +190,7 @@ export function HRISPage() {
 
       return true;
     });
-  }, [employees, searchTerm, filters]);
+  }, [employees, searchTerm, filters, showDeleted]);
 
   // Get unique departments for filter
   const departments = useMemo(() => {
@@ -205,7 +214,7 @@ export function HRISPage() {
       active: { label: 'Đang làm', variant: 'default' as const },
       probation: { label: 'Thử việc', variant: 'secondary' as const },
       inactive: { label: 'Nghỉ việc', variant: 'outline' as const },
-      terminated: { label: 'Đã sa thải', variant: 'destructive' as const },
+      terminated: { label: 'Đã xóa', variant: 'destructive' as const },
     };
     const config = statusMap[status];
     return <Badge variant={config.variant}>{config.label}</Badge>;
@@ -275,34 +284,40 @@ export function HRISPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="theme-card">
           <CardContent className="p-4">
-            <p className="text-sm theme-text-secondary">Tổng Nhân Viên</p>
-            <p className="text-2xl font-bold theme-text">{employees.length}</p>
-          </CardContent>
-        </Card>
-        <Card className="theme-card">
-          <CardContent className="p-4">
-            <p className="text-sm theme-text-secondary">Đang Làm</p>
-            <p className="text-2xl font-bold theme-text">
-              {employees.filter(e => e.status === 'active').length}
+            <p className="text-sm theme-text-secondary">
+              {showDeleted ? 'Tổng Đã Xóa' : 'Tổng Nhân Viên'}
             </p>
+            <p className="text-2xl font-bold theme-text">{filteredEmployees.length}</p>
           </CardContent>
         </Card>
-        <Card className="theme-card">
-          <CardContent className="p-4">
-            <p className="text-sm theme-text-secondary">Thử Việc</p>
-            <p className="text-2xl font-bold theme-text">
-              {employees.filter(e => e.status === 'probation').length}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="theme-card">
-          <CardContent className="p-4">
-            <p className="text-sm theme-text-secondary">Nghỉ Việc</p>
-            <p className="text-2xl font-bold theme-text">
-              {employees.filter(e => e.status === 'inactive').length}
-            </p>
-          </CardContent>
-        </Card>
+        {!showDeleted && (
+          <>
+            <Card className="theme-card">
+              <CardContent className="p-4">
+                <p className="text-sm theme-text-secondary">Đang Làm</p>
+                <p className="text-2xl font-bold theme-text">
+                  {employees.filter(e => !e.deletedAt && e.status === 'active').length}
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="theme-card">
+              <CardContent className="p-4">
+                <p className="text-sm theme-text-secondary">Thử Việc</p>
+                <p className="text-2xl font-bold theme-text">
+                  {employees.filter(e => !e.deletedAt && e.status === 'probation').length}
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="theme-card">
+              <CardContent className="p-4">
+                <p className="text-sm theme-text-secondary">Nghỉ Việc</p>
+                <p className="text-2xl font-bold theme-text">
+                  {employees.filter(e => !e.deletedAt && e.status === 'inactive').length}
+                </p>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
 
       {/* Bulk Operations */}

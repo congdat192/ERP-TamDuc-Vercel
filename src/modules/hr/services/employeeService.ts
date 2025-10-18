@@ -82,7 +82,9 @@ export class EmployeeService {
         name: emp.emergency_contact_name,
         phone: emp.emergency_contact_phone
       } : undefined,
-      notes: emp.notes
+      notes: emp.notes,
+      deletedAt: emp.deleted_at,
+      deletedBy: emp.deleted_by,
     }));
   }
 
@@ -137,7 +139,9 @@ export class EmployeeService {
         name: data.emergency_contact_name,
         phone: data.emergency_contact_phone
       } : undefined,
-      notes: data.notes
+      notes: data.notes,
+      deletedAt: data.deleted_at,
+      deletedBy: data.deleted_by,
     };
   }
 
