@@ -149,8 +149,9 @@ const fetchUserWithPermissions = async (supabaseUser: SupabaseUser): Promise<{ u
   // Get permissions based on role
   let permissions: UserPermissions;
   
-  if (roleName === 'admin') {
-    // Admin has full access
+  if (roleName === 'admin' && featureCodes.length === 0) {
+    // Fallback: Admin có full access nếu không có permissions trong DB
+    console.log('⚠️ [AuthContext] Using hardcoded Admin permissions (fallback)');
     permissions = {
       modules: MODULE_PERMISSIONS.map(m => m.module),
       voucherFeatures: VOUCHER_FEATURES.map(f => f.id as VoucherFeature),
@@ -158,13 +159,69 @@ const fetchUserWithPermissions = async (supabaseUser: SupabaseUser): Promise<{ u
       canViewAllVouchers: true,
     };
   } else {
-    // Regular users have limited access
+    // Map feature codes từ DB sang modules và features
+    const moduleSet = new Set<ERPModule>();
+    const voucherFeatureSet = new Set<VoucherFeature>();
+    let canManageUsers = false;
+    let canViewAllVouchers = false;
+
+    featureCodes.forEach((code: string) => {
+      // Map feature code to module based on prefix
+      if (code.includes('dashboard')) moduleSet.add('dashboard');
+      if (code.includes('customer')) moduleSet.add('customers');
+      if (code.includes('sale')) moduleSet.add('sales');
+      if (code.includes('inventory') || code.includes('product')) moduleSet.add('inventory');
+      if (code.includes('accounting')) moduleSet.add('accounting');
+      if (code.includes('hr')) moduleSet.add('hr');
+      if (code.includes('voucher')) moduleSet.add('voucher');
+      if (code.includes('marketing')) moduleSet.add('marketing');
+      if (code.includes('affiliate')) moduleSet.add('affiliate');
+      if (code.includes('setting')) moduleSet.add('system-settings');
+      if (code.includes('member') || code.includes('role') || code.includes('department') || code.includes('group')) {
+        moduleSet.add('user-management');
+      }
+
+      // Map voucher-specific features
+      if (code === 'view_voucher' || code === 'read_voucher') {
+        voucherFeatureSet.add('voucher-list');
+        voucherFeatureSet.add('voucher-dashboard');
+        canViewAllVouchers = true;
+      }
+      if (code === 'create_voucher') {
+        voucherFeatureSet.add('issue-voucher');
+      }
+      if (code === 'approve_voucher' || code === 'manage_campaign') {
+        voucherFeatureSet.add('campaign-management');
+      }
+      if (code === 'view_voucher_analytics') {
+        voucherFeatureSet.add('voucher-analytics');
+      }
+      if (code === 'view_voucher_leaderboard') {
+        voucherFeatureSet.add('voucher-leaderboard');
+      }
+      if (code === 'manage_voucher_settings') {
+        voucherFeatureSet.add('voucher-settings');
+      }
+
+      // Check for user management permissions
+      if (code === 'manage_members' || code === 'manage_roles' || code === 'create_member') {
+        canManageUsers = true;
+      }
+    });
+
     permissions = {
-      modules: [],
-      voucherFeatures: [],
-      canManageUsers: false,
-      canViewAllVouchers: false,
+      modules: Array.from(moduleSet),
+      voucherFeatures: Array.from(voucherFeatureSet),
+      canManageUsers,
+      canViewAllVouchers,
     };
+
+    console.log('✅ [AuthContext] Mapped permissions from DB:', {
+      featureCount: featureCodes.length,
+      modules: permissions.modules,
+      voucherFeatures: permissions.voucherFeatures,
+      canManageUsers: permissions.canManageUsers
+    });
   }
   
   const user: User = {
