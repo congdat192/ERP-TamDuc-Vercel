@@ -11,15 +11,17 @@ export class ExportService {
       'Số ĐT': emp.phone,
       'Phòng Ban': emp.department,
       'Chức Vụ': emp.position,
-      'Loại HĐ': emp.contractType,
+      'Loại Công': emp.employmentType,
       'Trạng Thái': emp.status === 'active' ? 'Đang làm' :
                     emp.status === 'probation' ? 'Thử việc' :
                     emp.status === 'inactive' ? 'Nghỉ việc' : 'Đã sa thải',
       'Ngày Vào Làm': emp.joinDate,
-      'Lương Cơ Bản': emp.salary.p1,
-      'Hệ Số': emp.salary.p2,
-      'Phụ Cấp': emp.salary.p3,
-      'Tổng Lương': emp.salary.total,
+      'Lương Cơ Bản': emp.salary.basic,
+      'PC Ăn Trưa': emp.salary.allowanceMeal,
+      'PC Xăng Xe': emp.salary.allowanceFuel,
+      'PC Điện Thoại': emp.salary.allowancePhone,
+      'PC Khác': emp.salary.allowanceOther,
+      'Tổng Lương Cứng': emp.salary.totalFixed,
       'KPI': emp.performance.kpi,
       'Ngày Đánh Giá': emp.performance.lastReview || ''
     }));

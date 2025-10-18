@@ -7,14 +7,18 @@ export interface Employee {
   avatar: string;
   position: string;
   department: string;
+  team?: string;
   joinDate: string;
-  contractType: 'Chính Thức' | 'Thử Việc' | 'Hợp Đồng';
+  employmentType: 'Full-time' | 'Part-time' | 'CTV' | 'Thử việc' | 'Thực tập';
+  seniorityMonths?: number;
   status: 'active' | 'inactive' | 'probation' | 'terminated';
   salary: {
-    p1: number;
-    p2: number;
-    p3: number;
-    total: number;
+    basic: number;
+    allowanceMeal: number;
+    allowanceFuel: number;
+    allowancePhone: number;
+    allowanceOther: number;
+    totalFixed: number;
   };
   performance: {
     kpi: number;
@@ -26,6 +30,20 @@ export interface Employee {
     name: string;
     phone: string;
   };
+  notes?: string;
+}
+
+export interface MonthlyAttendance {
+  id: string;
+  employeeId: string;
+  month: string; // YYYY-MM-01 format
+  standardDays: number;
+  actualDays: number;
+  paidLeave: number;
+  unpaidLeave: number;
+  otHours: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Attendance {

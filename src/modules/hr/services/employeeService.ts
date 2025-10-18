@@ -53,14 +53,18 @@ export class EmployeeService {
       avatar: emp.avatar_path || '',
       position: emp.position,
       department: emp.department,
+      team: emp.team,
       joinDate: emp.join_date,
-      contractType: emp.contract_type,
+      employmentType: emp.employment_type as 'Full-time' | 'Part-time' | 'CTV' | 'Thử việc' | 'Thực tập',
+      seniorityMonths: emp.seniority_months,
       status: emp.status,
       salary: {
-        p1: Number(emp.salary_p1) || 0,
-        p2: Number(emp.salary_p2) || 1.0,
-        p3: Number(emp.salary_p3) || 0,
-        total: (Number(emp.salary_p1) || 0) * (Number(emp.salary_p2) || 1.0) + (Number(emp.salary_p3) || 0)
+        basic: Number(emp.salary_p1) || 0,
+        allowanceMeal: Number(emp.allowance_meal) || 0,
+        allowanceFuel: Number(emp.allowance_fuel) || 0,
+        allowancePhone: Number(emp.allowance_phone) || 0,
+        allowanceOther: Number(emp.allowance_other) || 0,
+        totalFixed: Number(emp.total_fixed_salary) || 0,
       },
       performance: {
         kpi: Number(emp.kpi_score) || 0,
@@ -71,7 +75,8 @@ export class EmployeeService {
         relationship: emp.emergency_contact_relationship as 'Cha' | 'Mẹ' | 'Vợ' | 'Chồng' | 'Anh' | 'Chị' | 'Em' | 'Khác',
         name: emp.emergency_contact_name,
         phone: emp.emergency_contact_phone
-      } : undefined
+      } : undefined,
+      notes: emp.notes
     }));
   }
 
@@ -94,14 +99,18 @@ export class EmployeeService {
       avatar: data.avatar_path || '',
       position: data.position,
       department: data.department,
+      team: data.team,
       joinDate: data.join_date,
-      contractType: data.contract_type,
+      employmentType: data.employment_type as 'Full-time' | 'Part-time' | 'CTV' | 'Thử việc' | 'Thực tập',
+      seniorityMonths: data.seniority_months,
       status: data.status,
       salary: {
-        p1: Number(data.salary_p1) || 0,
-        p2: Number(data.salary_p2) || 1.0,
-        p3: Number(data.salary_p3) || 0,
-        total: (Number(data.salary_p1) || 0) * (Number(data.salary_p2) || 1.0) + (Number(data.salary_p3) || 0)
+        basic: Number(data.salary_p1) || 0,
+        allowanceMeal: Number(data.allowance_meal) || 0,
+        allowanceFuel: Number(data.allowance_fuel) || 0,
+        allowancePhone: Number(data.allowance_phone) || 0,
+        allowanceOther: Number(data.allowance_other) || 0,
+        totalFixed: Number(data.total_fixed_salary) || 0,
       },
       performance: {
         kpi: Number(data.kpi_score) || 0,
@@ -112,7 +121,8 @@ export class EmployeeService {
         relationship: data.emergency_contact_relationship as 'Cha' | 'Mẹ' | 'Vợ' | 'Chồng' | 'Anh' | 'Chị' | 'Em' | 'Khác',
         name: data.emergency_contact_name,
         phone: data.emergency_contact_phone
-      } : undefined
+      } : undefined,
+      notes: data.notes
     };
   }
 
@@ -127,18 +137,22 @@ export class EmployeeService {
         avatar_path: data.avatar_path || null,
         position: data.position,
         department: data.department,
+        team: data.team || null,
         join_date: data.join_date,
-        contract_type: data.contract_type,
+        employment_type: data.employment_type,
         status: data.status || 'probation',
-        salary_p1: data.salary_p1 || 0,
-        salary_p2: data.salary_p2 || 1.0,
-        salary_p3: data.salary_p3 || 0,
+        salary_p1: data.salary_basic || 0,
+        allowance_meal: data.allowance_meal || 0,
+        allowance_fuel: data.allowance_fuel || 0,
+        allowance_phone: data.allowance_phone || 0,
+        allowance_other: data.allowance_other || 0,
         kpi_score: data.kpi_score || 0,
         last_review_date: data.last_review_date,
         current_address: data.current_address || null,
         emergency_contact_relationship: data.emergency_contact_relationship || null,
         emergency_contact_name: data.emergency_contact_name || null,
         emergency_contact_phone: data.emergency_contact_phone || null,
+        notes: data.notes || null,
         created_by: (await supabase.auth.getUser()).data.user?.id
       });
 
@@ -155,18 +169,22 @@ export class EmployeeService {
     if (data.avatar_path !== undefined) updates.avatar_path = data.avatar_path;
     if (data.position) updates.position = data.position;
     if (data.department) updates.department = data.department;
+    if (data.team !== undefined) updates.team = data.team;
     if (data.join_date) updates.join_date = data.join_date;
-    if (data.contract_type) updates.contract_type = data.contract_type;
+    if (data.employment_type) updates.employment_type = data.employment_type;
     if (data.status) updates.status = data.status;
-    if (data.salary_p1 !== undefined) updates.salary_p1 = data.salary_p1;
-    if (data.salary_p2 !== undefined) updates.salary_p2 = data.salary_p2;
-    if (data.salary_p3 !== undefined) updates.salary_p3 = data.salary_p3;
+    if (data.salary_basic !== undefined) updates.salary_p1 = data.salary_basic;
+    if (data.allowance_meal !== undefined) updates.allowance_meal = data.allowance_meal;
+    if (data.allowance_fuel !== undefined) updates.allowance_fuel = data.allowance_fuel;
+    if (data.allowance_phone !== undefined) updates.allowance_phone = data.allowance_phone;
+    if (data.allowance_other !== undefined) updates.allowance_other = data.allowance_other;
     if (data.kpi_score !== undefined) updates.kpi_score = data.kpi_score;
     if (data.last_review_date !== undefined) updates.last_review_date = data.last_review_date;
     if (data.current_address !== undefined) updates.current_address = data.current_address;
     if (data.emergency_contact_relationship !== undefined) updates.emergency_contact_relationship = data.emergency_contact_relationship;
     if (data.emergency_contact_name !== undefined) updates.emergency_contact_name = data.emergency_contact_name;
     if (data.emergency_contact_phone !== undefined) updates.emergency_contact_phone = data.emergency_contact_phone;
+    if (data.notes !== undefined) updates.notes = data.notes;
 
     const { error } = await supabase
       .from('employees')

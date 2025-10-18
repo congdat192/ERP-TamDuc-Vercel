@@ -66,8 +66,11 @@ export type Database = {
       }
       employees: {
         Row: {
+          allowance_fuel: number | null
+          allowance_meal: number | null
+          allowance_other: number | null
+          allowance_phone: number | null
           avatar_path: string | null
-          contract_type: Database["public"]["Enums"]["contract_type"] | null
           created_at: string | null
           created_by: string | null
           current_address: string | null
@@ -77,22 +80,28 @@ export type Database = {
           emergency_contact_phone: string | null
           emergency_contact_relationship: string | null
           employee_code: string
+          employment_type: Database["public"]["Enums"]["employment_type"] | null
           full_name: string
           id: string
           join_date: string
           kpi_score: number | null
           last_review_date: string | null
+          notes: string | null
           phone: string | null
           position: string
           salary_p1: number | null
-          salary_p2: number | null
-          salary_p3: number | null
+          seniority_months: number | null
           status: Database["public"]["Enums"]["employee_status"] | null
+          team: string | null
+          total_fixed_salary: number | null
           updated_at: string | null
         }
         Insert: {
+          allowance_fuel?: number | null
+          allowance_meal?: number | null
+          allowance_other?: number | null
+          allowance_phone?: number | null
           avatar_path?: string | null
-          contract_type?: Database["public"]["Enums"]["contract_type"] | null
           created_at?: string | null
           created_by?: string | null
           current_address?: string | null
@@ -102,22 +111,30 @@ export type Database = {
           emergency_contact_phone?: string | null
           emergency_contact_relationship?: string | null
           employee_code: string
+          employment_type?:
+            | Database["public"]["Enums"]["employment_type"]
+            | null
           full_name: string
           id?: string
           join_date: string
           kpi_score?: number | null
           last_review_date?: string | null
+          notes?: string | null
           phone?: string | null
           position: string
           salary_p1?: number | null
-          salary_p2?: number | null
-          salary_p3?: number | null
+          seniority_months?: number | null
           status?: Database["public"]["Enums"]["employee_status"] | null
+          team?: string | null
+          total_fixed_salary?: number | null
           updated_at?: string | null
         }
         Update: {
+          allowance_fuel?: number | null
+          allowance_meal?: number | null
+          allowance_other?: number | null
+          allowance_phone?: number | null
           avatar_path?: string | null
-          contract_type?: Database["public"]["Enums"]["contract_type"] | null
           created_at?: string | null
           created_by?: string | null
           current_address?: string | null
@@ -127,17 +144,22 @@ export type Database = {
           emergency_contact_phone?: string | null
           emergency_contact_relationship?: string | null
           employee_code?: string
+          employment_type?:
+            | Database["public"]["Enums"]["employment_type"]
+            | null
           full_name?: string
           id?: string
           join_date?: string
           kpi_score?: number | null
           last_review_date?: string | null
+          notes?: string | null
           phone?: string | null
           position?: string
           salary_p1?: number | null
-          salary_p2?: number | null
-          salary_p3?: number | null
+          seniority_months?: number | null
           status?: Database["public"]["Enums"]["employee_status"] | null
+          team?: string | null
+          total_fixed_salary?: number | null
           updated_at?: string | null
         }
         Relationships: []
@@ -212,6 +234,56 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      monthly_attendance: {
+        Row: {
+          actual_days: number | null
+          created_at: string | null
+          created_by: string | null
+          employee_id: string
+          id: string
+          month: string
+          ot_hours: number | null
+          paid_leave: number | null
+          standard_days: number | null
+          unpaid_leave: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          actual_days?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          employee_id: string
+          id?: string
+          month: string
+          ot_hours?: number | null
+          paid_leave?: number | null
+          standard_days?: number | null
+          unpaid_leave?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          actual_days?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          employee_id?: string
+          id?: string
+          month?: string
+          ot_hours?: number | null
+          paid_leave?: number | null
+          standard_days?: number | null
+          unpaid_leave?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_attendance_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -368,6 +440,12 @@ export type Database = {
       app_role: "admin" | "user"
       contract_type: "Chính Thức" | "Thử Việc" | "Hợp Đồng"
       employee_status: "active" | "inactive" | "probation" | "terminated"
+      employment_type:
+        | "Full-time"
+        | "Part-time"
+        | "CTV"
+        | "Thử việc"
+        | "Thực tập"
       member_status: "ACTIVE" | "INACTIVE" | "PENDING" | "SUSPENDED"
     }
     CompositeTypes: {
@@ -499,6 +577,13 @@ export const Constants = {
       app_role: ["admin", "user"],
       contract_type: ["Chính Thức", "Thử Việc", "Hợp Đồng"],
       employee_status: ["active", "inactive", "probation", "terminated"],
+      employment_type: [
+        "Full-time",
+        "Part-time",
+        "CTV",
+        "Thử việc",
+        "Thực tập",
+      ],
       member_status: ["ACTIVE", "INACTIVE", "PENDING", "SUSPENDED"],
     },
   },

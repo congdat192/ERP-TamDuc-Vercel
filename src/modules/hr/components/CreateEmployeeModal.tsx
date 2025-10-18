@@ -35,18 +35,22 @@ export function CreateEmployeeModal({ onSuccess }: CreateEmployeeModalProps) {
       phone: '',
       position: '',
       department: '',
+      team: '',
       join_date: new Date().toISOString().split('T')[0],
-      contract_type: 'Thử Việc',
+      employment_type: 'Thử việc',
       status: 'probation',
-      salary_p1: 0,
-      salary_p2: 1.0,
-      salary_p3: 0,
+      salary_basic: 0,
+      allowance_meal: 0,
+      allowance_fuel: 0,
+      allowance_phone: 0,
+      allowance_other: 0,
       kpi_score: 0,
       last_review_date: '',
       current_address: '',
       emergency_contact_relationship: undefined,
       emergency_contact_name: '',
-      emergency_contact_phone: ''
+      emergency_contact_phone: '',
+      notes: ''
     }
   });
 
@@ -245,6 +249,20 @@ export function CreateEmployeeModal({ onSuccess }: CreateEmployeeModalProps) {
 
               <FormField
                 control={form.control}
+                name="team"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nhóm/Team</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="Team Performance" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
                 name="join_date"
                 render={({ field }) => (
                   <FormItem>
@@ -259,20 +277,22 @@ export function CreateEmployeeModal({ onSuccess }: CreateEmployeeModalProps) {
 
               <FormField
                 control={form.control}
-                name="contract_type"
+                name="employment_type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Loại Hợp Đồng *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormLabel>Loại Hình Làm Việc *</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Thử Việc">Thử Việc</SelectItem>
-                        <SelectItem value="Chính Thức">Chính Thức</SelectItem>
-                        <SelectItem value="Hợp Đồng">Hợp Đồng</SelectItem>
+                        <SelectItem value="Thử việc">Thử việc</SelectItem>
+                        <SelectItem value="Full-time">Full-time</SelectItem>
+                        <SelectItem value="Part-time">Part-time</SelectItem>
+                        <SelectItem value="CTV">CTV</SelectItem>
+                        <SelectItem value="Thực tập">Thực tập</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -397,7 +417,7 @@ export function CreateEmployeeModal({ onSuccess }: CreateEmployeeModalProps) {
 
               <FormField
                 control={form.control}
-                name="salary_p1"
+                name="salary_basic"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Lương Cơ Bản (VNĐ)</FormLabel>
@@ -415,16 +435,15 @@ export function CreateEmployeeModal({ onSuccess }: CreateEmployeeModalProps) {
 
               <FormField
                 control={form.control}
-                name="salary_p2"
+                name="allowance_meal"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Hệ Số Lương</FormLabel>
+                    <FormLabel>Phụ Cấp Ăn Trưa (VNĐ)</FormLabel>
                     <FormControl>
                       <Input 
                         {...field} 
                         type="number" 
-                        step="0.1"
-                        onChange={e => field.onChange(parseFloat(e.target.value) || 1.0)}
+                        onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -434,10 +453,46 @@ export function CreateEmployeeModal({ onSuccess }: CreateEmployeeModalProps) {
 
               <FormField
                 control={form.control}
-                name="salary_p3"
+                name="allowance_fuel"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Phụ Cấp (VNĐ)</FormLabel>
+                    <FormLabel>Phụ Cấp Xăng Xe (VNĐ)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        type="number"
+                        onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="allowance_phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phụ Cấp Điện Thoại (VNĐ)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        type="number"
+                        onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="allowance_other"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phụ Cấp Khác (VNĐ)</FormLabel>
                     <FormControl>
                       <Input 
                         {...field} 
@@ -476,6 +531,24 @@ export function CreateEmployeeModal({ onSuccess }: CreateEmployeeModalProps) {
                     <FormLabel>Ngày Đánh Giá Gần Nhất</FormLabel>
                     <FormControl>
                       <Input {...field} type="date" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem className="col-span-2">
+                    <FormLabel>Ghi Chú</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        {...field}
+                        placeholder="Ghi chú về nhân viên..."
+                        rows={2}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

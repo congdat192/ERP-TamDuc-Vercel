@@ -46,7 +46,7 @@ export function EmployeeDetailModal({ employee, open, onOpenChange }: EmployeeDe
               <p className="theme-text-secondary">{employee.position}</p>
               <div className="flex items-center gap-2 mt-2">
                 {getStatusBadge(employee.status)}
-                <Badge variant="outline">{employee.contractType}</Badge>
+                <Badge variant="outline">{employee.employmentType}</Badge>
               </div>
             </div>
           </div>

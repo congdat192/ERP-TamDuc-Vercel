@@ -37,18 +37,22 @@ export function EditEmployeeModal({ employee, onSuccess }: EditEmployeeModalProp
       phone: employee.phone || '',
       position: employee.position,
       department: employee.department,
+      team: employee.team || '',
       join_date: employee.joinDate,
-      contract_type: employee.contractType,
+      employment_type: employee.employmentType,
       status: employee.status,
-      salary_p1: employee.salary.p1,
-      salary_p2: employee.salary.p2,
-      salary_p3: employee.salary.p3,
+      salary_basic: employee.salary.basic,
+      allowance_meal: employee.salary.allowanceMeal,
+      allowance_fuel: employee.salary.allowanceFuel,
+      allowance_phone: employee.salary.allowancePhone,
+      allowance_other: employee.salary.allowanceOther,
       kpi_score: employee.performance.kpi,
       last_review_date: employee.performance.lastReview || '',
       current_address: employee.currentAddress || '',
       emergency_contact_relationship: employee.emergencyContact?.relationship,
       emergency_contact_name: employee.emergencyContact?.name || '',
-      emergency_contact_phone: employee.emergencyContact?.phone || ''
+      emergency_contact_phone: employee.emergencyContact?.phone || '',
+      notes: employee.notes || ''
     }
   });
 
@@ -61,18 +65,22 @@ export function EditEmployeeModal({ employee, onSuccess }: EditEmployeeModalProp
         phone: employee.phone || '',
         position: employee.position,
         department: employee.department,
+        team: employee.team || '',
         join_date: employee.joinDate,
-        contract_type: employee.contractType,
+        employment_type: employee.employmentType,
         status: employee.status,
-        salary_p1: employee.salary.p1,
-        salary_p2: employee.salary.p2,
-        salary_p3: employee.salary.p3,
+        salary_basic: employee.salary.basic,
+        allowance_meal: employee.salary.allowanceMeal,
+        allowance_fuel: employee.salary.allowanceFuel,
+        allowance_phone: employee.salary.allowancePhone,
+        allowance_other: employee.salary.allowanceOther,
         kpi_score: employee.performance.kpi,
         last_review_date: employee.performance.lastReview || '',
         current_address: employee.currentAddress || '',
         emergency_contact_relationship: employee.emergencyContact?.relationship,
         emergency_contact_name: employee.emergencyContact?.name || '',
-        emergency_contact_phone: employee.emergencyContact?.phone || ''
+        emergency_contact_phone: employee.emergencyContact?.phone || '',
+        notes: employee.notes || ''
       });
       
       // Set avatar preview if exists
@@ -298,7 +306,7 @@ export function EditEmployeeModal({ employee, onSuccess }: EditEmployeeModalProp
 
               <FormField
                 control={form.control}
-                name="contract_type"
+                name="employment_type"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Loại Hợp Đồng *</FormLabel>
@@ -436,7 +444,7 @@ export function EditEmployeeModal({ employee, onSuccess }: EditEmployeeModalProp
 
               <FormField
                 control={form.control}
-                name="salary_p1"
+                name="salary_basic"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Lương Cơ Bản (VNĐ)</FormLabel>
@@ -454,7 +462,7 @@ export function EditEmployeeModal({ employee, onSuccess }: EditEmployeeModalProp
 
               <FormField
                 control={form.control}
-                name="salary_p2"
+                name="allowance_meal"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Hệ Số Lương</FormLabel>
@@ -473,7 +481,7 @@ export function EditEmployeeModal({ employee, onSuccess }: EditEmployeeModalProp
 
               <FormField
                 control={form.control}
-                name="salary_p3"
+                name="allowance_fuel"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Phụ Cấp (VNĐ)</FormLabel>

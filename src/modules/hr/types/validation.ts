@@ -36,23 +36,36 @@ export const employeeSchema = z.object({
   join_date: z.string()
     .min(1, 'Ngày vào làm không được để trống'),
   
-  contract_type: z.enum(['Chính Thức', 'Thử Việc', 'Hợp Đồng'], {
-    required_error: 'Loại hợp đồng không được để trống'
+  team: z.string()
+    .trim()
+    .max(100, 'Tên nhóm tối đa 100 ký tự')
+    .optional()
+    .or(z.literal('')),
+  
+  employment_type: z.enum(['Full-time', 'Part-time', 'CTV', 'Thử việc', 'Thực tập'], {
+    required_error: 'Loại hình làm việc không được để trống'
   }),
   
   status: z.enum(['active', 'inactive', 'probation', 'terminated']).optional(),
   
-  salary_p1: z.number()
+  salary_basic: z.number()
     .min(0, 'Lương cơ bản không được âm')
     .optional(),
   
-  salary_p2: z.number()
-    .min(0, 'Hệ số lương không được âm')
-    .max(10, 'Hệ số lương tối đa 10')
+  allowance_meal: z.number()
+    .min(0, 'Phụ cấp ăn trưa không được âm')
     .optional(),
   
-  salary_p3: z.number()
-    .min(0, 'Phụ cấp không được âm')
+  allowance_fuel: z.number()
+    .min(0, 'Phụ cấp xăng xe không được âm')
+    .optional(),
+  
+  allowance_phone: z.number()
+    .min(0, 'Phụ cấp điện thoại không được âm')
+    .optional(),
+  
+  allowance_other: z.number()
+    .min(0, 'Phụ cấp khác không được âm')
     .optional(),
   
   kpi_score: z.number()
@@ -83,6 +96,12 @@ export const employeeSchema = z.object({
   emergency_contact_phone: z.string()
     .trim()
     .regex(/^0\d{9}$/, 'Số điện thoại phải có 10 chữ số và bắt đầu bằng 0')
+    .optional()
+    .or(z.literal('')),
+  
+  notes: z.string()
+    .trim()
+    .max(1000, 'Ghi chú tối đa 1000 ký tự')
     .optional()
     .or(z.literal(''))
 });
