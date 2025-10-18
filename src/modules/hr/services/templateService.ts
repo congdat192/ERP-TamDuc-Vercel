@@ -8,14 +8,14 @@ export class TemplateService {
     // Sheet 1: Employee_Info (Template)
     const employeeInfoData = [
       [
-        'MNV*',
-        'Họ và tên*',
-        'Email*',
+        'MNV',
+        'Họ và tên',
+        'Email',
         'SĐT',
-        'Phòng ban*',
-        'Chức danh*',
+        'Phòng ban',
+        'Chức danh',
         'Nhóm',
-        'Ngày vào làm*',
+        'Ngày vào làm',
         'Loại công',
         'Lương cơ bản',
         'Phụ cấp ăn trưa',
@@ -23,6 +23,23 @@ export class TemplateService {
         'Phụ cấp điện thoại',
         'Phụ cấp khác',
         'Ghi chú'
+      ],
+      [
+        '(Bắt buộc)',
+        '(Bắt buộc)',
+        '(Bắt buộc)',
+        '',
+        '(Bắt buộc)',
+        '(Bắt buộc)',
+        '',
+        '(Bắt buộc)',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        ''
       ]
     ];
     const ws1 = XLSX.utils.aoa_to_sheet(employeeInfoData);
@@ -80,14 +97,14 @@ export class TemplateService {
     // Sheet 3: Example_Data
     const exampleData = [
       [
-        'MNV*',
-        'Họ và tên*',
-        'Email*',
+        'MNV',
+        'Họ và tên',
+        'Email',
         'SĐT',
-        'Phòng ban*',
-        'Chức danh*',
+        'Phòng ban',
+        'Chức danh',
         'Nhóm',
-        'Ngày vào làm*',
+        'Ngày vào làm',
         'Loại công',
         'Lương cơ bản',
         'Phụ cấp ăn trưa',

@@ -160,9 +160,17 @@ export class ImportService {
       reader.onload = (e) => {
         try {
           const data = e.target?.result;
-          const workbook = XLSX.read(data, { type: 'binary' });
+          const workbook = XLSX.read(data, { 
+            type: 'binary',
+            cellDates: true,  // ✅ Convert Excel date serial to JS Date
+            cellNF: false,    // ✅ Don't parse number format
+            raw: false        // ✅ Parse values as string/date instead of raw
+          });
           const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-          const rows = XLSX.utils.sheet_to_json(firstSheet);
+          const rows = XLSX.utils.sheet_to_json(firstSheet, {
+            defval: '',       // ✅ Empty cells = '' instead of undefined
+            raw: false        // ✅ Parse values
+          });
           resolve(rows);
         } catch (err) {
           reject(new Error('Không thể đọc file Excel'));
@@ -174,12 +182,51 @@ export class ImportService {
     });
   }
 
+  static cleanHeaderKey(key: string): string {
+    return key
+      .replace(/\*/g, '')      // Remove asterisk
+      .trim();                  // Remove whitespace
+  }
+
+  static convertDateToISO(value: any): string | null {
+    if (!value) return null;
+    
+    // If already Date object (from cellDates: true)
+    if (value instanceof Date) {
+      return value.toISOString().split('T')[0]; // YYYY-MM-DD
+    }
+    
+    // If string DD/MM/YYYY
+    if (typeof value === 'string') {
+      const parts = value.split('/');
+      if (parts.length === 3) {
+        const [day, month, year] = parts;
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      }
+    }
+    
+    // If Excel serial number (fallback)
+    if (typeof value === 'number') {
+      const date = new Date((value - 25569) * 86400 * 1000); // Excel epoch conversion
+      return date.toISOString().split('T')[0];
+    }
+    
+    return null;
+  }
+
   static mapColumnAliases(row: any): ParsedEmployee {
     const mapped: any = {};
     
     for (const [key, value] of Object.entries(row)) {
-      const normalizedKey = this.COLUMN_ALIASES[key] || key;
-      mapped[normalizedKey] = value;
+      const cleanedKey = this.cleanHeaderKey(key);           // ✅ Clean key first
+      const normalizedKey = this.COLUMN_ALIASES[cleanedKey] || cleanedKey;
+      
+      // Convert date fields to ISO format
+      if (normalizedKey === 'join_date') {
+        mapped[normalizedKey] = this.convertDateToISO(value);
+      } else {
+        mapped[normalizedKey] = value;
+      }
     }
     
     return mapped as ParsedEmployee;
@@ -208,7 +255,11 @@ export class ImportService {
       errors.push({ row: rowIndex, field: 'position', message: 'Chức danh không được để trống' });
     }
     if (!row.join_date) {
-      errors.push({ row: rowIndex, field: 'join_date', message: 'Ngày vào làm không được để trống' });
+      errors.push({ 
+        row: rowIndex, 
+        field: 'join_date', 
+        message: `Ngày vào làm không được để trống (giá trị hiện tại: ${row.join_date})` 
+      });
     }
 
     // Validate email format

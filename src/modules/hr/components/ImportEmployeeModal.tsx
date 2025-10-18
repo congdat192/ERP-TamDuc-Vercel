@@ -75,6 +75,9 @@ export function ImportEmployeeModal({ onSuccess }: ImportEmployeeModalProps) {
     try {
       const rows = await ImportService.parseExcelFile(selectedFile);
       
+      console.log('📋 Parsed rows (first 3):', rows.slice(0, 3));
+      console.log('🔑 Column keys:', rows.length > 0 ? Object.keys(rows[0]) : []);
+      
       // Show preview (first 10 rows)
       setPreviewData(rows.slice(0, 10));
 
