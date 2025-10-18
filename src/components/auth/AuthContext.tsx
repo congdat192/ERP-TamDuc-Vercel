@@ -136,11 +136,9 @@ const fetchUserWithPermissions = async (supabaseUser: SupabaseUser): Promise<{ u
   let userRole: UserRole = 'custom';
   const roleName = roleData.name.toLowerCase();
   
-  // Warning nếu Admin không có permissions trong DB (sẽ dùng hardcoded full access)
-  if (roleName === 'admin' && featureCodes.length === 0) {
-    console.warn('⚠️ [AuthContext] Admin role has no permissions in DB. Using hardcoded full access.');
-  }
-  if (roleName === 'admin') {
+  if (roleName === 'owner') {
+    userRole = 'erp-admin';
+  } else if (roleName === 'admin') {
     userRole = 'erp-admin';
   } else if (roleName === 'user') {
     userRole = 'custom';
@@ -149,17 +147,37 @@ const fetchUserWithPermissions = async (supabaseUser: SupabaseUser): Promise<{ u
   // Get permissions based on role
   let permissions: UserPermissions;
   
-  if (roleName === 'admin' && featureCodes.length === 0) {
-    // Fallback: Admin có full access nếu không có permissions trong DB
-    console.log('⚠️ [AuthContext] Using hardcoded Admin permissions (fallback)');
+  // Owner role gets full access to everything
+  if (roleName === 'owner') {
+    console.log('👑 [AuthContext] Owner role detected - granting full access');
     permissions = {
-      modules: MODULE_PERMISSIONS.map(m => m.module),
-      voucherFeatures: VOUCHER_FEATURES.map(f => f.id as VoucherFeature),
+      modules: [
+        'dashboard',
+        'customers',
+        'sales',
+        'inventory',
+        'accounting',
+        'hr',
+        'voucher',
+        'marketing',
+        'affiliate',
+        'system-settings',
+        'user-management'
+      ] as ERPModule[],
+      voucherFeatures: [
+        'voucher-dashboard',
+        'campaign-management',
+        'issue-voucher',
+        'voucher-list',
+        'voucher-analytics',
+        'voucher-leaderboard',
+        'voucher-settings'
+      ] as VoucherFeature[],
       canManageUsers: true,
-      canViewAllVouchers: true,
+      canViewAllVouchers: true
     };
   } else {
-    // Map feature codes từ DB sang modules và features
+    // For future custom roles, map feature codes to permissions
     const moduleSet = new Set<ERPModule>();
     const voucherFeatureSet = new Set<VoucherFeature>();
     let canManageUsers = false;
