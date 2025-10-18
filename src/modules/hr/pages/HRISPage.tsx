@@ -86,7 +86,7 @@ export function HRISPage() {
       await EmployeeService.softDeleteEmployee(selectedEmployee.id);
       toast({
         title: 'Thành công',
-        description: `Đã cho nghỉ việc nhân viên ${selectedEmployee.fullName}`,
+        description: `Đã xóa nhân viên ${selectedEmployee.fullName}. Có thể khôi phục từ tab "Nhân Viên Đã Xóa".`,
       });
       await fetchEmployees();
     } catch (error: any) {
@@ -236,7 +236,7 @@ export function HRISPage() {
       <Tabs value={showDeleted ? "deleted" : "active"} onValueChange={(v) => setShowDeleted(v === "deleted")}>
         <TabsList className="grid w-full max-w-md grid-cols-2">
           <TabsTrigger value="active">Nhân Viên Đang Làm</TabsTrigger>
-          <TabsTrigger value="deleted">Nhân Viên Đã Nghỉ</TabsTrigger>
+          <TabsTrigger value="deleted">Nhân Viên Đã Xóa</TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -405,7 +405,7 @@ export function HRISPage() {
                               <Button 
                                 variant="ghost" 
                                 size="icon"
-                                title="Cho nghỉ việc"
+                                title="Xóa nhân viên"
                                 onClick={() => handleTerminateClick(employee)}
                               >
                                 <UserX className="h-4 w-4" />
@@ -450,17 +450,21 @@ export function HRISPage() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Xác nhận cho nhân viên nghỉ việc</AlertDialogTitle>
+            <AlertDialogTitle>Xác nhận xóa nhân viên</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn có chắc chắn muốn cho nhân viên <strong>{selectedEmployee?.fullName}</strong> nghỉ việc?
+              Bạn có chắc chắn muốn xóa nhân viên <strong>{selectedEmployee?.fullName}</strong>?
               <br /><br />
-              Nhân viên sẽ chuyển sang trạng thái "Đã nghỉ việc" và có thể khôi phục lại sau này.
+              Đây là xóa mềm (soft delete). Nhân viên sẽ chuyển sang tab "Nhân Viên Đã Xóa" và có thể khôi phục bất cứ lúc nào.
+              <br /><br />
+              <span className="text-sm text-muted-foreground">
+                Lưu ý: Khác với trạng thái "Nghỉ việc" trong hồ sơ - đây là xóa khỏi danh sách hoạt động.
+              </span>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Hủy</AlertDialogCancel>
             <AlertDialogAction onClick={handleTerminateConfirm} className="bg-orange-600 hover:bg-orange-700">
-              Cho Nghỉ Việc
+              Xóa Nhân Viên
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

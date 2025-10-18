@@ -38,7 +38,7 @@ export function EmployeeDetailModal({ employee, open, onOpenChange, onEmployeeDe
       
       toast({
         title: "Thành công",
-        description: `Đã cho nghỉ việc nhân viên ${employee.fullName}. Có thể khôi phục lại sau này từ tab "Nhân Viên Đã Nghỉ".`,
+        description: `Đã xóa nhân viên ${employee.fullName}. Có thể khôi phục từ tab "Nhân Viên Đã Xóa".`,
       });
 
       setDeleteDialogOpen(false);
@@ -79,7 +79,7 @@ export function EmployeeDetailModal({ employee, open, onOpenChange, onEmployeeDe
               size="icon"
               className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
               onClick={handleTerminateClick}
-              title="Cho nghỉ việc"
+              title="Xóa nhân viên"
             >
               <UserX className="h-4 w-4" />
             </Button>
@@ -331,17 +331,21 @@ export function EmployeeDetailModal({ employee, open, onOpenChange, onEmployeeDe
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Xác nhận cho nhân viên nghỉ việc</AlertDialogTitle>
+            <AlertDialogTitle>Xác nhận xóa nhân viên</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn có chắc chắn muốn cho nhân viên <strong>{employee.fullName}</strong> nghỉ việc?
+              Bạn có chắc chắn muốn xóa nhân viên <strong>{employee.fullName}</strong>?
               <br /><br />
-              Nhân viên sẽ chuyển sang trạng thái "Đã nghỉ việc" và có thể khôi phục lại sau này từ tab "Nhân Viên Đã Nghỉ".
+              Đây là xóa mềm (soft delete). Nhân viên sẽ chuyển sang tab "Nhân Viên Đã Xóa" và có thể khôi phục bất cứ lúc nào.
+              <br /><br />
+              <span className="text-sm text-muted-foreground">
+                Lưu ý: Khác với trạng thái "Nghỉ việc" trong hồ sơ - đây là xóa khỏi danh sách hoạt động.
+              </span>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Hủy</AlertDialogCancel>
             <AlertDialogAction onClick={handleTerminateConfirm} className="bg-orange-600 hover:bg-orange-700">
-              Cho Nghỉ Việc
+              Xóa Nhân Viên
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
