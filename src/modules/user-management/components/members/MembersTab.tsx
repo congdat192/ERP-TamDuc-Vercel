@@ -39,6 +39,7 @@ interface MembersTabProps {
   onUpdateMemberRole?: (memberId: string, roleId: number) => Promise<void>;
   onBulkOperation?: (operation: any) => void;
   onFiltersChange?: (filters: any) => void;
+  onRefreshMembers?: () => Promise<void>;
 }
 
 export function MembersTab({
@@ -49,15 +50,21 @@ export function MembersTab({
   onUserDelete,
   onUpdateMemberRole,
   onBulkOperation,
-  onFiltersChange
+  onFiltersChange,
+  onRefreshMembers
 }: MembersTabProps) {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [filters, setFilters] = useState<UserManagementFilters>({});
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  const handleUserCreated = () => {
-    // Reload members list
-    window.location.reload();
+  const handleUserCreated = async () => {
+    console.log('✅ User created successfully, refreshing list...');
+    // Wait for DB commit
+    await new Promise(resolve => setTimeout(resolve, 500));
+    // Refetch members
+    if (onRefreshMembers) {
+      await onRefreshMembers();
+    }
   };
 
   const handleSelectUser = (userId: string, selected: boolean) => {

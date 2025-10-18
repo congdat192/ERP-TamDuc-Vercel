@@ -151,7 +151,8 @@ Deno.serve(async (req) => {
     console.log(`✅ Assigned role: ${roleData.name} (ID: ${roleId})`);
 
     // Send credentials email
-    const loginUrl = `${Deno.env.get('SITE_URL')}/login`;
+    const siteUrl = Deno.env.get('SITE_URL')?.replace(/\/$/, '') || '';
+    const loginUrl = `${siteUrl}/login`;
     console.log('📧 Sending credentials email...');
 
     const { error: emailError } = await supabaseAdmin.functions.invoke(

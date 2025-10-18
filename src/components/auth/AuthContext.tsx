@@ -100,7 +100,11 @@ const fetchUserWithPermissions = async (supabaseUser: SupabaseUser): Promise<{ u
           features (
             code,
             module_id,
-            feature_type
+            feature_type,
+            modules!features_module_id_fkey (
+              code,
+              name
+            )
           )
         )
       )
@@ -125,12 +129,17 @@ const fetchUserWithPermissions = async (supabaseUser: SupabaseUser): Promise<{ u
 
   console.log('🔐 [AuthContext] User role loaded:', roleData.name, 'ID:', roleData.id);
   
-  // Extract permissions from role
-  const featureCodes = (roleData.role_permissions || [])
-    .map((rp: any) => rp.features?.code)
-    .filter(Boolean);
-
-  console.log('🔑 [AuthContext] Feature codes:', featureCodes);
+  // Extract permissions from role with module info
+  const rolePermissions = roleData.role_permissions || [];
+  
+  console.log('📋 [AuthContext] Role permissions count:', rolePermissions.length);
+  
+  // Log detailed feature-module mapping
+  rolePermissions.forEach((rp: any, index: number) => {
+    const feature = rp.features;
+    const moduleCode = feature?.modules?.code;
+    console.log(`  [${index + 1}] Feature: ${feature?.code} → Module: ${moduleCode}`);
+  });
 
   // Map role name to legacy UserRole type
   let userRole: UserRole = 'custom';
@@ -177,52 +186,51 @@ const fetchUserWithPermissions = async (supabaseUser: SupabaseUser): Promise<{ u
       canViewAllVouchers: true
     };
   } else {
-    // For future custom roles, map feature codes to permissions
+    // For custom roles, map features to permissions using module_code from database
     const moduleSet = new Set<ERPModule>();
     const voucherFeatureSet = new Set<VoucherFeature>();
     let canManageUsers = false;
     let canViewAllVouchers = false;
 
-    featureCodes.forEach((code: string) => {
-      // Map feature code to module based on prefix
-      if (code.includes('dashboard')) moduleSet.add('dashboard');
-      if (code.includes('customer')) moduleSet.add('customers');
-      if (code.includes('sale')) moduleSet.add('sales');
-      if (code.includes('inventory') || code.includes('product')) moduleSet.add('inventory');
-      if (code.includes('accounting')) moduleSet.add('accounting');
-      if (code.includes('hr')) moduleSet.add('hr');
-      if (code.includes('voucher')) moduleSet.add('voucher');
-      if (code.includes('marketing')) moduleSet.add('marketing');
-      if (code.includes('affiliate')) moduleSet.add('affiliate');
-      if (code.includes('setting')) moduleSet.add('system-settings');
-      if (code.includes('member') || code.includes('role') || code.includes('department') || code.includes('group')) {
-        moduleSet.add('user-management');
+    rolePermissions.forEach((rp: any) => {
+      const feature = rp.features;
+      if (!feature) return;
+      
+      const featureCode = feature.code;
+      const moduleCode = feature.modules?.code; // ✅ Get module code from database
+      
+      // Add module based on module_code from database
+      if (moduleCode) {
+        moduleSet.add(moduleCode as ERPModule);
+        console.log(`✅ Added module: ${moduleCode} from feature: ${featureCode}`);
       }
-
+      
       // Map voucher-specific features
-      if (code === 'view_voucher' || code === 'read_voucher') {
-        voucherFeatureSet.add('voucher-list');
-        voucherFeatureSet.add('voucher-dashboard');
-        canViewAllVouchers = true;
+      if (moduleCode === 'voucher') {
+        if (featureCode === 'view_voucher' || featureCode === 'read_voucher') {
+          voucherFeatureSet.add('voucher-list');
+          voucherFeatureSet.add('voucher-dashboard');
+          canViewAllVouchers = true;
+        }
+        if (featureCode === 'create_voucher') {
+          voucherFeatureSet.add('issue-voucher');
+        }
+        if (featureCode === 'approve_voucher' || featureCode === 'manage_campaign') {
+          voucherFeatureSet.add('campaign-management');
+        }
+        if (featureCode === 'view_voucher_analytics') {
+          voucherFeatureSet.add('voucher-analytics');
+        }
+        if (featureCode === 'view_voucher_leaderboard') {
+          voucherFeatureSet.add('voucher-leaderboard');
+        }
+        if (featureCode === 'manage_voucher_settings') {
+          voucherFeatureSet.add('voucher-settings');
+        }
       }
-      if (code === 'create_voucher') {
-        voucherFeatureSet.add('issue-voucher');
-      }
-      if (code === 'approve_voucher' || code === 'manage_campaign') {
-        voucherFeatureSet.add('campaign-management');
-      }
-      if (code === 'view_voucher_analytics') {
-        voucherFeatureSet.add('voucher-analytics');
-      }
-      if (code === 'view_voucher_leaderboard') {
-        voucherFeatureSet.add('voucher-leaderboard');
-      }
-      if (code === 'manage_voucher_settings') {
-        voucherFeatureSet.add('voucher-settings');
-      }
-
+      
       // Check for user management permissions
-      if (code === 'manage_members' || code === 'manage_roles' || code === 'create_member') {
+      if (featureCode === 'manage_members' || featureCode === 'manage_roles' || featureCode === 'create_member') {
         canManageUsers = true;
       }
     });
@@ -234,8 +242,10 @@ const fetchUserWithPermissions = async (supabaseUser: SupabaseUser): Promise<{ u
       canViewAllVouchers,
     };
 
-    console.log('✅ [AuthContext] Mapped permissions from DB:', {
-      featureCount: featureCodes.length,
+    console.log('✅ [AuthContext] Mapped modules:', Array.from(moduleSet));
+    console.log('✅ [AuthContext] Mapped voucher features:', Array.from(voucherFeatureSet));
+    console.log('✅ [AuthContext] Final permissions:', {
+      moduleCount: permissions.modules.length,
       modules: permissions.modules,
       voucherFeatures: permissions.voucherFeatures,
       canManageUsers: permissions.canManageUsers

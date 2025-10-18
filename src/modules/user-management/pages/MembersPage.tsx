@@ -331,6 +331,7 @@ export function MembersPage() {
       onUpdateMemberRole={handleUpdateMemberRole}
       onBulkOperation={handleBulkOperation}
       onFiltersChange={handleFiltersChange}
+      onRefreshMembers={fetchMembers}
     />
   );
 }
