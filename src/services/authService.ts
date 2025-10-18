@@ -204,9 +204,3 @@ export const getAuthToken = async (): Promise<string | null> => {
   const { data: { session } } = await supabase.auth.getSession();
   return session?.access_token || null;
 };
-
-export function clearSelectedBusinessId(): void {
-  try {
-    localStorage.removeItem('cbi');
-  } catch {}
-}

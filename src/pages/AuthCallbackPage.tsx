@@ -158,22 +158,13 @@ export function AuthCallbackPage() {
           
           <CardContent className="space-y-4">
             {!isVerifying && !isVerified && (
-              <div className="space-y-3">
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => navigate('/login', { replace: true })}
-                >
-                  Quay lại đăng nhập
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => navigate('/register', { replace: true })}
-                >
-                  Đăng ký lại
-                </Button>
-              </div>
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => navigate('/login', { replace: true })}
+              >
+                Quay lại đăng nhập
+              </Button>
             )}
           </CardContent>
         </Card>

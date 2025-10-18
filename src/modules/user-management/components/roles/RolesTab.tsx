@@ -45,8 +45,7 @@ export function RolesTab() {
       setIsLoading(true);
       console.log('🔍 [RolesTab] Loading roles...');
       
-      const businessId = localStorage.getItem('cbi') || '';
-      const rolesData = await RoleService.getRoles(businessId);
+      const rolesData = await RoleService.getRoles();
       console.log('📋 [RolesTab] Roles loaded:', rolesData);
       
       setRoles(rolesData);

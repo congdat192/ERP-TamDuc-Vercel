@@ -3,8 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { CustomRole, RoleCreationData } from '../types/role-management';
 
 export class RoleService {
-  static async getRoles(businessId?: string): Promise<CustomRole[]> {
-    // In single-tenant mode, businessId is not used
+  static async getRoles(): Promise<CustomRole[]> {
     const { data, error } = await supabase
       .from('roles')
       .select(`
@@ -46,7 +45,7 @@ export class RoleService {
     }));
   }
 
-  static async getRoleById(businessId: string, roleId: number): Promise<CustomRole> {
+  static async getRoleById(roleId: number): Promise<CustomRole> {
     const { data, error } = await supabase
       .from('roles')
       .select(`
@@ -79,7 +78,7 @@ export class RoleService {
     };
   }
 
-  static async createRole(businessId: string, roleData: RoleCreationData): Promise<CustomRole> {
+  static async createRole(roleData: RoleCreationData): Promise<CustomRole> {
     // 1. Create role
     const { data: role, error: roleError } = await supabase
       .from('roles')

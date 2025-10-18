@@ -113,7 +113,7 @@ export function MembersPage() {
       setIsLoadingRoles(true);
       console.log('🔍 [MembersPage] Fetching roles...');
       // Fetch global roles (no business ID needed in single-tenant)
-      const rolesData = await RoleService.getRoles('');
+      const rolesData = await RoleService.getRoles();
       console.log('✅ [MembersPage] Roles loaded:', rolesData);
       setRoles(rolesData);
     } catch (err: any) {
