@@ -153,7 +153,18 @@ Deno.serve(async (req) => {
 
     if (emailError) {
       console.error('⚠️ Warning: Could not send email:', emailError);
-      // Don't fail the request if email fails
+      
+      // Check for specific Resend errors
+      if (emailError.message?.includes('verify')) {
+        console.error('❌ Domain not verified. Please verify domain at resend.com/domains');
+      }
+      
+      if (emailError.statusCode === 403) {
+        console.error('❌ 403 Forbidden: Email address not allowed (sandbox mode or unverified domain)');
+      }
+      
+      // Don't fail the request if email fails - user is already created
+      console.log('⚠️ User created but email not sent. Admin should manually provide credentials.');
     } else {
       console.log('✅ Credentials email sent successfully');
     }
