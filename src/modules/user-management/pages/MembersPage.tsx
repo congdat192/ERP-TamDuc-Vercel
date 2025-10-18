@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/auth/AuthContext';
 import { RoleService } from '../services/roleService';
 import { MembersService, SupabaseMember } from '../services/membersService';
+import { supabase } from '@/integrations/supabase/client';
 import { getAvatarUrl } from '@/types/auth';
 import { UserManagementFilters } from '../types';
 
@@ -152,12 +153,21 @@ export function MembersPage() {
       
     } catch (err: any) {
       console.error('❌ [MembersPage] Error:', err);
-      setError(err.message || 'Có lỗi xảy ra khi tải danh sách thành viên');
-      toast({
-        title: "Lỗi",
-        description: err.message || "Không thể tải danh sách thành viên",
-        variant: "destructive",
-      });
+      setError(null); // Don't block UI with error
+      
+      // Phase 2: Silent retry after 2 seconds (in case of transient RLS or network issue)
+      setTimeout(() => {
+        console.log('🔄 [MembersPage] Retrying fetch after error...');
+        fetchMembers().catch(() => {
+          // If retry also fails, show error
+          setError(err.message || 'Có lỗi xảy ra khi tải danh sách thành viên');
+          toast({
+            title: "Lỗi",
+            description: err.message || "Không thể tải danh sách thành viên",
+            variant: "destructive",
+          });
+        });
+      }, 2000);
     } finally {
       setIsLoading(false);
     }
@@ -269,6 +279,43 @@ export function MembersPage() {
       fetchMembers();
       fetchRoles();
     }
+  }, [currentUser]);
+
+  // Phase 1: Realtime subscription for profiles changes
+  useEffect(() => {
+    if (!currentUser) return;
+    
+    console.log('🔔 [MembersPage] Setting up realtime listener for profiles changes');
+    
+    const channel = supabase
+      .channel('members-profiles-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to INSERT, UPDATE, DELETE
+          schema: 'public',
+          table: 'profiles'
+        },
+        (payload) => {
+          console.log('🔔 [MembersPage Realtime] Profiles changed:', payload);
+          console.log('   - Event:', payload.eventType);
+          console.log('   - Changed user:', (payload.new as any)?.email || (payload.old as any)?.email);
+          
+          // Auto-refresh members list when any profile changes
+          fetchMembers();
+        }
+      )
+      .subscribe((status) => {
+        console.log('📡 [MembersPage Realtime] Subscription status:', status);
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ [MembersPage Realtime] Successfully subscribed to profiles changes');
+        }
+      });
+    
+    return () => {
+      console.log('🔌 [MembersPage Realtime] Unsubscribing from profiles changes');
+      supabase.removeChannel(channel);
+    };
   }, [currentUser]);
 
   // Transform API data to match UI expectations

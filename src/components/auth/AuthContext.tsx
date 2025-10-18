@@ -376,68 +376,92 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const checkSession = async () => {
       try {
         console.log('🔍 [checkSession] Checking for existing session');
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
-        if (session?.user) {
-          console.log('🔍 [checkSession] Session found, checking user status');
-          
-          // Phase 1: Quick status check (same as onAuthStateChange)
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('status')
-            .eq('id', session.user.id)
-            .single();
-          
-          if (error) {
-            console.warn('⚠️ [checkSession] Failed to check status (proceeding with login):', error.message);
-            setCurrentUser(null); // Clear stale state
-            setIsInitialized(true);
-          } else if (profile?.status === 'INACTIVE') {
-            console.log('⛔ [checkSession] INACTIVE user detected - logging out');
+        // Phase 4: Validate session exists and is valid
+        if (sessionError || !session) {
+          console.log('ℹ️ [checkSession] No valid session found');
+          setIsInitialized(true);
+          return;
+        }
+        
+        // Phase 4: Validate session expiry
+        const expiresAt = session.expires_at;
+        if (expiresAt && expiresAt * 1000 < Date.now()) {
+          console.warn('⚠️ [checkSession] Session expired - clearing');
+          await supabase.auth.signOut();
+          localStorage.clear();
+          sessionStorage.clear();
+          setCurrentUser(null);
+          setIsInitialized(true);
+          return;
+        }
+        
+        console.log('🔍 [checkSession] Valid session found, checking user status');
+        
+        // Phase 1: Quick status check
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('status')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (error) {
+          console.warn('⚠️ [checkSession] Failed to check status - clearing session:', error.message);
+          await supabase.auth.signOut();
+          localStorage.clear();
+          sessionStorage.clear();
+          setCurrentUser(null);
+          setIsInitialized(true);
+          return;
+        }
+        
+        if (profile?.status === 'INACTIVE') {
+          console.log('⛔ [checkSession] INACTIVE user detected - logging out');
+          await supabase.auth.signOut();
+          setCurrentUser(null);
+          toast({
+            title: "Tài khoản bị vô hiệu hóa",
+            description: "Tài khoản của bạn đã bị vô hiệu hóa.",
+            variant: "destructive",
+          });
+          setIsInitialized(true);
+          return;
+        }
+        
+        console.log('✅ [checkSession] User status is ACTIVE - proceeding');
+        setIsInitialized(true);
+        
+        // Phase 2: Load full profile (non-blocking)
+        setTimeout(() => {
+          fetchUserWithPermissions(session.user).then(({ user, passwordChangeRequired }) => {
+            setCurrentUser(user);
+            setRequirePasswordChange(passwordChangeRequired);
+            console.log('✅ [checkSession] Profile loaded:', user.email);
+          }).catch(async (err) => {
+            console.error('❌ [checkSession] Failed to load profile - forcing logout:', err);
+            
+            // Force logout + clear everything (stale session detected)
             await supabase.auth.signOut();
-            setCurrentUser(null); // Clear stale state
+            setCurrentUser(null);
+            setRequirePasswordChange(false);
+            localStorage.clear();
+            sessionStorage.clear();
+            
             toast({
-              title: "Tài khoản bị vô hiệu hóa",
-              description: "Tài khoản của bạn đã bị vô hiệu hóa.",
+              title: "Phiên đăng nhập hết hạn",
+              description: "Vui lòng đăng nhập lại.",
               variant: "destructive",
             });
-            setIsInitialized(true);
-            return;
-          } else {
-            console.log('✅ [checkSession] User status is ACTIVE - proceeding');
-            setIsInitialized(true);
-            
-            // Phase 2: Load full profile (non-blocking)
-            setTimeout(() => {
-              fetchUserWithPermissions(session.user).then(({ user, passwordChangeRequired }) => {
-                setCurrentUser(user);
-                setRequirePasswordChange(passwordChangeRequired);
-                console.log('✅ [checkSession] Profile loaded:', user.email);
-              }).catch(async (err) => {
-                console.error('❌ [checkSession] Failed to load profile - forcing logout:', err);
-                
-                // Force logout + clear everything (stale session detected)
-                await supabase.auth.signOut();
-                setCurrentUser(null);
-                setRequirePasswordChange(false);
-                localStorage.clear();
-                sessionStorage.clear();
-                
-                toast({
-                  title: "Phiên đăng nhập hết hạn",
-                  description: "Vui lòng đăng nhập lại.",
-                  variant: "destructive",
-                });
-              });
-            }, 0);
-          }
-        } else {
-          console.log('ℹ️ [checkSession] No session found');
-          setIsInitialized(true);
-        }
+          });
+        }, 0);
       } catch (error) {
-        console.error('❌ [checkSession] Error:', error);
-        setCurrentUser(null); // Clear stale state
+        console.error('❌ [checkSession] Unexpected error:', error);
+        // Force clean state on any error
+        await supabase.auth.signOut();
+        localStorage.clear();
+        sessionStorage.clear();
+        setCurrentUser(null);
         setIsInitialized(true);
       }
     };
@@ -517,6 +541,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string): Promise<boolean> => {
     console.log('🔐 [AuthContext] Starting login process for:', email);
+    
+    // Phase 3: Force clear any stale sessions BEFORE login
+    console.log('🧹 [AuthContext] Clearing stale sessions before login');
+    await supabase.auth.signOut(); // Sign out any existing session
+    localStorage.clear();
+    sessionStorage.clear();
+    setCurrentUser(null);
+    setRequirePasswordChange(false);
+    
     setIsLoading(true);
     
     try {
