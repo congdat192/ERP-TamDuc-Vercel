@@ -18,7 +18,7 @@ export class AdminDocumentService {
         .from('administrative_documents')
         .select(`
           *,
-          employee:employees!employee_id(full_name, employee_code, position, department)
+          employee:employees!fk_administrative_documents_employee(full_name, employee_code, position, department)
         `)
         .order('created_at', { ascending: false });
 
@@ -67,7 +67,7 @@ export class AdminDocumentService {
         .from('administrative_documents')
         .select(`
           *,
-          employee:employees!employee_id(full_name, employee_code, position, department)
+          employee:employees!fk_administrative_documents_employee(full_name, employee_code, position, department)
         `)
         .eq('id', id)
         .single();
@@ -100,7 +100,7 @@ export class AdminDocumentService {
         })
         .select(`
           *,
-          employee:employees!employee_id(full_name, employee_code, position, department)
+          employee:employees!fk_administrative_documents_employee(full_name, employee_code, position, department)
         `)
         .single();
 
@@ -155,7 +155,7 @@ export class AdminDocumentService {
         .eq('id', id)
         .select(`
           *,
-          employee:employees!employee_id(full_name, employee_code, position, department)
+          employee:employees!fk_administrative_documents_employee(full_name, employee_code, position, department)
         `)
         .single();
 
@@ -458,7 +458,7 @@ export class AdminDocumentService {
         .from('administrative_documents')
         .select(`
           *,
-          employee:employees!employee_id(full_name, employee_code, position, department)
+          employee:employees!fk_administrative_documents_employee(full_name, employee_code, position, department)
         `)
         .eq('employee_id', employeeId)
         .order('created_at', { ascending: false });
