@@ -8,8 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, Download, Trash2, FileText, Loader2 } from 'lucide-react';
+import { Upload, Download, Trash2, FileText, Loader2, Eye } from 'lucide-react';
 import { DocumentService, type EmployeeDocument, type DocumentType } from '@/modules/hr/services/documentService';
+import { DocumentPreviewDialog } from './DocumentPreviewDialog';
 import { format } from 'date-fns';
 import {
   AlertDialog,
@@ -35,6 +36,8 @@ export function EmployeeDocumentsTab({ employeeId }: EmployeeDocumentsTabProps) 
   const [notes, setNotes] = useState('');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<string | null>(null);
+  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
+  const [documentToPreview, setDocumentToPreview] = useState<EmployeeDocument | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -124,6 +127,19 @@ export function EmployeeDocumentsTab({ employeeId }: EmployeeDocumentsTabProps) 
         variant: 'destructive',
       });
     }
+  };
+
+  const handlePreview = (doc: EmployeeDocument) => {
+    if (!DocumentService.canPreview(doc.mime_type)) {
+      toast({
+        title: 'Không thể preview',
+        description: 'Loại file này không hỗ trợ preview. Vui lòng tải xuống để xem.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setDocumentToPreview(doc);
+    setPreviewDialogOpen(true);
   };
 
   const confirmDelete = (documentId: string) => {
@@ -284,24 +300,33 @@ export function EmployeeDocumentsTab({ employeeId }: EmployeeDocumentsTabProps) 
                     <TableCell>{DocumentService.formatFileSize(doc.file_size)}</TableCell>
                     <TableCell>{format(new Date(doc.uploaded_at), 'dd/MM/yyyy HH:mm')}</TableCell>
                     <TableCell className="max-w-xs truncate">{doc.notes || '-'}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDownload(doc)}
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => confirmDelete(doc.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
-                      </div>
-                    </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handlePreview(doc)}
+                      disabled={!DocumentService.canPreview(doc.mime_type)}
+                      title={DocumentService.canPreview(doc.mime_type) ? 'Xem preview' : 'Không hỗ trợ preview'}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDownload(doc)}
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => confirmDelete(doc.id)}
+                    >
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </div>
+                </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -325,6 +350,13 @@ export function EmployeeDocumentsTab({ employeeId }: EmployeeDocumentsTabProps) 
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Preview Dialog */}
+      <DocumentPreviewDialog
+        open={previewDialogOpen}
+        onOpenChange={setPreviewDialogOpen}
+        document={documentToPreview}
+      />
     </div>
   );
 }

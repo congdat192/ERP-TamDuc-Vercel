@@ -209,6 +209,42 @@ export class DocumentService {
   }
 
   /**
+   * Get signed URL with longer expiry for preview
+   */
+  static async getPreviewUrl(filePath: string): Promise<string> {
+    try {
+      const { data, error } = await supabase.storage
+        .from('employee-documents')
+        .createSignedUrl(filePath, 3600); // 1 hour expiry for preview
+
+      if (error) {
+        console.error('❌ Error creating preview URL:', error);
+        throw new Error(`Không thể tạo link preview: ${error.message}`);
+      }
+
+      return data.signedUrl;
+    } catch (error: any) {
+      console.error('❌ Error in getPreviewUrl:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Check if document can be previewed
+   */
+  static canPreview(mimeType: string | null): boolean {
+    if (!mimeType) return false;
+    
+    const previewableTypes = [
+      'application/pdf',
+      'image/jpeg',
+      'image/jpg',
+      'image/png'
+    ];
+    return previewableTypes.includes(mimeType);
+  }
+
+  /**
    * Get document type label
    */
   static getDocumentTypeLabel(type: DocumentType): string {
