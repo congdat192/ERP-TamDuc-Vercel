@@ -91,7 +91,13 @@ export class RoleService {
       .select()
       .single();
     
-    if (roleError) throw roleError;
+    if (roleError) {
+      // Handle RLS policy violation
+      if (roleError.code === '42501' || roleError.message?.includes('row-level security')) {
+        throw new Error('Bạn không có quyền tạo vai trò. Chỉ Owner/Admin mới được phép thực hiện thao tác này.');
+      }
+      throw roleError;
+    }
     
     // 2. Get feature IDs from codes
     const { data: features, error: featuresError } = await supabase
@@ -137,7 +143,13 @@ export class RoleService {
       .select()
       .single();
     
-    if (roleError) throw roleError;
+    if (roleError) {
+      // Handle RLS policy violation
+      if (roleError.code === '42501' || roleError.message?.includes('row-level security')) {
+        throw new Error('Bạn không có quyền chỉnh sửa vai trò. Chỉ Owner/Admin mới được phép thực hiện thao tác này.');
+      }
+      throw roleError;
+    }
     
     // Update permissions if provided
     if (roleData.permissions) {
@@ -192,6 +204,12 @@ export class RoleService {
       .delete()
       .eq('id', roleId);
     
-    if (error) throw error;
+    if (error) {
+      // Handle RLS policy violation
+      if (error.code === '42501' || error.message?.includes('row-level security')) {
+        throw new Error('Bạn không có quyền xóa vai trò. Chỉ Owner/Admin mới được phép thực hiện thao tác này.');
+      }
+      throw error;
+    }
   }
 }
