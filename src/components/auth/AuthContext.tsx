@@ -314,33 +314,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('🔔 [AuthContext] Auth state changed:', event);
         
         if (session?.user) {
-          // ✅ PHASE 1: CHECK STATUS ON SESSION RESTORE
+          // ✅ PHASE 1: CHECK STATUS ON SESSION RESTORE (Relaxed)
           // This prevents INACTIVE users from accessing the app even with valid sessions
           if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
             console.log('🔍 [Phase 1] Checking user status for event:', event);
             
-            try {
-              const { data: profile } = await supabase
-                .from('profiles')
-                .select('status')
-                .eq('id', session.user.id)
-                .single();
-              
-              if (profile?.status === 'INACTIVE') {
-                console.log('⛔ [Phase 1] INACTIVE user detected - logging out');
-                await supabase.auth.signOut();
-                toast({
-                  title: "Tài khoản bị vô hiệu hóa",
-                  description: "Tài khoản của bạn đã bị vô hiệu hóa.",
-                  variant: "destructive",
-                });
-                return; // Don't load user data
-              }
-              
+            const { data: profile, error } = await supabase
+              .from('profiles')
+              .select('status')
+              .eq('id', session.user.id)
+              .single();
+            
+            if (error) {
+              // Query failed - log warning but proceed (let RLS handle access control)
+              console.warn('⚠️ [Phase 1] Failed to check status (proceeding with login):', error.message);
+            } else if (profile?.status === 'INACTIVE') {
+              // Query succeeded and user is INACTIVE - block access
+              console.log('⛔ [Phase 1] INACTIVE user detected - logging out');
+              await supabase.auth.signOut();
+              toast({
+                title: "Tài khoản bị vô hiệu hóa",
+                description: "Tài khoản của bạn đã bị vô hiệu hóa.",
+                variant: "destructive",
+              });
+              return; // Don't load user data
+            } else {
+              // Query succeeded and user is ACTIVE
               console.log('✅ [Phase 1] User status is ACTIVE - proceeding');
-            } catch (error) {
-              console.error('❌ [Phase 1] Error checking status:', error);
-              // Don't block login on status check error - let RLS handle it
             }
           }
           
