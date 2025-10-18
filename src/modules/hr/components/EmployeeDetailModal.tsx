@@ -260,6 +260,10 @@ export function EmployeeDetailModal({ employee, open, onOpenChange }: EmployeeDe
               </Card>
             </TabsContent>
 
+            <TabsContent value="attendance">
+              <MonthlyAttendanceTab employeeId={employee.id} />
+            </TabsContent>
+
             <TabsContent value="documents">
               <EmployeeDocumentsTab employeeId={employee.id} />
             </TabsContent>
