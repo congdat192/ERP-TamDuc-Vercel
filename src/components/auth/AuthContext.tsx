@@ -108,11 +108,21 @@ const fetchUserWithPermissions = async (supabaseUser: SupabaseUser): Promise<{ u
     .eq('user_id', supabaseUser.id)
     .single();
 
-  if (!userRoleData?.roles) {
-    throw new Error('User role not found');
+  // Check user_roles record exists
+  if (!userRoleData) {
+    console.error('❌ [AuthContext] No user_roles record found for user:', supabaseUser.id);
+    throw new Error('User has no assigned role. Please contact administrator.');
   }
 
+  console.log('📋 [AuthContext] User role data:', userRoleData);
+
+  // Check if role exists in roles table
   const roleData = userRoleData.roles as any;
+  if (!roleData) {
+    console.error('❌ [AuthContext] Role ID not found in roles table:', userRoleData.role_id);
+    throw new Error(`Role ID ${userRoleData.role_id} does not exist. Please contact administrator.`);
+  }
+
   console.log('🔐 [AuthContext] User role loaded:', roleData.name, 'ID:', roleData.id);
   
   // Extract permissions from role
@@ -125,6 +135,11 @@ const fetchUserWithPermissions = async (supabaseUser: SupabaseUser): Promise<{ u
   // Map role name to legacy UserRole type
   let userRole: UserRole = 'custom';
   const roleName = roleData.name.toLowerCase();
+  
+  // Warning nếu Admin không có permissions trong DB (sẽ dùng hardcoded full access)
+  if (roleName === 'admin' && featureCodes.length === 0) {
+    console.warn('⚠️ [AuthContext] Admin role has no permissions in DB. Using hardcoded full access.');
+  }
   if (roleName === 'admin') {
     userRole = 'erp-admin';
   } else if (roleName === 'user') {
