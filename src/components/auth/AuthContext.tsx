@@ -542,14 +542,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string): Promise<boolean> => {
     console.log('🔐 [AuthContext] Starting login process for:', email);
     
-    // Phase 3: Force clear any stale sessions BEFORE login
-    console.log('🧹 [AuthContext] Clearing stale sessions before login');
-    await supabase.auth.signOut(); // Sign out any existing session
-    localStorage.clear();
-    sessionStorage.clear();
-    setCurrentUser(null);
-    setRequirePasswordChange(false);
-    
     setIsLoading(true);
     
     try {

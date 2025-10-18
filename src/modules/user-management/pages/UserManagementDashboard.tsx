@@ -6,10 +6,12 @@ import { Users, Shield, Loader2, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardService, UserManagementCounts } from '../services/dashboardService';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/components/auth/AuthContext';
 
 export function UserManagementDashboard() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { currentUser } = useAuth();
   const [counts, setCounts] = useState<UserManagementCounts>({
     members: 0,
     roles: 0
@@ -17,9 +19,37 @@ export function UserManagementDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Phase 2 & 3: Navigation guard + auto-redirect
   useEffect(() => {
-    loadCounts();
-  }, []);
+    if (!currentUser) {
+      console.log('⏳ [UserManagementDashboard] Waiting for currentUser...');
+      
+      const timeoutId = setTimeout(() => {
+        if (!currentUser) {
+          console.error('❌ [UserManagementDashboard] currentUser still null after 3s - redirecting to login');
+          toast({
+            title: "Phiên đăng nhập hết hạn",
+            description: "Vui lòng đăng nhập lại.",
+            variant: "destructive"
+          });
+          navigate('/login');
+        }
+      }, 3000);
+      
+      return () => clearTimeout(timeoutId);
+    }
+    
+    // Phase 3: Auto-redirect to Members page if user has access
+    const hasViewMembersPermission = currentUser.permissions?.modules?.includes('user-management');
+    
+    if (hasViewMembersPermission) {
+      console.log('✅ [UserManagementDashboard] User has access - redirecting to Members');
+      navigate('/ERP/UserManagement/Members', { replace: true });
+    } else {
+      // No access - stay on dashboard and load counts
+      loadCounts();
+    }
+  }, [currentUser, navigate, toast]);
 
   const loadCounts = async () => {
     try {
