@@ -111,11 +111,22 @@ Deno.serve(async (req) => {
       throw new Error(`Invalid role ID: ${roleId}`);
     }
 
-    // Assign role_id to user
+    // Wait a bit for trigger to complete
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    // Delete default role created by trigger
+    await supabaseAdmin
+      .from('user_roles')
+      .delete()
+      .eq('user_id', authUser.user.id);
+
+    // Insert the admin-selected role
     const { error: roleError } = await supabaseAdmin
       .from('user_roles')
-      .update({ role_id: roleId })
-      .eq('user_id', authUser.user.id);
+      .insert({
+        user_id: authUser.user.id,
+        role_id: roleId
+      });
 
     if (roleError) {
       console.error('❌ Could not assign role:', roleError);
