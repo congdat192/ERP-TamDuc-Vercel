@@ -34,6 +34,7 @@ export interface ModulePermission {
 
 export interface UserPermissions {
   modules: ERPModule[];
+  features: string[]; // Array of feature codes from database (e.g., ["view_customers", "create_customers"])
   voucherFeatures: VoucherFeature[];
   canManageUsers: boolean;
   canViewAllVouchers: boolean;

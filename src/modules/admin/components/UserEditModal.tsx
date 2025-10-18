@@ -26,6 +26,7 @@ export function UserEditModal({ isOpen, onClose, user, onUserUpdated }: UserEdit
     notes: '',
     permissions: {
       modules: [],
+      features: [],
       voucherFeatures: [],
       canManageUsers: false,
       canViewAllVouchers: false

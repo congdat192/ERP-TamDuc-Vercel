@@ -30,45 +30,77 @@ export const useAuth = () => {
 // Transform database permissions to frontend format
 const transformPermissions = (dbPermissions: any[]): UserPermissions => {
   const modules = new Set<ERPModule>();
+  const features = new Set<string>();
   const voucherFeatures = new Set<VoucherFeature>();
   let canManageUsers = false;
   let canViewAllVouchers = false;
   
   (dbPermissions || []).forEach((p: any) => {
+    // Extract feature code
+    const featureCode = p.feature_code || p.features?.code;
+    const moduleCode = p.module_code || p.features?.modules?.code;
+    
+    // Add feature code
+    if (featureCode) {
+      features.add(featureCode);
+    }
+    
     // Add module if user has any permission in it
-    if (p.module_code) {
-      modules.add(p.module_code as ERPModule);
+    if (moduleCode) {
+      modules.add(moduleCode as ERPModule);
     }
     
     // Check for voucher-specific features
-    if (p.module_code === 'voucher') {
-      // Map feature codes to voucher features
-      if (p.feature_code === 'view_voucher') {
+    if (moduleCode === 'voucher') {
+      if (featureCode === 'view_voucher') {
         voucherFeatures.add('voucher-list');
         canViewAllVouchers = true;
       }
-      if (p.feature_code === 'create_voucher') {
+      if (featureCode === 'create_voucher') {
         voucherFeatures.add('issue-voucher');
       }
-      if (p.feature_code === 'approve_voucher') {
+      if (featureCode === 'approve_voucher') {
         voucherFeatures.add('campaign-management');
       }
-      // Add dashboard and analytics for anyone with voucher access
       voucherFeatures.add('voucher-dashboard');
       voucherFeatures.add('voucher-analytics');
     }
     
     // Check for user management permissions
-    if (p.feature_code === 'manage_members' || p.feature_code === 'manage_roles') {
+    if (featureCode === 'manage_members' || featureCode === 'manage_roles') {
       canManageUsers = true;
     }
   });
   
+  // Special case: full_access grants all modules
+  const hasFullAccess = features.has('full_access');
+  
   return {
-    modules: Array.from(modules),
-    voucherFeatures: Array.from(voucherFeatures),
-    canManageUsers,
-    canViewAllVouchers
+    modules: hasFullAccess ? [
+      'dashboard',
+      'customers',
+      'sales',
+      'inventory',
+      'accounting',
+      'hr',
+      'voucher',
+      'marketing',
+      'affiliate',
+      'system-settings',
+      'user-management'
+    ] as ERPModule[] : Array.from(modules),
+    features: Array.from(features),
+    voucherFeatures: hasFullAccess ? [
+      'voucher-dashboard',
+      'campaign-management',
+      'issue-voucher',
+      'voucher-list',
+      'voucher-analytics',
+      'voucher-leaderboard',
+      'voucher-settings'
+    ] as VoucherFeature[] : Array.from(voucherFeatures),
+    canManageUsers: hasFullAccess || canManageUsers,
+    canViewAllVouchers: hasFullAccess || canViewAllVouchers
   };
 };
 
@@ -186,6 +218,7 @@ const fetchUserWithPermissions = async (supabaseUser: SupabaseUser): Promise<{ u
         'system-settings',
         'user-management'
       ] as ERPModule[],
+      features: ['full_access'], // Owner has full_access feature
       voucherFeatures: [
         'voucher-dashboard',
         'campaign-management',
@@ -201,6 +234,7 @@ const fetchUserWithPermissions = async (supabaseUser: SupabaseUser): Promise<{ u
   } else {
     // For custom roles, map features to permissions using module_code from database
     const moduleSet = new Set<ERPModule>();
+    const featureSet = new Set<string>();
     const voucherFeatureSet = new Set<VoucherFeature>();
     let canManageUsers = false;
     let canViewAllVouchers = false;
@@ -211,6 +245,11 @@ const fetchUserWithPermissions = async (supabaseUser: SupabaseUser): Promise<{ u
       
       const featureCode = feature.code;
       const moduleCode = feature.modules?.code; // ✅ Get module code from database
+      
+      // Add feature code
+      if (featureCode) {
+        featureSet.add(featureCode);
+      }
       
       // Add module based on module_code from database
       if (moduleCode) {
@@ -252,20 +291,21 @@ const fetchUserWithPermissions = async (supabaseUser: SupabaseUser): Promise<{ u
 
     permissions = {
       modules: Array.from(moduleSet),
+      features: Array.from(featureSet),
       voucherFeatures: Array.from(voucherFeatureSet),
       canManageUsers,
       canViewAllVouchers,
     };
-
-    console.log('✅ [AuthContext] Final modules:', Array.from(moduleSet));
-    console.log('✅ [AuthContext] Final voucher features:', Array.from(voucherFeatureSet));
-    console.log('✅ [AuthContext] User can access:', {
-      modules: permissions.modules,
-      voucherFeatures: permissions.voucherFeatures,
-      canManageUsers: permissions.canManageUsers,
-      canViewAllVouchers: permissions.canViewAllVouchers
-    });
   }
+
+  console.log('✅ [AuthContext] Final modules:', permissions.modules);
+  console.log('✅ [AuthContext] Final voucher features:', permissions.voucherFeatures);
+  console.log('✅ [AuthContext] User can access:', {
+    modules: permissions.modules,
+    voucherFeatures: permissions.voucherFeatures,
+    canManageUsers: permissions.canManageUsers,
+    canViewAllVouchers: permissions.canViewAllVouchers
+  });
   
   const user: User = {
     id: supabaseUser.id,

@@ -27,6 +27,7 @@ export function UserCreateModal({ isOpen, onClose, onUserCreated }: UserCreateMo
   const [requirePasswordReset, setRequirePasswordReset] = useState(false);
   const [permissions, setPermissions] = useState<UserPermissions>({
     modules: [],
+    features: [],
     voucherFeatures: [],
     canManageUsers: false,
     canViewAllVouchers: false

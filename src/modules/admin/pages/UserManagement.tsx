@@ -78,6 +78,7 @@ export function UserManagement() {
       role: 'erp-admin',
       permissions: {
         modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'marketing', 'system-settings', 'user-management'],
+        features: ['full_access'],
         voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
         canManageUsers: true,
         canViewAllVouchers: true
@@ -106,6 +107,7 @@ export function UserManagement() {
       role: 'voucher-admin',
       permissions: {
         modules: ['dashboard', 'voucher'],
+        features: ['view_voucher', 'create_voucher', 'approve_voucher'],
         voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
         canManageUsers: false,
         canViewAllVouchers: true
@@ -133,6 +135,7 @@ export function UserManagement() {
       role: 'telesales',
       permissions: {
         modules: ['dashboard', 'customers', 'voucher'],
+        features: ['view_customers', 'view_voucher', 'create_voucher'],
         voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list'],
         canManageUsers: false,
         canViewAllVouchers: false
@@ -160,6 +163,7 @@ export function UserManagement() {
       role: 'custom',
       permissions: {
         modules: ['dashboard'],
+        features: [],
         voucherFeatures: [],
         canManageUsers: false,
         canViewAllVouchers: false
