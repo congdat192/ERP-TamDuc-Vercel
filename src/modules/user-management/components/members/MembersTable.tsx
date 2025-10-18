@@ -25,6 +25,7 @@ import { useNavigate } from 'react-router-dom';
 import { TableLoadingSkeleton } from '@/components/ui/loading';
 import { EmptyTableState } from '@/components/ui/empty-states';
 import { EditMemberRoleModal } from '../modals/EditMemberRoleModal';
+import { ConfirmationDialog } from '@/modules/admin/components/ConfirmationDialog';
 
 interface UIMember {
   id: string;
@@ -77,6 +78,11 @@ export function MembersTable({
     isOpen: false,
     member: null
   });
+  
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    isOpen: boolean;
+    member: UIMember | null;
+  }>({ isOpen: false, member: null });
 
   const getStatusBadge = (status: string, isOwner: boolean) => {
     if (isOwner) {
@@ -113,10 +119,14 @@ export function MembersTable({
 
   const handleDeleteMember = (member: UIMember) => {
     if (member.isOwner) return; // Can't delete owner
-    
-    if (confirm(`Bạn có chắc chắn muốn xóa thành viên "${member.fullName}"?`)) {
-      onUserDelete?.(member.id);
+    setDeleteConfirm({ isOpen: true, member });
+  };
+
+  const confirmDelete = () => {
+    if (deleteConfirm.member) {
+      onUserDelete?.(deleteConfirm.member.id);
     }
+    setDeleteConfirm({ isOpen: false, member: null });
   };
 
   const handleEditRole = (member: UIMember) => {
@@ -286,6 +296,17 @@ export function MembersTable({
         member={editRoleModal.member}
         roles={roles}
         onUpdateRole={handleUpdateRole}
+      />
+
+      <ConfirmationDialog
+        isOpen={deleteConfirm.isOpen}
+        onClose={() => setDeleteConfirm({ isOpen: false, member: null })}
+        title="Xác nhận xóa thành viên"
+        message={`Bạn có chắc chắn muốn xóa thành viên "${deleteConfirm.member?.fullName}"? Hành động này không thể hoàn tác.`}
+        onConfirm={confirmDelete}
+        confirmText="Xóa"
+        cancelText="Hủy"
+        variant="destructive"
       />
     </>
   );

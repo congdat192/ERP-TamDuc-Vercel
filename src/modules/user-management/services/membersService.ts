@@ -127,7 +127,14 @@ export class MembersService {
         .eq('user_id', userId);
 
       if (error) {
-        console.error('❌ [MembersService] Update error:', error);
+        console.error('❌ [MembersService] Update role error:', error);
+        console.error('   - Error code:', error.code);
+        console.error('   - Error details:', error.details);
+        
+        // Check if it's RLS error
+        if (error.code === '42501' || error.message.toLowerCase().includes('policy')) {
+          throw new Error('Bạn không có quyền cập nhật vai trò. Vui lòng liên hệ admin.');
+        }
         throw new Error(error.message);
       }
     }
@@ -141,6 +148,13 @@ export class MembersService {
 
       if (error) {
         console.error('❌ [MembersService] Update status error:', error);
+        console.error('   - Error code:', error.code);
+        console.error('   - Error details:', error.details);
+        
+        // Check if it's RLS error
+        if (error.code === '42501' || error.message.toLowerCase().includes('policy')) {
+          throw new Error('Bạn không có quyền cập nhật trạng thái. Vui lòng liên hệ admin.');
+        }
         throw new Error(error.message);
       }
     }
