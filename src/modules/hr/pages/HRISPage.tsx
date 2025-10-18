@@ -2,6 +2,12 @@ import { useState, useEffect, useMemo } from 'react';
 import { Search, Download, Eye, RefreshCw, UserX, Undo2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { usePermissions } from '@/hooks/usePermissions';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { PermissionGuard } from '@/components/auth/PermissionGuard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -346,8 +352,8 @@ export function HRISPage() {
                     onCheckedChange={handleSelectAll}
                   />
                 </TableHead>
-                <TableHead>Nhân Viên</TableHead>
                 <TableHead>Mã NV</TableHead>
+                <TableHead>Nhân Viên</TableHead>
                 <TableHead>Phòng Ban</TableHead>
                 <TableHead>Chức Vụ</TableHead>
                 <TableHead>Loại HĐ</TableHead>
@@ -378,6 +384,7 @@ export function HRISPage() {
                         onCheckedChange={(checked) => handleSelectOne(employee.id, checked as boolean)}
                       />
                     </TableCell>
+                    <TableCell className="theme-text font-mono">{employee.employeeCode}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar>
@@ -390,7 +397,6 @@ export function HRISPage() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="theme-text">{employee.employeeCode}</TableCell>
                     <TableCell className="theme-text">{employee.department}</TableCell>
                     <TableCell className="theme-text">{employee.position}</TableCell>
                     <TableCell className="theme-text">{employee.employmentType}</TableCell>
@@ -402,44 +408,73 @@ export function HRISPage() {
                     </TableCell>
                     <TableCell>{getStatusBadge(employee.status)}</TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          title="Xem chi tiết"
-                          onClick={() => handleViewDetail(employee)}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        {!showDeleted ? (
-                          <>
-                            <PermissionGuard requiredPermission="edit_employees" showError={false}>
-                              <EditEmployeeModal employee={employee} onSuccess={fetchEmployees} />
-                            </PermissionGuard>
-                            <PermissionGuard requiredPermission="delete_employees" showError={false}>
+                      <TooltipProvider>
+                        <div className="flex items-center justify-end gap-2">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
                               <Button 
                                 variant="ghost" 
                                 size="icon"
-                                title="Xóa nhân viên"
-                                onClick={() => handleTerminateClick(employee)}
+                                onClick={() => handleViewDetail(employee)}
                               >
-                                <UserX className="h-4 w-4" />
+                                <Eye className="h-4 w-4" />
                               </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Xem chi tiết</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          {!showDeleted ? (
+                            <>
+                              <PermissionGuard requiredPermission="edit_employees" showError={false}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div>
+                                      <EditEmployeeModal employee={employee} onSuccess={fetchEmployees} />
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Chỉnh sửa</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </PermissionGuard>
+                              <PermissionGuard requiredPermission="delete_employees" showError={false}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon"
+                                      onClick={() => handleTerminateClick(employee)}
+                                    >
+                                      <UserX className="h-4 w-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Xóa nhân viên</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </PermissionGuard>
+                            </>
+                          ) : (
+                            <PermissionGuard requiredPermission="edit_employees" showError={false}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon"
+                                    onClick={() => handleRestoreClick(employee)}
+                                  >
+                                    <Undo2 className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Khôi phục nhân viên</p>
+                                </TooltipContent>
+                              </Tooltip>
                             </PermissionGuard>
-                          </>
-                        ) : (
-                          <PermissionGuard requiredPermission="edit_employees" showError={false}>
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              title="Khôi phục nhân viên"
-                              onClick={() => handleRestoreClick(employee)}
-                            >
-                              <Undo2 className="h-4 w-4" />
-                            </Button>
-                          </PermissionGuard>
-                        )}
-                      </div>
+                          )}
+                        </div>
+                      </TooltipProvider>
                     </TableCell>
                   </TableRow>
                 ))

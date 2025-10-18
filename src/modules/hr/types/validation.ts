@@ -73,7 +73,10 @@ export const employeeSchema = z.object({
     .max(100, 'Điểm KPI tối đa 100')
     .optional(),
   
-  last_review_date: z.string().optional(),
+  last_review_date: z.string()
+    .optional()
+    .or(z.literal(''))
+    .transform(val => val === '' ? undefined : val),
   
   avatar_path: z.string().optional(),
   
