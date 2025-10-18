@@ -30,6 +30,7 @@ export interface AdministrativeDocument {
     position: string;
     department: string;
   };
+  is_orphaned?: boolean;
 }
 
 export interface CreateDocumentData {

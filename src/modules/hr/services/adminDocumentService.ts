@@ -51,7 +51,10 @@ export class AdminDocumentService {
         throw new Error(`Không thể tải danh sách văn bản: ${error.message}`);
       }
 
-      return (data || []) as AdministrativeDocument[];
+      return (data || []).map((doc: any) => ({
+        ...doc,
+        is_orphaned: doc.employee_id && !doc.employee,
+      })) as AdministrativeDocument[];
     } catch (error: any) {
       console.error('❌ Error in getDocuments:', error);
       throw error;
@@ -77,7 +80,10 @@ export class AdminDocumentService {
         throw new Error(`Không thể tải văn bản: ${error.message}`);
       }
 
-      return data as AdministrativeDocument;
+      return {
+        ...data,
+        is_orphaned: data.employee_id && !data.employee,
+      } as AdministrativeDocument;
     } catch (error: any) {
       console.error('❌ Error in getDocumentById:', error);
       throw error;
@@ -110,7 +116,10 @@ export class AdminDocumentService {
       }
 
       console.log('✅ Document created:', doc);
-      return doc as AdministrativeDocument;
+      return {
+        ...doc,
+        is_orphaned: doc.employee_id && !doc.employee,
+      } as AdministrativeDocument;
     } catch (error: any) {
       console.error('❌ Error in createDocument:', error);
       throw error;
@@ -165,7 +174,10 @@ export class AdminDocumentService {
       }
 
       console.log('✅ Document updated with version:', nextVersion);
-      return doc as AdministrativeDocument;
+      return {
+        ...doc,
+        is_orphaned: doc.employee_id && !doc.employee,
+      } as AdministrativeDocument;
     } catch (error: any) {
       console.error('❌ Error in updateDocument:', error);
       throw error;
@@ -468,7 +480,10 @@ export class AdminDocumentService {
         throw new Error(`Không thể tải văn bản của nhân viên: ${error.message}`);
       }
 
-      return (data || []) as AdministrativeDocument[];
+      return (data || []).map((doc: any) => ({
+        ...doc,
+        is_orphaned: doc.employee_id && !doc.employee,
+      })) as AdministrativeDocument[];
     } catch (error: any) {
       console.error('❌ Error in getDocumentsByEmployee:', error);
       throw error;

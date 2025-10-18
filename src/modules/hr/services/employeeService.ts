@@ -194,10 +194,61 @@ export class EmployeeService {
     if (error) throw error;
   }
 
-  static async deleteEmployee(id: string): Promise<void> {
+  static async deleteEmployee(id: string): Promise<{
+    success: boolean;
+    warnings?: {
+      documents: number;
+      attendance: number;
+      adminDocs: number;
+    };
+  }> {
+    // 1. Check related data
+    const [docsCount, attendanceCount, adminDocsCount] = await Promise.all([
+      supabase.from('employee_documents').select('id', { count: 'exact', head: true }).eq('employee_id', id),
+      supabase.from('monthly_attendance').select('id', { count: 'exact', head: true }).eq('employee_id', id),
+      supabase.from('administrative_documents').select('id', { count: 'exact', head: true }).eq('employee_id', id),
+    ]);
+
+    const warnings = {
+      documents: docsCount.count || 0,
+      attendance: attendanceCount.count || 0,
+      adminDocs: adminDocsCount.count || 0,
+    };
+
+    // 2. Perform delete (trigger will backup info)
     const { error } = await supabase
       .from('employees')
       .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+
+    return { success: true, warnings };
+  }
+
+  static async softDeleteEmployee(id: string): Promise<void> {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    const { error } = await supabase
+      .from('employees')
+      .update({
+        deleted_at: new Date().toISOString(),
+        deleted_by: user?.id,
+        status: 'terminated' as const,
+      })
+      .eq('id', id);
+
+    if (error) throw error;
+  }
+
+  static async restoreEmployee(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('employees')
+      .update({
+        deleted_at: null,
+        deleted_by: null,
+        status: 'active' as const,
+      })
       .eq('id', id);
 
     if (error) throw error;

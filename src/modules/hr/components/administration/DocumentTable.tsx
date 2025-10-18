@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileText, Eye, Edit, Trash2, MoreHorizontal } from 'lucide-react';
+import { FileText, Eye, Edit, Trash2, MoreHorizontal, AlertCircle } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -79,18 +79,23 @@ export function DocumentTable({
               <TableCell>
                 {format(new Date(doc.issue_date), 'dd/MM/yyyy', { locale: vi })}
               </TableCell>
-              <TableCell>
-                {doc.employee ? (
-                  <div className="flex items-center gap-2">
-                    <div>
-                      <p className="font-medium">{doc.employee.full_name}</p>
-                      <p className="text-xs text-muted-foreground">{doc.employee.employee_code}</p>
-                    </div>
+            <TableCell>
+              {doc.employee ? (
+                <div className="flex items-center gap-2">
+                  <div>
+                    <p className="font-medium">{doc.employee.full_name}</p>
+                    <p className="text-xs text-muted-foreground">{doc.employee.employee_code}</p>
                   </div>
-                ) : (
-                  <Badge variant="secondary">Văn bản công ty</Badge>
-                )}
-              </TableCell>
+                </div>
+              ) : doc.is_orphaned ? (
+                <Badge variant="destructive" className="gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  Nhân viên đã xóa
+                </Badge>
+              ) : (
+                <Badge variant="secondary">Văn bản công ty</Badge>
+              )}
+            </TableCell>
               <TableCell>
                 <Badge className={getStatusColor(doc.status)}>
                   {getStatusLabel(doc.status)}

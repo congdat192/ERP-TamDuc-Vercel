@@ -77,13 +77,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "administrative_documents_employee_id_fkey"
-            columns: ["employee_id"]
-            isOneToOne: false
-            referencedRelation: "employees"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "fk_administrative_documents_employee"
             columns: ["employee_id"]
             isOneToOne: false
@@ -211,6 +204,8 @@ export type Database = {
       employee_documents: {
         Row: {
           created_at: string | null
+          deleted_employee_code: string | null
+          deleted_employee_name: string | null
           document_type: string
           employee_id: string
           file_name: string
@@ -224,6 +219,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          deleted_employee_code?: string | null
+          deleted_employee_name?: string | null
           document_type: string
           employee_id: string
           file_name: string
@@ -237,6 +234,8 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          deleted_employee_code?: string | null
+          deleted_employee_name?: string | null
           document_type?: string
           employee_id?: string
           file_name?: string
@@ -268,6 +267,8 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           current_address: string | null
+          deleted_at: string | null
+          deleted_by: string | null
           department: string
           email: string
           emergency_contact_name: string | null
@@ -299,6 +300,8 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           current_address?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
           department: string
           email: string
           emergency_contact_name?: string | null
@@ -332,6 +335,8 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           current_address?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
           department?: string
           email?: string
           emergency_contact_name?: string | null
@@ -434,6 +439,8 @@ export type Database = {
           actual_days: number | null
           created_at: string | null
           created_by: string | null
+          deleted_employee_code: string | null
+          deleted_employee_name: string | null
           employee_id: string
           id: string
           month: string
@@ -447,6 +454,8 @@ export type Database = {
           actual_days?: number | null
           created_at?: string | null
           created_by?: string | null
+          deleted_employee_code?: string | null
+          deleted_employee_name?: string | null
           employee_id: string
           id?: string
           month: string
@@ -460,6 +469,8 @@ export type Database = {
           actual_days?: number | null
           created_at?: string | null
           created_by?: string | null
+          deleted_employee_code?: string | null
+          deleted_employee_name?: string | null
           employee_id?: string
           id?: string
           month?: string

@@ -1,22 +1,85 @@
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Trash2 } from 'lucide-react';
 import { Employee } from '../types';
 import { AvatarService } from '../services/avatarService';
+import { EmployeeService } from '../services/employeeService';
 import { EmployeeDocumentsTab } from './detail-tabs/EmployeeDocumentsTab';
 import { EmployeeAdminDocumentsTab } from './detail-tabs/EmployeeAdminDocumentsTab';
 import { MonthlyAttendanceTab } from './MonthlyAttendanceTab';
+import { EmployeeDeleteDialog } from './EmployeeDeleteDialog';
+import { useToast } from '@/hooks/use-toast';
 
 interface EmployeeDetailModalProps {
   employee: Employee | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onEmployeeDeleted?: () => void;
 }
 
-export function EmployeeDetailModal({ employee, open, onOpenChange }: EmployeeDetailModalProps) {
+export function EmployeeDetailModal({ employee, open, onOpenChange, onEmployeeDeleted }: EmployeeDetailModalProps) {
+  const { toast } = useToast();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteWarnings, setDeleteWarnings] = useState<{
+    documents: number;
+    attendance: number;
+    adminDocs: number;
+  }>();
+
   if (!employee) return null;
+
+  const handleDeleteClick = async () => {
+    try {
+      // Fetch warnings using Supabase client
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      const [docsResult, attendanceResult, adminDocsResult] = await Promise.all([
+        supabase.from('employee_documents').select('id', { count: 'exact', head: true }).eq('employee_id', employee.id),
+        supabase.from('monthly_attendance').select('id', { count: 'exact', head: true }).eq('employee_id', employee.id),
+        supabase.from('administrative_documents').select('id', { count: 'exact', head: true }).eq('employee_id', employee.id),
+      ]);
+
+      setDeleteWarnings({
+        documents: docsResult.count || 0,
+        attendance: attendanceResult.count || 0,
+        adminDocs: adminDocsResult.count || 0,
+      });
+
+      setDeleteDialogOpen(true);
+    } catch (error: any) {
+      toast({
+        title: "Lỗi",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      await EmployeeService.deleteEmployee(employee.id);
+      
+      toast({
+        title: "Thành công",
+        description: "Đã xóa nhân viên. Dữ liệu liên quan đã được lưu trữ.",
+      });
+
+      setDeleteDialogOpen(false);
+      onOpenChange(false);
+      onEmployeeDeleted?.();
+    } catch (error: any) {
+      toast({
+        title: "Lỗi",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
 
   const getStatusBadge = (status: Employee['status']) => {
     const statusMap = {
@@ -33,7 +96,18 @@ export function EmployeeDetailModal({ employee, open, onOpenChange }: EmployeeDe
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Chi Tiết Nhân Viên</DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle>Chi Tiết Nhân Viên</DialogTitle>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleDeleteClick}
+              className="gap-2"
+            >
+              <Trash2 className="h-4 w-4" />
+              Xóa Nhân Viên
+            </Button>
+          </div>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -276,6 +350,14 @@ export function EmployeeDetailModal({ employee, open, onOpenChange }: EmployeeDe
           </Tabs>
         </div>
       </DialogContent>
+
+      <EmployeeDeleteDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        employeeName={employee.fullName}
+        warnings={deleteWarnings}
+      />
     </Dialog>
   );
 }
