@@ -308,6 +308,44 @@ export class BenefitsService {
   }
 
   /**
+   * Bulk assign benefit to multiple employees
+   */
+  static async bulkAssignBenefit(
+    benefitId: string,
+    employeeIds: string[],
+    startDate: string,
+    endDate?: string
+  ): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Không tìm thấy thông tin người dùng');
+
+      const assignments = employeeIds.map(empId => ({
+        employee_id: empId,
+        benefit_id: benefitId,
+        assigned_date: new Date().toISOString().split('T')[0],
+        start_date: startDate,
+        end_date: endDate,
+        assigned_by: user.id,
+      }));
+
+      const { error } = await supabase
+        .from('hr_benefit_assignments')
+        .insert(assignments);
+
+      if (error) {
+        console.error('❌ Error bulk assigning benefits:', error);
+        throw new Error(`Không thể gán phúc lợi hàng loạt: ${error.message}`);
+      }
+
+      console.log(`✅ Bulk assigned benefit to ${employeeIds.length} employees`);
+    } catch (error: any) {
+      console.error('❌ Error in bulkAssignBenefit:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Generate benefit code
    */
   private static async generateBenefitCode(): Promise<string> {

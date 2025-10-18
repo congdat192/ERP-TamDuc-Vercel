@@ -11,6 +11,9 @@ import { AvatarService } from '../services/avatarService';
 import { EmployeeService } from '../services/employeeService';
 import { EmployeeDocumentsTab } from './detail-tabs/EmployeeDocumentsTab';
 import { EmployeeAdminDocumentsTab } from './detail-tabs/EmployeeAdminDocumentsTab';
+import { EmployeeBenefitsTab } from './detail-tabs/EmployeeBenefitsTab';
+import { EmployeeRewardsTab } from './detail-tabs/EmployeeRewardsTab';
+import { EmployeeDisciplineTab } from './detail-tabs/EmployeeDisciplineTab';
 import { MonthlyAttendanceTab } from './MonthlyAttendanceTab';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
@@ -105,13 +108,16 @@ export function EmployeeDetailModal({ employee, open, onOpenChange, onEmployeeDe
 
           {/* Tabs */}
           <Tabs defaultValue="info" className="w-full">
-            <TabsList className="grid w-full grid-cols-6">
+            <TabsList className="grid w-full grid-cols-9">
               <TabsTrigger value="info">Thông Tin</TabsTrigger>
               <TabsTrigger value="salary">Lương</TabsTrigger>
               <TabsTrigger value="performance">Hiệu Suất</TabsTrigger>
               <TabsTrigger value="attendance">Chấm Công</TabsTrigger>
               <TabsTrigger value="documents">Chứng Từ</TabsTrigger>
               <TabsTrigger value="admin-docs">VB Hành Chính</TabsTrigger>
+              <TabsTrigger value="benefits">Phúc Lợi</TabsTrigger>
+              <TabsTrigger value="rewards">Khen Thưởng</TabsTrigger>
+              <TabsTrigger value="discipline">Kỷ Luật</TabsTrigger>
             </TabsList>
 
             <TabsContent value="info" className="space-y-4 mt-4">
@@ -322,6 +328,18 @@ export function EmployeeDetailModal({ employee, open, onOpenChange, onEmployeeDe
 
             <TabsContent value="admin-docs">
               <EmployeeAdminDocumentsTab employeeId={employee.id} />
+            </TabsContent>
+
+            <TabsContent value="benefits">
+              <EmployeeBenefitsTab employeeId={employee.id} />
+            </TabsContent>
+
+            <TabsContent value="rewards">
+              <EmployeeRewardsTab employeeId={employee.id} />
+            </TabsContent>
+
+            <TabsContent value="discipline">
+              <EmployeeDisciplineTab employeeId={employee.id} />
             </TabsContent>
           </Tabs>
         </div>

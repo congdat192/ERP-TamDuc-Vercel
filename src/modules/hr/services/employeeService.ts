@@ -88,7 +88,7 @@ export class EmployeeService {
     }));
   }
 
-  static async getEmployeeById(id: string, includeDeleted = false): Promise<Employee | null> {
+  static async getEmployeeById(id: string, includeDeleted = false, includeRelated = false): Promise<Employee | null> {
     let query = supabase
       .from('employees')
       .select('*')
@@ -107,7 +107,7 @@ export class EmployeeService {
     }
     if (!data) return null;
 
-    return {
+    const employee: Employee = {
       id: data.id,
       employeeCode: data.employee_code,
       fullName: data.full_name,
@@ -143,6 +143,44 @@ export class EmployeeService {
       deletedAt: data.deleted_at,
       deletedBy: data.deleted_by,
     };
+
+    // Load related data if requested
+    if (includeRelated) {
+      try {
+        // Load benefit assignments
+        const { data: benefitAssignments } = await supabase
+          .from('hr_benefit_assignments')
+          .select(`
+            *,
+            benefit:hr_benefits(*)
+          `)
+          .eq('employee_id', id)
+          .eq('status', 'active')
+          .order('assigned_date', { ascending: false });
+
+        // Load rewards
+        const { data: rewards } = await supabase
+          .from('hr_rewards')
+          .select('*')
+          .eq('employee_id', id)
+          .order('awarded_date', { ascending: false });
+
+        // Load discipline records
+        const { data: disciplineRecords } = await supabase
+          .from('hr_discipline_records')
+          .select('*')
+          .eq('employee_id', id)
+          .order('violation_date', { ascending: false });
+
+        employee.benefits = (benefitAssignments || []) as any;
+        employee.rewards = (rewards || []) as any;
+        employee.disciplineRecords = (disciplineRecords || []) as any;
+      } catch (err) {
+        console.error('❌ Error loading related data:', err);
+      }
+    }
+
+    return employee;
   }
 
   static async createEmployee(data: CreateEmployeeData): Promise<void> {

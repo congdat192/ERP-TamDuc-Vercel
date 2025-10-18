@@ -86,6 +86,18 @@ export class RewardsService {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Không tìm thấy thông tin người dùng');
 
+      // Validate employee exists
+      const { data: employee, error: empError } = await supabase
+        .from('employees')
+        .select('id')
+        .eq('id', data.employee_id)
+        .maybeSingle();
+      
+      if (empError) throw empError;
+      if (!employee) {
+        throw new Error('Không tìm thấy nhân viên với ID này');
+      }
+
       // Generate reward code
       const reward_code = await this.generateRewardCode();
 

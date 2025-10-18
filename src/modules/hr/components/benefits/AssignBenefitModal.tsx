@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { BenefitsService } from '../../services/benefitsService';
 import type { Benefit } from '../../types/benefits';
+import { EmployeeSelector } from '../shared/EmployeeSelector';
 
 interface AssignBenefitModalProps {
   isOpen: boolean;
@@ -67,13 +68,11 @@ export function AssignBenefitModal({ isOpen, onClose, benefit, onSuccess }: Assi
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="employeeId">
-              Mã Nhân Viên <span className="text-destructive">*</span>
+              Nhân Viên <span className="text-destructive">*</span>
             </Label>
-            <Input
-              id="employeeId"
+            <EmployeeSelector
               value={employeeId}
-              onChange={(e) => setEmployeeId(e.target.value)}
-              placeholder="Nhập mã nhân viên"
+              onValueChange={setEmployeeId}
             />
           </div>
 

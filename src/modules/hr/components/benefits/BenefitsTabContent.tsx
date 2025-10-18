@@ -9,6 +9,7 @@ import { BenefitsTable } from './BenefitsTable';
 import { BenefitsFilters } from './BenefitsFilters';
 import { CreateBenefitModal } from './CreateBenefitModal';
 import { EditBenefitModal } from './EditBenefitModal';
+import { BulkAssignBenefitsModal } from './BulkAssignBenefitsModal';
 import { PermissionGuard } from '@/components/auth/PermissionGuard';
 import type { Benefit, BenefitFilters as BenefitFiltersType, BenefitStats } from '../../types/benefits';
 
@@ -19,6 +20,7 @@ export function BenefitsTabContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showBulkAssignModal, setShowBulkAssignModal] = useState(false);
   const [selectedBenefit, setSelectedBenefit] = useState<Benefit | null>(null);
   const { toast } = useToast();
   const { hasFeatureAccess } = usePermissions();
@@ -80,6 +82,11 @@ export function BenefitsTabContent() {
         variant: 'destructive',
       });
     }
+  };
+
+  const handleBulkAssign = (benefit: Benefit) => {
+    setSelectedBenefit(benefit);
+    setShowBulkAssignModal(true);
   };
 
   const handleSuccess = () => {
@@ -158,6 +165,7 @@ export function BenefitsTabContent() {
         isLoading={isLoading}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onBulkAssign={handleBulkAssign}
         canEdit={canEdit}
         canDelete={canDelete}
       />
@@ -176,6 +184,18 @@ export function BenefitsTabContent() {
           isOpen={showEditModal}
           onClose={() => {
             setShowEditModal(false);
+            setSelectedBenefit(null);
+          }}
+          benefit={selectedBenefit}
+          onSuccess={handleSuccess}
+        />
+      )}
+
+      {showBulkAssignModal && selectedBenefit && (
+        <BulkAssignBenefitsModal
+          isOpen={showBulkAssignModal}
+          onClose={() => {
+            setShowBulkAssignModal(false);
             setSelectedBenefit(null);
           }}
           benefit={selectedBenefit}

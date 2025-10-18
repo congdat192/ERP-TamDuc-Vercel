@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { DisciplineService } from '../../services/disciplineService';
 import type { CreateDisciplineData } from '../../types/benefits';
+import { EmployeeSelector } from '../shared/EmployeeSelector';
 
 interface CreateDisciplineModalProps {
   isOpen: boolean;
@@ -71,13 +72,11 @@ export function CreateDisciplineModal({ isOpen, onClose, onSuccess }: CreateDisc
           {/* Employee ID */}
           <div className="space-y-2">
             <Label htmlFor="employee_id">
-              Mã Nhân Viên <span className="text-destructive">*</span>
+              Nhân Viên <span className="text-destructive">*</span>
             </Label>
-            <Input
-              id="employee_id"
+            <EmployeeSelector
               value={formData.employee_id}
-              onChange={(e) => setFormData({ ...formData, employee_id: e.target.value })}
-              placeholder="Nhập mã nhân viên"
+              onValueChange={(value) => setFormData({ ...formData, employee_id: value })}
             />
           </div>
 

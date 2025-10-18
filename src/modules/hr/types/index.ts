@@ -1,3 +1,5 @@
+import type { BenefitAssignment, Reward, DisciplineRecord } from './benefits';
+
 export interface Employee {
   id: string;
   employeeCode: string;
@@ -33,6 +35,10 @@ export interface Employee {
   notes?: string;
   deletedAt?: string | null;
   deletedBy?: string | null;
+  // Benefits integration
+  benefits?: BenefitAssignment[];
+  rewards?: Reward[];
+  disciplineRecords?: DisciplineRecord[];
 }
 
 export interface MonthlyAttendance {

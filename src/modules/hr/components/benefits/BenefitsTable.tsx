@@ -1,7 +1,7 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, Users } from 'lucide-react';
 import { format } from 'date-fns';
 import type { Benefit } from '../../types/benefits';
 
@@ -10,6 +10,7 @@ interface BenefitsTableProps {
   isLoading: boolean;
   onEdit: (benefit: Benefit) => void;
   onDelete: (benefit: Benefit) => void;
+  onBulkAssign: (benefit: Benefit) => void;
   canEdit: boolean;
   canDelete: boolean;
 }
@@ -48,6 +49,7 @@ export function BenefitsTable({
   isLoading,
   onEdit,
   onDelete,
+  onBulkAssign,
   canEdit,
   canDelete,
 }: BenefitsTableProps) {
@@ -109,6 +111,14 @@ export function BenefitsTable({
               {(canEdit || canDelete) && (
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onBulkAssign(benefit)}
+                      title="Gán hàng loạt"
+                    >
+                      <Users className="h-4 w-4" />
+                    </Button>
                     {canEdit && (
                       <Button
                         variant="ghost"
