@@ -1,272 +1,254 @@
-import { FileText, File, Bell, FolderOpen } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect } from 'react';
+import { FileText, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Document } from '../types';
-
-const dummyDocuments: Document[] = [
-  {
-    id: '1',
-    docType: 'decision',
-    docNo: 'QĐ-001/2024',
-    subject: 'Quyết định bổ nhiệm Giám đốc Sales',
-    issueDate: '2024-01-15',
-    status: 'published',
-  },
-  {
-    id: '2',
-    docType: 'notice',
-    docNo: 'TB-002/2024',
-    subject: 'Thông báo nghỉ Tết Nguyên Đán 2024',
-    issueDate: '2024-01-20',
-    status: 'published',
-  },
-  {
-    id: '3',
-    docType: 'form',
-    docNo: 'BM-003/2024',
-    subject: 'Biểu mẫu đơn xin nghỉ phép',
-    issueDate: '2024-01-10',
-    status: 'published',
-  },
-];
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
+import { usePermissions } from '@/hooks/usePermissions';
+import { AdminDocumentService } from '../services/adminDocumentService';
+import { DocumentFiltersComponent } from '../components/administration/DocumentFilters';
+import { DocumentTable } from '../components/administration/DocumentTable';
+import { CreateDocumentModal } from '../components/administration/CreateDocumentModal';
+import { ViewDocumentModal } from '../components/administration/ViewDocumentModal';
+import type {
+  AdministrativeDocument,
+  DocumentFilters,
+  DocumentStats,
+  DocType,
+} from '../types/administration';
+import { getDocTypeLabel } from '../types/administration';
 
 export function AdministrationPage() {
-  const getDocTypeBadge = (type: Document['docType']) => {
-    const typeMap = {
-      decision: { label: 'Quyết định', color: 'bg-purple-500' },
-      contract: { label: 'Hợp đồng', color: 'bg-blue-500' },
-      notice: { label: 'Thông báo', color: 'bg-green-500' },
-      form: { label: 'Biểu mẫu', color: 'bg-yellow-500' },
-    };
-    const config = typeMap[type];
-    return (
-      <Badge className={`${config.color} text-white`}>
-        {config.label}
-      </Badge>
-    );
+  const [activeTab, setActiveTab] = useState<DocType | 'all'>('all');
+  const [documents, setDocuments] = useState<AdministrativeDocument[]>([]);
+  const [filteredDocs, setFilteredDocs] = useState<AdministrativeDocument[]>([]);
+  const [filters, setFilters] = useState<DocumentFilters>({});
+  const [stats, setStats] = useState<DocumentStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<AdministrativeDocument | null>(null);
+  const { toast } = useToast();
+  const { hasFeatureAccess } = usePermissions();
+
+  const canCreate = hasFeatureAccess('create_admin_documents');
+  const canApprove = hasFeatureAccess('approve_admin_documents');
+  const canDelete = hasFeatureAccess('delete_admin_documents');
+
+  useEffect(() => {
+    loadDocuments();
+    loadStats();
+  }, []);
+
+  useEffect(() => {
+    filterDocuments();
+  }, [documents, filters, activeTab]);
+
+  const loadDocuments = async () => {
+    try {
+      setIsLoading(true);
+      const data = await AdminDocumentService.getDocuments();
+      setDocuments(data);
+    } catch (error: any) {
+      toast({
+        title: 'Lỗi',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const getStatusBadge = (status: Document['status']) => {
-    const statusMap = {
-      draft: { label: 'Nháp', variant: 'outline' as const },
-      published: { label: 'Đã ban hành', variant: 'default' as const },
-      archived: { label: 'Lưu trữ', variant: 'secondary' as const },
-    };
-    const config = statusMap[status];
-    return <Badge variant={config.variant}>{config.label}</Badge>;
+  const loadStats = async () => {
+    try {
+      const data = await AdminDocumentService.getStats();
+      setStats(data);
+    } catch (error: any) {
+      console.error('Error loading stats:', error);
+    }
+  };
+
+  const filterDocuments = () => {
+    let filtered = [...documents];
+
+    if (activeTab !== 'all') {
+      filtered = filtered.filter((doc) => doc.doc_type === activeTab);
+    }
+
+    if (filters.status) {
+      filtered = filtered.filter((doc) => doc.status === filters.status);
+    }
+
+    if (filters.search) {
+      const search = filters.search.toLowerCase();
+      filtered = filtered.filter(
+        (doc) =>
+          doc.doc_no?.toLowerCase().includes(search) ||
+          doc.subject.toLowerCase().includes(search)
+      );
+    }
+
+    setFilteredDocs(filtered);
+  };
+
+  const handleView = (doc: AdministrativeDocument) => {
+    setSelectedDocument(doc);
+    setShowViewModal(true);
+  };
+
+  const handleEdit = (doc: AdministrativeDocument) => {
+    toast({
+      title: 'Chức năng đang phát triển',
+      description: 'Chỉnh sửa văn bản sẽ sớm được cập nhật',
+    });
+  };
+
+  const handleDelete = async (doc: AdministrativeDocument) => {
+    if (!confirm(`Bạn có chắc muốn xóa văn bản ${doc.doc_no}?`)) return;
+
+    try {
+      await AdminDocumentService.deleteDocument(doc.id);
+      toast({
+        title: 'Thành công',
+        description: 'Đã xóa văn bản',
+      });
+      loadDocuments();
+      loadStats();
+    } catch (error: any) {
+      toast({
+        title: 'Lỗi',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleSuccess = () => {
+    loadDocuments();
+    loadStats();
   };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold theme-text">Hồ Sơ Hành Chính</h1>
-          <p className="theme-text-secondary mt-1">Quản lý văn bản, biểu mẫu và tài liệu hành chính</p>
+          <h2 className="text-3xl font-bold tracking-tight">Hồ Sơ Hành Chính</h2>
+          <p className="text-muted-foreground mt-2">
+            Quản lý văn bản hành chính và tài liệu công ty
+          </p>
         </div>
-        <Button className="gap-2">
-          <FileText className="h-4 w-4" />
-          Tạo Văn Bản Mới
-        </Button>
+        {canCreate && (
+          <Button onClick={() => setShowCreateModal(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Tạo Văn Bản
+          </Button>
+        )}
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="theme-card">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <FileText className="h-8 w-8 theme-text-primary" />
-              <div>
-                <p className="text-sm theme-text-secondary">Tổng Văn Bản</p>
-                <p className="text-2xl font-bold theme-text">{dummyDocuments.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="theme-card">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <File className="h-8 w-8 text-purple-500" />
-              <div>
-                <p className="text-sm theme-text-secondary">Quyết Định</p>
-                <p className="text-2xl font-bold theme-text">
-                  {dummyDocuments.filter(d => d.docType === 'decision').length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="theme-card">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <Bell className="h-8 w-8 text-green-500" />
-              <div>
-                <p className="text-sm theme-text-secondary">Thông Báo</p>
-                <p className="text-2xl font-bold theme-text">
-                  {dummyDocuments.filter(d => d.docType === 'notice').length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="theme-card">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <FolderOpen className="h-8 w-8 text-blue-500" />
-              <div>
-                <p className="text-sm theme-text-secondary">Biểu Mẫu</p>
-                <p className="text-2xl font-bold theme-text">
-                  {dummyDocuments.filter(d => d.docType === 'form').length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Tabs */}
-      <Tabs defaultValue="all" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="all">Tất Cả Văn Bản</TabsTrigger>
-          <TabsTrigger value="decisions">Quyết Định</TabsTrigger>
-          <TabsTrigger value="contracts">Hợp Đồng</TabsTrigger>
-          <TabsTrigger value="forms">Biểu Mẫu</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="all">
-          <Card className="theme-card">
-            <CardHeader>
-              <CardTitle className="theme-text">Danh Sách Văn Bản</CardTitle>
+      {/* Stats Cards */}
+      {stats && (
+        <div className="grid gap-4 md:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Tổng Văn Bản</CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Loại</TableHead>
-                    <TableHead>Số Văn Bản</TableHead>
-                    <TableHead>Tiêu Đề</TableHead>
-                    <TableHead>Ngày Ban Hành</TableHead>
-                    <TableHead>Trạng Thái</TableHead>
-                    <TableHead className="text-right">Thao Tác</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {dummyDocuments.map((doc) => (
-                    <TableRow key={doc.id}>
-                      <TableCell>{getDocTypeBadge(doc.docType)}</TableCell>
-                      <TableCell className="theme-text font-medium">{doc.docNo}</TableCell>
-                      <TableCell className="theme-text">{doc.subject}</TableCell>
-                      <TableCell className="theme-text">{doc.issueDate}</TableCell>
-                      <TableCell>{getStatusBadge(doc.status)}</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm">Xem</Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <div className="text-2xl font-bold">{stats.total}</div>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="decisions">
-          <Card className="theme-card">
-            <CardHeader>
-              <CardTitle className="theme-text">Quyết Định</CardTitle>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Chờ Duyệt</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Số Quyết Định</TableHead>
-                    <TableHead>Nội Dung</TableHead>
-                    <TableHead>Ngày Ban Hành</TableHead>
-                    <TableHead>Trạng Thái</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {dummyDocuments
-                    .filter(d => d.docType === 'decision')
-                    .map((doc) => (
-                      <TableRow key={doc.id}>
-                        <TableCell className="theme-text font-medium">{doc.docNo}</TableCell>
-                        <TableCell className="theme-text">{doc.subject}</TableCell>
-                        <TableCell className="theme-text">{doc.issueDate}</TableCell>
-                        <TableCell>{getStatusBadge(doc.status)}</TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
+              <div className="text-2xl font-bold">{stats.pending}</div>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="contracts">
-          <Card className="theme-card">
-            <CardHeader>
-              <CardTitle className="theme-text">Hợp Đồng Mẫu</CardTitle>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Đã Xuất Bản</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-center h-64 theme-text-secondary">
-                <div className="text-center">
-                  <File className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Chưa có hợp đồng mẫu nào</p>
-                  <Button className="mt-4" size="sm">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Tạo Hợp Đồng Mẫu
-                  </Button>
-                </div>
-              </div>
+              <div className="text-2xl font-bold">{stats.published}</div>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="forms">
-          <Card className="theme-card">
-            <CardHeader>
-              <CardTitle className="theme-text">Biểu Mẫu Công Ty</CardTitle>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Lưu Trữ</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="theme-card cursor-pointer hover:shadow-lg transition-shadow">
-                  <CardContent className="p-6 text-center">
-                    <FileText className="h-12 w-12 mx-auto mb-4 theme-text-primary" />
-                    <h4 className="font-semibold theme-text mb-2">Đơn Xin Nghỉ Phép</h4>
-                    <p className="text-sm theme-text-secondary">Biểu mẫu nghỉ phép chuẩn</p>
-                    <Button size="sm" className="mt-3">Tải Về</Button>
-                  </CardContent>
-                </Card>
-                <Card className="theme-card cursor-pointer hover:shadow-lg transition-shadow">
-                  <CardContent className="p-6 text-center">
-                    <FileText className="h-12 w-12 mx-auto mb-4 theme-text-primary" />
-                    <h4 className="font-semibold theme-text mb-2">Hợp Đồng Lao Động</h4>
-                    <p className="text-sm theme-text-secondary">Mẫu hợp đồng có logo</p>
-                    <Button size="sm" className="mt-3">Tải Về</Button>
-                  </CardContent>
-                </Card>
-                <Card className="theme-card cursor-pointer hover:shadow-lg transition-shadow">
-                  <CardContent className="p-6 text-center">
-                    <FileText className="h-12 w-12 mx-auto mb-4 theme-text-primary" />
-                    <h4 className="font-semibold theme-text mb-2">Giấy Xác Nhận</h4>
-                    <p className="text-sm theme-text-secondary">Mẫu giấy xác nhận</p>
-                    <Button size="sm" className="mt-3">Tải Về</Button>
-                  </CardContent>
-                </Card>
-              </div>
+              <div className="text-2xl font-bold">{stats.archived}</div>
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+        </div>
+      )}
+
+      {/* Filters */}
+      <DocumentFiltersComponent filters={filters} onFilterChange={setFilters} />
+
+      {/* Documents Table */}
+      <Card>
+        <CardHeader>
+          <Tabs
+            value={activeTab}
+            onValueChange={(v) => setActiveTab(v as DocType | 'all')}
+          >
+            <TabsList>
+              <TabsTrigger value="all">
+                Tất Cả ({stats?.total || 0})
+              </TabsTrigger>
+              <TabsTrigger value="decision">
+                {getDocTypeLabel('decision')} ({stats?.by_type.decision || 0})
+              </TabsTrigger>
+              <TabsTrigger value="notice">
+                {getDocTypeLabel('notice')} ({stats?.by_type.notice || 0})
+              </TabsTrigger>
+              <TabsTrigger value="contract">
+                {getDocTypeLabel('contract')} ({stats?.by_type.contract || 0})
+              </TabsTrigger>
+              <TabsTrigger value="form">
+                {getDocTypeLabel('form')} ({stats?.by_type.form || 0})
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Đang tải...
+            </div>
+          ) : (
+            <DocumentTable
+              documents={filteredDocs}
+              onView={handleView}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              canEdit={canCreate}
+              canDelete={canDelete}
+            />
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Modals */}
+      <CreateDocumentModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={handleSuccess}
+      />
+
+      <ViewDocumentModal
+        isOpen={showViewModal}
+        onClose={() => {
+          setShowViewModal(false);
+          setSelectedDocument(null);
+        }}
+        document={selectedDocument}
+        onSuccess={handleSuccess}
+        canApprove={canApprove}
+      />
     </div>
   );
 }
