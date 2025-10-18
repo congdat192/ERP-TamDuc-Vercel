@@ -36,6 +36,7 @@ import { EmployeeFilters, EmployeeFiltersData } from '../components/EmployeeFilt
 import { EmployeePagination } from '../components/EmployeePagination';
 import { EmployeeDetailModal } from '../components/EmployeeDetailModal';
 import { BulkOperations } from '../components/BulkOperations';
+import { ImportEmployeeModal } from '../components/ImportEmployeeModal';
 
 export function HRISPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -230,10 +231,15 @@ export function HRISPage() {
               onFiltersChange={setFilters}
               departments={departments}
             />
-            <Button variant="outline" className="gap-2" onClick={handleExport}>
-              <Download className="h-4 w-4" />
-              Xuất Excel
-            </Button>
+            <div className="flex gap-2">
+              <PermissionGuard requiredPermission="create_employees" showError={false}>
+                <ImportEmployeeModal onSuccess={fetchEmployees} />
+              </PermissionGuard>
+              <Button variant="outline" className="gap-2" onClick={handleExport}>
+                <Download className="h-4 w-4" />
+                Xuất Excel
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
