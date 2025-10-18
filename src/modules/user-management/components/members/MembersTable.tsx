@@ -34,8 +34,7 @@ interface UIMember {
   email: string;
   phone?: string;
   avatar?: string;
-  status: string;
-  isActive: boolean;
+  status: 'ACTIVE' | 'INACTIVE'; // Simplified: directly use DB status
   isOwner: boolean;
   createdAt: string;
   lastLogin?: string | null;
@@ -84,17 +83,17 @@ export function MembersTable({
     member: UIMember | null;
   }>({ isOpen: false, member: null });
 
-  const getStatusBadge = (status: string, isOwner: boolean) => {
+  const getStatusBadge = (status: 'ACTIVE' | 'INACTIVE', isOwner: boolean) => {
     if (isOwner) {
       return <Badge className="bg-purple-100 text-purple-800">Chủ Sở Hữu</Badge>;
     }
     
     const statusConfig = {
-      active: { className: "bg-green-100 text-green-800", label: "Hoạt Động" },
-      inactive: { className: "bg-gray-100 text-gray-800", label: "Không Hoạt Động" },
+      ACTIVE: { className: "bg-green-100 text-green-800", label: "Hoạt Động" },
+      INACTIVE: { className: "bg-gray-100 text-gray-800", label: "Không Hoạt Động" },
     };
     
-    const config = statusConfig[status as keyof typeof statusConfig];
+    const config = statusConfig[status];
     return <Badge className={config?.className}>{config?.label || status}</Badge>;
   };
 
@@ -110,10 +109,11 @@ export function MembersTable({
   const handleToggleStatus = (member: UIMember) => {
     if (member.isOwner) return; // Can't change owner status
     
-    console.log('🔄 [MembersTable] Toggling status for member:', member.id, 'from', member.isActive ? 'ACTIVE' : 'INACTIVE', 'to', !member.isActive ? 'ACTIVE' : 'INACTIVE');
+    const newStatus = member.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+    console.log('🔄 [MembersTable] Toggling status for member:', member.id, 'from', member.status, 'to', newStatus);
     
     onUserUpdate?.(member.id, {
-      isActive: !member.isActive
+      status: newStatus
     });
   };
 
@@ -258,9 +258,9 @@ export function MembersTable({
                           </DropdownMenuItem>
                           <DropdownMenuItem 
                             onClick={() => handleToggleStatus(user)}
-                            className={user.isActive ? 'text-red-600' : 'text-green-600'}
+                            className={user.status === 'ACTIVE' ? 'text-red-600' : 'text-green-600'}
                           >
-                            {user.isActive ? (
+                            {user.status === 'ACTIVE' ? (
                               <>
                                 <EyeOff className="w-4 h-4 mr-2" />
                                 Vô Hiệu Hóa

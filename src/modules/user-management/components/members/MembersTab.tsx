@@ -15,8 +15,7 @@ interface UIMember {
   email: string;
   phone?: string;
   avatar?: string;
-  status: string;
-  isActive: boolean;
+  status: 'ACTIVE' | 'INACTIVE'; // Simplified: directly use DB status
   isOwner: boolean;
   createdAt: string;
   lastLogin?: string | null;

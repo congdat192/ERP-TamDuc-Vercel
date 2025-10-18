@@ -16,8 +16,7 @@ interface UIMember {
   email: string;
   phone?: string;
   avatar?: string;
-  status: string;
-  isActive: boolean;
+  status: 'ACTIVE' | 'INACTIVE'; // Simplified: directly use DB status
   isOwner: boolean;
   createdAt: string;
   lastLogin?: string | null;
@@ -177,12 +176,8 @@ export function MembersPage() {
     try {
       console.log('🔧 [MembersPage] Updating member:', memberId, data);
       
-      const updateData: any = {};
-      if (data.isActive !== undefined) {
-        updateData.status = data.isActive ? 'ACTIVE' : 'INACTIVE';
-      }
-
-      await MembersService.updateMember(memberId, updateData);
+      // Simplified: No conversion needed - pass status directly
+      await MembersService.updateMember(memberId, data);
       
       toast({
         title: "Thành công",
@@ -347,8 +342,7 @@ export function MembersPage() {
       email: member.profiles?.email || 'N/A',
       phone: member.profiles?.phone || undefined,
       avatar: avatarUrl,
-      status: member.status === 'ACTIVE' ? 'active' : 'inactive',
-      isActive: member.status === 'ACTIVE',
+      status: member.status, // Simplified: Use DB status directly (ACTIVE/INACTIVE)
       isOwner: isOwner,
       createdAt: member.joined_at,
       lastLogin: null,
