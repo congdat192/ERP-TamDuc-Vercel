@@ -5,7 +5,6 @@ export interface ApiRequestConfig {
   headers?: Record<string, string>;
   body?: any;
   requiresAuth?: boolean;
-  requiresBusinessId?: boolean;
 }
 
 export interface ApiResponse<T> {
@@ -13,34 +12,6 @@ export interface ApiResponse<T> {
   message?: string;
   success: boolean;
 }
-
-// Storage keys
-const STORAGE_KEYS = {
-  SELECTED_BUSINESS_ID: 'cbi',
-};
-
-// Get selected business ID
-export const getSelectedBusinessId = (): string | null => {
-  try {
-    return localStorage.getItem(STORAGE_KEYS.SELECTED_BUSINESS_ID);
-  } catch {
-    return null;
-  }
-};
-
-// Set selected business ID
-export const setSelectedBusinessId = (businessId: string): void => {
-  try {
-    localStorage.setItem(STORAGE_KEYS.SELECTED_BUSINESS_ID, businessId);
-  } catch {}
-};
-
-// Clear selected business ID
-export const clearSelectedBusinessId = (): void => {
-  try {
-    localStorage.removeItem(STORAGE_KEYS.SELECTED_BUSINESS_ID);
-  } catch {}
-};
 
 // Mock API call function - returns mock data
 export const apiCall = async <T>(

@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserPermissions, ERPModule, VoucherFeature } from '@/types/auth';
 import { supabase } from '@/integrations/supabase/client';
-import { clearSelectedBusinessId } from '@/services/apiService';
 import { useToast } from '@/hooks/use-toast';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 

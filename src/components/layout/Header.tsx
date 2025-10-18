@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Menu, LogOut, User, Bell, Settings, Globe } from 'lucide-react';
+import { Search, Menu, LogOut, User, Bell, Settings, Globe, Building2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
@@ -19,7 +19,6 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { BusinessSwitcher } from '@/components/ui/business-switcher';
 import { User as UserType, getAvatarUrl } from '@/types/auth';
 import { useNavigate } from 'react-router-dom';
 
@@ -82,8 +81,11 @@ export function Header({ onSidebarToggle, currentPage, onPageChange, onLogout, c
             <Menu className="w-5 h-5" />
           </Button>
           
-          {/* Business Switcher */}
-          <BusinessSwitcher className="max-w-48" />
+          {/* Company Name */}
+          <div className="hidden md:flex items-center space-x-2 px-3 py-1.5 rounded-lg theme-bg-accent">
+            <Building2 className="w-4 h-4 theme-text-primary" />
+            <span className="text-sm font-medium theme-text">Hệ Thống ERP</span>
+          </div>
           
           <div className="hidden md:block h-6 w-px bg-border" />
           
