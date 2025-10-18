@@ -14,6 +14,193 @@ export type Database = {
   }
   public: {
     Tables: {
+      administrative_documents: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          content: string
+          created_at: string
+          created_by: string
+          doc_no: string | null
+          doc_type: string
+          effective_date: string | null
+          employee_id: string | null
+          file_name: string | null
+          file_path: string | null
+          file_size: number | null
+          id: string
+          issue_date: string
+          mime_type: string | null
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          content: string
+          created_at?: string
+          created_by: string
+          doc_no?: string | null
+          doc_type: string
+          effective_date?: string | null
+          employee_id?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          issue_date?: string
+          mime_type?: string | null
+          status?: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string
+          doc_no?: string | null
+          doc_type?: string
+          effective_date?: string | null
+          employee_id?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          issue_date?: string
+          mime_type?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "administrative_documents_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_sequences: {
+        Row: {
+          created_at: string
+          doc_type: string
+          id: string
+          last_number: number
+          prefix: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          doc_type: string
+          id?: string
+          last_number?: number
+          prefix: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          doc_type?: string
+          id?: string
+          last_number?: number
+          prefix?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      document_templates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          doc_type: string
+          id: string
+          is_active: boolean | null
+          name: string
+          template_content: string
+          updated_at: string
+          variables: Json | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          doc_type: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          template_content: string
+          updated_at?: string
+          variables?: Json | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          doc_type?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          template_content?: string
+          updated_at?: string
+          variables?: Json | null
+        }
+        Relationships: []
+      }
+      document_versions: {
+        Row: {
+          change_note: string | null
+          changed_by: string
+          content: string
+          created_at: string
+          document_id: string
+          file_name: string | null
+          file_path: string | null
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          version_number: number
+        }
+        Insert: {
+          change_note?: string | null
+          changed_by: string
+          content: string
+          created_at?: string
+          document_id: string
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          version_number: number
+        }
+        Update: {
+          change_note?: string | null
+          changed_by?: string
+          content?: string
+          created_at?: string
+          document_id?: string
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_versions_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "administrative_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_documents: {
         Row: {
           created_at: string | null
@@ -421,6 +608,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_doc_number: {
+        Args: { _doc_type: string; _year: number }
+        Returns: string
+      }
       has_role: {
         Args:
           | { _role: Database["public"]["Enums"]["app_role"]; _user_id: string }
