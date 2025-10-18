@@ -344,6 +344,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [requirePasswordChange, setRequirePasswordChange] = useState(false);
   const { toast } = useToast();
 
+  /**
+   * PHASE 1: Complete session cleanup - removes ALL auth-related data
+   * Prevents stale tokens from causing login issues in preview environment
+   */
+  const clearAuthState = async () => {
+    console.log('🧹 [clearAuthState] Cleaning up all auth state');
+    
+    try {
+      // 1. Sign out from Supabase
+      await supabase.auth.signOut();
+      
+      // 2. Clear React state
+      setCurrentUser(null);
+      setRequirePasswordChange(false);
+      
+      // 3. Clear ALL Supabase-related localStorage keys
+      const supabaseKeys = Object.keys(localStorage).filter(key => 
+        key.startsWith('sb-') || key.includes('supabase')
+      );
+      supabaseKeys.forEach(key => {
+        console.log('  🗑️ Removing:', key);
+        localStorage.removeItem(key);
+      });
+      
+      // 4. Clear general storage
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      console.log('✅ [clearAuthState] Cleanup complete');
+    } catch (error) {
+      console.error('❌ [clearAuthState] Error during cleanup:', error);
+      // Force clear even if signOut fails
+      setCurrentUser(null);
+      setRequirePasswordChange(false);
+      localStorage.clear();
+      sessionStorage.clear();
+    }
+  };
+
   // Setup Supabase auth state listener (CRITICAL!)
   useEffect(() => {
     console.log('🚀 [AuthContext] Setting up auth state listener');
@@ -397,10 +436,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               setCurrentUser(user);
               setRequirePasswordChange(passwordChangeRequired);
               console.log('✅ [AuthContext] User state updated:', user.email);
-            } catch (error) {
+            } catch (error: any) {
               console.error('❌ [AuthContext] Error fetching user:', error);
-              setCurrentUser(null);
-              setRequirePasswordChange(false);
+              
+              // PHASE 3: If RLS error or critical failure, clear everything
+              const isCriticalError = 
+                error?.code === '42501' || 
+                error?.code === 'PGRST301' || 
+                error?.message?.includes('JWT') ||
+                error?.message?.includes('RLS') ||
+                error?.message?.includes('permission denied');
+              
+              if (isCriticalError) {
+                console.error('🚨 [AuthContext] Critical auth error - force logout');
+                await clearAuthState();
+                
+                toast({
+                  title: "Phiên đăng nhập hết hạn",
+                  description: "Vui lòng đăng nhập lại.",
+                  variant: "destructive",
+                });
+                
+                // Redirect to login if not already there
+                if (window.location.pathname !== '/login') {
+                  window.location.href = '/login';
+                }
+              } else {
+                // Non-critical error - just clear state
+                setCurrentUser(null);
+                setRequirePasswordChange(false);
+              }
             }
           }, 0);
         } else {
@@ -418,22 +483,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('🔍 [checkSession] Checking for existing session');
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
-        // Phase 4: Validate session exists and is valid
-        if (sessionError || !session) {
-          console.log('ℹ️ [checkSession] No valid session found');
+        // PHASE 4: Validate session exists and is valid
+        if (sessionError) {
+          console.warn('⚠️ [checkSession] Session error:', sessionError.message);
+          await clearAuthState();
           setIsInitialized(true);
           return;
         }
         
-        // Phase 4: Validate session expiry
-        const expiresAt = session.expires_at;
-        if (expiresAt && expiresAt * 1000 < Date.now()) {
-          console.warn('⚠️ [checkSession] Session expired - clearing');
-          await supabase.auth.signOut();
-          localStorage.clear();
-          sessionStorage.clear();
-          setCurrentUser(null);
+        if (!session) {
+          console.log('ℹ️ [checkSession] No session found');
           setIsInitialized(true);
+          return;
+        }
+        
+        // PHASE 4: Validate session expiry with 5-minute buffer
+        const expiresAt = session.expires_at;
+        const EXPIRY_BUFFER = 300; // 5 minutes in seconds
+        
+        if (expiresAt && (expiresAt - EXPIRY_BUFFER) < Math.floor(Date.now() / 1000)) {
+          console.warn('⚠️ [checkSession] Session expired or expiring soon - clearing');
+          await clearAuthState();
+          setIsInitialized(true);
+          
+          toast({
+            title: "Phiên đăng nhập hết hạn",
+            description: "Vui lòng đăng nhập lại.",
+          });
+          
           return;
         }
         
@@ -448,11 +525,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (error) {
           console.warn('⚠️ [checkSession] Failed to check status - clearing session:', error.message);
-          await supabase.auth.signOut();
-          localStorage.clear();
-          sessionStorage.clear();
-          setCurrentUser(null);
+          await clearAuthState(); // PHASE 2: Use helper
           setIsInitialized(true);
+          
+          // Force page reload to ensure clean state
+          if (window.location.pathname !== '/login') {
+            console.log('🔄 [checkSession] Redirecting to login...');
+            window.location.href = '/login';
+          }
           return;
         }
         
@@ -481,27 +561,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }).catch(async (err) => {
             console.error('❌ [checkSession] Failed to load profile - forcing logout:', err);
             
-            // Force logout + clear everything (stale session detected)
-            await supabase.auth.signOut();
-            setCurrentUser(null);
-            setRequirePasswordChange(false);
-            localStorage.clear();
-            sessionStorage.clear();
+            // PHASE 2: Force logout + clear everything (stale session detected)
+            await clearAuthState();
             
             toast({
               title: "Phiên đăng nhập hết hạn",
               description: "Vui lòng đăng nhập lại.",
               variant: "destructive",
             });
+            
+            // Force redirect to login
+            if (window.location.pathname !== '/login') {
+              window.location.href = '/login';
+            }
           });
         }, 0);
       } catch (error) {
         console.error('❌ [checkSession] Unexpected error:', error);
-        // Force clean state on any error
-        await supabase.auth.signOut();
-        localStorage.clear();
-        sessionStorage.clear();
-        setCurrentUser(null);
+        // PHASE 2: Force clean state on any error
+        await clearAuthState();
         setIsInitialized(true);
       }
     };
@@ -649,13 +727,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     
     try {
-      await supabase.auth.signOut();
-      
-      // Force clear all state and storage
-      setCurrentUser(null);
-      setRequirePasswordChange(false);
-      localStorage.clear();
-      sessionStorage.clear();
+      await clearAuthState(); // Use helper for consistency
       
       console.log('✅ [AuthContext] User logged out and storage cleared');
       
@@ -713,6 +785,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('❌ [AuthContext] Failed to refresh permissions:', error);
     }
   };
+
+  // PHASE 5: Add debugging helper (development only)
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      (window as any).debugAuthState = async () => {
+        console.log('🔍 ===== DEBUG AUTH STATE =====');
+        console.log('- currentUser:', currentUser);
+        console.log('- isInitialized:', isInitialized);
+        console.log('- isLoading:', isLoading);
+        console.log('- requirePasswordChange:', requirePasswordChange);
+        console.log('- localStorage keys:', Object.keys(localStorage));
+        
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log('- Supabase session:', session);
+        if (session?.expires_at) {
+          const expiryDate = new Date(session.expires_at * 1000);
+          const minutesUntilExpiry = Math.floor((expiryDate.getTime() - Date.now()) / 1000 / 60);
+          console.log('- Session expires:', expiryDate.toLocaleString());
+          console.log('- Time until expiry:', minutesUntilExpiry, 'minutes');
+        }
+        console.log('==============================');
+      };
+      
+      console.log('💡 Debug helper available: window.debugAuthState()');
+    }
+  }, [currentUser, isInitialized, isLoading, requirePasswordChange]);
 
   // Don't render children until auth state is initialized
   if (!isInitialized) {
