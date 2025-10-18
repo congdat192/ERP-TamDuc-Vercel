@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MembersTab } from '../components/members/MembersTab';
 import { useToast } from '@/hooks/use-toast';
-import { useBusiness } from '@/contexts/BusinessContext';
+import { useAuth } from '@/components/auth/AuthContext';
 import { RoleService } from '../services/roleService';
 import { MembersService, SupabaseMember } from '../services/membersService';
 import { getAvatarUrl } from '@/types/auth';
@@ -106,14 +106,14 @@ export function MembersPage() {
   });
   
   const { toast } = useToast();
-  const { currentBusiness } = useBusiness();
+  const { currentUser } = useAuth();
 
   const fetchRoles = async () => {
     try {
       setIsLoadingRoles(true);
       console.log('🔍 [MembersPage] Fetching roles...');
-      const businessId = localStorage.getItem('cbi') || '';
-      const rolesData = await RoleService.getRoles(businessId);
+      // Fetch global roles (no business ID needed in single-tenant)
+      const rolesData = await RoleService.getRoles('');
       console.log('✅ [MembersPage] Roles loaded:', rolesData);
       setRoles(rolesData);
     } catch (err: any) {
@@ -128,15 +128,11 @@ export function MembersPage() {
     try {
       setIsLoading(true);
       setError(null);
-      
-      const businessId = localStorage.getItem('cbi') || '';
-      if (!businessId) {
-        throw new Error('Không tìm thấy business context');
-      }
 
       console.log('🌐 [MembersPage] Fetching members from Supabase...');
       
-      const response = await MembersService.getMembers(businessId);
+      // In single-tenant mode, fetch all members (no business ID needed)
+      const response = await MembersService.getMembers('');
       
       console.log('📊 [MembersPage] Raw response:', response);
       console.log('👥 [MembersPage] Members data:', response.data);
@@ -262,17 +258,17 @@ export function MembersPage() {
   };
 
   useEffect(() => {
-    if (currentBusiness) {
-      console.log('🏢 [MembersPage] Current business:', currentBusiness);
+    if (currentUser) {
+      console.log('👤 [MembersPage] Current user:', currentUser);
       fetchMembers();
       fetchRoles();
     }
-  }, [currentBusiness]);
+  }, [currentUser]);
 
   // Transform API data to match UI expectations
   const transformedMembers: UIMember[] = filteredMembers.map(member => {
-    // Check if user is owner
-    const isOwner = member.businesses.owner_id === member.user_id;
+    // In single-tenant, no owner concept
+    const isOwner = false;
     
     // Get role name
     let roleName = member.roles?.name || 'Thành Viên';

@@ -198,7 +198,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // User logged out
           console.log('👋 [AuthContext] User logged out');
           setCurrentUser(null);
-          clearSelectedBusinessId();
         }
       }
     );

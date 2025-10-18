@@ -25,7 +25,7 @@ interface AccountPermissionsTabProps {
 export function AccountPermissionsTab({ user, isOwnProfile = true }: AccountPermissionsTabProps) {
   const { currentUser } = useAuth();
   
-  const isAdmin = currentUser?.role === 'admin' && !isOwnProfile;
+  const isAdmin = currentUser?.role === 'erp-admin' && !isOwnProfile;
 
   return (
     <div className="space-y-6">
@@ -69,7 +69,7 @@ export function AccountPermissionsTab({ user, isOwnProfile = true }: AccountPerm
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Vai trò hiện tại:</span>
                 <Badge variant="secondary">
-                  {user.role === 'admin' ? 'Quản Trị Viên' : user.role === 'manager' ? 'Quản Lý' : 'Nhân Viên'}
+                  {user.role === 'erp-admin' ? 'Quản Trị Viên' : user.role === 'voucher-admin' ? 'Quản Lý Voucher' : 'Nhân Viên'}
                 </Badge>
               </div>
             </div>
@@ -110,11 +110,11 @@ export function AccountPermissionsTab({ user, isOwnProfile = true }: AccountPerm
                 <div className="space-y-2">
                   {[
                     { action: 'Xem dữ liệu', granted: true },
-                    { action: 'Tạo mới', granted: user.role === 'admin' || user.role === 'manager' },
-                    { action: 'Chỉnh sửa', granted: user.role === 'admin' || user.role === 'manager' },
-                    { action: 'Xóa dữ liệu', granted: user.role === 'admin' },
-                    { action: 'Quản lý người dùng', granted: user.role === 'admin' },
-                    { action: 'Cài đặt hệ thống', granted: user.role === 'admin' }
+                    { action: 'Tạo mới', granted: user.role === 'erp-admin' || user.role === 'voucher-admin' },
+                    { action: 'Chỉnh sửa', granted: user.role === 'erp-admin' || user.role === 'voucher-admin' },
+                    { action: 'Xóa dữ liệu', granted: user.role === 'erp-admin' },
+                    { action: 'Quản lý người dùng', granted: user.role === 'erp-admin' },
+                    { action: 'Cài đặt hệ thống', granted: user.role === 'erp-admin' }
                   ].map((perm) => (
                     <div key={perm.action} className="flex items-center justify-between text-sm">
                       <span>{perm.action}</span>
