@@ -34,13 +34,8 @@ export function LoginPage() {
         return;
       }
 
-      // Redirect based on user role
-      if (currentUser.role === 'platform-admin') {
-        navigate('/platformadmin');
-      } else {
-        // Redirect to business selection page instead of direct ERP
-        navigate('/business-selection');
-      }
+      // Redirect directly to ERP Dashboard (single-tenant)
+      navigate('/ERP/Dashboard');
     }
   }, [isAuthenticated, currentUser, navigate]);
 

@@ -68,8 +68,8 @@ const transformPermissions = (dbPermissions: any[]): UserPermissions => {
   };
 };
 
-// Fetch user with all permissions from database
-const fetchUserWithPermissions = async (supabaseUser: SupabaseUser, businessId?: string): Promise<User> => {
+// Fetch user with all permissions from database (single-tenant)
+const fetchUserWithPermissions = async (supabaseUser: SupabaseUser): Promise<User> => {
   console.log('🔄 [AuthContext] Fetching user with permissions');
   
   // Get profile
@@ -84,15 +84,16 @@ const fetchUserWithPermissions = async (supabaseUser: SupabaseUser, businessId?:
     throw profileError;
   }
   
-  // Get platform roles
-  const { data: roles } = await supabase
+  // Get user role from user_roles table (current enum: 'user' | 'business_owner' | 'super_admin')
+  const { data: userRoleData } = await supabase
     .from('user_roles')
     .select('role')
-    .eq('user_id', supabaseUser.id);
+    .eq('user_id', supabaseUser.id)
+    .single();
   
-  const isPlatformAdmin = roles?.some(r => r.role === 'super_admin');
+  const dbRole = userRoleData?.role || 'user';
   
-  // Get permissions for current business
+  // Get permissions based on role
   let permissions: UserPermissions = {
     modules: [],
     voucherFeatures: [],
@@ -100,46 +101,34 @@ const fetchUserWithPermissions = async (supabaseUser: SupabaseUser, businessId?:
     canViewAllVouchers: false
   };
   
-  // If platform admin, grant all permissions
-  if (isPlatformAdmin) {
+  // If super_admin or business_owner, grant all permissions
+  if (dbRole === 'super_admin' || dbRole === 'business_owner') {
     permissions = {
       modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'marketing', 'affiliate', 'system-settings', 'user-management'],
       voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
       canManageUsers: true,
       canViewAllVouchers: true
     };
-  } else if (businessId) {
-    // Check if user is owner of the business
-    const { data: businessData } = await supabase
-      .from('businesses')
-      .select('owner_id')
-      .eq('id', businessId)
-      .single();
+  } else {
+    // Fetch permissions from database (pass null for business_id since single-tenant)
+    const { data: perms, error: permsError } = await supabase.rpc('get_user_permissions', {
+      _user_id: supabaseUser.id,
+      _business_id: null
+    });
     
-    const isOwner = businessData?.owner_id === supabaseUser.id;
-    
-    if (isOwner) {
-      // Owner gets full permissions automatically
-      console.log('✅ [AuthContext] User is owner - granting full permissions');
-      permissions = {
-        modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'marketing', 'affiliate', 'system-settings', 'user-management'],
-        voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
-        canManageUsers: true,
-        canViewAllVouchers: true
-      };
+    if (permsError) {
+      console.error('❌ [AuthContext] Error fetching permissions:', permsError);
     } else {
-      // Regular user - fetch permissions from database
-      const { data: perms, error: permsError } = await supabase.rpc('get_user_permissions', {
-        _user_id: supabaseUser.id,
-        _business_id: businessId
-      });
-      
-      if (permsError) {
-        console.error('❌ [AuthContext] Error fetching permissions:', permsError);
-      } else {
-        permissions = transformPermissions(perms || []);
-      }
+      permissions = transformPermissions(perms || []);
     }
+  }
+  
+  // Map database role to frontend UserRole type
+  let frontendRole: 'erp-admin' | 'voucher-admin' | 'telesales' | 'custom' = 'custom';
+  if (dbRole === 'super_admin' || dbRole === 'business_owner') {
+    frontendRole = 'erp-admin';
+  } else {
+    frontendRole = 'custom';
   }
   
   return {
@@ -148,7 +137,7 @@ const fetchUserWithPermissions = async (supabaseUser: SupabaseUser, businessId?:
     username: supabaseUser.email?.split('@')[0] || '',
     email: supabaseUser.email!,
     phone: profile.phone,
-    role: isPlatformAdmin ? 'platform-admin' : 'custom',
+    role: frontendRole,
     permissions,
     isActive: true,
     status: supabaseUser.email_confirmed_at ? 'active' : 'pending_verification',
@@ -185,8 +174,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Use setTimeout to avoid blocking the auth callback
           setTimeout(async () => {
             try {
-              const businessId = localStorage.getItem('cbi') || undefined;
-              const user = await fetchUserWithPermissions(session.user, businessId);
+              const user = await fetchUserWithPermissions(session.user);
               setCurrentUser(user);
               console.log('✅ [AuthContext] User state updated:', user.email);
             } catch (error) {
@@ -209,8 +197,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
-          const businessId = localStorage.getItem('cbi') || undefined;
-          const user = await fetchUserWithPermissions(session.user, businessId);
+          const user = await fetchUserWithPermissions(session.user);
           setCurrentUser(user);
           console.log('✅ [AuthContext] Session restored:', user.email);
         }
@@ -229,31 +216,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  // Listen for business context changes
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'cbi' && e.newValue !== e.oldValue) {
-        console.log('🔄 [AuthContext] Business context changed, refreshing permissions');
-        refreshUserProfile();
-      }
-    };
-    
-    // Listen for localStorage changes from other tabs/windows
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Listen for custom event from same tab
-    const handleBusinessChange = () => {
-      console.log('🔄 [AuthContext] Business selected, refreshing permissions');
-      refreshUserProfile();
-    };
-    
-    window.addEventListener('businessChanged', handleBusinessChange);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('businessChanged', handleBusinessChange);
-    };
-  }, []);
+  // No business context changes in single-tenant (removed)
 
   const login = async (email: string, password: string): Promise<boolean> => {
     console.log('🔐 [AuthContext] Starting login process for:', email);
@@ -270,8 +233,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('📨 [AuthContext] Login successful');
       
       // Fetch user with permissions
-      const businessId = localStorage.getItem('cbi') || undefined;
-      const user = await fetchUserWithPermissions(data.user, businessId);
+      const user = await fetchUserWithPermissions(data.user);
       
       // Check if email is verified
       if (!user.emailVerified) {
@@ -351,8 +313,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
       
-      const businessId = localStorage.getItem('cbi') || undefined;
-      const updatedUser = await fetchUserWithPermissions(supabaseUser, businessId);
+      const updatedUser = await fetchUserWithPermissions(supabaseUser);
       
       setCurrentUser(updatedUser);
       console.log('✅ [AuthContext] User profile refreshed:', updatedUser.username);

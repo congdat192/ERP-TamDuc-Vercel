@@ -54,7 +54,7 @@ export const MODULE_PERMISSIONS: ModulePermission[] = [
     module: 'affiliate',
     label: 'Affiliate',
     icon: 'UserPlus',
-    allowedRoles: ['erp-admin', 'voucher-admin', 'telesales', 'custom', 'platform-admin']
+    allowedRoles: ['erp-admin', 'voucher-admin', 'telesales', 'custom']
   },
   {
     module: 'system-settings',
@@ -104,11 +104,5 @@ export const DEFAULT_PERMISSIONS = {
     voucherFeatures: [] as VoucherFeature[],
     canManageUsers: false,
     canViewAllVouchers: false
-  },
-  'platform-admin': {
-    modules: ['dashboard'] as ERPModule[],
-    voucherFeatures: [] as VoucherFeature[],
-    canManageUsers: true,
-    canViewAllVouchers: true
   }
 };

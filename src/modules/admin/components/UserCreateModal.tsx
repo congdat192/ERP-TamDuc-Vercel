@@ -166,7 +166,6 @@ export function UserCreateModal({ isOpen, onClose, onUserCreated }: UserCreateMo
                   <SelectItem value="voucher-admin">Voucher Admin</SelectItem>
                   <SelectItem value="telesales">Telesales</SelectItem>
                   <SelectItem value="custom">Custom</SelectItem>
-                  <SelectItem value="platform-admin">Platform Admin</SelectItem>
                 </SelectContent>
               </Select>
             </div>

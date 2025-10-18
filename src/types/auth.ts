@@ -1,5 +1,5 @@
 
-export type UserRole = 'erp-admin' | 'voucher-admin' | 'telesales' | 'custom' | 'platform-admin';
+export type UserRole = 'erp-admin' | 'voucher-admin' | 'telesales' | 'custom';
 
 export type UserStatus = 'active' | 'inactive' | 'locked' | 'pending' | 'pending_verification';
 
