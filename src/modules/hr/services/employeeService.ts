@@ -1,26 +1,41 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Employee } from '../types';
+import { EmployeeFormData } from '../types/validation';
 
-export interface CreateEmployeeData {
-  employee_code: string;
-  full_name: string;
-  email: string;
-  phone?: string;
-  position: string;
-  department: string;
-  join_date: string;
-  contract_type: 'Chính Thức' | 'Thử Việc' | 'Hợp Đồng';
-  status?: 'active' | 'inactive' | 'probation' | 'terminated';
-  salary_p1?: number;
-  salary_p2?: number;
-  salary_p3?: number;
-  kpi_score?: number;
-  last_review_date?: string;
-}
-
-export interface UpdateEmployeeData extends Partial<CreateEmployeeData> {}
+export interface CreateEmployeeData extends EmployeeFormData {}
+export interface UpdateEmployeeData extends Partial<EmployeeFormData> {}
 
 export class EmployeeService {
+  static async checkEmailExists(email: string, excludeId?: string): Promise<boolean> {
+    let query = supabase
+      .from('employees')
+      .select('id')
+      .eq('email', email);
+    
+    if (excludeId) {
+      query = query.neq('id', excludeId);
+    }
+    
+    const { data, error } = await query.maybeSingle();
+    if (error) throw error;
+    return !!data;
+  }
+
+  static async checkEmployeeCodeExists(code: string, excludeId?: string): Promise<boolean> {
+    let query = supabase
+      .from('employees')
+      .select('id')
+      .eq('employee_code', code);
+    
+    if (excludeId) {
+      query = query.neq('id', excludeId);
+    }
+    
+    const { data, error } = await query.maybeSingle();
+    if (error) throw error;
+    return !!data;
+  }
+
   static async getEmployees(): Promise<Employee[]> {
     const { data, error } = await supabase
       .from('employees')

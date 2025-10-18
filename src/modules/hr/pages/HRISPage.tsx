@@ -192,9 +192,10 @@ export function HRISPage() {
               <TableRow>
                 <TableHead>Nhân Viên</TableHead>
                 <TableHead>Mã NV</TableHead>
-                <TableHead>Chức Vụ</TableHead>
                 <TableHead>Phòng Ban</TableHead>
+                <TableHead>Chức Vụ</TableHead>
                 <TableHead>Loại HĐ</TableHead>
+                <TableHead>Lương</TableHead>
                 <TableHead>Trạng Thái</TableHead>
                 <TableHead className="text-right">Thao Tác</TableHead>
               </TableRow>
@@ -202,13 +203,13 @@ export function HRISPage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 theme-text-secondary">
+                  <TableCell colSpan={8} className="text-center py-8 theme-text-secondary">
                     Đang tải dữ liệu...
                   </TableCell>
                 </TableRow>
               ) : filteredEmployees.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 theme-text-secondary">
+                  <TableCell colSpan={8} className="text-center py-8 theme-text-secondary">
                     Không tìm thấy nhân viên
                   </TableCell>
                 </TableRow>
@@ -228,9 +229,15 @@ export function HRISPage() {
                       </div>
                     </TableCell>
                     <TableCell className="theme-text">{employee.employeeCode}</TableCell>
-                    <TableCell className="theme-text">{employee.position}</TableCell>
                     <TableCell className="theme-text">{employee.department}</TableCell>
+                    <TableCell className="theme-text">{employee.position}</TableCell>
                     <TableCell className="theme-text">{employee.contractType}</TableCell>
+                    <TableCell className="font-semibold">
+                      {new Intl.NumberFormat('vi-VN', {
+                        style: 'currency',
+                        currency: 'VND'
+                      }).format(employee.salary.total)}
+                    </TableCell>
                     <TableCell>{getStatusBadge(employee.status)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">

@@ -1,27 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Edit } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Edit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { EmployeeService, UpdateEmployeeData } from '../services/employeeService';
+import { EmployeeService } from '../services/employeeService';
 import { Employee } from '../types';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { employeeSchema, type EmployeeFormData } from '../types/validation';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
 interface EditEmployeeModalProps {
   employee: Employee;
@@ -33,29 +22,13 @@ export function EditEmployeeModal({ employee, onSuccess }: EditEmployeeModalProp
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const [formData, setFormData] = useState<UpdateEmployeeData>({
-    employee_code: employee.employeeCode,
-    full_name: employee.fullName,
-    email: employee.email,
-    phone: employee.phone,
-    position: employee.position,
-    department: employee.department,
-    join_date: employee.joinDate,
-    contract_type: employee.contractType,
-    status: employee.status,
-    salary_p1: employee.salary.p1,
-    salary_p2: employee.salary.p2,
-    salary_p3: employee.salary.p3,
-    kpi_score: employee.performance.kpi,
-    last_review_date: employee.performance.lastReview,
-  });
-
-  useEffect(() => {
-    setFormData({
+  const form = useForm<EmployeeFormData>({
+    resolver: zodResolver(employeeSchema),
+    defaultValues: {
       employee_code: employee.employeeCode,
       full_name: employee.fullName,
       email: employee.email,
-      phone: employee.phone,
+      phone: employee.phone || '',
       position: employee.position,
       department: employee.department,
       join_date: employee.joinDate,
@@ -65,27 +38,64 @@ export function EditEmployeeModal({ employee, onSuccess }: EditEmployeeModalProp
       salary_p2: employee.salary.p2,
       salary_p3: employee.salary.p3,
       kpi_score: employee.performance.kpi,
-      last_review_date: employee.performance.lastReview,
-    });
-  }, [employee]);
+      last_review_date: employee.performance.lastReview || ''
+    }
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        employee_code: employee.employeeCode,
+        full_name: employee.fullName,
+        email: employee.email,
+        phone: employee.phone || '',
+        position: employee.position,
+        department: employee.department,
+        join_date: employee.joinDate,
+        contract_type: employee.contractType,
+        status: employee.status,
+        salary_p1: employee.salary.p1,
+        salary_p2: employee.salary.p2,
+        salary_p3: employee.salary.p3,
+        kpi_score: employee.performance.kpi,
+        last_review_date: employee.performance.lastReview || ''
+      });
+    }
+  }, [open, employee, form]);
+
+  const handleSubmit = async (data: EmployeeFormData) => {
     setLoading(true);
-
     try {
-      await EmployeeService.updateEmployee(employee.id, formData);
+      // Check email uniqueness (exclude current employee)
+      const emailExists = await EmployeeService.checkEmailExists(data.email, employee.id);
+      if (emailExists) {
+        form.setError('email', { message: 'Email đã tồn tại trong hệ thống' });
+        setLoading(false);
+        return;
+      }
+
+      // Check employee code uniqueness (exclude current employee)
+      const codeExists = await EmployeeService.checkEmployeeCodeExists(data.employee_code, employee.id);
+      if (codeExists) {
+        form.setError('employee_code', { message: 'Mã nhân viên đã tồn tại' });
+        setLoading(false);
+        return;
+      }
+
+      await EmployeeService.updateEmployee(employee.id, data);
+      
       toast({
         title: 'Thành công',
-        description: 'Đã cập nhật thông tin nhân viên',
+        description: 'Cập nhật thông tin nhân viên thành công'
       });
+      
       setOpen(false);
       onSuccess();
     } catch (error: any) {
       toast({
         title: 'Lỗi',
         description: error.message || 'Không thể cập nhật nhân viên',
-        variant: 'destructive',
+        variant: 'destructive'
       });
     } finally {
       setLoading(false);
@@ -101,173 +111,255 @@ export function EditEmployeeModal({ employee, onSuccess }: EditEmployeeModalProp
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Chỉnh Sửa Nhân Viên</DialogTitle>
-          <DialogDescription>
-            Cập nhật thông tin nhân viên {employee.fullName}
-          </DialogDescription>
+          <DialogTitle>Chỉnh Sửa Thông Tin Nhân Viên</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
+        
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="employee_code">Mã Nhân Viên *</Label>
-                <Input
-                  id="employee_code"
-                  value={formData.employee_code}
-                  onChange={(e) => setFormData({ ...formData, employee_code: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="full_name">Họ Tên *</Label>
-                <Input
-                  id="full_name"
-                  value={formData.full_name}
-                  onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                  required
-                />
-              </div>
-            </div>
+              <FormField
+                control={form.control}
+                name="employee_code"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mã Nhân Viên *</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email *</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Số Điện Thoại</Label>
-                <Input
-                  id="phone"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                />
-              </div>
-            </div>
+              <FormField
+                control={form.control}
+                name="full_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Họ Tên *</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="position">Chức Vụ *</Label>
-                <Input
-                  id="position"
-                  value={formData.position}
-                  onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="department">Phòng Ban *</Label>
-                <Input
-                  id="department"
-                  value={formData.department}
-                  onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                  required
-                />
-              </div>
-            </div>
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email *</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="email" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="join_date">Ngày Vào Làm *</Label>
-                <Input
-                  id="join_date"
-                  type="date"
-                  value={formData.join_date}
-                  onChange={(e) => setFormData({ ...formData, join_date: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="contract_type">Loại Hợp Đồng *</Label>
-                <Select
-                  value={formData.contract_type}
-                  onValueChange={(value: any) => setFormData({ ...formData, contract_type: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Thử Việc">Thử Việc</SelectItem>
-                    <SelectItem value="Chính Thức">Chính Thức</SelectItem>
-                    <SelectItem value="Hợp Đồng">Hợp Đồng</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="status">Trạng Thái *</Label>
-                <Select
-                  value={formData.status}
-                  onValueChange={(value: any) => setFormData({ ...formData, status: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="probation">Thử Việc</SelectItem>
-                    <SelectItem value="active">Đang Làm</SelectItem>
-                    <SelectItem value="inactive">Nghỉ Việc</SelectItem>
-                    <SelectItem value="terminated">Đã Sa Thải</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Số Điện Thoại</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="salary_p1">Lương Cơ Bản (P1)</Label>
-                <Input
-                  id="salary_p1"
-                  type="number"
-                  value={formData.salary_p1}
-                  onChange={(e) => setFormData({ ...formData, salary_p1: parseFloat(e.target.value) })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="salary_p2">Hệ Số (P2)</Label>
-                <Input
-                  id="salary_p2"
-                  type="number"
-                  step="0.1"
-                  value={formData.salary_p2}
-                  onChange={(e) => setFormData({ ...formData, salary_p2: parseFloat(e.target.value) })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="salary_p3">Phụ Cấp (P3)</Label>
-                <Input
-                  id="salary_p3"
-                  type="number"
-                  value={formData.salary_p3}
-                  onChange={(e) => setFormData({ ...formData, salary_p3: parseFloat(e.target.value) })}
-                />
-              </div>
-            </div>
+              <FormField
+                control={form.control}
+                name="position"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Chức Vụ *</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <div className="space-y-2">
-              <Label htmlFor="kpi_score">KPI Score</Label>
-              <Input
-                id="kpi_score"
-                type="number"
-                step="0.01"
-                value={formData.kpi_score}
-                onChange={(e) => setFormData({ ...formData, kpi_score: parseFloat(e.target.value) })}
+              <FormField
+                control={form.control}
+                name="department"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phòng Ban *</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="join_date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ngày Vào Làm *</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="date" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="contract_type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Loại Hợp Đồng *</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Thử Việc">Thử Việc</SelectItem>
+                        <SelectItem value="Chính Thức">Chính Thức</SelectItem>
+                        <SelectItem value="Hợp Đồng">Hợp Đồng</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Trạng Thái</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="probation">Thử việc</SelectItem>
+                        <SelectItem value="active">Đang làm việc</SelectItem>
+                        <SelectItem value="inactive">Nghỉ việc</SelectItem>
+                        <SelectItem value="terminated">Đã sa thải</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="salary_p1"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Lương Cơ Bản (VNĐ)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        type="number"
+                        onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="salary_p2"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Hệ Số Lương</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        type="number" 
+                        step="0.1"
+                        onChange={e => field.onChange(parseFloat(e.target.value) || 1.0)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="salary_p3"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phụ Cấp (VNĐ)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        type="number"
+                        onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="kpi_score"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Điểm KPI</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        type="number"
+                        onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="last_review_date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ngày Đánh Giá Gần Nhất</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="date" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Hủy
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Đang lưu...' : 'Cập Nhật'}
-            </Button>
-          </DialogFooter>
-        </form>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                Hủy
+              </Button>
+              <Button type="submit" disabled={loading}>
+                {loading ? 'Đang cập nhật...' : 'Cập Nhật'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
