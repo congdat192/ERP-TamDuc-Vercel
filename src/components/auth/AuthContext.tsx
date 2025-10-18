@@ -413,8 +413,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setCurrentUser(user);
                 setRequirePasswordChange(passwordChangeRequired);
                 console.log('✅ [checkSession] Profile loaded:', user.email);
-              }).catch((err) => {
-                console.error('❌ [checkSession] Error loading profile:', err);
+              }).catch(async (err) => {
+                console.error('❌ [checkSession] Failed to load profile - forcing logout:', err);
+                
+                // Force logout + clear everything (stale session detected)
+                await supabase.auth.signOut();
+                setCurrentUser(null);
+                setRequirePasswordChange(false);
+                localStorage.clear();
+                sessionStorage.clear();
+                
+                toast({
+                  title: "Phiên đăng nhập hết hạn",
+                  description: "Vui lòng đăng nhập lại.",
+                  variant: "destructive",
+                });
               });
             }, 0);
           }

@@ -69,6 +69,18 @@ export function LoginPage({ onLogin }: LoginPageProps) {
     }
   };
 
+  const handleClearCache = () => {
+    localStorage.clear();
+    sessionStorage.clear();
+    toast({
+      title: "Đã xóa cache",
+      description: "Trang sẽ được tải lại.",
+    });
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
+  };
+
   return (
     <>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
@@ -202,6 +214,16 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                   </button>
                 </div>
                 
+                {/* Clear Cache Button */}
+                <Button 
+                  type="button"
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleClearCache}
+                  className="mt-2 text-xs text-gray-500 hover:text-gray-700"
+                >
+                  Không đăng nhập được? Xóa cache
+                </Button>
               </div>
 
               {/* Footer Links */}
