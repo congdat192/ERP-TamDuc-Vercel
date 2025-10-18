@@ -401,6 +401,247 @@ export type Database = {
           },
         ]
       }
+      hr_benefit_assignments: {
+        Row: {
+          assigned_by: string | null
+          assigned_date: string
+          benefit_id: string
+          created_at: string | null
+          employee_id: string
+          end_date: string | null
+          id: string
+          notes: string | null
+          start_date: string
+          status: string | null
+        }
+        Insert: {
+          assigned_by?: string | null
+          assigned_date?: string
+          benefit_id: string
+          created_at?: string | null
+          employee_id: string
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          start_date: string
+          status?: string | null
+        }
+        Update: {
+          assigned_by?: string | null
+          assigned_date?: string
+          benefit_id?: string
+          created_at?: string | null
+          employee_id?: string
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          start_date?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_benefit_assignments_benefit_id_fkey"
+            columns: ["benefit_id"]
+            isOneToOne: false
+            referencedRelation: "hr_benefits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_benefit_assignments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_benefits: {
+        Row: {
+          benefit_code: string
+          benefit_name: string
+          benefit_type: string
+          created_at: string | null
+          created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          description: string | null
+          effective_from: string | null
+          effective_to: string | null
+          eligibility_criteria: string | null
+          frequency: string | null
+          id: string
+          status: string | null
+          updated_at: string | null
+          value: number | null
+        }
+        Insert: {
+          benefit_code: string
+          benefit_name: string
+          benefit_type: string
+          created_at?: string | null
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          description?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
+          eligibility_criteria?: string | null
+          frequency?: string | null
+          id?: string
+          status?: string | null
+          updated_at?: string | null
+          value?: number | null
+        }
+        Update: {
+          benefit_code?: string
+          benefit_name?: string
+          benefit_type?: string
+          created_at?: string | null
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          description?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
+          eligibility_criteria?: string | null
+          frequency?: string | null
+          id?: string
+          status?: string | null
+          updated_at?: string | null
+          value?: number | null
+        }
+        Relationships: []
+      }
+      hr_discipline_records: {
+        Row: {
+          created_at: string | null
+          description: string
+          employee_id: string
+          id: string
+          issued_at: string | null
+          issued_by: string
+          notes: string | null
+          penalty: string | null
+          penalty_amount: number | null
+          record_code: string
+          resolution_note: string | null
+          resolved_at: string | null
+          severity: string
+          status: string | null
+          updated_at: string | null
+          violation_date: string
+          violation_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          employee_id: string
+          id?: string
+          issued_at?: string | null
+          issued_by: string
+          notes?: string | null
+          penalty?: string | null
+          penalty_amount?: number | null
+          record_code: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          severity: string
+          status?: string | null
+          updated_at?: string | null
+          violation_date: string
+          violation_type: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          employee_id?: string
+          id?: string
+          issued_at?: string | null
+          issued_by?: string
+          notes?: string | null
+          penalty?: string | null
+          penalty_amount?: number | null
+          record_code?: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          severity?: string
+          status?: string | null
+          updated_at?: string | null
+          violation_date?: string
+          violation_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_discipline_records_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_rewards: {
+        Row: {
+          amount: number | null
+          approved_at: string | null
+          approved_by: string | null
+          awarded_date: string
+          created_at: string | null
+          created_by: string
+          employee_id: string
+          id: string
+          reason: string
+          rejection_note: string | null
+          reward_code: string
+          reward_title: string
+          reward_type: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount?: number | null
+          approved_at?: string | null
+          approved_by?: string | null
+          awarded_date: string
+          created_at?: string | null
+          created_by: string
+          employee_id: string
+          id?: string
+          reason: string
+          rejection_note?: string | null
+          reward_code: string
+          reward_title: string
+          reward_type: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number | null
+          approved_at?: string | null
+          approved_by?: string | null
+          awarded_date?: string
+          created_at?: string | null
+          created_by?: string
+          employee_id?: string
+          id?: string
+          reason?: string
+          rejection_note?: string | null
+          reward_code?: string
+          reward_title?: string
+          reward_type?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_rewards_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       modules: {
         Row: {
           code: string
