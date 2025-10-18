@@ -45,6 +45,7 @@ export class ImportService {
     // Full Name
     'Họ và tên': 'full_name',
     'Họ tên': 'full_name',
+    'Họ Tên': 'full_name',  // ← Thêm alias từ Export cũ
     'Tên nhân viên': 'full_name',
     'full_name': 'full_name',
     
@@ -54,16 +55,19 @@ export class ImportService {
     
     // Phone
     'SĐT': 'phone',
+    'Số ĐT': 'phone',  // ← Thêm alias từ Export cũ
     'Số điện thoại': 'phone',
     'phone': 'phone',
     
     // Department
     'Phòng ban': 'department',
+    'Phòng Ban': 'department',  // ← Thêm alias từ Export cũ
     'department': 'department',
     
     // Position
     'Chức danh': 'position',
     'Chức vụ': 'position',
+    'Chức Vụ': 'position',  // ← Thêm alias từ Export cũ
     'position': 'position',
     
     // Team
@@ -73,24 +77,31 @@ export class ImportService {
     
     // Join Date
     'Ngày vào làm': 'join_date',
+    'Ngày Vào Làm': 'join_date',  // ← Thêm alias từ Export cũ
     'join_date': 'join_date',
     
     // Employment Type
     'Loại công': 'employment_type',
+    'Loại Công': 'employment_type',  // ← Thêm alias từ Export cũ
     'employment_type': 'employment_type',
     
     // Salary P1
     'Lương cơ bản': 'salary_p1',
+    'Lương Cơ Bản': 'salary_p1',  // ← Thêm alias từ Export cũ
     'salary_p1': 'salary_p1',
     
-    // Allowances
+    // Allowances (thêm cả aliases viết tắt từ Export cũ)
     'Phụ cấp ăn trưa': 'allowance_meal',
+    'PC Ăn Trưa': 'allowance_meal',  // ← Thêm alias từ Export cũ
     'allowance_meal': 'allowance_meal',
     'Phụ cấp xăng xe': 'allowance_fuel',
+    'PC Xăng Xe': 'allowance_fuel',  // ← Thêm alias từ Export cũ
     'allowance_fuel': 'allowance_fuel',
     'Phụ cấp điện thoại': 'allowance_phone',
+    'PC Điện Thoại': 'allowance_phone',  // ← Thêm alias từ Export cũ
     'allowance_phone': 'allowance_phone',
     'Phụ cấp khác': 'allowance_other',
+    'PC Khác': 'allowance_other',  // ← Thêm alias từ Export cũ
     'allowance_other': 'allowance_other',
     
     // Notes

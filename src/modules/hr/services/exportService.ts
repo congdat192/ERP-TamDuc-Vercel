@@ -3,50 +3,46 @@ import { Employee } from '../types';
 
 export class ExportService {
   static exportToExcel(employees: Employee[], filename: string = 'employees.xlsx') {
-    // Prepare data for export
+    // Prepare data for export - Match Template headers exactly
     const data = employees.map((emp) => ({
-      'Mã NV': emp.employeeCode,
-      'Họ Tên': emp.fullName,
+      'MNV': emp.employeeCode,
+      'Họ và tên': emp.fullName,
       'Email': emp.email,
-      'Số ĐT': emp.phone,
-      'Phòng Ban': emp.department,
-      'Chức Vụ': emp.position,
-      'Loại Công': emp.employmentType,
-      'Trạng Thái': emp.status === 'active' ? 'Đang làm' :
-                    emp.status === 'probation' ? 'Thử việc' :
-                    emp.status === 'inactive' ? 'Nghỉ việc' : 'Đã sa thải',
-      'Ngày Vào Làm': emp.joinDate,
-      'Lương Cơ Bản': emp.salary.basic,
-      'PC Ăn Trưa': emp.salary.allowanceMeal,
-      'PC Xăng Xe': emp.salary.allowanceFuel,
-      'PC Điện Thoại': emp.salary.allowancePhone,
-      'PC Khác': emp.salary.allowanceOther,
-      'Tổng Lương Cứng': emp.salary.totalFixed,
-      'KPI': emp.performance.kpi,
-      'Ngày Đánh Giá': emp.performance.lastReview || ''
+      'SĐT': emp.phone || '',
+      'Phòng ban': emp.department,
+      'Chức danh': emp.position,
+      'Nhóm': emp.team || '',
+      'Ngày vào làm': emp.joinDate,
+      'Loại công': emp.employmentType,
+      'Lương cơ bản': emp.salary.basic || 0,
+      'Phụ cấp ăn trưa': emp.salary.allowanceMeal || 0,
+      'Phụ cấp xăng xe': emp.salary.allowanceFuel || 0,
+      'Phụ cấp điện thoại': emp.salary.allowancePhone || 0,
+      'Phụ cấp khác': emp.salary.allowanceOther || 0,
+      'Ghi chú': emp.notes || ''
     }));
 
     // Create workbook and worksheet
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(data);
 
-    // Set column widths
+    // Set column widths - Match Template structure
     const colWidths = [
-      { wch: 10 },  // Mã NV
-      { wch: 25 },  // Họ Tên
+      { wch: 10 },  // MNV
+      { wch: 25 },  // Họ và tên
       { wch: 30 },  // Email
-      { wch: 12 },  // Số ĐT
-      { wch: 15 },  // Phòng Ban
-      { wch: 20 },  // Chức Vụ
-      { wch: 12 },  // Loại HĐ
-      { wch: 12 },  // Trạng Thái
-      { wch: 12 },  // Ngày Vào Làm
-      { wch: 15 },  // Lương Cơ Bản
-      { wch: 8 },   // Hệ Số
-      { wch: 12 },  // Phụ Cấp
-      { wch: 15 },  // Tổng Lương
-      { wch: 8 },   // KPI
-      { wch: 12 }   // Ngày Đánh Giá
+      { wch: 12 },  // SĐT
+      { wch: 15 },  // Phòng ban
+      { wch: 20 },  // Chức danh
+      { wch: 15 },  // Nhóm
+      { wch: 12 },  // Ngày vào làm
+      { wch: 12 },  // Loại công
+      { wch: 15 },  // Lương cơ bản
+      { wch: 15 },  // Phụ cấp ăn trưa
+      { wch: 15 },  // Phụ cấp xăng xe
+      { wch: 15 },  // Phụ cấp điện thoại
+      { wch: 15 },  // Phụ cấp khác
+      { wch: 30 }   // Ghi chú
     ];
     ws['!cols'] = colWidths;
 
