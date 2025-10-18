@@ -157,6 +157,27 @@ export class MembersService {
         }
         throw new Error(error.message);
       }
+      
+      // ✅ PHASE 3: INVALIDATE SESSIONS SERVER-SIDE WHEN USER IS DEACTIVATED
+      if (updates.status === 'INACTIVE') {
+        console.log('🔐 [Phase 3] User deactivated - invalidating all sessions:', userId);
+        
+        try {
+          const { error: invalidateError } = await supabase.functions.invoke('invalidate-user-sessions', {
+            body: { userId }
+          });
+          
+          if (invalidateError) {
+            console.error('❌ [Phase 3] Failed to invalidate sessions:', invalidateError);
+            // Don't throw - profile update succeeded, session invalidation is best-effort
+          } else {
+            console.log('✅ [Phase 3] All sessions invalidated successfully for:', userId);
+          }
+        } catch (error) {
+          console.error('❌ [Phase 3] Error calling invalidate-user-sessions:', error);
+          // Don't throw - profile update succeeded
+        }
+      }
     }
     
     console.log('✅ [MembersService] Member updated successfully');

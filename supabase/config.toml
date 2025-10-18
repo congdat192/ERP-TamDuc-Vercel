@@ -26,3 +26,6 @@ verify_jwt = true
 
 [functions.send-new-user-credentials]
 verify_jwt = false
+
+[functions.invalidate-user-sessions]
+verify_jwt = true

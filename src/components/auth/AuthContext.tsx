@@ -314,6 +314,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('🔔 [AuthContext] Auth state changed:', event);
         
         if (session?.user) {
+          // ✅ PHASE 1: CHECK STATUS ON SESSION RESTORE
+          // This prevents INACTIVE users from accessing the app even with valid sessions
+          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            console.log('🔍 [Phase 1] Checking user status for event:', event);
+            
+            try {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('status')
+                .eq('id', session.user.id)
+                .single();
+              
+              if (profile?.status === 'INACTIVE') {
+                console.log('⛔ [Phase 1] INACTIVE user detected - logging out');
+                await supabase.auth.signOut();
+                toast({
+                  title: "Tài khoản bị vô hiệu hóa",
+                  description: "Tài khoản của bạn đã bị vô hiệu hóa.",
+                  variant: "destructive",
+                });
+                return; // Don't load user data
+              }
+              
+              console.log('✅ [Phase 1] User status is ACTIVE - proceeding');
+            } catch (error) {
+              console.error('❌ [Phase 1] Error checking status:', error);
+              // Don't block login on status check error - let RLS handle it
+            }
+          }
+          
           // User logged in - fetch profile and permissions
           // Use setTimeout to avoid blocking the auth callback
           setTimeout(async () => {
