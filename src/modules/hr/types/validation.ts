@@ -48,7 +48,7 @@ export const employeeSchema = z.object({
   
   status: z.enum(['active', 'inactive', 'probation', 'terminated']).optional(),
   
-  salary_basic: z.number()
+  salary_p1: z.number()
     .min(0, 'Lương cơ bản không được âm')
     .optional(),
   

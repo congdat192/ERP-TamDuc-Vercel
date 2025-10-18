@@ -41,7 +41,7 @@ export function EditEmployeeModal({ employee, onSuccess }: EditEmployeeModalProp
       join_date: employee.joinDate,
       employment_type: employee.employmentType,
       status: employee.status,
-      salary_basic: employee.salary.basic,
+      salary_p1: employee.salary.basic,
       allowance_meal: employee.salary.allowanceMeal,
       allowance_fuel: employee.salary.allowanceFuel,
       allowance_phone: employee.salary.allowancePhone,
@@ -69,7 +69,7 @@ export function EditEmployeeModal({ employee, onSuccess }: EditEmployeeModalProp
         join_date: employee.joinDate,
         employment_type: employee.employmentType,
         status: employee.status,
-        salary_basic: employee.salary.basic,
+        salary_p1: employee.salary.basic,
         allowance_meal: employee.salary.allowanceMeal,
         allowance_fuel: employee.salary.allowanceFuel,
         allowance_phone: employee.salary.allowancePhone,
@@ -444,7 +444,7 @@ export function EditEmployeeModal({ employee, onSuccess }: EditEmployeeModalProp
 
               <FormField
                 control={form.control}
-                name="salary_basic"
+                name="salary_p1"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Lương Cơ Bản (VNĐ)</FormLabel>

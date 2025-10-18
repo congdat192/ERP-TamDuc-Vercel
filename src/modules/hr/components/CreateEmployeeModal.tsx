@@ -39,7 +39,7 @@ export function CreateEmployeeModal({ onSuccess }: CreateEmployeeModalProps) {
       join_date: new Date().toISOString().split('T')[0],
       employment_type: 'Thử việc',
       status: 'probation',
-      salary_basic: 0,
+      salary_p1: 0,
       allowance_meal: 0,
       allowance_fuel: 0,
       allowance_phone: 0,
@@ -417,7 +417,7 @@ export function CreateEmployeeModal({ onSuccess }: CreateEmployeeModalProps) {
 
               <FormField
                 control={form.control}
-                name="salary_basic"
+                name="salary_p1"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Lương Cơ Bản (VNĐ)</FormLabel>

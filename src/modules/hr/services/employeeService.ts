@@ -141,7 +141,7 @@ export class EmployeeService {
         join_date: data.join_date,
         employment_type: data.employment_type,
         status: data.status || 'probation',
-        salary_p1: data.salary_basic || 0,
+        salary_p1: data.salary_p1 || 0,
         allowance_meal: data.allowance_meal || 0,
         allowance_fuel: data.allowance_fuel || 0,
         allowance_phone: data.allowance_phone || 0,
@@ -173,7 +173,7 @@ export class EmployeeService {
     if (data.join_date) updates.join_date = data.join_date;
     if (data.employment_type) updates.employment_type = data.employment_type;
     if (data.status) updates.status = data.status;
-    if (data.salary_basic !== undefined) updates.salary_p1 = data.salary_basic;
+    if (data.salary_p1 !== undefined) updates.salary_p1 = data.salary_p1;
     if (data.allowance_meal !== undefined) updates.allowance_meal = data.allowance_meal;
     if (data.allowance_fuel !== undefined) updates.allowance_fuel = data.allowance_fuel;
     if (data.allowance_phone !== undefined) updates.allowance_phone = data.allowance_phone;

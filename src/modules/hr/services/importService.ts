@@ -25,11 +25,18 @@ interface ParsedEmployee {
   team?: string;
   join_date: string;
   employment_type: 'Full-time' | 'Part-time' | 'CTV' | 'Thử việc' | 'Thực tập';
+  status?: 'active' | 'inactive' | 'probation' | 'terminated';
   salary_p1?: number;
   allowance_meal?: number;
   allowance_fuel?: number;
   allowance_phone?: number;
   allowance_other?: number;
+  kpi_score?: number;
+  last_review_date?: string;
+  current_address?: string;
+  emergency_contact_relationship?: 'Cha' | 'Mẹ' | 'Vợ' | 'Chồng' | 'Anh' | 'Chị' | 'Em' | 'Khác';
+  emergency_contact_name?: string;
+  emergency_contact_phone?: string;
   notes?: string;
 }
 
@@ -107,6 +114,27 @@ export class ImportService {
     // Notes
     'Ghi chú': 'notes',
     'notes': 'notes',
+    
+    // Status
+    'Trạng thái': 'status',
+    'Status': 'status',
+    
+    // KPI
+    'KPI': 'kpi_score',
+    'Điểm KPI': 'kpi_score',
+    
+    // Last Review Date
+    'Ngày đánh giá': 'last_review_date',
+    'Last Review': 'last_review_date',
+    
+    // Current Address
+    'Địa chỉ': 'current_address',
+    'Địa chỉ hiện tại': 'current_address',
+    
+    // Emergency Contact
+    'Người liên hệ khẩn cấp': 'emergency_contact_name',
+    'SĐT khẩn cấp': 'emergency_contact_phone',
+    'Quan hệ': 'emergency_contact_relationship',
   };
 
   static async importFromExcel(file: File): Promise<ImportResult> {
@@ -218,11 +246,11 @@ export class ImportService {
     const mapped: any = {};
     
     for (const [key, value] of Object.entries(row)) {
-      const cleanedKey = this.cleanHeaderKey(key);           // ✅ Clean key first
+      const cleanedKey = this.cleanHeaderKey(key);
       const normalizedKey = this.COLUMN_ALIASES[cleanedKey] || cleanedKey;
       
       // Convert date fields to ISO format
-      if (normalizedKey === 'join_date') {
+      if (normalizedKey === 'join_date' || normalizedKey === 'last_review_date') {
         mapped[normalizedKey] = this.convertDateToISO(value);
       } else {
         mapped[normalizedKey] = value;
@@ -289,6 +317,46 @@ export class ImportService {
       if (value !== undefined && value !== null && Number(value) < 0) {
         errors.push({ row: rowIndex, field, message: `${field} không được âm` });
       }
+    }
+
+    // Validate status enum
+    if (row.status && !['active', 'inactive', 'probation', 'terminated'].includes(row.status)) {
+      errors.push({
+        row: rowIndex,
+        field: 'status',
+        message: `Trạng thái không hợp lệ. Chỉ chấp nhận: active, inactive, probation, terminated`
+      });
+    }
+
+    // Validate KPI score
+    if (row.kpi_score !== undefined && row.kpi_score !== null) {
+      const kpi = Number(row.kpi_score);
+      if (kpi < 0 || kpi > 100) {
+        errors.push({
+          row: rowIndex,
+          field: 'kpi_score',
+          message: `KPI phải từ 0-100: ${row.kpi_score}`
+        });
+      }
+    }
+
+    // Validate emergency contact phone (if exists)
+    if (row.emergency_contact_phone && !/^0\d{9}$/.test(row.emergency_contact_phone.toString().trim())) {
+      errors.push({
+        row: rowIndex,
+        field: 'emergency_contact_phone',
+        message: `SĐT khẩn cấp phải có 10 số và bắt đầu bằng 0: ${row.emergency_contact_phone}`
+      });
+    }
+
+    // Validate emergency contact relationship
+    const validRelationships = ['Cha', 'Mẹ', 'Vợ', 'Chồng', 'Anh', 'Chị', 'Em', 'Khác'];
+    if (row.emergency_contact_relationship && !validRelationships.includes(row.emergency_contact_relationship)) {
+      errors.push({
+        row: rowIndex,
+        field: 'emergency_contact_relationship',
+        message: `Quan hệ không hợp lệ. Chỉ chấp nhận: ${validRelationships.join(', ')}`
+      });
     }
 
     // Check duplicates in database

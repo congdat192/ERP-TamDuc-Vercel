@@ -3,7 +3,7 @@ import { Employee } from '../types';
 
 export class ExportService {
   static exportToExcel(employees: Employee[], filename: string = 'employees.xlsx') {
-    // Prepare data for export - Match Template headers exactly
+    // Prepare data for export - Full 23 columns
     const data = employees.map((emp) => ({
       'MNV': emp.employeeCode,
       'Họ và tên': emp.fullName,
@@ -14,11 +14,19 @@ export class ExportService {
       'Nhóm': emp.team || '',
       'Ngày vào làm': emp.joinDate,
       'Loại công': emp.employmentType,
+      'Trạng thái': emp.status || '',
       'Lương cơ bản': emp.salary.basic || 0,
       'Phụ cấp ăn trưa': emp.salary.allowanceMeal || 0,
       'Phụ cấp xăng xe': emp.salary.allowanceFuel || 0,
       'Phụ cấp điện thoại': emp.salary.allowancePhone || 0,
       'Phụ cấp khác': emp.salary.allowanceOther || 0,
+      'Tổng lương cứng': emp.salary.totalFixed || 0,
+      'KPI': emp.performance.kpi || 0,
+      'Ngày đánh giá': emp.performance.lastReview || '',
+      'Địa chỉ hiện tại': emp.currentAddress || '',
+      'Người liên hệ khẩn cấp': emp.emergencyContact?.name || '',
+      'SĐT khẩn cấp': emp.emergencyContact?.phone || '',
+      'Quan hệ': emp.emergencyContact?.relationship || '',
       'Ghi chú': emp.notes || ''
     }));
 
@@ -26,7 +34,7 @@ export class ExportService {
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(data);
 
-    // Set column widths - Match Template structure
+    // Set column widths - 23 columns
     const colWidths = [
       { wch: 10 },  // MNV
       { wch: 25 },  // Họ và tên
@@ -37,11 +45,19 @@ export class ExportService {
       { wch: 15 },  // Nhóm
       { wch: 12 },  // Ngày vào làm
       { wch: 12 },  // Loại công
+      { wch: 12 },  // Trạng thái
       { wch: 15 },  // Lương cơ bản
       { wch: 15 },  // Phụ cấp ăn trưa
       { wch: 15 },  // Phụ cấp xăng xe
       { wch: 15 },  // Phụ cấp điện thoại
       { wch: 15 },  // Phụ cấp khác
+      { wch: 15 },  // Tổng lương cứng
+      { wch: 10 },  // KPI
+      { wch: 12 },  // Ngày đánh giá
+      { wch: 30 },  // Địa chỉ hiện tại
+      { wch: 20 },  // Người liên hệ khẩn cấp
+      { wch: 12 },  // SĐT khẩn cấp
+      { wch: 10 },  // Quan hệ
       { wch: 30 }   // Ghi chú
     ];
     ws['!cols'] = colWidths;
