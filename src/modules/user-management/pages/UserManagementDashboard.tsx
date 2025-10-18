@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, Building2, Shield, UserCog, Mail, Loader2, AlertCircle } from 'lucide-react';
+import { Users, Shield, Loader2, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardService, UserManagementCounts } from '../services/dashboardService';
 import { useToast } from '@/hooks/use-toast';
@@ -12,10 +12,7 @@ export function UserManagementDashboard() {
   const { toast } = useToast();
   const [counts, setCounts] = useState<UserManagementCounts>({
     members: 0,
-    departments: 0,
-    roles: 0,
-    groups: 0,
-    invitations: 0
+    roles: 0
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,32 +54,11 @@ export function UserManagementDashboard() {
       color: 'text-blue-600'
     },
     {
-      title: 'Phòng Ban',
-      icon: Building2,
-      path: '/ERP/UserManagement/Departments',
-      stats: counts.departments.toString(),
-      color: 'text-green-600'
-    },
-    {
       title: 'Vai Trò',
       icon: Shield,
       path: '/ERP/UserManagement/Roles',
       stats: counts.roles.toString(),
       color: 'text-purple-600'
-    },
-    {
-      title: 'Nhóm',
-      icon: UserCog,
-      path: '/ERP/UserManagement/Groups',
-      stats: counts.groups.toString(),
-      color: 'text-orange-600'
-    },
-    {
-      title: 'Lời Mời',
-      icon: Mail,
-      path: '/ERP/UserManagement/Invitations',
-      stats: counts.invitations.toString(),
-      color: 'text-pink-600'
     }
   ];
 
@@ -122,8 +98,8 @@ export function UserManagementDashboard() {
         </p>
       </div>
 
-      {/* Features Grid - 1x5 layout */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 max-w-7xl mx-auto">
+      {/* Features Grid - 1x2 layout */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
         {features.map((feature) => {
           const Icon = feature.icon;
           return (

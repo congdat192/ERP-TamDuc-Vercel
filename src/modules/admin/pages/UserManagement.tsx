@@ -53,12 +53,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { UserCreateModal } from '../components/UserCreateModal';
 import { UserDetailModal } from '../components/UserDetailModal';
 import { UserSecurityModal } from '../components/UserSecurityModal';
-import { Department, Role, UserGroup, EnhancedUser, UserManagementFilters, BulkOperation } from '@/modules/user-management/types';
+import { Role, EnhancedUser, UserManagementFilters, BulkOperation } from '@/modules/user-management/types';
 import { User, UserStatus, UserRole, UserSecuritySettings } from '@/types/auth';
 import { EmptyState } from '@/components/ui/empty-states';
-import { DepartmentsTab } from '@/modules/user-management/components/departments/DepartmentsTab';
 import { RolesTab } from '@/modules/user-management/components/roles/RolesTab';
-import { GroupsTab } from '@/modules/user-management/components/groups/GroupsTab';
 
 export function UserManagement() {
   const [users, setUsers] = useState<User[]>([]);

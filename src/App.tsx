@@ -30,7 +30,7 @@ import { ProductDetailPage } from "./pages/ProductDetailPage";
 import { InvoiceDetailPage } from "./pages/InvoiceDetailPage";
 import { UserProfilePage } from "./pages/UserProfilePage";
 import { Settings } from "./modules/admin/pages/Settings";
-import { UserManagementLayout, MembersPage, DepartmentsPage, RolesPage, GroupsPage, UserManagementDashboard } from "./modules/user-management";
+import { UserManagementLayout, MembersPage, RolesPage, UserManagementDashboard } from "./modules/user-management";
 import { AffiliateModule } from "./modules/affiliate";
 import { ERPLayout } from "@/components/layout/ERPLayout";
 import { Navigate, useNavigate } from "react-router-dom";
@@ -247,9 +247,7 @@ const AppContent = () => {
                   >
                     <Route index element={<UserManagementDashboard />} />
                     <Route path="Members" element={<MembersPage />} />
-                    <Route path="Departments" element={<DepartmentsPage />} />
                     <Route path="Roles" element={<RolesPage />} />
-                    <Route path="Groups" element={<GroupsPage />} />
                   </Route>
                   
                   <Route 

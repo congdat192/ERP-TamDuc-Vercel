@@ -1,16 +1,4 @@
 
-export interface Department {
-  id: string;
-  name: string;
-  description?: string;
-  parentId?: string;
-  level: number;
-  memberCount: number;
-  managerId?: string;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface Role {
   id: number; // Changed from string to number to match API
   name: string;
@@ -29,15 +17,6 @@ export interface Permission {
   description: string;
 }
 
-export interface UserGroup {
-  id: string;
-  name: string;
-  description?: string;
-  color?: string;
-  memberCount: number;
-  created_at: string;
-  updated_at: string;
-}
 
 export interface EnhancedUser {
   id: string;
@@ -47,12 +26,8 @@ export interface EnhancedUser {
   phone?: string;
   avatar?: string;
   status: 'active' | 'inactive' | 'locked' | 'pending_verification';
-  departmentId?: string;
-  department?: Department;
   roleId: string;
   role: Role;
-  groupIds: string[];
-  groups: UserGroup[];
   lastLogin?: string;
   emailVerified: boolean;
   isActive: boolean;
@@ -64,9 +39,7 @@ export interface EnhancedUser {
 export interface UserManagementFilters {
   search?: string;
   status?: string[];
-  departmentIds?: string[];
-  roleIds?: number[]; // Changed from string[] to number[] to match API
-  groupIds?: string[];
+  roleIds?: number[];
   dateRange?: {
     start: string;
     end: string;
@@ -74,7 +47,7 @@ export interface UserManagementFilters {
 }
 
 export interface BulkOperation {
-  type: 'activate' | 'deactivate' | 'delete' | 'change_role' | 'change_department' | 'add_to_group';
+  type: 'activate' | 'deactivate' | 'delete' | 'change_role';
   userIds: string[];
   params?: Record<string, any>;
 }

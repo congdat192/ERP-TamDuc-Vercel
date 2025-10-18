@@ -2,10 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface UserManagementCounts {
   members: number;
-  departments: number;
   roles: number;
-  groups: number;
-  invitations: number;
 }
 
 export class DashboardService {
@@ -35,10 +32,7 @@ export class DashboardService {
 
       const counts = {
         members: usersCount || 0,
-        departments: 0,
-        roles: rolesCount || 0,
-        groups: 0,
-        invitations: 0
+        roles: rolesCount || 0
       };
 
       console.log('✅ [DashboardService] Counts loaded:', counts);

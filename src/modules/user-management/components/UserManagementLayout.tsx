@@ -3,7 +3,7 @@ import React from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, Building2, Shield, UserCog, Mail, ArrowLeft } from 'lucide-react';
+import { Users, Shield, ArrowLeft } from 'lucide-react';
 import { 
   Breadcrumb,
   BreadcrumbList,
@@ -24,24 +24,9 @@ export function UserManagementLayout() {
       icon: Users
     },
     {
-      path: '/ERP/UserManagement/Departments',
-      label: 'Phòng Ban',
-      icon: Building2
-    },
-    {
       path: '/ERP/UserManagement/Roles',
       label: 'Vai Trò',
       icon: Shield
-    },
-    {
-      path: '/ERP/UserManagement/Groups',
-      label: 'Nhóm',
-      icon: UserCog
-    },
-    {
-      path: '/ERP/UserManagement/Invitations',
-      label: 'Lời Mời',
-      icon: Mail
     }
   ];
 
