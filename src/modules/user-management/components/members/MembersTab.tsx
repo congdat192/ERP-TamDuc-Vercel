@@ -1,10 +1,12 @@
-
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { MemberFilters } from './MemberFilters';
 import { MembersTable } from './MembersTable';
 import { BulkOperations } from './BulkOperations';
+import { CreateUserModal } from '../modals/CreateUserModal';
 import { UserManagementFilters } from '../../types';
+import { UserPlus } from 'lucide-react';
 
 interface UIMember {
   id: string;
@@ -51,6 +53,12 @@ export function MembersTab({
 }: MembersTabProps) {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [filters, setFilters] = useState<UserManagementFilters>({});
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  const handleUserCreated = () => {
+    // Reload members list
+    window.location.reload();
+  };
 
   const handleSelectUser = (userId: string, selected: boolean) => {
     if (selected) {
@@ -74,10 +82,21 @@ export function MembersTab({
   };
 
   return (
-    <div className="space-y-6">
+    <>
       <Card>
         <CardHeader>
-          <CardTitle>Quản Lý Thành Viên</CardTitle>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Danh Sách Thành Viên</CardTitle>
+              <CardDescription>
+                Quản lý thông tin và quyền hạn của các thành viên trong hệ thống
+              </CardDescription>
+            </div>
+            <Button onClick={() => setIsCreateModalOpen(true)}>
+              <UserPlus className="w-4 h-4 mr-2" />
+              Thêm Thành Viên
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -110,6 +129,12 @@ export function MembersTab({
           </div>
         </CardContent>
       </Card>
-    </div>
+
+      <CreateUserModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onUserCreated={handleUserCreated}
+      />
+    </>
   );
 }

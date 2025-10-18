@@ -7,7 +7,9 @@ import { ErrorBoundary } from "@/components/layout/ErrorBoundary";
 import { AuthProvider } from "@/components/auth/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ThemeSystem } from "@/components/theme/ThemeSystem";
+import { ForceChangePasswordDialog } from "@/components/auth/ForceChangePasswordDialog";
 import { useEffect } from "react";
+import { useAuth } from "@/components/auth/AuthContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { ForbiddenPage, ServerErrorPage, NetworkErrorPage } from "./pages/ErrorPages";
@@ -31,7 +33,6 @@ import { Settings } from "./modules/admin/pages/Settings";
 import { UserManagementLayout, MembersPage, DepartmentsPage, RolesPage, GroupsPage, UserManagementDashboard } from "./modules/user-management";
 import { AffiliateModule } from "./modules/affiliate";
 import { ERPLayout } from "@/components/layout/ERPLayout";
-import { useAuth } from "@/components/auth/AuthContext";
 import { Navigate, useNavigate } from "react-router-dom";
 
 const queryClient = new QueryClient({
@@ -128,15 +129,20 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-const App = () => (
-  <ErrorBoundary>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <ThemeProvider>
-          <AuthProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
+// Content wrapper to access auth context
+const AppContent = () => {
+  const { requirePasswordChange, setRequirePasswordChange, refreshUserProfile } = useAuth();
+
+  const handlePasswordChanged = async () => {
+    setRequirePasswordChange(false);
+    await refreshUserProfile();
+  };
+
+  return (
+    <>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/login" element={<LoginPage />} />
@@ -270,6 +276,21 @@ const App = () => (
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </BrowserRouter>
+              <ForceChangePasswordDialog
+                isOpen={requirePasswordChange}
+                onPasswordChanged={handlePasswordChanged}
+              />
+    </>
+  );
+};
+
+const App = () => (
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <AppContent />
           </AuthProvider>
         </ThemeProvider>
       </TooltipProvider>

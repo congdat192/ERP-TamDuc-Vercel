@@ -12,6 +12,8 @@ interface AuthContextType {
   logout: () => void;
   refreshUserProfile: () => Promise<void>;
   isLoading: boolean;
+  requirePasswordChange: boolean;
+  setRequirePasswordChange: (value: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -70,10 +72,10 @@ const transformPermissions = (dbPermissions: any[]): UserPermissions => {
 };
 
 // Fetch user with all permissions from database (single-tenant)
-const fetchUserWithPermissions = async (supabaseUser: SupabaseUser): Promise<User> => {
+const fetchUserWithPermissions = async (supabaseUser: SupabaseUser): Promise<{ user: User; passwordChangeRequired: boolean }> => {
   console.log('🔄 [AuthContext] Fetching user with permissions');
   
-  // Get profile
+  // Get profile with password_change_required flag
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('*')
@@ -119,7 +121,7 @@ const fetchUserWithPermissions = async (supabaseUser: SupabaseUser): Promise<Use
     };
   }
   
-  return {
+  const user: User = {
     id: supabaseUser.id,
     fullName: profile.full_name || 'User',
     username: supabaseUser.email?.split('@')[0] || '',
@@ -136,9 +138,16 @@ const fetchUserWithPermissions = async (supabaseUser: SupabaseUser): Promise<Use
     securitySettings: {
       twoFactorEnabled: false,
       loginAttemptLimit: 5,
-      passwordChangeRequired: false
+      passwordChangeRequired: profile.password_change_required || false
     },
     activities: []
+  };
+
+  console.log('🔐 [AuthContext] Password change required:', profile.password_change_required);
+
+  return {
+    user,
+    passwordChangeRequired: profile.password_change_required || false
   };
 };
 
@@ -146,6 +155,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [requirePasswordChange, setRequirePasswordChange] = useState(false);
   const { toast } = useToast();
 
   // Setup Supabase auth state listener (CRITICAL!)
@@ -162,18 +172,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Use setTimeout to avoid blocking the auth callback
           setTimeout(async () => {
             try {
-              const user = await fetchUserWithPermissions(session.user);
+              const { user, passwordChangeRequired } = await fetchUserWithPermissions(session.user);
               setCurrentUser(user);
+              setRequirePasswordChange(passwordChangeRequired);
               console.log('✅ [AuthContext] User state updated:', user.email);
             } catch (error) {
               console.error('❌ [AuthContext] Error fetching user:', error);
               setCurrentUser(null);
+              setRequirePasswordChange(false);
             }
           }, 0);
         } else {
           // User logged out
           console.log('👋 [AuthContext] User logged out');
           setCurrentUser(null);
+          setRequirePasswordChange(false);
         }
       }
     );
@@ -185,8 +198,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {
-          const user = await fetchUserWithPermissions(session.user);
+          const { user, passwordChangeRequired } = await fetchUserWithPermissions(session.user);
           setCurrentUser(user);
+          setRequirePasswordChange(passwordChangeRequired);
           console.log('✅ [AuthContext] Session restored:', user.email);
         }
       } catch (error) {
@@ -221,7 +235,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('📨 [AuthContext] Login successful');
       
       // Fetch user with permissions
-      const user = await fetchUserWithPermissions(data.user);
+      const { user, passwordChangeRequired } = await fetchUserWithPermissions(data.user);
       
       // Check if email is verified
       if (!user.emailVerified) {
@@ -238,6 +252,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       setCurrentUser(user);
+      setRequirePasswordChange(passwordChangeRequired);
       
       console.log('✅ [AuthContext] User logged in successfully:', email);
       
@@ -301,9 +316,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
       
-      const updatedUser = await fetchUserWithPermissions(supabaseUser);
+      const { user: updatedUser, passwordChangeRequired } = await fetchUserWithPermissions(supabaseUser);
       
       setCurrentUser(updatedUser);
+      setRequirePasswordChange(passwordChangeRequired);
       console.log('✅ [AuthContext] User profile refreshed:', updatedUser.username);
     } catch (error) {
       console.warn('❌ [AuthContext] Failed to refresh user profile:', error);
@@ -331,6 +347,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logout,
         refreshUserProfile,
         isLoading,
+        requirePasswordChange,
+        setRequirePasswordChange,
       }}
     >
       {children}
