@@ -47,7 +47,7 @@ export function HRModuleSidebar({ currentUser, onBackToModules }: HRModuleSideba
       <div className="p-4 border-b theme-border-primary">
         <Button
           variant="ghost"
-          onClick={() => navigate('/ERP')}
+          onClick={() => navigate('/ERP/Dashboard')}
           className="w-full justify-start gap-2 mb-3"
         >
           <ChevronLeft className="h-4 w-4" />

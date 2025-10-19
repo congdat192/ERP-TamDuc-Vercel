@@ -154,6 +154,9 @@ const AppContent = () => {
                 <Route path="/doi-mat-khau/" element={<ResetPasswordPage />} />
                 <Route path="/change-password" element={<ChangePasswordPage />} />
                   
+                  {/* Redirect /ERP to /ERP/Dashboard */}
+                  <Route path="/ERP" element={<Navigate to="/ERP/Dashboard" replace />} />
+                  
                   {/* ERP Routes without business ID */}
                   <Route 
                     path="/ERP/Dashboard" 

@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ import {
 import { EmptyState } from '@/components/ui/empty-states';
 
 export function F0ReferralHistoryPage() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [timeFilter, setTimeFilter] = useState('all');
@@ -126,7 +128,7 @@ export function F0ReferralHistoryPage() {
             description="Khi bạn giới thiệu khách hàng, thông tin sẽ hiển thị ở đây"
             action={{
               label: "Giới Thiệu Ngay",
-              onClick: () => window.location.href = "/ERP/Affiliate/f0-referral"
+              onClick: () => navigate('/ERP/Affiliate/f0-referral')
             }}
           />
         </CardContent>

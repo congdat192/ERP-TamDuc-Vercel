@@ -17,7 +17,7 @@ export function AccessDenied() {
           <Button variant="outline" onClick={() => navigate(-1)}>
             Quay Lại
           </Button>
-          <Button onClick={() => navigate('/ERP')}>
+          <Button onClick={() => navigate('/ERP/Dashboard')}>
             Về Trang Chủ
           </Button>
         </div>
