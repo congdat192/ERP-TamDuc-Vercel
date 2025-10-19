@@ -173,7 +173,8 @@ Deno.serve(async (req) => {
           full_name: employee.full_name,
           employee_code: employee.employee_code,
           department: employee.department || '',
-          position: employee.position || ''
+          position: employee.position || '',
+          password_change_required: false
         }
       });
 
@@ -198,6 +199,18 @@ Deno.serve(async (req) => {
       }
     } else {
       console.log(`✅ Employee already has user_id: ${userId}`);
+    }
+
+    // Ensure password_change_required = false for OTP users
+    const { error: profileUpdateError } = await supabaseAdmin
+      .from('profiles')
+      .update({ password_change_required: false })
+      .eq('id', userId);
+
+    if (profileUpdateError) {
+      console.error('⚠️ Warning: Could not update password_change_required:', profileUpdateError);
+    } else {
+      console.log('✅ Updated password_change_required to false for OTP user');
     }
 
     // ============================================
