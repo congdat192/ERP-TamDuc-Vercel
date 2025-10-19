@@ -167,7 +167,7 @@ Deno.serve(async (req) => {
     console.log('📧 Sending OTP email via Resend...');
 
     const { error: emailError } = await resend.emails.send({
-      from: 'Tam Duc ERP <onboarding@resend.dev>',
+      from: 'ERP System <noreply@dangphuocquan.cloud>',
       to: [emailLower],
       subject: `Mã OTP đăng nhập: ${otpCode} - Tam Duc ERP`,
       html: emailHtml
