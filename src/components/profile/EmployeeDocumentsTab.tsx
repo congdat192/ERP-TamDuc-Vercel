@@ -21,6 +21,7 @@ export function EmployeeDocumentsTab({ employeeId }: Props) {
   const fetchDocuments = async () => {
     setIsLoading(true);
     try {
+      // Fetch administrative documents related to this employee OR published company documents
       const { data, error } = await supabase
         .from('administrative_documents')
         .select(`
@@ -37,9 +38,10 @@ export function EmployeeDocumentsTab({ employeeId }: Props) {
 
       if (error) throw error;
 
+      console.log('📄 [EmployeeDocumentsTab] Fetched documents:', data?.length || 0);
       setDocuments(data as any || []);
     } catch (error: any) {
-      console.error('Error fetching documents:', error);
+      console.error('❌ [EmployeeDocumentsTab] Error fetching documents:', error);
       toast({
         title: "Lỗi",
         description: "Không thể tải danh sách hồ sơ",

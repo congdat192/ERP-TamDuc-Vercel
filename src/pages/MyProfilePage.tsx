@@ -18,15 +18,32 @@ export function MyProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    console.log('🔍 [MyProfile] currentUser:', currentUser);
+    console.log('🔍 [MyProfile] currentUser.id:', currentUser?.id);
+    
     if (!currentUser?.id) {
-      console.log('⏳ Waiting for currentUser...');
-      return;
+      console.log('⏳ [MyProfile] Waiting for currentUser...');
+      
+      // Timeout fallback to prevent infinite loading
+      const timeout = setTimeout(() => {
+        console.error('❌ [MyProfile] Timeout waiting for currentUser');
+        setIsLoading(false);
+        toast({
+          title: "Lỗi Timeout",
+          description: "Không thể tải thông tin. Vui lòng đăng nhập lại.",
+          variant: "destructive",
+        });
+      }, 10000); // 10s timeout
+      
+      return () => clearTimeout(timeout);
     }
 
     let retryCount = 0;
     const maxRetries = 3;
 
     const fetchEmployee = async () => {
+      console.log(`📥 [MyProfile] Fetching employee for user_id: ${currentUser.id}`);
+      
       try {
         const { data, error } = await supabase
           .from('employees')
@@ -35,7 +52,7 @@ export function MyProfilePage() {
           .maybeSingle();
 
         if (error) {
-          console.error('❌ Error fetching employee:', error);
+          console.error('❌ [MyProfile] Error fetching employee:', error);
           toast({
             title: "Lỗi",
             description: "Không thể tải thông tin nhân viên",
@@ -45,9 +62,11 @@ export function MyProfilePage() {
           return;
         }
 
+        console.log('📦 [MyProfile] Employee data:', data);
+
         if (!data && retryCount < maxRetries) {
           retryCount++;
-          console.log(`🔄 Retry fetch employee (${retryCount}/${maxRetries})...`);
+          console.log(`🔄 [MyProfile] Retry fetch employee (${retryCount}/${maxRetries})...`);
           setTimeout(fetchEmployee, 1000);
           return;
         }
@@ -55,7 +74,7 @@ export function MyProfilePage() {
         setEmployee(data);
         setIsLoading(false);
       } catch (err: any) {
-        console.error('❌ Error in fetchEmployee:', err);
+        console.error('❌ [MyProfile] Error in fetchEmployee:', err);
         toast({
           title: "Lỗi",
           description: "Không thể tải thông tin nhân viên",
