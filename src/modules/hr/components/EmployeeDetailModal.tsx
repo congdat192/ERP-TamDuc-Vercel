@@ -3,62 +3,24 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { UserX } from 'lucide-react';
 import { Employee } from '../types';
 import { AvatarService } from '../services/avatarService';
-import { EmployeeService } from '../services/employeeService';
 import { EmployeeDocumentsTab } from './detail-tabs/EmployeeDocumentsTab';
 import { EmployeeAdminDocumentsTab } from './detail-tabs/EmployeeAdminDocumentsTab';
 import { EmployeeBenefitsTab } from './detail-tabs/EmployeeBenefitsTab';
 import { EmployeeRewardsTab } from './detail-tabs/EmployeeRewardsTab';
 import { EmployeeDisciplineTab } from './detail-tabs/EmployeeDisciplineTab';
 import { MonthlyAttendanceTab } from './MonthlyAttendanceTab';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { useToast } from '@/hooks/use-toast';
 
 interface EmployeeDetailModalProps {
   employee: Employee | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onEmployeeDeleted?: () => void;
 }
 
-export function EmployeeDetailModal({ employee, open, onOpenChange, onEmployeeDeleted }: EmployeeDetailModalProps) {
-  const { toast } = useToast();
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-
+export function EmployeeDetailModal({ employee, open, onOpenChange }: EmployeeDetailModalProps) {
   if (!employee) return null;
-
-  const handleTerminateClick = () => {
-    setDeleteDialogOpen(true);
-  };
-
-  const handleTerminateConfirm = async () => {
-    try {
-      await EmployeeService.softDeleteEmployee(employee.id);
-      
-      toast({
-        title: "Thành công",
-        description: `Đã xóa nhân viên ${employee.fullName}. Có thể khôi phục từ tab "Nhân Viên Đã Xóa".`,
-      });
-
-      setDeleteDialogOpen(false);
-      onOpenChange(false);
-      
-      if (onEmployeeDeleted) {
-        onEmployeeDeleted();
-      }
-    } catch (error: any) {
-      console.error('❌ Error terminating employee:', error);
-      toast({
-        title: "Lỗi",
-        description: error.message || "Không thể cập nhật trạng thái nhân viên",
-        variant: "destructive",
-      });
-    }
-  };
 
   const getStatusBadge = (status: Employee['status']) => {
     const statusMap = {
@@ -75,18 +37,7 @@ export function EmployeeDetailModal({ employee, open, onOpenChange, onEmployeeDe
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle>Chi Tiết Nhân Viên</DialogTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
-              onClick={handleTerminateClick}
-              title="Xóa nhân viên"
-            >
-              <UserX className="h-4 w-4" />
-            </Button>
-          </div>
+          <DialogTitle>Chi Tiết Nhân Viên</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -344,30 +295,6 @@ export function EmployeeDetailModal({ employee, open, onOpenChange, onEmployeeDe
           </Tabs>
         </div>
       </DialogContent>
-
-      {/* Terminate Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Xác nhận xóa nhân viên</AlertDialogTitle>
-            <AlertDialogDescription>
-              Bạn có chắc chắn muốn xóa nhân viên <strong>{employee.fullName}</strong>?
-              <br /><br />
-              Đây là xóa mềm (soft delete). Nhân viên sẽ chuyển sang tab "Nhân Viên Đã Xóa" và có thể khôi phục bất cứ lúc nào.
-              <br /><br />
-              <span className="text-sm text-muted-foreground">
-                Lưu ý: Khác với trạng thái "Nghỉ việc" trong hồ sơ - đây là xóa khỏi danh sách hoạt động.
-              </span>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Hủy</AlertDialogCancel>
-            <AlertDialogAction onClick={handleTerminateConfirm} className="bg-orange-600 hover:bg-orange-700">
-              Xóa Nhân Viên
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </Dialog>
   );
 }

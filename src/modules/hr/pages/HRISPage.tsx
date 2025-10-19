@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Search, Download, Eye, RefreshCw, UserX, Undo2 } from 'lucide-react';
+import { Search, Download, Eye, RefreshCw, Undo2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { usePermissions } from '@/hooks/usePermissions';
 import {
@@ -438,22 +438,6 @@ export function HRISPage() {
                                   </TooltipContent>
                                 </Tooltip>
                               </PermissionGuard>
-                              <PermissionGuard requiredPermission="delete_employees" showError={false}>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button 
-                                      variant="ghost" 
-                                      size="icon"
-                                      onClick={() => handleTerminateClick(employee)}
-                                    >
-                                      <UserX className="h-4 w-4" />
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>Xóa nhân viên</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </PermissionGuard>
                             </>
                           ) : (
                             <PermissionGuard requiredPermission="edit_employees" showError={false}>
@@ -525,7 +509,6 @@ export function HRISPage() {
         employee={selectedEmployee}
         open={detailModalOpen}
         onOpenChange={setDetailModalOpen}
-        onEmployeeDeleted={fetchEmployees}
       />
     </div>
   );

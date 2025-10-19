@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Edit } from 'lucide-react';
+import { Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { EmployeeService } from '../services/employeeService';
 import { Employee } from '../types';
@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Label } from '@/components/ui/label';
 import { AvatarService } from '../services/avatarService';
 import { Textarea } from '@/components/ui/textarea';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 interface EditEmployeeModalProps {
   employee: Employee;
@@ -26,6 +27,7 @@ export function EditEmployeeModal({ employee, onSuccess }: EditEmployeeModalProp
   const [loading, setLoading] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string>('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const { toast } = useToast();
   
   const form = useForm<EmployeeFormData>({
@@ -164,6 +166,30 @@ export function EditEmployeeModal({ employee, onSuccess }: EditEmployeeModalProp
         title: 'Lỗi',
         description: error.message || 'Không thể cập nhật nhân viên',
         variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setLoading(true);
+    try {
+      await EmployeeService.softDeleteEmployee(employee.id);
+      
+      toast({
+        title: 'Thành công',
+        description: `Đã xóa nhân viên ${employee.fullName}. Có thể khôi phục từ tab "Nhân Viên Đã Xóa".`,
+      });
+      
+      setDeleteDialogOpen(false);
+      setOpen(false);
+      onSuccess();
+    } catch (error: any) {
+      toast({
+        title: 'Lỗi',
+        description: error.message || 'Không thể xóa nhân viên',
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -531,17 +557,60 @@ export function EditEmployeeModal({ employee, onSuccess }: EditEmployeeModalProp
             </div>
             </div>
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                Hủy
+            <DialogFooter className="sm:justify-between">
+              {/* Left side: Delete button */}
+              <Button 
+                type="button"
+                variant="destructive"
+                className="gap-2"
+                onClick={() => setDeleteDialogOpen(true)}
+                disabled={loading}
+              >
+                <Trash2 className="h-4 w-4" />
+                Xóa Nhân Viên
               </Button>
-              <Button type="submit" disabled={loading}>
-                {loading ? 'Đang cập nhật...' : 'Cập Nhật'}
-              </Button>
+              
+              {/* Right side: Cancel + Update */}
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={loading}>
+                  Hủy
+                </Button>
+                <Button type="submit" disabled={loading}>
+                  {loading ? 'Đang cập nhật...' : 'Cập Nhật'}
+                </Button>
+              </div>
             </DialogFooter>
           </form>
         </Form>
       </DialogContent>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận xóa nhân viên</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn xóa nhân viên <strong>{employee.fullName}</strong>?
+              <br /><br />
+              Đây là xóa mềm (soft delete). Nhân viên sẽ chuyển sang tab "Nhân Viên Đã Xóa" và có thể khôi phục bất cứ lúc nào.
+              <br /><br />
+              <span className="text-sm text-muted-foreground">
+                Lưu ý: Khác với trạng thái "Nghỉ việc" trong hồ sơ - đây là xóa khỏi danh sách hoạt động.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={loading}>Hủy</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDelete} 
+              className="bg-destructive hover:bg-destructive/90"
+              disabled={loading}
+            >
+              {loading ? 'Đang xóa...' : 'Xóa Nhân Viên'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
