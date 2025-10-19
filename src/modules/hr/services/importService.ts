@@ -381,11 +381,15 @@ export class ImportService {
     return false;
   }
 
+  /**
+   * Validate row format & business rules (fast validation for batch import)
+   * NOTE: Does NOT check duplicates - UPSERT flow handles that separately
+   */
   static async validateRowFast(
     row: ParsedEmployee, 
     rowIndex: number,
-    existingCodes: Set<string>,
-    existingEmails: Set<string>
+    existingCodes: Set<string>, // Not used - kept for backward compatibility
+    existingEmails: Set<string> // Not used - kept for backward compatibility
   ): Promise<{ isValid: boolean; errors: ImportError[]; }> {
     const errors: ImportError[] = [];
 
@@ -522,22 +526,8 @@ export class ImportService {
       });
     }
 
-    // Check duplicates (in-memory using cached sets)
-    if (row.employee_code && existingCodes.has(row.employee_code.toLowerCase())) {
-      errors.push({ 
-        row: rowIndex, 
-        field: 'employee_code', 
-        message: `Mã nhân viên đã tồn tại: ${row.employee_code}` 
-      });
-    }
-
-    if (row.email && existingEmails.has(row.email.toLowerCase())) {
-      errors.push({ 
-        row: rowIndex, 
-        field: 'email', 
-        message: `Email đã tồn tại: ${row.email}` 
-      });
-    }
+    // ✅ REMOVED: Duplicate checks - handled by UPSERT flow in importFromExcelBatch
+    // Duplicates are not errors in UPSERT mode, they trigger update/skip logic
 
     return {
       isValid: errors.length === 0,
