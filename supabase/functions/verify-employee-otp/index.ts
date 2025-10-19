@@ -15,6 +15,16 @@ interface VerifyOTPResponse {
   message: string;
   hashed_token?: string;
   email?: string;
+  profile?: {
+    id: string;
+    full_name: string;
+    employee_code: string;
+    department: string;
+    position: string;
+    avatar_path: string | null;
+    phone: string | null;
+    email: string;
+  };
 }
 
 // Generate random secure password (for auto-created users)
@@ -65,96 +75,44 @@ Deno.serve(async (req) => {
 
     const emailLower = email.toLowerCase();
 
-    // ============================================
-    // STEP 2: VERIFY OTP CODE FROM DATABASE
-    // ============================================
     console.log(`🔍 Verifying OTP for ${emailLower}: ${otpCode}`);
 
-    // Tìm OTP (bỏ check verified = false để handle retry)
-    const { data: otpRecord, error: otpError } = await supabaseAdmin
-      .from('email_otp_codes')
-      .select('*')
-      .eq('email', emailLower)
-      .eq('otp_code', otpCode)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
+    // ============================================
+    // STEP 2: BATCH VERIFY OTP + GET EMPLOYEE (OPTIMIZED - 1 RPC CALL)
+    // ============================================
+    const { data: batchResult, error: batchError } = await supabaseAdmin
+      .rpc('verify_employee_otp_batch', {
+        p_email: emailLower,
+        p_otp_code: otpCode
+      });
 
-    if (otpError || !otpRecord) {
-      console.error('❌ OTP not found');
+    if (batchError) {
+      console.error('❌ RPC error:', batchError);
       return new Response(
         JSON.stringify({ 
           success: false, 
-          message: 'Mã OTP không chính xác. Vui lòng kiểm tra lại.' 
+          message: 'Lỗi hệ thống. Vui lòng thử lại sau.' 
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!batchResult.success) {
+      console.error(`❌ ${batchResult.error}: ${batchResult.message}`);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          message: batchResult.message 
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // ============================================
-    // STEP 3: CHECK EXPIRATION
-    // ============================================
-    const expiresAt = new Date(otpRecord.expires_at);
-    const now = new Date();
-
-    if (now > expiresAt) {
-      console.error('❌ OTP expired');
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới.' 
-        }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    console.log('✅ OTP is valid and not expired');
+    const employee = batchResult.employee;
+    console.log(`✅ Employee verified: ${employee.employee_code} - ${employee.full_name}`);
 
     // ============================================
-    // STEP 4 & 5: BATCH GET EMPLOYEE + MARK OTP VERIFIED (OPTIMIZED)
-    // ============================================
-    
-    // Get employee data first (needed for user creation)
-    const { data: employee, error: employeeError } = await supabaseAdmin
-      .from('employees')
-      .select('id, full_name, employee_code, email, user_id, department, position')
-      .ilike('email', emailLower)
-      .is('deleted_at', null)
-      .single();
-
-    if (employeeError || !employee) {
-      console.error('❌ Employee not found:', employeeError);
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: 'Nhân viên không tồn tại trong hệ thống' 
-        }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    console.log(`✅ Employee found: ${employee.employee_code} - ${employee.full_name}`);
-
-    // Mark OTP as verified (async, non-blocking for performance)
-    if (!otpRecord.verified) {
-      (async () => {
-        try {
-          await supabaseAdmin
-            .from('email_otp_codes')
-            .update({
-              verified: true,
-              verified_at: now.toISOString()
-            })
-            .eq('id', otpRecord.id);
-          console.log('✅ OTP marked as verified');
-        } catch (err: any) {
-          console.error('⚠️ Error marking OTP as verified (non-blocking):', err);
-        }
-      })();
-    }
-
-    // ============================================
-    // STEP 6: CREATE USER IF NOT EXISTS (OPTIMIZED WITH BATCH UPDATES)
+    // STEP 3: CREATE USER IF NOT EXISTS (PARALLEL WITH MAGIC LINK)
     // ============================================
     let userId = employee.user_id;
 
@@ -184,54 +142,24 @@ Deno.serve(async (req) => {
       userId = newUserData.user.id;
       console.log(`✅ Auth user created: ${userId}`);
 
-      // Batch update: Link employee + update profile (async for performance)
+      // Link employee to user (async, non-blocking)
       (async () => {
         try {
-          const [linkResult, profileResult] = await Promise.all([
-            supabaseAdmin
-              .from('employees')
-              .update({ user_id: userId })
-              .eq('id', employee.id),
-            supabaseAdmin
-              .from('profiles')
-              .update({ password_change_required: false })
-              .eq('id', userId)
-          ]);
-          
-          if (linkResult.error) {
-            console.error('⚠️ Error linking employee to user:', linkResult.error);
-          } else {
-            console.log('✅ Employee linked to auth user');
-          }
-          
-          if (profileResult.error) {
-            console.error('⚠️ Error updating password_change_required:', profileResult.error);
-          } else {
-            console.log('✅ Updated password_change_required to false');
-          }
+          await supabaseAdmin
+            .from('employees')
+            .update({ user_id: userId })
+            .eq('id', employee.id);
+          console.log('✅ Employee linked to auth user');
         } catch (err: any) {
-          console.error('⚠️ Error in batch update:', err);
+          console.error('⚠️ Error linking employee to user:', err);
         }
       })();
     } else {
       console.log(`✅ Employee already has user_id: ${userId}`);
-      
-      // Update profile async (non-blocking)
-      (async () => {
-        try {
-          await supabaseAdmin
-            .from('profiles')
-            .update({ password_change_required: false })
-            .eq('id', userId);
-          console.log('✅ Updated password_change_required to false for OTP user');
-        } catch (err: any) {
-          console.error('⚠️ Warning: Could not update password_change_required:', err);
-        }
-      })();
     }
 
     // ============================================
-    // STEP 7: GENERATE MAGIC LINK WITH HASHED TOKEN
+    // STEP 4: GENERATE MAGIC LINK (PARALLEL - No waiting for async updates)
     // ============================================
     console.log('🔑 Generating magic link for user...');
 
@@ -246,17 +174,26 @@ Deno.serve(async (req) => {
     }
 
     console.log('✅ Magic link generated successfully');
-    console.log('📦 Hashed token:', magicLinkData.properties.hashed_token ? '✅ Present' : '❌ Missing');
 
     // ============================================
-    // STEP 8: RETURN HASHED TOKEN FOR FRONTEND
+    // STEP 5: RETURN HASHED TOKEN + PROFILE DATA (OPTIMIZED)
     // ============================================
     return new Response(
       JSON.stringify({
         success: true,
         message: 'Đăng nhập thành công!',
         hashed_token: magicLinkData.properties.hashed_token,
-        email: emailLower
+        email: emailLower,
+        profile: {
+          id: employee.id,
+          full_name: employee.full_name,
+          employee_code: employee.employee_code,
+          department: employee.department,
+          position: employee.position,
+          avatar_path: employee.avatar_path,
+          phone: employee.phone,
+          email: employee.email
+        }
       } as VerifyOTPResponse),
       {
         status: 200,

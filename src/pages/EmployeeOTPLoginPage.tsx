@@ -124,6 +124,13 @@ export function EmployeeOTPLoginPage() {
       }
 
       console.log('✅ Step 1 complete: OTP verified by backend');
+      
+      // Cache profile data BEFORE creating session (OPTIMIZATION 3)
+      if (data.profile) {
+        sessionStorage.setItem('cached_employee_profile', JSON.stringify(data.profile));
+        console.log('✅ Profile data cached for instant load');
+      }
+      
       console.log('🔐 Step 2: Creating session with hashed_token...');
 
       // Step 2: Use hashed_token to verify OTP and create session
@@ -152,7 +159,7 @@ export function EmployeeOTPLoginPage() {
         description: 'Chào mừng bạn quay trở lại',
       });
 
-      // Redirect to my profile
+      // Redirect to my profile (profile data already cached)
       navigate('/my-profile');
 
     } catch (error: any) {

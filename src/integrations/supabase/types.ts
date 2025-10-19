@@ -1080,6 +1080,10 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: undefined
       }
+      verify_employee_otp_batch: {
+        Args: { p_email: string; p_otp_code: string }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "user"
