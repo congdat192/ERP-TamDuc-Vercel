@@ -32,60 +32,32 @@ export function EmployeeOTPLoginPage() {
   const [resendCountdown, setResendCountdown] = useState(0);
 
   // ============================================
-  // STEP 1: VALIDATE EMAIL & SEND OTP
+  // STEP 1: SEND OTP VIA CUSTOM EDGE FUNCTION
   // ============================================
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      // 1. Validate email via Edge Function
-      console.log('🔍 Validating employee email...');
-      const { data: validationData, error: validationError } = await supabase.functions.invoke(
-        'validate-employee-email',
-        {
-          body: { email: email.toLowerCase() }
-        }
-      );
+      console.log('📧 Sending OTP via custom Edge Function...');
+      
+      const { data, error } = await supabase.functions.invoke('send-employee-otp', {
+        body: { email: email.toLowerCase() }
+      });
 
-      if (validationError) {
-        throw new Error(validationError.message || 'Không thể xác thực email');
-      }
+      if (error) throw error;
 
-      if (!validationData.valid) {
+      if (!data.success) {
         toast({
-          title: 'Email không hợp lệ',
-          description: validationData.message,
+          title: 'Lỗi',
+          description: data.message || 'Không thể gửi mã OTP',
           variant: 'destructive',
         });
         return;
       }
 
-      console.log('✅ Email validated:', validationData);
-      setEmployeeData(validationData.employeeData);
-
-      // 2. Send OTP via Supabase Auth
-      console.log('📧 Sending OTP...');
-      const { error: otpError } = await supabase.auth.signInWithOtp({
-        email: email.toLowerCase(),
-        options: {
-          shouldCreateUser: validationData.shouldCreateUser,
-          emailRedirectTo: undefined, // Không dùng Magic Link
-          data: {
-            // Metadata cho user mới (nếu auto-create)
-            full_name: validationData.employeeData.fullName,
-            employee_code: validationData.employeeData.employeeCode,
-          }
-        }
-      });
-
-      if (otpError) {
-        console.error('❌ Error sending OTP:', otpError);
-        throw otpError;
-      }
-
       console.log('✅ OTP sent successfully');
-
+      
       toast({
         title: 'Mã OTP đã được gửi',
         description: `Vui lòng kiểm tra email ${email} và nhập mã xác thực (có hiệu lực trong 5 phút).`,
@@ -98,7 +70,7 @@ export function EmployeeOTPLoginPage() {
       console.error('❌ Error:', error);
       
       // Handle rate limit errors
-      if (error.message?.includes('429') || error.message?.includes('quá nhiều')) {
+      if (error.message?.includes('429') || error.message?.includes('rate limit')) {
         toast({
           title: 'Quá nhiều yêu cầu',
           description: 'Bạn đã gửi quá nhiều yêu cầu. Vui lòng thử lại sau 15 phút.',
@@ -117,7 +89,7 @@ export function EmployeeOTPLoginPage() {
   };
 
   // ============================================
-  // STEP 2: VERIFY OTP
+  // STEP 2: VERIFY OTP VIA CUSTOM EDGE FUNCTION
   // ============================================
   const handleVerifyOTP = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,32 +106,47 @@ export function EmployeeOTPLoginPage() {
     setLoading(true);
 
     try {
-      console.log('🔐 Verifying OTP...');
+      console.log('🔐 Verifying OTP via custom Edge Function...');
       
-      const { data, error } = await supabase.auth.verifyOtp({
-        email: email.toLowerCase(),
-        token: otp,
-        type: 'email'
+      const { data, error } = await supabase.functions.invoke('verify-employee-otp', {
+        body: {
+          email: email.toLowerCase(),
+          otpCode: otp
+        }
       });
 
-      if (error) {
-        console.error('❌ OTP verification failed:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      if (!data.session || !data.user) {
-        throw new Error('Xác thực thất bại. Vui lòng thử lại.');
+      if (!data.success) {
+        toast({
+          title: 'Xác thực thất bại',
+          description: data.message || 'Mã OTP không chính xác',
+          variant: 'destructive',
+        });
+        return;
       }
 
       console.log('✅ OTP verified successfully');
-      console.log('👤 User:', data.user.id);
+
+      // Set session manually using tokens from Edge Function
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: data.session.access_token,
+        refresh_token: data.session.refresh_token
+      });
+
+      if (sessionError) {
+        console.error('❌ Session error:', sessionError);
+        throw sessionError;
+      }
+
+      console.log('✅ Session created successfully');
 
       toast({
         title: 'Đăng nhập thành công',
-        description: `Chào mừng ${employeeData?.fullName || 'bạn'}!`,
+        description: `Chào mừng ${data.session.user.user_metadata.full_name}!`,
       });
 
-      // Redirect to employee profile page
+      // Redirect to employee self-service portal
       navigate('/my-profile');
 
     } catch (error: any) {
@@ -171,7 +158,7 @@ export function EmployeeOTPLoginPage() {
           description: 'Vui lòng yêu cầu gửi lại mã mới.',
           variant: 'destructive',
         });
-      } else if (error.message?.includes('invalid') || error.message?.includes('không hợp lệ')) {
+      } else if (error.message?.includes('invalid') || error.message?.includes('không chính xác')) {
         toast({
           title: 'Mã OTP không chính xác',
           description: 'Vui lòng kiểm tra lại mã trong email.',
