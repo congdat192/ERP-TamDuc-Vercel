@@ -103,14 +103,27 @@ export function ImportEmployeeModal({ onSuccess }: ImportEmployeeModalProps) {
       if (allErrors.length === 0) {
         toast({
           title: 'Validation thành công',
-          description: `${rows.length} dòng dữ liệu hợp lệ`,
+          description: `${rows.length} dòng dữ liệu hợp lệ, sẵn sàng import`,
         });
       } else {
-        toast({
-          title: 'Phát hiện lỗi',
-          description: `${allErrors.length} lỗi trong ${rows.length} dòng`,
-          variant: 'destructive',
-        });
+        // Phân biệt format errors vs duplicate warnings
+        const formatErrors = allErrors.filter(
+          e => !e.message.includes('đã tồn tại')
+        );
+        
+        if (formatErrors.length === 0) {
+          // Chỉ có duplicate warnings - vẫn cho phép import
+          toast({
+            title: 'Sẵn sàng import',
+            description: `${rows.length} dòng sẽ được xử lý (bao gồm ${allErrors.length} bản ghi đã tồn tại)`,
+          });
+        } else {
+          toast({
+            title: 'Phát hiện lỗi format',
+            description: `${formatErrors.length} lỗi cần sửa trước khi import`,
+            variant: 'destructive',
+          });
+        }
       }
     } catch (err: any) {
       toast({
@@ -124,7 +137,7 @@ export function ImportEmployeeModal({ onSuccess }: ImportEmployeeModalProps) {
   };
 
   const handleImport = async () => {
-    if (!file || errors.length > 0) return;
+    if (!file) return; // Chỉ check file tồn tại, cho phép import với duplicate records
 
     setIsImporting(true);
     setImportProgress({ current: 0, total: previewData.length });

@@ -761,28 +761,8 @@ export class ImportService {
       });
     }
 
-    // Check duplicates in database
-    if (row.employee_code) {
-      const codeExists = await EmployeeService.checkEmployeeCodeExists(row.employee_code);
-      if (codeExists) {
-        errors.push({ 
-          row: rowIndex, 
-          field: 'employee_code', 
-          message: `Mã nhân viên đã tồn tại: ${row.employee_code}` 
-        });
-      }
-    }
-
-    if (row.email) {
-      const emailExists = await EmployeeService.checkEmailExists(row.email);
-      if (emailExists) {
-        errors.push({ 
-          row: rowIndex, 
-          field: 'email', 
-          message: `Email đã tồn tại: ${row.email}` 
-        });
-      }
-    }
+    // ✅ REMOVED: Duplicate checks - UPSERT flow handles existing records
+    // Duplicates will be handled as UPDATE or SKIP, not validation errors
 
     return {
       isValid: errors.length === 0,
