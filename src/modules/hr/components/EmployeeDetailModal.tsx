@@ -106,6 +106,22 @@ export function EmployeeDetailModal({ employee, open, onOpenChange }: EmployeeDe
                       <p className="font-medium theme-text">{employee.employmentType}</p>
                     </div>
                     <div>
+                      <p className="text-sm theme-text-secondary">Giới Tính</p>
+                      <p className="font-medium theme-text">
+                        {employee.gender === 'Male' ? 'Nam' : 
+                         employee.gender === 'Female' ? 'Nữ' : 
+                         employee.gender === 'Other' ? 'Khác' : 'Chưa cập nhật'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm theme-text-secondary">Ngày Sinh</p>
+                      <p className="font-medium theme-text">
+                        {employee.birthDate 
+                          ? new Date(employee.birthDate).toLocaleDateString('vi-VN')
+                          : 'Chưa cập nhật'}
+                      </p>
+                    </div>
+                    <div>
                       <p className="text-sm theme-text-secondary">Trạng Thái</p>
                       <div className="mt-1">{getStatusBadge(employee.status)}</div>
                     </div>
@@ -227,6 +243,63 @@ export function EmployeeDetailModal({ employee, open, onOpenChange }: EmployeeDe
                     </p>
                     <p className="font-mono text-sm font-bold theme-text mt-1">
                       = {employee.salary.totalFixed.toLocaleString('vi-VN')} VNĐ
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Lương Theo Loại Hợp Đồng Card */}
+              <Card>
+                <CardContent className="pt-6 space-y-4">
+                  <h4 className="font-semibold text-lg theme-text border-b pb-2">
+                    Lương Theo Loại Hợp Đồng
+                  </h4>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm theme-text-secondary">Lương Full-time Thử Việc</p>
+                      <p className="text-xl font-bold theme-text">
+                        {new Intl.NumberFormat('vi-VN', {
+                          style: 'currency',
+                          currency: 'VND'
+                        }).format(employee.salary.fulltimeProbation || 0)}
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <p className="text-sm theme-text-secondary">Lương Full-time Chính Thức</p>
+                      <p className="text-xl font-bold theme-text">
+                        {new Intl.NumberFormat('vi-VN', {
+                          style: 'currency',
+                          currency: 'VND'
+                        }).format(employee.salary.fulltimeOfficial || 0)}
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <p className="text-sm theme-text-secondary">Lương Part-time Thử Việc</p>
+                      <p className="text-xl font-bold theme-text">
+                        {new Intl.NumberFormat('vi-VN', {
+                          style: 'currency',
+                          currency: 'VND'
+                        }).format(employee.salary.parttimeProbation || 0)}
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <p className="text-sm theme-text-secondary">Lương Part-time Chính Thức</p>
+                      <p className="text-xl font-bold theme-text">
+                        {new Intl.NumberFormat('vi-VN', {
+                          style: 'currency',
+                          currency: 'VND'
+                        }).format(employee.salary.parttimeOfficial || 0)}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-4 border-t">
+                    <p className="text-sm theme-text-secondary">
+                      💡 Các mức lương này áp dụng tùy theo loại hợp đồng và trạng thái của nhân viên.
                     </p>
                   </div>
                 </CardContent>

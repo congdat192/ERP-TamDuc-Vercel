@@ -64,6 +64,8 @@ export class EmployeeService {
       employmentType: emp.employment_type as 'Full-time' | 'Part-time' | 'CTV' | 'Thử việc' | 'Thực tập',
       seniorityMonths: emp.seniority_months,
       status: emp.status,
+      gender: emp.gender as 'Male' | 'Female' | 'Other' | undefined,
+      birthDate: emp.birth_date,
       salary: {
         basic: Number(emp.salary_p1) || 0,
         allowanceMeal: Number(emp.allowance_meal) || 0,
@@ -71,6 +73,10 @@ export class EmployeeService {
         allowancePhone: Number(emp.allowance_phone) || 0,
         allowanceOther: Number(emp.allowance_other) || 0,
         totalFixed: Number(emp.total_fixed_salary) || 0,
+        fulltimeProbation: Number(emp.salary_fulltime_probation) || 0,
+        fulltimeOfficial: Number(emp.salary_fulltime_official) || 0,
+        parttimeProbation: Number(emp.salary_parttime_probation) || 0,
+        parttimeOfficial: Number(emp.salary_parttime_official) || 0,
       },
       performance: {
         kpi: Number(emp.kpi_score) || 0,
@@ -124,6 +130,8 @@ export class EmployeeService {
           employmentType: emp.employment_type as 'Full-time' | 'Part-time' | 'CTV' | 'Thử việc' | 'Thực tập',
           seniorityMonths: emp.seniority_months,
           status: emp.status,
+          gender: emp.gender as 'Male' | 'Female' | 'Other' | undefined,
+          birthDate: emp.birth_date,
           salary: {
             basic: Number(emp.salary_p1) || 0,
             allowanceMeal: Number(emp.allowance_meal) || 0,
@@ -131,6 +139,10 @@ export class EmployeeService {
             allowancePhone: Number(emp.allowance_phone) || 0,
             allowanceOther: Number(emp.allowance_other) || 0,
             totalFixed: Number(emp.total_fixed_salary) || 0,
+            fulltimeProbation: Number(emp.salary_fulltime_probation) || 0,
+            fulltimeOfficial: Number(emp.salary_fulltime_official) || 0,
+            parttimeProbation: Number(emp.salary_parttime_probation) || 0,
+            parttimeOfficial: Number(emp.salary_parttime_official) || 0,
           },
           performance: {
             kpi: Number(emp.kpi_score) || 0,
@@ -183,6 +195,8 @@ export class EmployeeService {
       employmentType: data.employment_type as 'Full-time' | 'Part-time' | 'CTV' | 'Thử việc' | 'Thực tập',
       seniorityMonths: data.seniority_months,
       status: data.status,
+      gender: data.gender as 'Male' | 'Female' | 'Other' | undefined,
+      birthDate: data.birth_date,
       salary: {
         basic: Number(data.salary_p1) || 0,
         allowanceMeal: Number(data.allowance_meal) || 0,
@@ -190,6 +204,10 @@ export class EmployeeService {
         allowancePhone: Number(data.allowance_phone) || 0,
         allowanceOther: Number(data.allowance_other) || 0,
         totalFixed: Number(data.total_fixed_salary) || 0,
+        fulltimeProbation: Number(data.salary_fulltime_probation) || 0,
+        fulltimeOfficial: Number(data.salary_fulltime_official) || 0,
+        parttimeProbation: Number(data.salary_parttime_probation) || 0,
+        parttimeOfficial: Number(data.salary_parttime_official) || 0,
       },
       performance: {
         kpi: Number(data.kpi_score) || 0,
@@ -272,6 +290,12 @@ export class EmployeeService {
         emergency_contact_name: data.emergency_contact_name || null,
         emergency_contact_phone: data.emergency_contact_phone || null,
         notes: data.notes || null,
+        gender: data.gender || null,
+        birth_date: data.birth_date || null,
+        salary_fulltime_probation: data.salary_fulltime_probation || 0,
+        salary_fulltime_official: data.salary_fulltime_official || 0,
+        salary_parttime_probation: data.salary_parttime_probation || 0,
+        salary_parttime_official: data.salary_parttime_official || 0,
         created_by: (await supabase.auth.getUser()).data.user?.id
       });
 
@@ -304,6 +328,12 @@ export class EmployeeService {
     if (data.emergency_contact_name !== undefined) updates.emergency_contact_name = data.emergency_contact_name;
     if (data.emergency_contact_phone !== undefined) updates.emergency_contact_phone = data.emergency_contact_phone;
     if (data.notes !== undefined) updates.notes = data.notes;
+    if (data.gender !== undefined) updates.gender = data.gender;
+    if (data.birth_date !== undefined) updates.birth_date = data.birth_date || null;
+    if (data.salary_fulltime_probation !== undefined) updates.salary_fulltime_probation = data.salary_fulltime_probation;
+    if (data.salary_fulltime_official !== undefined) updates.salary_fulltime_official = data.salary_fulltime_official;
+    if (data.salary_parttime_probation !== undefined) updates.salary_parttime_probation = data.salary_parttime_probation;
+    if (data.salary_parttime_official !== undefined) updates.salary_parttime_official = data.salary_parttime_official;
 
     const { error } = await supabase
       .from('employees')

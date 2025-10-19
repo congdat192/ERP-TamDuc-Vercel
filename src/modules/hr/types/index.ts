@@ -14,6 +14,8 @@ export interface Employee {
   employmentType: 'Full-time' | 'Part-time' | 'CTV' | 'Thử việc' | 'Thực tập';
   seniorityMonths?: number;
   status: 'active' | 'inactive' | 'probation' | 'terminated';
+  gender?: 'Male' | 'Female' | 'Other';
+  birthDate?: string;
   salary: {
     basic: number;
     allowanceMeal: number;
@@ -21,6 +23,10 @@ export interface Employee {
     allowancePhone: number;
     allowanceOther: number;
     totalFixed: number;
+    fulltimeProbation?: number;
+    fulltimeOfficial?: number;
+    parttimeProbation?: number;
+    parttimeOfficial?: number;
   };
   performance: {
     kpi: number;

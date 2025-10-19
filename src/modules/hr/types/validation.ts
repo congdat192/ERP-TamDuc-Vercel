@@ -106,7 +106,39 @@ export const employeeSchema = z.object({
     .trim()
     .max(1000, 'Ghi chú tối đa 1000 ký tự')
     .optional()
+    .or(z.literal('')),
+
+  gender: z.enum(['Male', 'Female', 'Other']).optional(),
+
+  birth_date: z.string()
+    .optional()
     .or(z.literal(''))
+    .refine(
+      (val) => {
+        if (!val || val === '') return true;
+        const birthDate = new Date(val);
+        const today = new Date();
+        const age = today.getFullYear() - birthDate.getFullYear();
+        return age >= 16 && age <= 100;
+      },
+      { message: 'Tuổi phải từ 16 đến 100' }
+    ),
+
+  salary_fulltime_probation: z.number()
+    .min(0, 'Lương không được âm')
+    .optional(),
+
+  salary_fulltime_official: z.number()
+    .min(0, 'Lương không được âm')
+    .optional(),
+
+  salary_parttime_probation: z.number()
+    .min(0, 'Lương không được âm')
+    .optional(),
+
+  salary_parttime_official: z.number()
+    .min(0, 'Lương không được âm')
+    .optional()
 });
 
 export type EmployeeFormData = z.infer<typeof employeeSchema>;

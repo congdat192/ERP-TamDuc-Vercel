@@ -54,7 +54,13 @@ export function EditEmployeeModal({ employee, onSuccess }: EditEmployeeModalProp
       emergency_contact_relationship: employee.emergencyContact?.relationship,
       emergency_contact_name: employee.emergencyContact?.name || '',
       emergency_contact_phone: employee.emergencyContact?.phone || '',
-      notes: employee.notes || ''
+      notes: employee.notes || '',
+      gender: employee.gender,
+      birth_date: employee.birthDate || '',
+      salary_fulltime_probation: employee.salary.fulltimeProbation || 0,
+      salary_fulltime_official: employee.salary.fulltimeOfficial || 0,
+      salary_parttime_probation: employee.salary.parttimeProbation || 0,
+      salary_parttime_official: employee.salary.parttimeOfficial || 0
     }
   });
 
@@ -82,7 +88,13 @@ export function EditEmployeeModal({ employee, onSuccess }: EditEmployeeModalProp
         emergency_contact_relationship: employee.emergencyContact?.relationship,
         emergency_contact_name: employee.emergencyContact?.name || '',
         emergency_contact_phone: employee.emergencyContact?.phone || '',
-        notes: employee.notes || ''
+        notes: employee.notes || '',
+        gender: employee.gender,
+        birth_date: employee.birthDate || '',
+        salary_fulltime_probation: employee.salary.fulltimeProbation || 0,
+        salary_fulltime_official: employee.salary.fulltimeOfficial || 0,
+        salary_parttime_probation: employee.salary.parttimeProbation || 0,
+        salary_parttime_official: employee.salary.parttimeOfficial || 0
       });
       
       // Set avatar preview if exists
@@ -282,6 +294,43 @@ export function EditEmployeeModal({ employee, onSuccess }: EditEmployeeModalProp
                     <FormLabel>Số Điện Thoại</FormLabel>
                     <FormControl>
                       <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Giới Tính</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Chọn giới tính" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Male">Nam</SelectItem>
+                        <SelectItem value="Female">Nữ</SelectItem>
+                        <SelectItem value="Other">Khác</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="birth_date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ngày Sinh</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="date" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -555,6 +604,90 @@ export function EditEmployeeModal({ employee, onSuccess }: EditEmployeeModalProp
                 )}
               />
             </div>
+            </div>
+
+            {/* Lương Theo Loại Hợp Đồng Section */}
+            <div className="col-span-2 border-t pt-4">
+              <h3 className="text-lg font-semibold mb-4">Lương Theo Loại Hợp Đồng</h3>
+              <div className="grid grid-cols-2 gap-4">
+                
+                <FormField
+                  control={form.control}
+                  name="salary_fulltime_probation"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Lương Full-time Thử Việc (VNĐ)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          type="number" 
+                          onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="salary_fulltime_official"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Lương Full-time Chính Thức (VNĐ)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          type="number" 
+                          onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="salary_parttime_probation"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Lương Part-time Thử Việc (VNĐ)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          type="number" 
+                          onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="salary_parttime_official"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Lương Part-time Chính Thức (VNĐ)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          type="number" 
+                          onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <p className="text-sm text-muted-foreground mt-4">
+                💡 <strong>Ghi chú:</strong> Các mức lương này áp dụng khi nhân viên ở loại hợp đồng tương ứng. 
+                "Lương Cơ Bản" ở trên là mức lương hiện tại đang áp dụng.
+              </p>
             </div>
 
             <DialogFooter className="sm:justify-between">

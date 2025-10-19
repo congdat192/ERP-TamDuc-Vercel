@@ -264,6 +264,7 @@ export type Database = {
           allowance_other: number | null
           allowance_phone: number | null
           avatar_path: string | null
+          birth_date: string | null
           created_at: string | null
           created_by: string | null
           current_address: string | null
@@ -277,6 +278,7 @@ export type Database = {
           employee_code: string
           employment_type: Database["public"]["Enums"]["employment_type"] | null
           full_name: string
+          gender: string | null
           id: string
           join_date: string
           kpi_score: number | null
@@ -284,7 +286,11 @@ export type Database = {
           notes: string | null
           phone: string | null
           position: string
+          salary_fulltime_official: number | null
+          salary_fulltime_probation: number | null
           salary_p1: number | null
+          salary_parttime_official: number | null
+          salary_parttime_probation: number | null
           seniority_months: number | null
           status: Database["public"]["Enums"]["employee_status"] | null
           team: string | null
@@ -297,6 +303,7 @@ export type Database = {
           allowance_other?: number | null
           allowance_phone?: number | null
           avatar_path?: string | null
+          birth_date?: string | null
           created_at?: string | null
           created_by?: string | null
           current_address?: string | null
@@ -312,6 +319,7 @@ export type Database = {
             | Database["public"]["Enums"]["employment_type"]
             | null
           full_name: string
+          gender?: string | null
           id?: string
           join_date: string
           kpi_score?: number | null
@@ -319,7 +327,11 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           position: string
+          salary_fulltime_official?: number | null
+          salary_fulltime_probation?: number | null
           salary_p1?: number | null
+          salary_parttime_official?: number | null
+          salary_parttime_probation?: number | null
           seniority_months?: number | null
           status?: Database["public"]["Enums"]["employee_status"] | null
           team?: string | null
@@ -332,6 +344,7 @@ export type Database = {
           allowance_other?: number | null
           allowance_phone?: number | null
           avatar_path?: string | null
+          birth_date?: string | null
           created_at?: string | null
           created_by?: string | null
           current_address?: string | null
@@ -347,6 +360,7 @@ export type Database = {
             | Database["public"]["Enums"]["employment_type"]
             | null
           full_name?: string
+          gender?: string | null
           id?: string
           join_date?: string
           kpi_score?: number | null
@@ -354,7 +368,11 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           position?: string
+          salary_fulltime_official?: number | null
+          salary_fulltime_probation?: number | null
           salary_p1?: number | null
+          salary_parttime_official?: number | null
+          salary_parttime_probation?: number | null
           seniority_months?: number | null
           status?: Database["public"]["Enums"]["employee_status"] | null
           team?: string | null
