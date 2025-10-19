@@ -45,6 +45,11 @@ const transformToUser = (data: CachedAuth): User => {
   const roleLevel = data.role.level;
   const isOwnerAdmin = isOwnerOrAdmin(roleLevel);
 
+  // SAFETY: Handle INACTIVE status at frontend level
+  if (data.profile.status !== 'ACTIVE') {
+    console.warn('⚠️ [Auth] User account is not active:', data.profile.status);
+  }
+
   return {
     id: data.profile.id,
     fullName: data.profile.full_name,
@@ -55,9 +60,7 @@ const transformToUser = (data: CachedAuth): User => {
     status: data.profile.status as UserStatus,
     role: data.role.name as any, // Compatible with existing UserRole type
     permissions: {
-      modules: isOwnerAdmin 
-        ? ['dashboard', 'hr', 'sales', 'customers', 'inventory', 'accounting', 'marketing', 'affiliate', 'system-settings', 'user-management'] as ERPModule[]
-        : [] as ERPModule[],
+      modules: (data.modules || ['dashboard']) as ERPModule[], // Use modules from RPC with fallback
       features: isOwnerAdmin ? ['full_access'] : [],
       voucherFeatures: [] as VoucherFeature[],
       canManageUsers: isOwnerAdmin,

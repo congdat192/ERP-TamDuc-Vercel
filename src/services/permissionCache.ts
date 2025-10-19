@@ -20,12 +20,13 @@ export interface CachedAuth {
     level: number;
     description?: string;
   };
+  modules: string[];
 }
 
 export class PermissionCache {
   private static KEY = 'tam_duc_erp_auth';
   private static TTL = 2 * 60 * 60 * 1000; // 2 hours
-  private static VERSION = '2.0'; // Bump khi thay đổi schema
+  private static VERSION = '2.1'; // Bump khi thay đổi schema
 
   static save(data: CachedAuth): void {
     try {
