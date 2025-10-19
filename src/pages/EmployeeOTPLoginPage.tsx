@@ -58,13 +58,14 @@ export function EmployeeOTPLoginPage() {
 
       console.log('✅ OTP sent successfully');
       
-      toast({
-        title: 'Mã OTP đã được gửi',
-        description: `Vui lòng kiểm tra email ${email} và nhập mã xác thực (có hiệu lực trong 5 phút).`,
-      });
-
+      // Optimistic UI: Chuyển màn hình ngay lập tức
       setStep('otp');
       startResendCountdown();
+      
+      toast({
+        title: 'Mã OTP đã được gửi',
+        description: `Vui lòng kiểm tra email ${email}. Email có thể mất vài giây để đến hộp thư của bạn.`,
+      });
 
     } catch (error: any) {
       console.error('❌ Error:', error);

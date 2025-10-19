@@ -46,66 +46,86 @@ Deno.serve(async (req) => {
     const emailLower = email.toLowerCase();
 
     // ============================================
-    // STEP 1: VALIDATE EMAIL VIA EXISTING FUNCTION
+    // STEP 1: VALIDATE EMAIL (INLINED FOR PERFORMANCE)
     // ============================================
     console.log(`🔍 Validating email: ${emailLower}`);
 
-    const { data: validationData, error: validationError } = await supabaseAdmin.functions.invoke(
-      'validate-employee-email',
-      { body: { email: emailLower } }
-    );
+    // Check if employee exists with this email
+    const { data: employee, error: employeeError } = await supabaseAdmin
+      .from('employees')
+      .select('id, employee_code, full_name, email, status, department')
+      .ilike('email', emailLower)
+      .is('deleted_at', null)
+      .single();
 
-    if (validationError || !validationData?.valid) {
-      console.error('❌ Email validation failed:', validationError || validationData?.message);
+    if (employeeError || !employee) {
+      console.error('❌ Employee not found');
       return new Response(
         JSON.stringify({
           success: false,
-          message: validationData?.message || 'Email không hợp lệ hoặc không tồn tại trong hệ thống'
+          message: 'Email không tồn tại trong hệ thống nhân viên'
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const employeeData = validationData.employeeData;
-    console.log(`✅ Employee found: ${employeeData.employeeCode} - ${employeeData.fullName}`);
+    if (employee.status !== 'active') {
+      console.error('❌ Employee not active');
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: 'Tài khoản nhân viên chưa được kích hoạt'
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`✅ Employee found: ${employee.employee_code} - ${employee.full_name}`);
 
     // ============================================
-    // STEP 2: GENERATE OTP & SAVE TO DB
+    // STEP 2: GENERATE OTP & SAVE TO DB (OPTIMIZED WITH UPSERT)
     // ============================================
     const otpCode = generateOTP();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
     console.log(`🔐 Generated OTP for ${emailLower}: ${otpCode} (expires at ${expiresAt.toISOString()})`);
 
-    // Delete old OTP codes for this email
-    const { error: deleteError } = await supabaseAdmin
+    // Upsert OTP (delete + insert in one operation)
+    const { error: upsertError } = await supabaseAdmin
       .from('email_otp_codes')
-      .delete()
-      .eq('email', emailLower);
-
-    if (deleteError) {
-      console.error('❌ Error deleting old OTP codes:', deleteError);
-    }
-
-    // Insert new OTP
-    const { error: insertError } = await supabaseAdmin
-      .from('email_otp_codes')
-      .insert({
+      .upsert({
         email: emailLower,
         otp_code: otpCode,
         expires_at: expiresAt.toISOString(),
-        verified: false
+        verified: false,
+        created_at: new Date().toISOString()
+      }, {
+        onConflict: 'email',
+        ignoreDuplicates: false
       });
 
-    if (insertError) {
-      console.error('❌ Error saving OTP:', insertError);
-      throw new Error('Không thể tạo mã OTP. Vui lòng thử lại.');
+    if (upsertError) {
+      console.error('❌ Error saving OTP:', upsertError);
+      // Fallback: delete then insert
+      await supabaseAdmin.from('email_otp_codes').delete().eq('email', emailLower);
+      const { error: insertError } = await supabaseAdmin
+        .from('email_otp_codes')
+        .insert({
+          email: emailLower,
+          otp_code: otpCode,
+          expires_at: expiresAt.toISOString(),
+          verified: false
+        });
+      
+      if (insertError) {
+        throw new Error('Không thể tạo mã OTP. Vui lòng thử lại.');
+      }
     }
 
     console.log(`✅ OTP saved to database`);
 
     // ============================================
-    // STEP 3: SEND EMAIL VIA RESEND
+    // STEP 3: SEND EMAIL ASYNC (NON-BLOCKING)
     // ============================================
     const emailHtml = `
       <!DOCTYPE html>
@@ -135,7 +155,7 @@ Deno.serve(async (req) => {
             <p>Tam Duc ERP System</p>
           </div>
           
-          <p>Xin chào <strong>${employeeData.fullName}</strong>,</p>
+          <p>Xin chào <strong>${employee.full_name}</strong>,</p>
           <p>Bạn đã yêu cầu đăng nhập vào hệ thống nhân viên. Vui lòng sử dụng mã OTP dưới đây:</p>
           
           <div class="otp-box">
@@ -146,8 +166,8 @@ Deno.serve(async (req) => {
             <p>⏱️ Mã OTP có hiệu lực trong <strong>5 phút</strong></p>
             <p>🔒 Không chia sẻ mã này với bất kỳ ai</p>
             <p>📧 Email: <strong>${emailLower}</strong></p>
-            <p>👤 Mã nhân viên: <strong>${employeeData.employeeCode}</strong></p>
-            <p>🏢 Phòng ban: <strong>${employeeData.department || 'N/A'}</strong></p>
+            <p>👤 Mã nhân viên: <strong>${employee.employee_code}</strong></p>
+            <p>🏢 Phòng ban: <strong>${employee.department || 'N/A'}</strong></p>
           </div>
           
           <div class="warning">
@@ -164,21 +184,21 @@ Deno.serve(async (req) => {
       </html>
     `;
 
-    console.log('📧 Sending OTP email via Resend...');
-
-    const { error: emailError } = await resend.emails.send({
+    // Send email asynchronously (non-blocking)
+    console.log('📧 Queuing OTP email for sending...');
+    
+    // Fire-and-forget email sending
+    resend.emails.send({
       from: 'ERP System <noreply@dangphuocquan.cloud>',
       to: [emailLower],
       subject: `Mã OTP đăng nhập: ${otpCode} - Tam Duc ERP`,
       html: emailHtml
+    }).then(() => {
+      console.log(`✅ OTP email sent successfully to ${emailLower}`);
+    }).catch((emailError) => {
+      console.error('⚠️ Email sending failed (non-blocking):', emailError);
+      // Don't throw error - email failure shouldn't block OTP flow
     });
-
-    if (emailError) {
-      console.error('❌ Error sending email:', emailError);
-      throw new Error('Không thể gửi email. Vui lòng thử lại sau.');
-    }
-
-    console.log(`✅ OTP email sent successfully to ${emailLower}`);
 
     // ============================================
     // STEP 4: RETURN SUCCESS
