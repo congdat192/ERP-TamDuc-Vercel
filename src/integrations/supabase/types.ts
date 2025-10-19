@@ -296,6 +296,7 @@ export type Database = {
           team: string | null
           total_fixed_salary: number | null
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           allowance_fuel?: number | null
@@ -337,6 +338,7 @@ export type Database = {
           team?: string | null
           total_fixed_salary?: number | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           allowance_fuel?: number | null
@@ -378,6 +380,7 @@ export type Database = {
           team?: string | null
           total_fixed_salary?: number | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -748,6 +751,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      otp_rate_limit: {
+        Row: {
+          attempt_count: number | null
+          blocked_until: string | null
+          created_at: string | null
+          email: string
+          first_attempt_at: string | null
+          id: string
+          last_attempt_at: string | null
+        }
+        Insert: {
+          attempt_count?: number | null
+          blocked_until?: string | null
+          created_at?: string | null
+          email: string
+          first_attempt_at?: string | null
+          id?: string
+          last_attempt_at?: string | null
+        }
+        Update: {
+          attempt_count?: number | null
+          blocked_until?: string | null
+          created_at?: string | null
+          email?: string
+          first_attempt_at?: string | null
+          id?: string
+          last_attempt_at?: string | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {

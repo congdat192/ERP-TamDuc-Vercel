@@ -19,6 +19,8 @@ import { EmailVerificationPage } from "./pages/EmailVerificationPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { ChangePasswordPage } from "./pages/ChangePasswordPage";
+import { EmployeeOTPLoginPage } from "./pages/EmployeeOTPLoginPage";
+import { MyProfilePage } from "./pages/MyProfilePage";
 import { ERPHome } from "./pages/ERPHome";
 import { CustomerPage } from "./pages/CustomerPage";
 import { SalesPage } from "./pages/SalesPage";
@@ -146,6 +148,8 @@ const AppContent = () => {
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/employee-login" element={<EmployeeOTPLoginPage />} />
+                <Route path="/my-profile" element={<MyProfilePage />} />
                 <Route path="/auth/callback" element={<AuthCallbackPage />} />
                 <Route path="/email/verify/:id/:hash" element={<EmailVerificationPage />} />
                 <Route path="/xac-nhan-tai-khoan/:email/:hash" element={<EmailVerificationPage />} />

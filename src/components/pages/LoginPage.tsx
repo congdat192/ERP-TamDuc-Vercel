@@ -195,6 +195,18 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                 </Button>
               </form>
 
+              {/* Employee OTP Login Link */}
+              <div className="text-center border-t pt-4">
+                <p className="text-sm text-gray-600 mb-2">Nhân viên?</p>
+                <Link 
+                  to="/employee-login"
+                  className="text-sm font-medium text-blue-600 hover:text-blue-800 underline-offset-4 hover:underline inline-flex items-center gap-1"
+                >
+                  Đăng nhập bằng OTP qua Email
+                  <Mail className="w-4 h-4" />
+                </Link>
+              </div>
+
               {/* Action Links */}
               <div className="text-center space-y-2">
                 <div className="flex items-center justify-center space-x-4">
