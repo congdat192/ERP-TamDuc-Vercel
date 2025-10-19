@@ -112,7 +112,11 @@ export function EmployeeSelector({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[500px] p-0" align="start">
-        {isLoading ? (
+        {!open ? (
+          <div className="p-4 text-center text-sm text-muted-foreground">
+            Loading...
+          </div>
+        ) : isLoading ? (
           <div className="p-4 text-center text-sm text-muted-foreground">
             Đang tải danh sách nhân viên...
           </div>
@@ -130,44 +134,41 @@ export function EmployeeSelector({
             <CommandEmpty>Không tìm thấy nhân viên</CommandEmpty>
             <CommandGroup className="max-h-[300px] overflow-auto">
               {Array.isArray(employees) && employees.length > 0 ? (
-                employees.map((employee) => {
-                  if (!employee || !employee.id) {
-                    console.warn('⚠️ [EmployeeSelector] Skipping invalid employee:', employee);
-                    return null;
-                  }
-                  
-                  const searchValue = [
-                    employee.fullName || '',
-                    employee.employeeCode || '',
-                    employee.position || '',
-                    employee.department || '',
-                    employee.team || ''
-                  ].filter(val => val !== '').join(' ');
-                  
-                  return (
-                    <CommandItem
-                      key={employee.id}
-                      value={searchValue || employee.id}
-                      onSelect={() => {
-                        onValueChange(employee.id);
-                        setOpen(false);
-                      }}
-                    >
-                      <Check
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          value === employee.id ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      <div className="flex flex-col">
-                        <span className="font-medium">{employee.fullName || 'N/A'}</span>
-                        <span className="text-sm text-muted-foreground">
-                          {employee.employeeCode || 'N/A'} - {employee.position || 'N/A'} ({employee.department || 'N/A'})
-                        </span>
-                      </div>
-                    </CommandItem>
-                  );
-                }).filter(Boolean)
+                employees
+                  .filter(employee => employee && employee.id)
+                  .map((employee) => {
+                    const searchValue = [
+                      employee.fullName || '',
+                      employee.employeeCode || '',
+                      employee.position || '',
+                      employee.department || '',
+                      employee.team || ''
+                    ].filter(val => val !== '').join(' ');
+                    
+                    return (
+                      <CommandItem
+                        key={employee.id}
+                        value={searchValue || employee.id}
+                        onSelect={() => {
+                          onValueChange(employee.id);
+                          setOpen(false);
+                        }}
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            value === employee.id ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        <div className="flex flex-col">
+                          <span className="font-medium">{employee.fullName || 'N/A'}</span>
+                          <span className="text-sm text-muted-foreground">
+                            {employee.employeeCode || 'N/A'} - {employee.position || 'N/A'} ({employee.department || 'N/A'})
+                          </span>
+                        </div>
+                      </CommandItem>
+                    );
+                  })
               ) : null}
             </CommandGroup>
           </Command>
