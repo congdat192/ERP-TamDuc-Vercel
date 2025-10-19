@@ -216,19 +216,26 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
 
           {/* Customer Table - Takes remaining height and width */}
           <div className="flex-1 min-h-0">
-            <CustomerTable 
-              customers={customers}
-              visibleColumns={visibleColumns}
-              selectedCustomers={selectedCustomers}
-              handleSelectCustomer={handleSelectCustomer}
-              handleSelectAll={handleSelectAll}
-              currentPage={currentPage}
-              setCurrentPage={setCurrentPage}
-              itemsPerPage={itemsPerPage}
-              setItemsPerPage={setItemsPerPage}
-              totalCustomers={totalCustomers}
-              totalPages={totalPages}
-            />
+          <CustomerTable 
+            customers={customers}
+            visibleColumns={visibleColumns}
+            selectedCustomers={selectedCustomers}
+            handleSelectCustomer={handleSelectCustomer}
+            handleSelectAll={handleSelectAll}
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+            itemsPerPage={itemsPerPage}
+            setItemsPerPage={setItemsPerPage}
+            totalCustomers={totalCustomers}
+            totalPages={totalPages}
+            voucherData={voucherData}
+            voucherLoading={voucherLoading}
+            onClaimVoucher={claimVoucher}
+            claiming={claiming}
+            onRefreshVoucher={checkEligibility}
+            invoiceData={invoiceData}
+            invoiceLoading={invoiceLoading}
+          />
           </div>
         </div>
       </div>

@@ -40,6 +40,13 @@ interface CustomerTableProps {
   setItemsPerPage: (items: number) => void;
   totalCustomers: number;
   totalPages: number;
+  voucherData: any;
+  voucherLoading: boolean;
+  onClaimVoucher: (phone: string, campaignId: string) => Promise<void>;
+  claiming: boolean;
+  onRefreshVoucher: (phone: string) => Promise<void>;
+  invoiceData: any;
+  invoiceLoading: boolean;
 }
 
 // Column width configurations based on content type
@@ -95,7 +102,14 @@ export function CustomerTable({
   itemsPerPage,
   setItemsPerPage,
   totalCustomers,
-  totalPages
+  totalPages,
+  voucherData,
+  voucherLoading,
+  onClaimVoucher,
+  claiming,
+  onRefreshVoucher,
+  invoiceData,
+  invoiceLoading
 }: CustomerTableProps) {
   const [expandedCustomerId, setExpandedCustomerId] = useState<string | null>(null);
 
@@ -264,6 +278,13 @@ export function CustomerTable({
                   <CustomerDetailRow 
                     customer={customer} 
                     visibleColumnsCount={visibleColumns.length}
+                    voucherData={voucherData}
+                    voucherLoading={voucherLoading}
+                    onClaimVoucher={(campaignId) => onClaimVoucher(customer.phone, campaignId)}
+                    claiming={claiming}
+                    onRefreshVoucher={() => onRefreshVoucher(customer.phone)}
+                    invoiceData={invoiceData}
+                    invoiceLoading={invoiceLoading}
                   />
                 )}
               </>
