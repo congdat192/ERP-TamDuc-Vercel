@@ -1068,6 +1068,7 @@ export type Database = {
           description: string | null
           id: number
           is_system: boolean | null
+          level: number | null
           name: string
           updated_at: string | null
         }
@@ -1076,6 +1077,7 @@ export type Database = {
           description?: string | null
           id?: number
           is_system?: boolean | null
+          level?: number | null
           name: string
           updated_at?: string | null
         }
@@ -1084,6 +1086,7 @@ export type Database = {
           description?: string | null
           id?: number
           is_system?: boolean | null
+          level?: number | null
           name?: string
           updated_at?: string | null
         }
@@ -1130,6 +1133,14 @@ export type Database = {
       generate_doc_number: {
         Args: { _doc_type: string; _year: number }
         Returns: string
+      }
+      get_user_profile_simple: {
+        Args: { _user_id: string }
+        Returns: Json
+      }
+      get_user_role_level: {
+        Args: { _user_id: string }
+        Returns: number
       }
       has_role: {
         Args:
