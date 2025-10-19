@@ -61,7 +61,7 @@ const transformToUser = (data: CachedAuth): User => {
     role: data.role.name as any, // Compatible with existing UserRole type
     permissions: {
       modules: (data.modules || ['dashboard']) as ERPModule[], // Use modules from RPC with fallback
-      features: isOwnerAdmin ? ['full_access'] : [],
+      features: data.features || [], // Use features from RPC (Owner/Admin get ['full_access'], custom roles get actual codes)
       voucherFeatures: [] as VoucherFeature[],
       canManageUsers: isOwnerAdmin,
       canViewAllVouchers: isOwnerAdmin
