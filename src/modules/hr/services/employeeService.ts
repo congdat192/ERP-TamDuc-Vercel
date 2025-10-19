@@ -36,6 +36,58 @@ export class EmployeeService {
     return !!data;
   }
 
+  /**
+   * Search employees by name or code
+   */
+  static async searchEmployees(query: string, limit: number = 10): Promise<Employee[]> {
+    const { data, error } = await supabase
+      .from('employees')
+      .select('*')
+      .or(`full_name.ilike.%${query}%,employee_code.ilike.%${query}%`)
+      .is('deleted_at', null)
+      .order('full_name', { ascending: true })
+      .limit(limit);
+
+    if (error) throw error;
+
+    return (data || []).map((emp: any): Employee => ({
+      id: emp.id,
+      employeeCode: emp.employee_code,
+      fullName: emp.full_name,
+      email: emp.email,
+      phone: emp.phone || '',
+      avatar: emp.avatar_path || '/placeholder.svg',
+      position: emp.position,
+      department: emp.department,
+      team: emp.team,
+      joinDate: emp.join_date,
+      employmentType: emp.employment_type as 'Full-time' | 'Part-time' | 'CTV' | 'Thử việc' | 'Thực tập',
+      seniorityMonths: emp.seniority_months,
+      status: emp.status,
+      salary: {
+        basic: Number(emp.salary_p1) || 0,
+        allowanceMeal: Number(emp.allowance_meal) || 0,
+        allowanceFuel: Number(emp.allowance_fuel) || 0,
+        allowancePhone: Number(emp.allowance_phone) || 0,
+        allowanceOther: Number(emp.allowance_other) || 0,
+        totalFixed: Number(emp.total_fixed_salary) || 0,
+      },
+      performance: {
+        kpi: Number(emp.kpi_score) || 0,
+        lastReview: emp.last_review_date || ''
+      },
+      currentAddress: emp.current_address,
+      emergencyContact: emp.emergency_contact_name ? {
+        relationship: emp.emergency_contact_relationship as 'Cha' | 'Mẹ' | 'Vợ' | 'Chồng' | 'Anh' | 'Chị' | 'Em' | 'Khác',
+        name: emp.emergency_contact_name,
+        phone: emp.emergency_contact_phone
+      } : undefined,
+      notes: emp.notes,
+      deletedAt: emp.deleted_at,
+      deletedBy: emp.deleted_by,
+    }));
+  }
+
   static async getEmployees(includeDeleted = false): Promise<Employee[]> {
     let query = supabase
       .from('employees')

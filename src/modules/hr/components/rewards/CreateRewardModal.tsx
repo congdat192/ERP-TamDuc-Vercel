@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { RewardsService } from '../../services/rewardsService';
 import type { CreateRewardData } from '../../types/benefits';
-import { EmployeeSelector } from '../shared/EmployeeSelector';
+import { EmployeeSearchInput } from '../shared/EmployeeSearchInput';
 
 interface CreateRewardModalProps {
   isOpen: boolean;
@@ -118,9 +118,10 @@ export function CreateRewardModal({ isOpen, onClose, onSuccess }: CreateRewardMo
             <Label htmlFor="employee_id">
               Nhân Viên <span className="text-destructive">*</span>
             </Label>
-            <EmployeeSelector
+            <EmployeeSearchInput
               value={formData.employee_id}
               onValueChange={(value) => setFormData({ ...formData, employee_id: value })}
+              placeholder="Tìm kiếm nhân viên..."
             />
           </div>
 
