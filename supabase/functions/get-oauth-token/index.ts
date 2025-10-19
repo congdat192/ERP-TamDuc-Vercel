@@ -55,17 +55,25 @@ serve(async (req) => {
       );
     }
 
-    const data: OAuthTokenResponse = await response.json();
+    const data = await response.json();
     console.log('[get-oauth-token] Full response data:', JSON.stringify(data));
     console.log('[get-oauth-token] Response keys:', Object.keys(data));
-    console.log('[get-oauth-token] Has access_token:', !!data.access_token);
-    console.log('[get-oauth-token] Token expires in:', data.expires_in);
-    console.log('[get-oauth-token] Token (first 20 chars):', data.access_token?.substring(0, 20));
+    
+    // ✅ FIX: Extract token from nested structure
+    const actualToken = data.data?.access_token || data.access_token;
+    const expiresAt = data.data?.expires_at_vn || data.expires_at_vn;
+    
+    console.log('[get-oauth-token] Has access_token:', !!actualToken);
+    console.log('[get-oauth-token] Token (first 20 chars):', actualToken?.substring(0, 20));
+    console.log('[get-oauth-token] Expires at:', expiresAt);
 
     return new Response(
       JSON.stringify({
         success: true,
-        data: data
+        data: {
+          access_token: actualToken,
+          expires_at_vn: expiresAt
+        }
       }),
       {
         status: 200,
