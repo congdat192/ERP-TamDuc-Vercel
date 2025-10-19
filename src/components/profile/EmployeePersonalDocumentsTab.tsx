@@ -278,10 +278,8 @@ export function EmployeePersonalDocumentsTab({ employeeId }: Props) {
         variant: "destructive",
       });
     } finally {
-      // Remove from loading list after a short delay
-      setTimeout(() => {
-        setLoadingDocIds(prev => prev.filter(id => id !== doc.id));
-      }, 500);
+      // Remove from loading list immediately
+      setLoadingDocIds(prev => prev.filter(id => id !== doc.id));
     }
   };
 
