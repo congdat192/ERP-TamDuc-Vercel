@@ -7,7 +7,7 @@ import { LogOut, User, Gift, FileText, Send, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { EmployeePersonalInfoTab } from '@/components/profile/EmployeePersonalInfoTab';
 import { EmployeeBenefitsTab } from '@/components/profile/EmployeeBenefitsTab';
-import { EmployeeDocumentsTab } from '@/components/profile/EmployeeDocumentsTab';
+import { EmployeePersonalDocumentsTab } from '@/components/profile/EmployeePersonalDocumentsTab';
 import { EmployeeChangeRequestsTab } from '@/components/profile/EmployeeChangeRequestsTab';
 
 export function MyProfilePage() {
@@ -116,7 +116,7 @@ export function MyProfilePage() {
           </TabsContent>
 
           <TabsContent value="documents">
-            <EmployeeDocumentsTab employeeId={employee.id} />
+            <EmployeePersonalDocumentsTab employeeId={employee.id} />
           </TabsContent>
 
           <TabsContent value="requests">
