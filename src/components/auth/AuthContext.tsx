@@ -1,15 +1,20 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, UserPermissions, ERPModule, VoucherFeature, UserRole } from '@/types/auth';
-import { MODULE_PERMISSIONS, VOUCHER_FEATURES } from '@/constants/permissions';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import type { User as SupabaseUser } from '@supabase/supabase-js';
+// AuthProvider.tsx
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import type { User as SupabaseUser } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
+// Giữ nguyên đường dẫn type theo dự án của bạn
+import { User, UserPermissions, ERPModule, VoucherFeature, UserRole } from "@/types/auth";
+
+/* ============================================================================
+ *  Context Types
+ * ==========================================================================*/
 interface AuthContextType {
   currentUser: User | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
   refreshUserProfile: () => Promise<void>;
   refreshPermissions: () => Promise<void>;
   isLoading: boolean;
@@ -20,322 +25,265 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within an AuthProvider");
+  return ctx;
 };
 
-// Transform database permissions to frontend format
-const transformPermissions = (dbPermissions: any[]): UserPermissions => {
+/* ============================================================================
+ *  Small utilities
+ * ==========================================================================*/
+
+// Chỉ xoá key liên quan Supabase để tránh xóa nhầm dữ liệu app khác
+const clearSupabaseStorage = () => {
+  try {
+    const keys = Object.keys(localStorage);
+    for (const k of keys) {
+      if (k.startsWith("sb-") || k.toLowerCase().includes("supabase")) {
+        localStorage.removeItem(k);
+      }
+    }
+  } catch {
+    /* no-op */
+  }
+};
+
+// Chống spam toast trong 30s cho cùng 1 "key"
+const notifyOnce = (() => {
+  const cache = new Map<string, number>();
+  const TTL = 30_000;
+  return (key: string, fn: () => void) => {
+    const now = Date.now();
+    const last = cache.get(key) ?? 0;
+    if (now - last > TTL) {
+      cache.set(key, now);
+      fn();
+    }
+  };
+})();
+
+/* ============================================================================
+ *  Permission mapping (Single source of truth)
+ * ==========================================================================*/
+
+const ALL_MODULES: ERPModule[] = [
+  "dashboard",
+  "customers",
+  "sales",
+  "inventory",
+  "accounting",
+  "hr",
+  "voucher",
+  "marketing",
+  "affiliate",
+  "system-settings",
+  "user-management",
+];
+
+type DbPermissionLike = {
+  feature_code?: string | null;
+  module_code?: ERPModule | null;
+  // dự phòng nếu payload join sâu (giữ lại để tương thích)
+  features?: {
+    code?: string | null;
+    modules?: { code?: ERPModule | null } | null;
+  } | null;
+};
+
+/**
+ * Gộp toàn bộ logic chuyển quyền về một nơi.
+ * - Nếu role là owner/admin => full_access + ALL_MODULES + toàn bộ voucherFeatures phổ biến.
+ * - Các role khác: map từ feature_code / module_code.
+ */
+const transformPermissions = (
+  dbPermissions: DbPermissionLike[] | null | undefined,
+  roleName?: string,
+): UserPermissions => {
   const modules = new Set<ERPModule>();
   const features = new Set<string>();
-  const voucherFeatures = new Set<VoucherFeature>();
+  const voucher = new Set<VoucherFeature>();
   let canManageUsers = false;
   let canViewAllVouchers = false;
-  
-  (dbPermissions || []).forEach((p: any) => {
-    // Extract feature code
-    const featureCode = p.feature_code || p.features?.code;
-    const moduleCode = p.module_code || p.features?.modules?.code;
-    
-    // Add feature code
-    if (featureCode) {
-      features.add(featureCode);
-    }
-    
-    // Add module if user has any permission in it
-    if (moduleCode) {
-      modules.add(moduleCode as ERPModule);
-    }
-    
-    // Check for voucher-specific features
-    if (moduleCode === 'voucher') {
-      if (featureCode === 'view_voucher') {
-        voucherFeatures.add('voucher-list');
+
+  const rn = (roleName || "").toLowerCase();
+  const isOwner = rn === "owner" || rn === "admin";
+
+  if (isOwner) {
+    return {
+      modules: [...ALL_MODULES],
+      features: ["full_access"], // guard sẽ hiểu full_access là siêu quyền
+      voucherFeatures: [
+        "voucher-dashboard",
+        "campaign-management",
+        "issue-voucher",
+        "voucher-list",
+        "voucher-analytics",
+        "voucher-leaderboard",
+        "voucher-settings",
+      ],
+      canManageUsers: true,
+      canViewAllVouchers: true,
+    };
+  }
+
+  (dbPermissions || []).forEach((p) => {
+    const featureCode = p.feature_code ?? p.features?.code ?? undefined;
+    const moduleCode = (p.module_code ?? p.features?.modules?.code) as ERPModule | null | undefined;
+
+    if (featureCode) features.add(featureCode);
+    if (moduleCode) modules.add(moduleCode);
+
+    // Map các tính năng voucher
+    if (moduleCode === "voucher") {
+      if (featureCode === "view_voucher" || featureCode === "read_voucher") {
+        voucher.add("voucher-list");
+        voucher.add("voucher-dashboard");
         canViewAllVouchers = true;
       }
-      if (featureCode === 'create_voucher') {
-        voucherFeatures.add('issue-voucher');
-      }
-      if (featureCode === 'approve_voucher') {
-        voucherFeatures.add('campaign-management');
-      }
-      voucherFeatures.add('voucher-dashboard');
-      voucherFeatures.add('voucher-analytics');
+      if (featureCode === "create_voucher") voucher.add("issue-voucher");
+      if (featureCode === "approve_voucher" || featureCode === "manage_campaign") voucher.add("campaign-management");
+      if (featureCode === "view_voucher_analytics") voucher.add("voucher-analytics");
+      if (featureCode === "view_voucher_leaderboard") voucher.add("voucher-leaderboard");
+      if (featureCode === "manage_voucher_settings") voucher.add("voucher-settings");
     }
-    
-    // Check for user management permissions
-    if (featureCode === 'manage_members' || featureCode === 'manage_roles') {
+
+    if (featureCode && ["manage_members", "manage_roles", "create_member"].includes(featureCode)) {
       canManageUsers = true;
     }
   });
-  
-  // Special case: full_access grants all modules
-  const hasFullAccess = features.has('full_access');
-  
+
   return {
-    modules: hasFullAccess ? [
-      'dashboard',
-      'customers',
-      'sales',
-      'inventory',
-      'accounting',
-      'hr',
-      'voucher',
-      'marketing',
-      'affiliate',
-      'system-settings',
-      'user-management'
-    ] as ERPModule[] : Array.from(modules),
+    modules: Array.from(modules),
     features: Array.from(features),
-    voucherFeatures: hasFullAccess ? [
-      'voucher-dashboard',
-      'campaign-management',
-      'issue-voucher',
-      'voucher-list',
-      'voucher-analytics',
-      'voucher-leaderboard',
-      'voucher-settings'
-    ] as VoucherFeature[] : Array.from(voucherFeatures),
-    canManageUsers: hasFullAccess || canManageUsers,
-    canViewAllVouchers: hasFullAccess || canViewAllVouchers
+    voucherFeatures: Array.from(voucher),
+    canManageUsers,
+    canViewAllVouchers,
   };
 };
 
-// Fetch user with all permissions from database (single-tenant)
-const fetchUserWithPermissions = async (supabaseUser: SupabaseUser): Promise<{ user: User; passwordChangeRequired: boolean }> => {
-  console.log('🔄 [AuthContext] Fetching user with permissions');
-  
-  // Get profile with password_change_required flag
+/* ============================================================================
+ *  Guards: dùng thống nhất trong UI
+ * ==========================================================================*/
+
+/** Siêu quyền */
+export const hasFullAccess = (user: User | null) => !!user?.permissions?.features?.includes("full_access");
+
+/** Kiểm tra feature */
+export const hasFeature = (user: User | null, feature: string) => {
+  if (!user) return false;
+  if (hasFullAccess(user)) return true;
+  return !!user.permissions?.features?.includes(feature);
+};
+
+/** Kiểm tra module */
+export const hasModule = (user: User | null, moduleCode: ERPModule) => {
+  if (!user) return false;
+  if (hasFullAccess(user)) return true;
+  return !!user.permissions?.modules?.includes(moduleCode);
+};
+
+/* ============================================================================
+ *  DB fetch layer
+ * ==========================================================================*/
+
+const fetchUserWithPermissions = async (
+  supaUser: SupabaseUser,
+): Promise<{ user: User; passwordChangeRequired: boolean }> => {
+  // 1) Lấy hồ sơ (chỉ cột cần)
   const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', supabaseUser.id)
+    .from("profiles")
+    .select("full_name, phone, avatar_path, password_change_required, status")
+    .eq("id", supaUser.id)
     .single();
-  
-  if (profileError) {
-    console.error('❌ [AuthContext] Error fetching profile:', profileError);
-    throw profileError;
-  }
-  
-  // Fetch user role with permissions via role_id
-  const { data: userRoleData } = await supabase
-    .from('user_roles')
-    .select(`
+  if (profileError) throw profileError;
+
+  // 2) Lấy role + permissions (join như code cũ của bạn)
+  const { data: userRoleData, error: roleErr } = await supabase
+    .from("user_roles")
+    .select(
+      `
       role_id,
       roles!user_roles_role_id_fkey (
         id,
         name,
         description,
-      role_permissions (
-        features (
-          code,
-          module_id,
-          feature_type,
-          modules (
+        role_permissions (
+          features (
             code,
-            name
+            module_id,
+            modules ( code )
           )
         )
       )
-      )
-    `)
-    .eq('user_id', supabaseUser.id)
+    `,
+    )
+    .eq("user_id", supaUser.id)
     .single();
 
-  // Check user_roles record exists
-  if (!userRoleData) {
-    console.error('❌ [AuthContext] No user_roles record found for user:', supabaseUser.id);
-    throw new Error('User has no assigned role. Please contact administrator.');
+  if (roleErr) throw roleErr;
+  if (!userRoleData || !(userRoleData as any).roles) {
+    throw new Error("User has no assigned role. Please contact administrator.");
   }
 
-  console.log('📋 [AuthContext] User role data:', userRoleData);
+  const roleData = (userRoleData as any).roles as {
+    id: string;
+    name: string;
+    role_permissions?: Array<{
+      features?: { code?: string | null; modules?: { code?: ERPModule | null } | null };
+    }>;
+  };
 
-  // Check if role exists in roles table
-  const roleData = userRoleData.roles as any;
-  if (!roleData) {
-    console.error('❌ [AuthContext] Role ID not found in roles table:', userRoleData.role_id);
-    throw new Error(`Role ID ${userRoleData.role_id} does not exist. Please contact administrator.`);
-  }
-
-  console.log('🔐 [AuthContext] User role loaded:', roleData.name, 'ID:', roleData.id);
-  
-  // Extract permissions from role with module info
+  const roleName = (roleData.name || "custom").toLowerCase();
   const rolePermissions = roleData.role_permissions || [];
-  
-  console.log('📋 [AuthContext] Role permissions count:', rolePermissions.length);
-  
-  // Log detailed feature-module mapping
-  rolePermissions.forEach((rp: any, index: number) => {
-    const feature = rp.features;
-    if (!feature) {
-      console.warn(`⚠️ [${index + 1}] No feature data in role_permission`);
-      return;
-    }
-    
-    const featureCode = feature.code;
-    const moduleCode = feature?.modules?.code;
-    
-    console.log(`🔍 [${index + 1}] Feature:`, {
-      featureCode: featureCode,
-      moduleName: feature?.modules?.name,
-      moduleCode: moduleCode,
-      moduleId: feature.module_id
-    });
+
+  // 3) Flatten để đưa vào transformPermissions
+  const flattened: DbPermissionLike[] = rolePermissions.map((rp) => {
+    const f = rp.features || {};
+    return {
+      feature_code: f.code || undefined,
+      module_code: (f.modules?.code as ERPModule | null) ?? undefined,
+      features: f as any,
+    };
   });
 
-  // Map role name to legacy UserRole type
-  let userRole: UserRole = 'custom';
-  const roleName = roleData.name.toLowerCase();
-  
-  if (roleName === 'owner') {
-    userRole = 'erp-admin';
-  } else if (roleName === 'admin') {
-    userRole = 'erp-admin';
-  } else if (roleName === 'user') {
-    userRole = 'custom';
-  }
-  
-  // Get permissions based on role
-  let permissions: UserPermissions;
-  
-  // Owner role gets full access to everything
-  if (roleName === 'owner') {
-    console.log('👑 [AuthContext] Owner role detected - granting full access');
-    permissions = {
-      modules: [
-        'dashboard',
-        'customers',
-        'sales',
-        'inventory',
-        'accounting',
-        'hr',
-        'voucher',
-        'marketing',
-        'affiliate',
-        'system-settings',
-        'user-management'
-      ] as ERPModule[],
-      features: ['full_access'], // Owner has full_access feature
-      voucherFeatures: [
-        'voucher-dashboard',
-        'campaign-management',
-        'issue-voucher',
-        'voucher-list',
-        'voucher-analytics',
-        'voucher-leaderboard',
-        'voucher-settings'
-      ] as VoucherFeature[],
-      canManageUsers: true,
-      canViewAllVouchers: true
-    };
-  } else {
-    // For custom roles, map features to permissions using module_code from database
-    const moduleSet = new Set<ERPModule>();
-    const featureSet = new Set<string>();
-    const voucherFeatureSet = new Set<VoucherFeature>();
-    let canManageUsers = false;
-    let canViewAllVouchers = false;
+  // 4) Map role name -> legacy UserRole
+  let userRole: UserRole = "custom";
+  if (roleName === "owner" || roleName === "admin") userRole = "erp-admin";
 
-    rolePermissions.forEach((rp: any) => {
-      const feature = rp.features;
-      if (!feature) return;
-      
-      const featureCode = feature.code;
-      const moduleCode = feature.modules?.code; // ✅ Get module code from database
-      
-      // Add feature code
-      if (featureCode) {
-        featureSet.add(featureCode);
-      }
-      
-      // Add module based on module_code from database
-      if (moduleCode) {
-        moduleSet.add(moduleCode as ERPModule);
-        console.log(`✅ Added module: ${moduleCode} from feature: ${featureCode}`);
-      } else {
-        console.warn(`⚠️ Module code not found for feature: ${featureCode}`);
-      }
-      
-      // Map voucher-specific features
-      if (moduleCode === 'voucher') {
-        if (featureCode === 'view_voucher' || featureCode === 'read_voucher') {
-          voucherFeatureSet.add('voucher-list');
-          voucherFeatureSet.add('voucher-dashboard');
-          canViewAllVouchers = true;
-        }
-        if (featureCode === 'create_voucher') {
-          voucherFeatureSet.add('issue-voucher');
-        }
-        if (featureCode === 'approve_voucher' || featureCode === 'manage_campaign') {
-          voucherFeatureSet.add('campaign-management');
-        }
-        if (featureCode === 'view_voucher_analytics') {
-          voucherFeatureSet.add('voucher-analytics');
-        }
-        if (featureCode === 'view_voucher_leaderboard') {
-          voucherFeatureSet.add('voucher-leaderboard');
-        }
-        if (featureCode === 'manage_voucher_settings') {
-          voucherFeatureSet.add('voucher-settings');
-        }
-      }
-      
-      // Check for user management permissions
-      if (featureCode === 'manage_members' || featureCode === 'manage_roles' || featureCode === 'create_member') {
-        canManageUsers = true;
-      }
-    });
+  // 5) Build final permissions
+  const permissions = transformPermissions(flattened, roleName);
 
-    permissions = {
-      modules: Array.from(moduleSet),
-      features: Array.from(featureSet),
-      voucherFeatures: Array.from(voucherFeatureSet),
-      canManageUsers,
-      canViewAllVouchers,
-    };
-  }
-
-  console.log('✅ [AuthContext] Final modules:', permissions.modules);
-  console.log('✅ [AuthContext] Final voucher features:', permissions.voucherFeatures);
-  console.log('✅ [AuthContext] User can access:', {
-    modules: permissions.modules,
-    voucherFeatures: permissions.voucherFeatures,
-    canManageUsers: permissions.canManageUsers,
-    canViewAllVouchers: permissions.canViewAllVouchers
-  });
-  
   const user: User = {
-    id: supabaseUser.id,
-    fullName: profile.full_name || 'User',
-    username: supabaseUser.email?.split('@')[0] || '',
-    email: supabaseUser.email!,
-    phone: profile.phone,
+    id: supaUser.id,
+    fullName: profile?.full_name || "User",
+    username: supaUser.email?.split("@")[0] || "",
+    email: supaUser.email || "",
+    phone: profile?.phone ?? null,
     role: userRole,
     permissions,
     isActive: true,
-    status: supabaseUser.email_confirmed_at ? 'active' : 'pending_verification',
-    createdAt: supabaseUser.created_at,
+    status: supaUser.email_confirmed_at ? "active" : "pending_verification",
+    createdAt: supaUser.created_at,
     lastLogin: new Date().toISOString(),
-    emailVerified: !!supabaseUser.email_confirmed_at,
-    avatarPath: profile.avatar_path,
+    emailVerified: !!supaUser.email_confirmed_at,
+    avatarPath: profile?.avatar_path ?? null,
     securitySettings: {
       twoFactorEnabled: false,
       loginAttemptLimit: 5,
-      passwordChangeRequired: profile.password_change_required || false
+      passwordChangeRequired: !!profile?.password_change_required,
     },
-    activities: []
+    activities: [],
   };
-
-  console.log('🔐 [AuthContext] Password change required:', profile.password_change_required);
 
   return {
     user,
-    passwordChangeRequired: profile.password_change_required || false
+    passwordChangeRequired: !!profile?.password_change_required,
   };
 };
+
+/* ============================================================================
+ *  Auth Provider
+ * ==========================================================================*/
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -344,378 +292,194 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [requirePasswordChange, setRequirePasswordChange] = useState(false);
   const { toast } = useToast();
 
-  /**
-   * PHASE 1: Complete session cleanup - removes ALL auth-related data
-   * Prevents stale tokens from causing login issues in preview environment
-   */
+  const fetchAbortRef = useRef<AbortController | null>(null);
+
   const clearAuthState = async () => {
-    console.log('🧹 [clearAuthState] Cleaning up all auth state');
-    
     try {
-      // 1. Sign out from Supabase
       await supabase.auth.signOut();
-      
-      // 2. Clear React state
-      setCurrentUser(null);
-      setRequirePasswordChange(false);
-      
-      // 3. Clear ALL Supabase-related localStorage keys
-      const supabaseKeys = Object.keys(localStorage).filter(key => 
-        key.startsWith('sb-') || key.includes('supabase')
-      );
-      supabaseKeys.forEach(key => {
-        console.log('  🗑️ Removing:', key);
-        localStorage.removeItem(key);
-      });
-      
-      // 4. Clear general storage
-      localStorage.clear();
-      sessionStorage.clear();
-      
-      console.log('✅ [clearAuthState] Cleanup complete');
-    } catch (error) {
-      console.error('❌ [clearAuthState] Error during cleanup:', error);
-      // Force clear even if signOut fails
-      setCurrentUser(null);
-      setRequirePasswordChange(false);
-      localStorage.clear();
-      sessionStorage.clear();
+    } catch {
+      /* no-op */
+    }
+    setCurrentUser(null);
+    setRequirePasswordChange(false);
+    clearSupabaseStorage();
+    try {
+      sessionStorage.clear(); // session không chứa bí mật → optional
+    } catch {
+      /* no-op */
     }
   };
 
-  // Setup Supabase auth state listener (CRITICAL!)
+  // Single source of truth: auth listener (tránh double-fetch)
   useEffect(() => {
-    console.log('🚀 [AuthContext] Setting up auth state listener');
-    
-    // Subscribe to auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('🔔 [AuthContext] Auth state changed:', event);
-        
-        if (session?.user) {
-          // ✅ PHASE 1: CHECK STATUS ON SESSION RESTORE (Relaxed)
-          // This prevents INACTIVE users from accessing the app even with valid sessions
-          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-            console.log('🔍 [Phase 1] Checking user status for event:', event);
-            
-            const { data: profile, error } = await supabase
-              .from('profiles')
-              .select('status')
-              .eq('id', session.user.id)
-              .single();
-            
-            if (error) {
-              // Query failed - log warning but proceed (let RLS handle access control)
-              console.warn('⚠️ [Phase 1] Failed to check status (proceeding with login):', error.message);
-              setCurrentUser(null); // Clear stale state
-              setIsInitialized(true);
-            } else if (profile?.status === 'INACTIVE') {
-              // Query succeeded and user is INACTIVE - block access
-              console.log('⛔ [Phase 1] INACTIVE user detected - logging out');
-              await supabase.auth.signOut();
-              setCurrentUser(null); // Clear stale state
-              toast({
-                title: "Tài khoản bị vô hiệu hóa",
-                description: "Tài khoản của bạn đã bị vô hiệu hóa.",
-                variant: "destructive",
-              });
-              setIsInitialized(true);
-              return; // Don't load user data
-            } else {
-              // Query succeeded and user is ACTIVE
-              console.log('✅ [Phase 1] User status is ACTIVE - proceeding');
-              setIsInitialized(true);
-            }
-          }
-          
-          // User logged in - fetch profile and permissions
-          // Use setTimeout to avoid blocking the auth callback
-          setTimeout(async () => {
-            try {
-              const { user, passwordChangeRequired } = await fetchUserWithPermissions(session.user);
-              setCurrentUser(user);
-              setRequirePasswordChange(passwordChangeRequired);
-              console.log('✅ [AuthContext] User state updated:', user.email);
-            } catch (error: any) {
-              console.error('❌ [AuthContext] Error fetching user:', error);
-              
-              // PHASE 3: If RLS error or critical failure, clear everything
-              const isCriticalError = 
-                error?.code === '42501' || 
-                error?.code === 'PGRST301' || 
-                error?.message?.includes('JWT') ||
-                error?.message?.includes('RLS') ||
-                error?.message?.includes('permission denied');
-              
-              if (isCriticalError) {
-                console.error('🚨 [AuthContext] Critical auth error - force logout');
-                await clearAuthState();
-                
-                toast({
-                  title: "Phiên đăng nhập hết hạn",
-                  description: "Vui lòng đăng nhập lại.",
-                  variant: "destructive",
-                });
-                
-                // Redirect to login if not already there
-                if (window.location.pathname !== '/login') {
-                  window.location.href = '/login';
-                }
-              } else {
-                // Non-critical error - just clear state
-                setCurrentUser(null);
-                setRequirePasswordChange(false);
-              }
-            }
-          }, 0);
-        } else {
-          // User logged out
-          console.log('👋 [AuthContext] User logged out');
-          setCurrentUser(null);
-          setRequirePasswordChange(false);
-        }
-      }
-    );
-    
-    // Check for existing session on mount
-    const checkSession = async () => {
-      try {
-        console.log('🔍 [checkSession] Checking for existing session');
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        // PHASE 4: Validate session exists and is valid
-        if (sessionError) {
-          console.warn('⚠️ [checkSession] Session error:', sessionError.message);
-          await clearAuthState();
-          setIsInitialized(true);
-          return;
-        }
-        
-        if (!session) {
-          console.log('ℹ️ [checkSession] No session found');
-          setIsInitialized(true);
-          return;
-        }
-        
-        // PHASE 4: Validate session expiry with 5-minute buffer
-        const expiresAt = session.expires_at;
-        const EXPIRY_BUFFER = 300; // 5 minutes in seconds
-        
-        if (expiresAt && (expiresAt - EXPIRY_BUFFER) < Math.floor(Date.now() / 1000)) {
-          console.warn('⚠️ [checkSession] Session expired or expiring soon - clearing');
-          await clearAuthState();
-          setIsInitialized(true);
-          
-          toast({
-            title: "Phiên đăng nhập hết hạn",
-            description: "Vui lòng đăng nhập lại.",
-          });
-          
-          return;
-        }
-        
-        console.log('🔍 [checkSession] Valid session found, checking user status');
-        
-        // Phase 1: Quick status check
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('status')
-          .eq('id', session.user.id)
+    let mounted = true;
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!mounted) return;
+
+      if (session?.user) {
+        // Quick status check INACTIVE
+        const { data: st, error: stErr } = await supabase
+          .from("profiles")
+          .select("status")
+          .eq("id", session.user.id)
           .single();
-        
-        if (error) {
-          console.warn('⚠️ [checkSession] Failed to check status - clearing session:', error.message);
-          await clearAuthState(); // PHASE 2: Use helper
+
+        if (stErr) {
+          await clearAuthState();
           setIsInitialized(true);
-          
-          // Force page reload to ensure clean state
-          if (window.location.pathname !== '/login') {
-            console.log('🔄 [checkSession] Redirecting to login...');
-            window.location.href = '/login';
-          }
-          return;
-        }
-        
-        if (profile?.status === 'INACTIVE') {
-          console.log('⛔ [checkSession] INACTIVE user detected - logging out');
-          await supabase.auth.signOut();
-          setCurrentUser(null);
-          toast({
-            title: "Tài khoản bị vô hiệu hóa",
-            description: "Tài khoản của bạn đã bị vô hiệu hóa.",
-            variant: "destructive",
-          });
-          setIsInitialized(true);
-          return;
-        }
-        
-        console.log('✅ [checkSession] User status is ACTIVE - proceeding');
-        setIsInitialized(true);
-        
-        // Phase 2: Load full profile (non-blocking)
-        setTimeout(() => {
-          fetchUserWithPermissions(session.user).then(({ user, passwordChangeRequired }) => {
-            setCurrentUser(user);
-            setRequirePasswordChange(passwordChangeRequired);
-            console.log('✅ [checkSession] Profile loaded:', user.email);
-          }).catch(async (err) => {
-            console.error('❌ [checkSession] Failed to load profile - forcing logout:', err);
-            
-            // PHASE 2: Force logout + clear everything (stale session detected)
-            await clearAuthState();
-            
+          notifyOnce("status-error", () =>
             toast({
               title: "Phiên đăng nhập hết hạn",
               description: "Vui lòng đăng nhập lại.",
               variant: "destructive",
-            });
-            
-            // Force redirect to login
-            if (window.location.pathname !== '/login') {
-              window.location.href = '/login';
-            }
-          });
-        }, 0);
-      } catch (error) {
-        console.error('❌ [checkSession] Unexpected error:', error);
-        // PHASE 2: Force clean state on any error
-        await clearAuthState();
+            }),
+          );
+          if (window.location.pathname !== "/login") window.location.href = "/login";
+          return;
+        }
+
+        if (st?.status === "INACTIVE") {
+          await clearAuthState();
+          setIsInitialized(true);
+          notifyOnce("inactive", () =>
+            toast({
+              title: "Tài khoản bị vô hiệu hóa",
+              description: "Vui lòng liên hệ quản trị viên.",
+              variant: "destructive",
+            }),
+          );
+          return;
+        }
+
+        // Huỷ các fetch cũ đang chạy
+        fetchAbortRef.current?.abort();
+        fetchAbortRef.current = new AbortController();
+
+        try {
+          const { user, passwordChangeRequired } = await fetchUserWithPermissions(session.user);
+          if (!mounted) return;
+          setCurrentUser(user);
+          setRequirePasswordChange(passwordChangeRequired);
+          setIsInitialized(true);
+        } catch {
+          await clearAuthState();
+          setIsInitialized(true);
+          notifyOnce("fetch-user-error", () =>
+            toast({
+              title: "Phiên đăng nhập hết hạn",
+              description: "Vui lòng đăng nhập lại.",
+              variant: "destructive",
+            }),
+          );
+          if (window.location.pathname !== "/login") window.location.href = "/login";
+        }
+      } else {
+        // logged out
+        setCurrentUser(null);
+        setRequirePasswordChange(false);
         setIsInitialized(true);
       }
-    };
-    
-    checkSession();
-    
-    // Cleanup subscription on unmount
+    });
+
+    // Kích hoạt trạng thái hiện tại (không fetch thêm)
+    supabase.auth.getSession().then(() => {});
+
     return () => {
-      subscription.unsubscribe();
+      mounted = false;
+      subscription?.unsubscribe();
+      fetchAbortRef.current?.abort();
     };
-  }, []);
+  }, [toast]);
 
-  // Safety timeout: Force initialization after 5 seconds
+  // Safety timeout: đề phòng khởi tạo treo
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (!isInitialized) {
-        console.warn('⚠️ [AuthContext] Force initialization after timeout');
-        setIsInitialized(true);
-      }
+    const t = setTimeout(() => {
+      if (!isInitialized) setIsInitialized(true);
     }, 5000);
-
-    return () => clearTimeout(timeout);
+    return () => clearTimeout(t);
   }, [isInitialized]);
 
-  // Setup realtime listener for profile status changes
+  // Realtime: lắng nghe thay đổi status của chính user
   useEffect(() => {
     if (!currentUser) return;
 
-    console.log('🔔 [AuthContext] Setting up realtime status listener for user:', currentUser.id);
-
     const channel = supabase
-      .channel('profile-status-changes')
+      .channel(`profile-status-${currentUser.id}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'profiles',
-          filter: `id=eq.${currentUser.id}`
+          event: "UPDATE",
+          schema: "public",
+          table: "profiles",
+          filter: `id=eq.${currentUser.id}`,
         },
-        (payload) => {
-          console.log('🔔 [Realtime] Profile updated:', payload);
-          console.log('   - Old status:', payload.old?.status);
-          console.log('   - New status:', payload.new?.status);
-          console.log('   - User ID:', currentUser.id);
-          
-          const newStatus = payload.new?.status;
-          const oldStatus = payload.old?.status;
-          
-          if (newStatus === 'INACTIVE' && oldStatus !== 'INACTIVE') {
-            console.log('⛔ [Realtime] User status changed to INACTIVE - logging out');
-            toast({
-              title: "Tài khoản bị vô hiệu hóa",
-              description: "Tài khoản của bạn đã bị vô hiệu hóa. Bạn sẽ bị đăng xuất.",
-              variant: "destructive",
-              duration: 5000,
-            });
-            logout();
+        async (payload) => {
+          const newStatus = (payload.new as any)?.status;
+          const oldStatus = (payload.old as any)?.status;
+          if (newStatus === "INACTIVE" && oldStatus !== "INACTIVE") {
+            notifyOnce("inactive-realtime", () =>
+              toast({
+                title: "Tài khoản bị vô hiệu hóa",
+                description: "Bạn sẽ bị đăng xuất.",
+                variant: "destructive",
+              }),
+            );
+            await clearAuthState();
           }
-        }
+        },
       )
-      .subscribe((status) => {
-        console.log('📡 [Realtime] Subscription status:', status);
-        if (status === 'SUBSCRIBED') {
-          console.log('✅ [Realtime] Successfully subscribed to profile changes for user:', currentUser.id);
-        } else if (status === 'CHANNEL_ERROR') {
-          console.error('❌ [Realtime] Channel error - profile changes may not be detected');
-        }
-      });
+      .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentUser]);
+  }, [currentUser, toast]);
 
-  // No business context changes in single-tenant (removed)
+  /* ------------------------------------------------------------------------ *
+   *  Public API
+   * ------------------------------------------------------------------------ */
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    console.log('🔐 [AuthContext] Starting login process for:', email);
-    
     setIsLoading(true);
-    
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
       });
-      
       if (error) throw error;
-      
-      console.log('📨 [AuthContext] Login successful');
-      
-      // Fetch user with permissions
-      const { user, passwordChangeRequired } = await fetchUserWithPermissions(data.user);
-      
-      // Check if email is verified
-      if (!user.emailVerified) {
+
+      // Nếu provider là email và chưa verify thì chặn
+      const provider = data.session?.user?.app_metadata?.provider;
+      const emailConfirmed = !!data.user?.email_confirmed_at;
+      if (!emailConfirmed && (!provider || provider === "email")) {
         await supabase.auth.signOut();
-        
         toast({
           title: "Email chưa xác thực",
           description: "Vui lòng kiểm tra email và xác thực tài khoản trước khi đăng nhập.",
           variant: "destructive",
           duration: 6000,
         });
-        
         return false;
       }
-      
-      setCurrentUser(user);
-      setRequirePasswordChange(passwordChangeRequired);
-      
-      console.log('✅ [AuthContext] User logged in successfully:', email);
-      
+
       toast({
         title: "Đăng nhập thành công",
-        description: `Chào mừng ${user.fullName}!`,
+        description: `Chào mừng ${data.user?.email?.split("@")[0] || "bạn"}!`,
         duration: 4000,
       });
-      
+
+      // Phần lấy profile/permission do onAuthStateChange xử lý
       return true;
-    } catch (error: any) {
-      console.log('❌ [AuthContext] Login failed for:', email, error);
-      
-      let errorMessage = "Thông tin đăng nhập không chính xác";
-      if (error?.message) {
-        errorMessage = error.message;
-      }
-      
+    } catch (e: any) {
       toast({
         title: "Đăng nhập thất bại",
-        description: errorMessage,
+        description: e?.message || "Thông tin đăng nhập không chính xác",
         variant: "destructive",
         duration: 5000,
       });
-      
       return false;
     } finally {
       setIsLoading(false);
@@ -723,122 +487,92 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
-    console.log('🚪 [AuthContext] Starting logout process');
     setIsLoading(true);
-    
     try {
-      await clearAuthState(); // Use helper for consistency
-      
-      console.log('✅ [AuthContext] User logged out and storage cleared');
-      
+      await clearAuthState();
       toast({
         title: "Đăng xuất thành công",
         description: "Bạn đã đăng xuất khỏi hệ thống",
         duration: 4000,
       });
-    } catch (error) {
-      console.warn('⚠️ [AuthContext] Logout error:', error);
+      if (window.location.pathname !== "/login") window.location.href = "/login";
+    } catch {
+      /* no-op */
     } finally {
       setIsLoading(false);
     }
   };
 
   const refreshUserProfile = async () => {
-    console.log('🔄 [AuthContext] Refreshing user profile');
-    
+    const {
+      data: { user: sbUser },
+    } = await supabase.auth.getUser();
+    if (!sbUser) return;
+
     try {
-      const { data: { user: supabaseUser } } = await supabase.auth.getUser();
-      
-      if (!supabaseUser) {
-        console.log('⚠️ [AuthContext] No user to refresh');
-        return;
-      }
-      
-      const { user: updatedUser, passwordChangeRequired } = await fetchUserWithPermissions(supabaseUser);
-      
-      setCurrentUser(updatedUser);
+      const { user, passwordChangeRequired } = await fetchUserWithPermissions(sbUser);
+      setCurrentUser(user);
       setRequirePasswordChange(passwordChangeRequired);
-      console.log('✅ [AuthContext] User profile refreshed:', updatedUser.username);
-    } catch (error) {
-      console.warn('❌ [AuthContext] Failed to refresh user profile:', error);
+    } catch {
+      notifyOnce("refresh-user-fail", () =>
+        toast({
+          title: "Không thể tải lại hồ sơ",
+          description: "Vui lòng thử lại.",
+          variant: "destructive",
+        }),
+      );
     }
   };
 
   const refreshPermissions = async () => {
-    console.log('🔄 [AuthContext] Force refreshing permissions...');
-    
+    const {
+      data: { user: sbUser },
+    } = await supabase.auth.getUser();
+    if (!sbUser) return;
     try {
-      const { data: { user: supabaseUser } } = await supabase.auth.getUser();
-      
-      if (!supabaseUser) {
-        console.warn('⚠️ [AuthContext] No user found for refresh');
-        return;
-      }
-      
-      const { user: updatedUser, passwordChangeRequired } = await fetchUserWithPermissions(supabaseUser);
-      
-      setCurrentUser(updatedUser);
+      const { user, passwordChangeRequired } = await fetchUserWithPermissions(sbUser);
+      setCurrentUser(user);
       setRequirePasswordChange(passwordChangeRequired);
-      
-      console.log('✅ [AuthContext] Permissions refreshed:', updatedUser.permissions);
-    } catch (error) {
-      console.error('❌ [AuthContext] Failed to refresh permissions:', error);
+    } catch {
+      notifyOnce("refresh-perm-fail", () =>
+        toast({
+          title: "Không thể tải lại quyền truy cập",
+          description: "Vui lòng thử lại.",
+          variant: "destructive",
+        }),
+      );
     }
   };
 
-  // PHASE 5: Add debugging helper (development only)
-  useEffect(() => {
-    if (import.meta.env.DEV) {
-      (window as any).debugAuthState = async () => {
-        console.log('🔍 ===== DEBUG AUTH STATE =====');
-        console.log('- currentUser:', currentUser);
-        console.log('- isInitialized:', isInitialized);
-        console.log('- isLoading:', isLoading);
-        console.log('- requirePasswordChange:', requirePasswordChange);
-        console.log('- localStorage keys:', Object.keys(localStorage));
-        
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log('- Supabase session:', session);
-        if (session?.expires_at) {
-          const expiryDate = new Date(session.expires_at * 1000);
-          const minutesUntilExpiry = Math.floor((expiryDate.getTime() - Date.now()) / 1000 / 60);
-          console.log('- Session expires:', expiryDate.toLocaleString());
-          console.log('- Time until expiry:', minutesUntilExpiry, 'minutes');
-        }
-        console.log('==============================');
-      };
-      
-      console.log('💡 Debug helper available: window.debugAuthState()');
-    }
-  }, [currentUser, isInitialized, isLoading, requirePasswordChange]);
+  /* ------------------------------------------------------------------------ *
+   *  Render
+   * ------------------------------------------------------------------------ */
 
-  // Don't render children until auth state is initialized
+  const value = useMemo<AuthContextType>(
+    () => ({
+      currentUser,
+      isAuthenticated: !!currentUser?.emailVerified,
+      login,
+      logout,
+      refreshUserProfile,
+      refreshPermissions,
+      isLoading,
+      requirePasswordChange,
+      setRequirePasswordChange,
+    }),
+    [currentUser, isLoading, requirePasswordChange],
+  );
+
   if (!isInitialized) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
           <p className="text-gray-600">Đang khởi tạo...</p>
         </div>
       </div>
     );
   }
 
-  return (
-    <AuthContext.Provider
-      value={{
-        currentUser,
-        isAuthenticated: !!currentUser && currentUser.emailVerified,
-        login,
-        logout,
-        refreshUserProfile,
-        refreshPermissions,
-        isLoading,
-        requirePasswordChange,
-        setRequirePasswordChange,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
