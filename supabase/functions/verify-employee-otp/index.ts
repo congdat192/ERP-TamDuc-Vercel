@@ -204,41 +204,25 @@ Deno.serve(async (req) => {
     }
 
     // ============================================
-    // STEP 7: GENERATE SESSION TOKEN
+    // STEP 7: CREATE SESSION DIRECTLY
     // ============================================
-    console.log('🔑 Generating session token for user...');
+    console.log('🔑 Creating session for user...');
 
-    const { data: sessionData, error: sessionError } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'magiclink',
-      email: emailLower
+    const { data: sessionData, error: sessionError } = await supabaseAdmin.auth.admin.createSession({
+      user_id: userId
     });
 
-    if (sessionError || !sessionData) {
-      console.error('❌ Error generating session:', sessionError);
+    if (sessionError || !sessionData?.session) {
+      console.error('❌ Error creating session:', sessionError);
       throw new Error('Không thể tạo phiên đăng nhập. Vui lòng thử lại.');
     }
 
-    console.log('✅ Session link generated successfully');
-
-    // Parse tokens from action_link URL
-    const actionLink = sessionData.properties?.action_link;
-    if (!actionLink) {
-      console.error('❌ No action_link in response');
-      throw new Error('Không thể tạo phiên đăng nhập. Vui lòng thử lại.');
-    }
-
-    // Extract tokens using URL parsing
-    const url = new URL(actionLink);
-    const accessToken = url.searchParams.get('access_token');
-    const refreshToken = url.searchParams.get('refresh_token');
-
-    if (!accessToken || !refreshToken) {
-      console.error('❌ Missing tokens in action_link');
-      throw new Error('Không thể tạo phiên đăng nhập. Vui lòng thử lại.');
-    }
-
-    // Get user data
-    const { data: { user: userData }, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
+    console.log('✅ Session created successfully');
+    console.log('📦 Session data:', {
+      access_token: sessionData.session.access_token ? '✅ Present' : '❌ Missing',
+      refresh_token: sessionData.session.refresh_token ? '✅ Present' : '❌ Missing',
+      user_id: sessionData.user.id
+    });
 
     // ============================================
     // STEP 8: RETURN SESSION DATA
@@ -248,17 +232,12 @@ Deno.serve(async (req) => {
         success: true,
         message: 'Đăng nhập thành công!',
         session: {
-          access_token: accessToken,
-          refresh_token: refreshToken,
+          access_token: sessionData.session.access_token,
+          refresh_token: sessionData.session.refresh_token,
           user: {
-            id: userId,
-            email: emailLower,
-            user_metadata: userData?.user_metadata || {
-              full_name: employee.full_name,
-              employee_code: employee.employee_code,
-              department: employee.department,
-              position: employee.position
-            }
+            id: sessionData.user.id,
+            email: sessionData.user.email,
+            user_metadata: sessionData.user.user_metadata
           }
         }
       } as VerifyOTPResponse),
