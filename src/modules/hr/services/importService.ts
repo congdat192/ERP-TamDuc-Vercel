@@ -630,6 +630,15 @@ export class ImportService {
         else if (value === 'Khác' || value === 'Other') mapped[normalizedKey] = 'Other';
         else mapped[normalizedKey] = value;
       } 
+      // ✅ Handle emergency contact relationship - allow NULL and free text
+      else if (normalizedKey === 'emergency_contact_relationship') {
+        if (value === '' || value === null || value === undefined) {
+          mapped[normalizedKey] = null;
+        } else {
+          // Accept any text value (Cha, Mẹ, Người yêu, Bạn trai, Con, Bạn, etc.)
+          mapped[normalizedKey] = String(value).trim();
+        }
+      }
       // ✅ Handle numeric fields - convert empty string to null
       else if (this.NUMERIC_FIELDS.includes(normalizedKey)) {
         if (value === '' || value === null || value === undefined) {
