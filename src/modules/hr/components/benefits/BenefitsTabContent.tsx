@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, TrendingUp, TrendingDown, Package } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, Package, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -84,8 +84,16 @@ export function BenefitsTabContent() {
     }
   };
 
-  const handleBulkAssign = (benefit: Benefit) => {
-    setSelectedBenefit(benefit);
+  const handleBulkAssign = (benefit?: Benefit) => {
+    if (!benefit && filteredBenefits.length === 0) {
+      toast({
+        title: 'Thông báo',
+        description: 'Vui lòng tạo phúc lợi trước khi gán hàng loạt',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setSelectedBenefit(benefit || filteredBenefits[0]);
     setShowBulkAssignModal(true);
   };
 
@@ -94,6 +102,7 @@ export function BenefitsTabContent() {
     loadStats();
     setShowCreateModal(false);
     setShowEditModal(false);
+    setShowBulkAssignModal(false);
     setSelectedBenefit(null);
   };
 
@@ -151,12 +160,24 @@ export function BenefitsTabContent() {
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <BenefitsFilters filters={filters} onFiltersChange={setFilters} />
         
-        <PermissionGuard requiredPermission="create_benefits" showError={false}>
-          <Button onClick={() => setShowCreateModal(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Thêm Phúc Lợi
-          </Button>
-        </PermissionGuard>
+        <div className="flex gap-2">
+          <PermissionGuard requiredPermission="create_benefits" showError={false}>
+            <Button 
+              variant="outline" 
+              onClick={() => handleBulkAssign()}
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Gán Hàng Loạt
+            </Button>
+          </PermissionGuard>
+
+          <PermissionGuard requiredPermission="create_benefits" showError={false}>
+            <Button onClick={() => setShowCreateModal(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Thêm Phúc Lợi
+            </Button>
+          </PermissionGuard>
+        </div>
       </div>
 
       {/* Table */}

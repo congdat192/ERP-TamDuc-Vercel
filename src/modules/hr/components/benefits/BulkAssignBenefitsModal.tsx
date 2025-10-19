@@ -15,11 +15,13 @@ import type { Employee } from '../../types';
 interface BulkAssignBenefitsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  benefit: Benefit;
+  benefit?: Benefit;
   onSuccess: () => void;
 }
 
 export function BulkAssignBenefitsModal({ isOpen, onClose, benefit, onSuccess }: BulkAssignBenefitsModalProps) {
+  const [benefits, setBenefits] = useState<Benefit[]>([]);
+  const [selectedBenefitId, setSelectedBenefitId] = useState<string>(benefit?.id || '');
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<string[]>([]);
   const [filters, setFilters] = useState({ department: '', position: '', status: 'active' });
@@ -30,7 +32,16 @@ export function BulkAssignBenefitsModal({ isOpen, onClose, benefit, onSuccess }:
 
   useEffect(() => {
     loadEmployees();
+    if (!benefit) {
+      loadBenefits();
+    }
   }, []);
+
+  useEffect(() => {
+    if (benefit) {
+      setSelectedBenefitId(benefit.id);
+    }
+  }, [benefit]);
 
   const loadEmployees = async () => {
     try {
@@ -38,6 +49,18 @@ export function BulkAssignBenefitsModal({ isOpen, onClose, benefit, onSuccess }:
       setEmployees(data);
     } catch (err) {
       console.error('❌ Error loading employees:', err);
+    }
+  };
+
+  const loadBenefits = async () => {
+    try {
+      const data = await BenefitsService.getBenefits();
+      setBenefits(data.filter(b => b.status === 'active'));
+      if (data.length > 0 && !selectedBenefitId) {
+        setSelectedBenefitId(data[0].id);
+      }
+    } catch (err) {
+      console.error('❌ Error loading benefits:', err);
     }
   };
 
@@ -85,10 +108,19 @@ export function BulkAssignBenefitsModal({ isOpen, onClose, benefit, onSuccess }:
       return;
     }
 
+    if (!selectedBenefitId) {
+      toast({
+        title: 'Lỗi',
+        description: 'Vui lòng chọn phúc lợi',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       await BenefitsService.bulkAssignBenefit(
-        benefit.id,
+        selectedBenefitId,
         selectedEmployeeIds,
         startDate,
         endDate || undefined
@@ -112,14 +144,43 @@ export function BulkAssignBenefitsModal({ isOpen, onClose, benefit, onSuccess }:
   const departments = [...new Set(employees.map(e => e.department))];
   const positions = [...new Set(employees.map(e => e.position))];
 
+  const selectedBenefit = benefit || benefits.find(b => b.id === selectedBenefitId);
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Gán Hàng Loạt: {benefit.benefit_name}</DialogTitle>
+          <DialogTitle>Gán Phúc Lợi Hàng Loạt</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Benefit Selection - Only show if no benefit provided */}
+          {!benefit && (
+            <div className="space-y-2">
+              <Label htmlFor="benefit">
+                Chọn Phúc Lợi <span className="text-destructive">*</span>
+              </Label>
+              <Select value={selectedBenefitId} onValueChange={setSelectedBenefitId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Chọn phúc lợi..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {benefits.map((b) => (
+                    <SelectItem key={b.id} value={b.id}>
+                      {b.benefit_name} ({b.benefit_code})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {benefit && (
+            <div className="p-3 bg-muted rounded-lg">
+              <p className="text-sm text-muted-foreground">Phúc lợi đã chọn:</p>
+              <p className="font-medium">{benefit.benefit_name}</p>
+            </div>
+          )}
           {/* Filters */}
           <div className="grid grid-cols-3 gap-4 p-4 border rounded-lg bg-muted/50">
             <div className="space-y-2">

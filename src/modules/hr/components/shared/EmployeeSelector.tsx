@@ -14,6 +14,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { useToast } from '@/hooks/use-toast';
 import { EmployeeService } from '../../services/employeeService';
 import type { Employee } from '../../types';
 
@@ -35,22 +36,44 @@ export function EmployeeSelector({
   const [open, setOpen] = useState(false);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     const loadEmployees = async () => {
       setIsLoading(true);
+      setError(null);
       try {
+        console.log('🔍 [EmployeeSelector] Loading employees...');
         const data = await EmployeeService.getEmployees();
+        console.log(`✅ [EmployeeSelector] Loaded ${data.length} employees`);
+        
+        // Validate data structure
+        if (data.length > 0) {
+          const firstEmp = data[0];
+          if (!firstEmp.fullName || !firstEmp.employeeCode) {
+            console.error('❌ [EmployeeSelector] Invalid employee data structure:', firstEmp);
+            throw new Error('Dữ liệu nhân viên không hợp lệ');
+          }
+        }
+        
         setEmployees(data);
-      } catch (err) {
-        console.error('❌ Error loading employees:', err);
+      } catch (err: any) {
+        console.error('❌ [EmployeeSelector] Error loading employees:', err);
+        const errorMessage = err.message || 'Không thể tải danh sách nhân viên';
+        setError(errorMessage);
+        toast({
+          title: 'Lỗi',
+          description: errorMessage,
+          variant: 'destructive',
+        });
       } finally {
         setIsLoading(false);
       }
     };
 
     loadEmployees();
-  }, []);
+  }, [toast]);
 
   const selectedEmployee = employees.find(emp => emp.id === value);
 
@@ -62,15 +85,17 @@ export function EmployeeSelector({
           role="combobox"
           aria-expanded={open}
           className={cn("w-full justify-between", className)}
-          disabled={disabled || isLoading}
+          disabled={disabled || isLoading || error !== null}
         >
           {isLoading ? (
             "Đang tải..."
+          ) : error ? (
+            <span className="text-destructive">Không thể tải danh sách</span>
           ) : selectedEmployee ? (
             <span className="flex items-center gap-2">
-              <span className="font-medium">{selectedEmployee.fullName}</span>
+              <span className="font-medium">{selectedEmployee.fullName || 'N/A'}</span>
               <span className="text-muted-foreground text-sm">
-                {selectedEmployee.employeeCode} - {selectedEmployee.position}
+                {selectedEmployee.employeeCode || 'N/A'} - {selectedEmployee.position || 'N/A'}
               </span>
             </span>
           ) : (

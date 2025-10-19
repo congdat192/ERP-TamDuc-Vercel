@@ -115,7 +115,7 @@ export function BenefitsTable({
                       variant="ghost"
                       size="icon"
                       onClick={() => onBulkAssign(benefit)}
-                      title="Gán hàng loạt"
+                      title="Gán phúc lợi này cho nhiều nhân viên"
                     >
                       <Users className="h-4 w-4" />
                     </Button>
