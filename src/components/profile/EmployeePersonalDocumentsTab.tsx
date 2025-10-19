@@ -66,6 +66,7 @@ export function EmployeePersonalDocumentsTab({ employeeId }: Props) {
   const [notes, setNotes] = useState('');
   const [deleteDocId, setDeleteDocId] = useState<string | null>(null);
   const [deleteRequestId, setDeleteRequestId] = useState<string | null>(null);
+  const [loadingDocIds, setLoadingDocIds] = useState<string[]>([]);
 
   useEffect(() => {
     fetchDocuments();
@@ -253,7 +254,14 @@ export function EmployeePersonalDocumentsTab({ employeeId }: Props) {
     }
   };
 
-  const handleDownload = async (doc: EmployeeDocument) => {
+  const handleDownload = async (doc: EmployeeDocument | DocumentChangeRequest) => {
+    // Prevent duplicate requests
+    if (loadingDocIds.includes(doc.id)) {
+      return;
+    }
+
+    setLoadingDocIds(prev => [...prev, doc.id]);
+    
     try {
       const { data, error } = await supabase.storage
         .from('employee-documents')
@@ -269,6 +277,11 @@ export function EmployeePersonalDocumentsTab({ employeeId }: Props) {
         description: "Không thể tải xuống chứng từ",
         variant: "destructive",
       });
+    } finally {
+      // Remove from loading list after a short delay
+      setTimeout(() => {
+        setLoadingDocIds(prev => prev.filter(id => id !== doc.id));
+      }, 500);
     }
   };
 
@@ -421,9 +434,14 @@ export function EmployeePersonalDocumentsTab({ employeeId }: Props) {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDownload(request as any)}
+                      disabled={loadingDocIds.includes(request.id)}
                       title="Xem file"
                     >
-                      <Eye className="w-4 h-4" />
+                      {loadingDocIds.includes(request.id) ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
                     </Button>
                     <Button
                       variant="ghost"
@@ -488,9 +506,14 @@ export function EmployeePersonalDocumentsTab({ employeeId }: Props) {
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDownload(doc)}
+                      disabled={loadingDocIds.includes(doc.id)}
                       title="Xem/Tải xuống"
                     >
-                      <Eye className="w-4 h-4" />
+                      {loadingDocIds.includes(doc.id) ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
                     </Button>
                   </div>
                 </div>
