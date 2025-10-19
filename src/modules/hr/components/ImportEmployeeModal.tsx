@@ -40,6 +40,10 @@ export function ImportEmployeeModal({ onSuccess }: ImportEmployeeModalProps) {
     successCount: number;
     errorCount: number;
   } | null>(null);
+  const [importProgress, setImportProgress] = useState<{
+    current: number;
+    total: number;
+  } | null>(null);
   const { toast } = useToast();
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -121,14 +125,22 @@ export function ImportEmployeeModal({ onSuccess }: ImportEmployeeModalProps) {
     if (!file || errors.length > 0) return;
 
     setIsImporting(true);
+    setImportProgress({ current: 0, total: previewData.length });
+    
     try {
-      const result = await ImportService.importFromExcel(file);
+      const result = await ImportService.importFromExcelBatch(
+        file,
+        (current, total) => {
+          setImportProgress({ current, total });
+        }
+      );
+      
       setImportResult(result);
 
       if (result.successCount > 0) {
         toast({
           title: 'Import thành công',
-          description: `Đã nhập ${result.successCount} nhân viên`,
+          description: `Đã nhập ${result.successCount}/${result.totalRows} nhân viên`,
         });
         onSuccess();
       }
@@ -149,6 +161,7 @@ export function ImportEmployeeModal({ onSuccess }: ImportEmployeeModalProps) {
       });
     } finally {
       setIsImporting(false);
+      setImportProgress(null);
     }
   };
 
@@ -230,6 +243,21 @@ export function ImportEmployeeModal({ onSuccess }: ImportEmployeeModalProps) {
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Đang validate dữ liệu...</p>
               <Progress value={undefined} />
+            </div>
+          )}
+
+          {/* Import Progress */}
+          {isImporting && importProgress && (
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="font-medium">Đang import nhân viên...</span>
+                <span className="font-medium text-primary">
+                  {importProgress.current} / {importProgress.total}
+                </span>
+              </div>
+              <Progress 
+                value={(importProgress.current / importProgress.total) * 100} 
+              />
             </div>
           )}
 
