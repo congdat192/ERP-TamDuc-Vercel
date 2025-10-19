@@ -68,7 +68,7 @@ serve(async (req) => {
       
       for (const [field, value] of Object.entries(request.changes as any)) {
         if (field !== 'avatar_path') {
-          updates[field] = value.new;
+          updates[field] = (value as any).new;
         }
       }
       
