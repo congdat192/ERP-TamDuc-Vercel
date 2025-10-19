@@ -619,17 +619,33 @@ export class ImportService {
       const cleanedKey = this.cleanHeaderKey(key);
       const normalizedKey = this.COLUMN_ALIASES[cleanedKey] || cleanedKey;
       
-      // Convert date fields to ISO format
+      // Convert date fields to ISO format, allow NULL for optional dates
       if (normalizedKey === 'join_date' || normalizedKey === 'last_review_date' || normalizedKey === 'birth_date') {
-        mapped[normalizedKey] = this.convertDateToISO(value);
-      } 
-      // Normalize gender (Vietnamese → English)
+        if (value === '' || value === null || value === undefined) {
+          // join_date is required, others are optional
+          if (normalizedKey === 'join_date') {
+            mapped[normalizedKey] = undefined; // Will be caught by validation
+          } else {
+            mapped[normalizedKey] = null; // ✅ Allow NULL for birth_date, last_review_date
+          }
+        } else {
+          mapped[normalizedKey] = this.convertDateToISO(value);
+        }
+      }
+      // Normalize gender (Vietnamese → English) and allow NULL
       else if (normalizedKey === 'gender') {
-        if (value === 'Nam' || value === 'Male') mapped[normalizedKey] = 'Male';
-        else if (value === 'Nữ' || value === 'Female') mapped[normalizedKey] = 'Female';
-        else if (value === 'Khác' || value === 'Other') mapped[normalizedKey] = 'Other';
-        else mapped[normalizedKey] = value;
-      } 
+        if (value === '' || value === null || value === undefined) {
+          mapped[normalizedKey] = null;  // ✅ Allow NULL for empty cells
+        } else if (value === 'Nam' || value === 'Male') {
+          mapped[normalizedKey] = 'Male';
+        } else if (value === 'Nữ' || value === 'Female') {
+          mapped[normalizedKey] = 'Female';
+        } else if (value === 'Khác' || value === 'Other') {
+          mapped[normalizedKey] = 'Other';
+        } else {
+          mapped[normalizedKey] = String(value).trim();  // ✅ Accept any text value
+        }
+      }
       // ✅ Handle emergency contact relationship - allow NULL and free text
       else if (normalizedKey === 'emergency_contact_relationship') {
         if (value === '' || value === null || value === undefined) {
@@ -638,6 +654,21 @@ export class ImportService {
           // Accept any text value (Cha, Mẹ, Người yêu, Bạn trai, Con, Bạn, etc.)
           mapped[normalizedKey] = String(value).trim();
         }
+      }
+      // ✅ Handle optional text fields - convert empty string to null
+      else if (['phone', 'current_address', 'emergency_contact_name', 'emergency_contact_phone', 'team'].includes(normalizedKey)) {
+        if (value === '' || value === null || value === undefined) {
+          mapped[normalizedKey] = null;
+        } else {
+          mapped[normalizedKey] = String(value).trim();
+        }
+      }
+      // ✅ Handle enum fields - let database defaults apply
+      else if (normalizedKey === 'status' || normalizedKey === 'employment_type') {
+        if (value !== '' && value !== null && value !== undefined) {
+          mapped[normalizedKey] = String(value).trim();
+        }
+        // Don't set to null - let DB default apply
       }
       // ✅ Handle numeric fields - convert empty string to null
       else if (this.NUMERIC_FIELDS.includes(normalizedKey)) {
