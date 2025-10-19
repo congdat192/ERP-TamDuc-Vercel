@@ -3,12 +3,16 @@ import { Employee } from '../types';
 
 export class ExportService {
   static exportToExcel(employees: Employee[], filename: string = 'employees.xlsx') {
-    // Prepare data for export - Full 23 columns
+    // Prepare data for export - Full 29 columns
     const data = employees.map((emp) => ({
       'MNV': emp.employeeCode,
       'Họ và tên': emp.fullName,
       'Email': emp.email,
       'SĐT': emp.phone || '',
+      'Giới tính': emp.gender === 'Male' ? 'Nam' : 
+                   emp.gender === 'Female' ? 'Nữ' : 
+                   emp.gender === 'Other' ? 'Khác' : '',
+      'Ngày sinh': emp.birthDate || '',
       'Phòng ban': emp.department,
       'Chức danh': emp.position,
       'Nhóm': emp.team || '',
@@ -21,6 +25,10 @@ export class ExportService {
       'Phụ cấp điện thoại': emp.salary.allowancePhone || 0,
       'Phụ cấp khác': emp.salary.allowanceOther || 0,
       'Tổng lương cứng': emp.salary.totalFixed || 0,
+      'Lương Full-time Thử việc': emp.salary.fulltimeProbation || 0,
+      'Lương Full-time Chính thức': emp.salary.fulltimeOfficial || 0,
+      'Lương Part-time Thử việc': emp.salary.parttimeProbation || 0,
+      'Lương Part-time Chính thức': emp.salary.parttimeOfficial || 0,
       'KPI': emp.performance.kpi || 0,
       'Ngày đánh giá': emp.performance.lastReview || '',
       'Địa chỉ hiện tại': emp.currentAddress || '',
@@ -34,12 +42,14 @@ export class ExportService {
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(data);
 
-    // Set column widths - 23 columns
+    // Set column widths - 29 columns
     const colWidths = [
       { wch: 10 },  // MNV
       { wch: 25 },  // Họ và tên
       { wch: 30 },  // Email
       { wch: 12 },  // SĐT
+      { wch: 10 },  // Giới tính
+      { wch: 12 },  // Ngày sinh
       { wch: 15 },  // Phòng ban
       { wch: 20 },  // Chức danh
       { wch: 15 },  // Nhóm
@@ -52,6 +62,10 @@ export class ExportService {
       { wch: 15 },  // Phụ cấp điện thoại
       { wch: 15 },  // Phụ cấp khác
       { wch: 15 },  // Tổng lương cứng
+      { wch: 20 },  // Lương Full-time Thử việc
+      { wch: 20 },  // Lương Full-time Chính thức
+      { wch: 20 },  // Lương Part-time Thử việc
+      { wch: 20 },  // Lương Part-time Chính thức
       { wch: 10 },  // KPI
       { wch: 12 },  // Ngày đánh giá
       { wch: 30 },  // Địa chỉ hiện tại

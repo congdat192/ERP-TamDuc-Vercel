@@ -20,6 +20,8 @@ interface ParsedEmployee {
   full_name: string;
   email: string;
   phone?: string;
+  gender?: 'Male' | 'Female' | 'Other';
+  birth_date?: string;
   department: string;
   position: string;
   team?: string;
@@ -31,6 +33,10 @@ interface ParsedEmployee {
   allowance_fuel?: number;
   allowance_phone?: number;
   allowance_other?: number;
+  salary_fulltime_probation?: number;
+  salary_fulltime_official?: number;
+  salary_parttime_probation?: number;
+  salary_parttime_official?: number;
   kpi_score?: number;
   last_review_date?: string;
   current_address?: string;
@@ -62,9 +68,21 @@ export class ImportService {
     
     // Phone
     'SĐT': 'phone',
-    'Số ĐT': 'phone',  // ← Thêm alias từ Export cũ
+    'Số ĐT': 'phone',
     'Số điện thoại': 'phone',
     'phone': 'phone',
+    
+    // Gender
+    'Giới tính': 'gender',
+    'Giới Tính': 'gender',
+    'gender': 'gender',
+    'Gender': 'gender',
+    
+    // Birth Date
+    'Ngày sinh': 'birth_date',
+    'Ngày Sinh': 'birth_date',
+    'birth_date': 'birth_date',
+    'Birth Date': 'birth_date',
     
     // Department
     'Phòng ban': 'department',
@@ -94,10 +112,27 @@ export class ImportService {
     
     // Salary P1
     'Lương cơ bản': 'salary_p1',
-    'Lương Cơ Bản': 'salary_p1',  // ← Thêm alias từ Export cũ
+    'Lương Cơ Bản': 'salary_p1',
     'salary_p1': 'salary_p1',
     
-    // Allowances (thêm cả aliases viết tắt từ Export cũ)
+    // Salary by Contract Type
+    'Lương Full-time Thử việc': 'salary_fulltime_probation',
+    'Lương Full-time thử việc': 'salary_fulltime_probation',
+    'salary_fulltime_probation': 'salary_fulltime_probation',
+    
+    'Lương Full-time Chính thức': 'salary_fulltime_official',
+    'Lương Full-time chính thức': 'salary_fulltime_official',
+    'salary_fulltime_official': 'salary_fulltime_official',
+    
+    'Lương Part-time Thử việc': 'salary_parttime_probation',
+    'Lương Part-time thử việc': 'salary_parttime_probation',
+    'salary_parttime_probation': 'salary_parttime_probation',
+    
+    'Lương Part-time Chính thức': 'salary_parttime_official',
+    'Lương Part-time chính thức': 'salary_parttime_official',
+    'salary_parttime_official': 'salary_parttime_official',
+    
+    // Allowances
     'Phụ cấp ăn trưa': 'allowance_meal',
     'PC Ăn Trưa': 'allowance_meal',  // ← Thêm alias từ Export cũ
     'allowance_meal': 'allowance_meal',
@@ -250,9 +285,17 @@ export class ImportService {
       const normalizedKey = this.COLUMN_ALIASES[cleanedKey] || cleanedKey;
       
       // Convert date fields to ISO format
-      if (normalizedKey === 'join_date' || normalizedKey === 'last_review_date') {
+      if (normalizedKey === 'join_date' || normalizedKey === 'last_review_date' || normalizedKey === 'birth_date') {
         mapped[normalizedKey] = this.convertDateToISO(value);
-      } else {
+      } 
+      // Normalize gender (Vietnamese → English)
+      else if (normalizedKey === 'gender') {
+        if (value === 'Nam' || value === 'Male') mapped[normalizedKey] = 'Male';
+        else if (value === 'Nữ' || value === 'Female') mapped[normalizedKey] = 'Female';
+        else if (value === 'Khác' || value === 'Other') mapped[normalizedKey] = 'Other';
+        else mapped[normalizedKey] = value;
+      } 
+      else {
         mapped[normalizedKey] = value;
       }
     }
@@ -311,11 +354,51 @@ export class ImportService {
     }
 
     // Validate salary fields (non-negative)
-    const salaryFields = ['salary_p1', 'allowance_meal', 'allowance_fuel', 'allowance_phone', 'allowance_other'];
+    const salaryFields = [
+      'salary_p1', 
+      'allowance_meal', 
+      'allowance_fuel', 
+      'allowance_phone', 
+      'allowance_other',
+      'salary_fulltime_probation',
+      'salary_fulltime_official',
+      'salary_parttime_probation',
+      'salary_parttime_official'
+    ];
     for (const field of salaryFields) {
       const value = row[field as keyof ParsedEmployee];
       if (value !== undefined && value !== null && Number(value) < 0) {
         errors.push({ row: rowIndex, field, message: `${field} không được âm` });
+      }
+    }
+    
+    // Validate gender enum
+    if (row.gender && !['Male', 'Female', 'Other'].includes(row.gender)) {
+      errors.push({
+        row: rowIndex,
+        field: 'gender',
+        message: `Giới tính không hợp lệ. Chỉ chấp nhận: Nam (Male), Nữ (Female), Khác (Other)`
+      });
+    }
+    
+    // Validate birth_date (age 16-100)
+    if (row.birth_date) {
+      const birthDate = new Date(row.birth_date);
+      const today = new Date();
+      const age = today.getFullYear() - birthDate.getFullYear();
+      
+      if (isNaN(birthDate.getTime())) {
+        errors.push({
+          row: rowIndex,
+          field: 'birth_date',
+          message: `Ngày sinh không hợp lệ: ${row.birth_date}`
+        });
+      } else if (age < 16 || age > 100) {
+        errors.push({
+          row: rowIndex,
+          field: 'birth_date',
+          message: `Tuổi phải từ 16-100 (hiện tại: ${age})`
+        });
       }
     }
 
