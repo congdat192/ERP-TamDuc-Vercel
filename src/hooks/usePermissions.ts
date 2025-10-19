@@ -2,60 +2,48 @@ import { useCallback } from 'react';
 import { useAuth } from '@/components/auth/AuthContext';
 import { ERPModule, VoucherFeature } from '@/types/auth';
 
+/**
+ * Ultra-Simple Permissions Hook
+ * - Owner/Admin (level <= 2): Full access to everything
+ * - Other roles: Controlled by role level and own data only
+ * - Permission codes are for UI display only, not enforced here
+ */
 export function usePermissions() {
   const { currentUser } = useAuth();
-  
+
+  // Check if user is Owner or Admin (role level <= 2)
+  const isOwnerOrAdmin = useCallback((): boolean => {
+    if (!currentUser) return false;
+    return currentUser.permissions?.features?.includes('full_access') ?? false;
+  }, [currentUser]);
+
+  // All permission checks bypass for Owner/Admin
   const hasPermission = useCallback((featureCode: string): boolean => {
-    if (!currentUser) return false;
-    
-    // Owner/Admin bypass - check for full_access feature or admin role
-    const hasFullAccess = currentUser.permissions?.features?.includes('full_access');
-    if (hasFullAccess) return true;
-    
-    // Check specific feature permission
-    return currentUser.permissions?.features?.includes(featureCode) ?? false;
-  }, [currentUser]);
-  
+    return isOwnerOrAdmin();
+  }, [isOwnerOrAdmin]);
+
   const hasModuleAccess = useCallback((moduleCode: ERPModule): boolean => {
-    if (!currentUser) return false;
-    
-    // Owner/Admin bypass
-    const hasFullAccess = currentUser.permissions?.features?.includes('full_access');
-    if (hasFullAccess) return true;
-    
-    // Check if module is in user's permissions
-    return currentUser.permissions.modules.includes(moduleCode);
-  }, [currentUser]);
-  
+    return isOwnerOrAdmin();
+  }, [isOwnerOrAdmin]);
+
   const hasFeatureAccess = useCallback((featureCode: string): boolean => {
-    return hasPermission(featureCode);
-  }, [hasPermission]);
-  
+    return isOwnerOrAdmin();
+  }, [isOwnerOrAdmin]);
+
   const hasVoucherFeature = useCallback((feature: VoucherFeature): boolean => {
-    if (!currentUser) return false;
-    
-    // Owner/Admin bypass
-    const hasFullAccess = currentUser.permissions?.features?.includes('full_access');
-    if (hasFullAccess) return true;
-    
-    return currentUser.permissions.voucherFeatures.includes(feature);
-  }, [currentUser]);
-  
+    return isOwnerOrAdmin();
+  }, [isOwnerOrAdmin]);
+
   const canManageUsers = useCallback((): boolean => {
-    if (!currentUser) return false;
-    
-    // Owner/Admin bypass
-    const hasFullAccess = currentUser.permissions?.features?.includes('full_access');
-    if (hasFullAccess) return true;
-    
-    return currentUser.permissions.canManageUsers;
-  }, [currentUser]);
-  
-  return { 
-    hasPermission, 
+    return isOwnerOrAdmin();
+  }, [isOwnerOrAdmin]);
+
+  return {
+    hasPermission,
     hasModuleAccess,
     hasFeatureAccess,
     hasVoucherFeature,
-    canManageUsers
+    canManageUsers,
+    hasFullAccess: isOwnerOrAdmin, // For direct checks
   };
 }
