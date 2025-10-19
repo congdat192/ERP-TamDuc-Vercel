@@ -39,27 +39,78 @@ interface Customer {
 interface CustomerDetailRowProps {
   customer: Customer;
   visibleColumnsCount: number;
-  voucherData: any;
-  voucherLoading: boolean;
-  onClaimVoucher: (campaignId: string) => Promise<void>;
-  claiming: boolean;
-  onRefreshVoucher: () => Promise<void>;
-  invoiceData: any;
-  invoiceLoading: boolean;
 }
 
-export function CustomerDetailRow({ 
-  customer, 
-  visibleColumnsCount,
-  voucherData,
-  voucherLoading,
-  onClaimVoucher,
-  claiming,
-  onRefreshVoucher,
-  invoiceData,
-  invoiceLoading
-}: CustomerDetailRowProps) {
+export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDetailRowProps) {
   const [activeTab, setActiveTab] = useState('info');
+  const [invoicesData, setInvoicesData] = useState<any[]>([]);
+  const [customerData, setCustomerData] = useState<any>(null);
+  const [isLoadingInvoices, setIsLoadingInvoices] = useState(false);
+  const [invoicesError, setInvoicesError] = useState<string | null>(null);
+  const [voucherEligibilityData, setVoucherEligibilityData] = useState<any>(null);
+  const [isLoadingVouchers, setIsLoadingVouchers] = useState(false);
+  const [vouchersError, setVouchersError] = useState<string | null>(null);
+
+  const fetchInvoicesData = async () => {
+    if (!customer.phone) return;
+
+    setIsLoadingInvoices(true);
+    setInvoicesError(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('get-invoices-by-phone', {
+        body: { phone: customer.phone }
+      });
+
+      if (error) throw error;
+
+      // Parse nested structure: data.data.data
+      if (data?.data?.data) {
+        setInvoicesData(data.data.data.invoices || []);
+        setCustomerData(data.data.data.customer || null);
+      } else {
+        console.warn('[fetchInvoicesData] Unexpected response structure:', data);
+        setInvoicesData([]);
+        setCustomerData(null);
+      }
+    } catch (err) {
+      console.error('Error fetching invoices:', err);
+      setInvoicesError(err instanceof Error ? err.message : 'Lỗi khi tải dữ liệu hóa đơn');
+      setInvoicesData([]);
+      setCustomerData(null);
+    } finally {
+      setIsLoadingInvoices(false);
+    }
+  };
+
+  const fetchVoucherEligibility = async () => {
+    if (!customer.phone) return;
+
+    setIsLoadingVouchers(true);
+    setVouchersError(null);
+
+    try {
+      // Use query params instead of body for GET request
+      const params = new URLSearchParams({ phone: customer.phone });
+      const { data, error } = await supabase.functions.invoke(
+        `check-voucher-eligibility?${params.toString()}`
+      );
+
+      if (error) throw error;
+
+      setVoucherEligibilityData(data);
+    } catch (err) {
+      console.error('Error fetching voucher eligibility:', err);
+      setVouchersError(err instanceof Error ? err.message : 'Lỗi khi tải dữ liệu voucher');
+    } finally {
+      setIsLoadingVouchers(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchInvoicesData();
+    fetchVoucherEligibility();
+  }, [customer.phone]);
 
   return (
     <tr className="bg-gray-50/50">
@@ -72,11 +123,11 @@ export function CustomerDetailRow({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={onRefreshVoucher}
-                disabled={voucherLoading || invoiceLoading}
+                onClick={fetchInvoicesData}
+                disabled={isLoadingInvoices}
                 className="gap-2"
               >
-                <RefreshCw className={`w-4 h-4 ${(voucherLoading || invoiceLoading) ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`w-4 h-4 ${isLoadingInvoices ? 'animate-spin' : ''}`} />
                 Làm mới
               </Button>
             </div>
@@ -134,10 +185,10 @@ export function CustomerDetailRow({
 
               <TabsContent value="sales-history" className="mt-0">
                 <CustomerSalesHistoryTab 
-                  invoices={invoiceData?.invoices || []}
-                  customer={invoiceData?.customer || null}
-                  isLoading={invoiceLoading}
-                  error={null}
+                  invoices={invoicesData}
+                  customer={customerData}
+                  isLoading={isLoadingInvoices}
+                  error={invoicesError}
                 />
               </TabsContent>
 
@@ -158,12 +209,10 @@ export function CustomerDetailRow({
               <TabsContent value="voucher" className="mt-0">
                 <CustomerVoucherTab 
                   customerPhone={customer.phone}
-                  voucherData={voucherData}
-                  isLoading={voucherLoading}
-                  error={null}
-                  onRefresh={onRefreshVoucher}
-                  onClaimVoucher={onClaimVoucher}
-                  claiming={claiming}
+                  voucherData={voucherEligibilityData}
+                  isLoading={isLoadingVouchers}
+                  error={vouchersError}
+                  onRefresh={fetchVoucherEligibility}
                 />
               </TabsContent>
 

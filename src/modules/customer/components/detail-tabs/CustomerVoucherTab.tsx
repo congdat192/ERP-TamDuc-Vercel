@@ -35,8 +35,6 @@ interface CustomerVoucherTabProps {
   isLoading: boolean;
   error: string | null;
   onRefresh: () => void;
-  onClaimVoucher: (campaignId: string) => Promise<void>;
-  claiming: boolean;
 }
 
 export function CustomerVoucherTab({
@@ -44,14 +42,13 @@ export function CustomerVoucherTab({
   voucherData,
   isLoading,
   error,
-  onRefresh,
-  onClaimVoucher,
-  claiming
+  onRefresh
 }: CustomerVoucherTabProps) {
   const [selectedVoucher, setSelectedVoucher] = useState<ReceivedVoucher | null>(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<AvailableCampaign | null>(null);
   const [isClaimDialogOpen, setIsClaimDialogOpen] = useState(false);
+  const [isClaiming, setIsClaiming] = useState(false);
 
   // History state
   const [historyData, setHistoryData] = useState<VoucherHistoryResponse | null>(null);
@@ -100,12 +97,24 @@ export function CustomerVoucherTab({
   const handleClaimConfirm = async () => {
     if (!selectedCampaign) return;
 
+    setIsClaiming(true);
     try {
-      await onClaimVoucher(selectedCampaign.campaign_id);
-      setIsClaimDialogOpen(false);
-      setSelectedCampaign(null);
+      const result = await voucherService.claimVoucher(customerPhone, selectedCampaign.campaign_id);
+      
+      if (result.success) {
+        toast.success(`Đã nhận voucher ${result.voucher.code} thành công!`);
+        setIsClaimDialogOpen(false);
+        setSelectedCampaign(null);
+        // Refresh voucher data
+        onRefresh();
+      } else {
+        toast.error('Không thể nhận voucher');
+      }
     } catch (err) {
       console.error('Error claiming voucher:', err);
+      toast.error(err instanceof Error ? err.message : 'Lỗi khi nhận voucher');
+    } finally {
+      setIsClaiming(false);
     }
   };
 
@@ -208,7 +217,7 @@ export function CustomerVoucherTab({
                   key={campaign.campaign_id}
                   campaign={campaign}
                   onClaim={() => handleClaimClick(campaign)}
-                  isLoading={claiming && selectedCampaign?.campaign_id === campaign.campaign_id}
+                  isLoading={isClaiming && selectedCampaign?.campaign_id === campaign.campaign_id}
                 />
               ))}
             </div>
@@ -362,7 +371,7 @@ export function CustomerVoucherTab({
         open={isClaimDialogOpen}
         onOpenChange={setIsClaimDialogOpen}
         onConfirm={handleClaimConfirm}
-        isLoading={claiming}
+        isLoading={isClaiming}
       />
     </div>
   );
