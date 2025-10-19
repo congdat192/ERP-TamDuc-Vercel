@@ -29,6 +29,19 @@ interface EmployeeDocument {
   uploaded_at: string;
 }
 
+interface DocumentChangeRequest {
+  id: string;
+  document_type: string;
+  file_name: string;
+  file_path: string;
+  file_size: number | null;
+  mime_type: string | null;
+  notes: string | null;
+  status: string;
+  requested_at: string;
+  review_note: string | null;
+}
+
 interface Props {
   employeeId: string;
 }
@@ -46,11 +59,13 @@ export function EmployeePersonalDocumentsTab({ employeeId }: Props) {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [documents, setDocuments] = useState<EmployeeDocument[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<DocumentChangeRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [selectedType, setSelectedType] = useState<string>('');
   const [notes, setNotes] = useState('');
   const [deleteDocId, setDeleteDocId] = useState<string | null>(null);
+  const [deleteRequestId, setDeleteRequestId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchDocuments();
@@ -59,14 +74,27 @@ export function EmployeePersonalDocumentsTab({ employeeId }: Props) {
   const fetchDocuments = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      // Fetch approved documents
+      const { data: docs, error: docsError } = await supabase
         .from('employee_documents')
         .select('*')
         .eq('employee_id', employeeId)
         .order('uploaded_at', { ascending: false });
 
-      if (error) throw error;
-      setDocuments(data || []);
+      if (docsError) throw docsError;
+
+      // Fetch pending change requests
+      const { data: requests, error: reqError } = await supabase
+        .from('document_change_requests')
+        .select('*')
+        .eq('employee_id', employeeId)
+        .in('status', ['pending', 'rejected'])
+        .order('requested_at', { ascending: false });
+
+      if (reqError) throw reqError;
+
+      setDocuments(docs || []);
+      setPendingRequests(requests || []);
     } catch (error: any) {
       console.error('Error fetching documents:', error);
       toast({
@@ -126,38 +154,44 @@ export function EmployeePersonalDocumentsTab({ employeeId }: Props) {
     setIsUploading(true);
 
     try {
-      // Upload file to storage
+      // Upload file to PENDING folder (awaiting HR approval)
       const fileExt = file.name.split('.').pop();
       const fileName = `${employeeId}_${selectedType}_${Date.now()}.${fileExt}`;
-      const filePath = `documents/${fileName}`;
+      const tempPath = `documents/pending/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('employee-documents')
-        .upload(filePath, file, {
+        .upload(tempPath, file, {
           cacheControl: '3600',
           upsert: false,
         });
 
       if (uploadError) throw uploadError;
 
-      // Insert record to database
-      const { error: dbError } = await supabase
-        .from('employee_documents')
+      // Create change request (NOT directly to employee_documents)
+      const { error: requestError } = await supabase
+        .from('document_change_requests')
         .insert({
           employee_id: employeeId,
+          request_type: 'document_upload',
           document_type: selectedType,
           file_name: file.name,
-          file_path: filePath,
+          file_path: tempPath,
           file_size: file.size,
           mime_type: file.type,
           notes: notes || null,
+          status: 'pending'
         });
 
-      if (dbError) throw dbError;
+      if (requestError) {
+        // If request insert fails, cleanup uploaded file
+        await supabase.storage.from('employee-documents').remove([tempPath]);
+        throw requestError;
+      }
 
       toast({
-        title: "Thành công",
-        description: "Upload chứng từ thành công",
+        title: "Gửi yêu cầu thành công",
+        description: "HR sẽ xem xét yêu cầu của bạn trong thời gian sớm nhất.",
       });
 
       // Reset form
@@ -168,10 +202,10 @@ export function EmployeePersonalDocumentsTab({ employeeId }: Props) {
       // Refresh list
       await fetchDocuments();
     } catch (error: any) {
-      console.error('Error uploading document:', error);
+      console.error('Error submitting document request:', error);
       toast({
         title: "Lỗi",
-        description: error.message || "Không thể upload chứng từ",
+        description: error.message || "Không thể gửi yêu cầu",
         variant: "destructive",
       });
     } finally {
@@ -179,43 +213,43 @@ export function EmployeePersonalDocumentsTab({ employeeId }: Props) {
     }
   };
 
-  const handleDelete = async () => {
-    if (!deleteDocId) return;
+  const handleDeleteRequest = async () => {
+    if (!deleteRequestId) return;
 
     try {
-      const doc = documents.find(d => d.id === deleteDocId);
-      if (!doc) return;
+      const request = pendingRequests.find(r => r.id === deleteRequestId);
+      if (!request) return;
 
       // Delete from storage
       const { error: storageError } = await supabase.storage
         .from('employee-documents')
-        .remove([doc.file_path]);
+        .remove([request.file_path]);
 
-      if (storageError) throw storageError;
+      if (storageError) console.warn('Storage delete warning:', storageError);
 
-      // Delete from database
+      // Delete request from database
       const { error: dbError } = await supabase
-        .from('employee_documents')
+        .from('document_change_requests')
         .delete()
-        .eq('id', deleteDocId);
+        .eq('id', deleteRequestId);
 
       if (dbError) throw dbError;
 
       toast({
         title: "Thành công",
-        description: "Xóa chứng từ thành công",
+        description: "Hủy yêu cầu thành công",
       });
 
       await fetchDocuments();
     } catch (error: any) {
-      console.error('Error deleting document:', error);
+      console.error('Error deleting request:', error);
       toast({
         title: "Lỗi",
-        description: error.message || "Không thể xóa chứng từ",
+        description: error.message || "Không thể hủy yêu cầu",
         variant: "destructive",
       });
     } finally {
-      setDeleteDocId(null);
+      setDeleteRequestId(null);
     }
   };
 
@@ -334,12 +368,85 @@ export function EmployeePersonalDocumentsTab({ employeeId }: Props) {
         </CardContent>
       </Card>
 
-      {/* Documents List */}
+      {/* Pending Requests */}
+      {pendingRequests.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Loader2 className="w-5 h-5 text-yellow-500" />
+              Yêu Cầu Chờ Duyệt
+            </CardTitle>
+            <CardDescription>
+              Các yêu cầu upload đang chờ HR xem xét
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {pendingRequests.map(request => (
+                <div
+                  key={request.id}
+                  className={`flex items-center justify-between p-4 border rounded-lg ${
+                    request.status === 'rejected' ? 'border-red-300 bg-red-50 dark:bg-red-950/20' : 'border-yellow-300 bg-yellow-50 dark:bg-yellow-950/20'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className={request.status === 'rejected' ? 'text-red-500' : 'text-yellow-500'}>
+                      {getDocumentIcon(request.document_type)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium truncate">{request.file_name}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {getDocumentTypeLabel(request.document_type)} • {formatFileSize(request.file_size)} • {new Date(request.requested_at).toLocaleDateString('vi-VN')}
+                      </div>
+                      {request.notes && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {request.notes}
+                        </div>
+                      )}
+                      {request.status === 'rejected' && request.review_note && (
+                        <div className="text-xs text-red-600 dark:text-red-400 mt-1 font-medium">
+                          ❌ Lý do từ chối: {request.review_note}
+                        </div>
+                      )}
+                      <div className={`text-xs font-medium mt-1 ${
+                        request.status === 'rejected' ? 'text-red-600 dark:text-red-400' : 'text-yellow-600 dark:text-yellow-400'
+                      }`}>
+                        {request.status === 'pending' ? '⏳ Chờ duyệt' : '❌ Đã từ chối'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDownload(request as any)}
+                      title="Xem file"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setDeleteRequestId(request.id)}
+                      title="Hủy yêu cầu"
+                    >
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Approved Documents List */}
       <Card>
         <CardHeader>
-          <CardTitle>Chứng Từ Đã Upload</CardTitle>
+          <CardTitle>Chứng Từ Đã Duyệt</CardTitle>
           <CardDescription>
-            Danh sách các chứng từ cá nhân của bạn
+            Danh sách các chứng từ đã được HR phê duyệt
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -350,7 +457,7 @@ export function EmployeePersonalDocumentsTab({ employeeId }: Props) {
           ) : documents.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
-              <p>Chưa có chứng từ nào</p>
+              <p>Chưa có chứng từ đã duyệt</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -385,14 +492,6 @@ export function EmployeePersonalDocumentsTab({ employeeId }: Props) {
                     >
                       <Eye className="w-4 h-4" />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setDeleteDocId(doc.id)}
-                      title="Xóa"
-                    >
-                      <Trash2 className="w-4 h-4 text-destructive" />
-                    </Button>
                   </div>
                 </div>
               ))}
@@ -401,19 +500,19 @@ export function EmployeePersonalDocumentsTab({ employeeId }: Props) {
         </CardContent>
       </Card>
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deleteDocId} onOpenChange={() => setDeleteDocId(null)}>
+      {/* Delete Request Confirmation Dialog */}
+      <AlertDialog open={!!deleteRequestId} onOpenChange={() => setDeleteRequestId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Xác Nhận Xóa</AlertDialogTitle>
+            <AlertDialogTitle>Xác Nhận Hủy Yêu Cầu</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn có chắc chắn muốn xóa chứng từ này? Hành động này không thể hoàn tác.
+              Bạn có chắc chắn muốn hủy yêu cầu upload này? File tạm thời sẽ bị xóa.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Hủy</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Xóa
+            <AlertDialogCancel>Không</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteRequest} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Hủy Yêu Cầu
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

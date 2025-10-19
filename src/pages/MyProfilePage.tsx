@@ -18,28 +18,51 @@ export function MyProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!currentUser?.id) {
+      console.log('⏳ Waiting for currentUser...');
+      return;
+    }
+
+    let retryCount = 0;
+    const maxRetries = 3;
+
     const fetchEmployee = async () => {
-      if (!currentUser?.id) return;
+      try {
+        const { data, error } = await supabase
+          .from('employees')
+          .select('*')
+          .eq('user_id', currentUser.id)
+          .maybeSingle();
 
-      const { data, error } = await supabase
-        .from('employees')
-        .select('*')
-        .eq('user_id', currentUser.id)
-        .single();
+        if (error) {
+          console.error('❌ Error fetching employee:', error);
+          toast({
+            title: "Lỗi",
+            description: "Không thể tải thông tin nhân viên",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
 
-      if (error) {
-        console.error('Error fetching employee:', error);
+        if (!data && retryCount < maxRetries) {
+          retryCount++;
+          console.log(`🔄 Retry fetch employee (${retryCount}/${maxRetries})...`);
+          setTimeout(fetchEmployee, 1000);
+          return;
+        }
+
+        setEmployee(data);
+        setIsLoading(false);
+      } catch (err: any) {
+        console.error('❌ Error in fetchEmployee:', err);
         toast({
           title: "Lỗi",
           description: "Không thể tải thông tin nhân viên",
           variant: "destructive",
         });
         setIsLoading(false);
-        return;
       }
-
-      setEmployee(data);
-      setIsLoading(false);
     };
 
     fetchEmployee();
