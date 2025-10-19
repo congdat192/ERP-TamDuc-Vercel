@@ -24,7 +24,7 @@ export function BulkAssignBenefitsModal({ isOpen, onClose, benefit, onSuccess }:
   const [selectedBenefitId, setSelectedBenefitId] = useState<string>(benefit?.id || '');
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<string[]>([]);
-  const [filters, setFilters] = useState({ department: '', position: '', status: 'active' });
+  const [filters, setFilters] = useState({ department: 'all', position: 'all', status: 'active' });
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -65,9 +65,9 @@ export function BulkAssignBenefitsModal({ isOpen, onClose, benefit, onSuccess }:
   };
 
   const filteredEmployees = employees.filter(emp => {
-    if (filters.department && emp.department !== filters.department) return false;
-    if (filters.position && emp.position !== filters.position) return false;
-    if (filters.status && emp.status !== filters.status) return false;
+    if (filters.department && filters.department !== 'all' && emp.department !== filters.department) return false;
+    if (filters.position && filters.position !== 'all' && emp.position !== filters.position) return false;
+    if (filters.status && filters.status !== 'all' && emp.status !== filters.status) return false;
     return true;
   });
 
@@ -190,7 +190,7 @@ export function BulkAssignBenefitsModal({ isOpen, onClose, benefit, onSuccess }:
                   <SelectValue placeholder="Tất cả" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tất cả</SelectItem>
+                  <SelectItem value="all">Tất cả</SelectItem>
                   {departments.map(dept => (
                     <SelectItem key={dept} value={dept}>{dept}</SelectItem>
                   ))}
@@ -205,7 +205,7 @@ export function BulkAssignBenefitsModal({ isOpen, onClose, benefit, onSuccess }:
                   <SelectValue placeholder="Tất cả" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tất cả</SelectItem>
+                  <SelectItem value="all">Tất cả</SelectItem>
                   {positions.map(pos => (
                     <SelectItem key={pos} value={pos}>{pos}</SelectItem>
                   ))}
@@ -220,7 +220,7 @@ export function BulkAssignBenefitsModal({ isOpen, onClose, benefit, onSuccess }:
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tất cả</SelectItem>
+                  <SelectItem value="all">Tất cả</SelectItem>
                   <SelectItem value="active">Đang làm</SelectItem>
                   <SelectItem value="probation">Thử việc</SelectItem>
                 </SelectContent>
