@@ -174,6 +174,22 @@ export class ImportService {
     'Quan hệ': 'emergency_contact_relationship',
   };
 
+  // ✅ Numeric fields that need empty string → null conversion
+  private static readonly NUMERIC_FIELDS = [
+    'salary_p1',
+    'allowance_meal',
+    'allowance_fuel',
+    'allowance_phone',
+    'allowance_other',
+    'total_fixed_salary',
+    'salary_fulltime_probation',
+    'salary_fulltime_official',
+    'salary_parttime_probation',
+    'salary_parttime_official',
+    'kpi_score',
+    'seniority_months'
+  ];
+
   static async importFromExcel(file: File): Promise<ImportResult> {
     const rows = await this.parseExcelFile(file);
     const errors: ImportError[] = [];
@@ -614,6 +630,16 @@ export class ImportService {
         else if (value === 'Khác' || value === 'Other') mapped[normalizedKey] = 'Other';
         else mapped[normalizedKey] = value;
       } 
+      // ✅ Handle numeric fields - convert empty string to null
+      else if (this.NUMERIC_FIELDS.includes(normalizedKey)) {
+        if (value === '' || value === null || value === undefined) {
+          mapped[normalizedKey] = null;
+        } else {
+          // Ensure it's a valid number
+          const num = typeof value === 'number' ? value : parseFloat(String(value));
+          mapped[normalizedKey] = isNaN(num) ? null : num;
+        }
+      }
       else {
         mapped[normalizedKey] = value;
       }
