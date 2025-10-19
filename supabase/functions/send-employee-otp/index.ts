@@ -83,43 +83,29 @@ Deno.serve(async (req) => {
     console.log(`✅ Employee found: ${employee.employee_code} - ${employee.full_name}`);
 
     // ============================================
-    // STEP 2: GENERATE OTP & SAVE TO DB (OPTIMIZED WITH UPSERT)
+    // STEP 2: GENERATE OTP & SAVE TO DB (DELETE + INSERT)
     // ============================================
     const otpCode = generateOTP();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
     console.log(`🔐 Generated OTP for ${emailLower}: ${otpCode} (expires at ${expiresAt.toISOString()})`);
 
-    // Upsert OTP (delete + insert in one operation)
-    const { error: upsertError } = await supabaseAdmin
+    // Delete old OTP codes for this email (if any)
+    await supabaseAdmin.from('email_otp_codes').delete().eq('email', emailLower);
+
+    // Insert new OTP
+    const { error: insertError } = await supabaseAdmin
       .from('email_otp_codes')
-      .upsert({
+      .insert({
         email: emailLower,
         otp_code: otpCode,
         expires_at: expiresAt.toISOString(),
-        verified: false,
-        created_at: new Date().toISOString()
-      }, {
-        onConflict: 'email',
-        ignoreDuplicates: false
+        verified: false
       });
-
-    if (upsertError) {
-      console.error('❌ Error saving OTP:', upsertError);
-      // Fallback: delete then insert
-      await supabaseAdmin.from('email_otp_codes').delete().eq('email', emailLower);
-      const { error: insertError } = await supabaseAdmin
-        .from('email_otp_codes')
-        .insert({
-          email: emailLower,
-          otp_code: otpCode,
-          expires_at: expiresAt.toISOString(),
-          verified: false
-        });
-      
-      if (insertError) {
-        throw new Error('Không thể tạo mã OTP. Vui lòng thử lại.');
-      }
+    
+    if (insertError) {
+      console.error('❌ Error saving OTP:', insertError);
+      throw new Error('Không thể tạo mã OTP. Vui lòng thử lại.');
     }
 
     console.log(`✅ OTP saved to database`);

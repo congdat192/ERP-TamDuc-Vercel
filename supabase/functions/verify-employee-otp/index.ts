@@ -137,15 +137,20 @@ Deno.serve(async (req) => {
 
     // Mark OTP as verified (async, non-blocking for performance)
     if (!otpRecord.verified) {
-      supabaseAdmin
-        .from('email_otp_codes')
-        .update({
-          verified: true,
-          verified_at: now.toISOString()
-        })
-        .eq('id', otpRecord.id)
-        .then(() => console.log('✅ OTP marked as verified'))
-        .catch((err) => console.error('⚠️ Error marking OTP as verified (non-blocking):', err));
+      (async () => {
+        try {
+          await supabaseAdmin
+            .from('email_otp_codes')
+            .update({
+              verified: true,
+              verified_at: now.toISOString()
+            })
+            .eq('id', otpRecord.id);
+          console.log('✅ OTP marked as verified');
+        } catch (err: any) {
+          console.error('⚠️ Error marking OTP as verified (non-blocking):', err);
+        }
+      })();
     }
 
     // ============================================
@@ -180,42 +185,49 @@ Deno.serve(async (req) => {
       console.log(`✅ Auth user created: ${userId}`);
 
       // Batch update: Link employee + update profile (async for performance)
-      Promise.all([
-        supabaseAdmin
-          .from('employees')
-          .update({ user_id: userId })
-          .eq('id', employee.id),
-        supabaseAdmin
-          .from('profiles')
-          .update({ password_change_required: false })
-          .eq('id', userId)
-      ]).then(([linkResult, profileResult]) => {
-        if (linkResult.error) {
-          console.error('⚠️ Error linking employee to user:', linkResult.error);
-        } else {
-          console.log('✅ Employee linked to auth user');
+      (async () => {
+        try {
+          const [linkResult, profileResult] = await Promise.all([
+            supabaseAdmin
+              .from('employees')
+              .update({ user_id: userId })
+              .eq('id', employee.id),
+            supabaseAdmin
+              .from('profiles')
+              .update({ password_change_required: false })
+              .eq('id', userId)
+          ]);
+          
+          if (linkResult.error) {
+            console.error('⚠️ Error linking employee to user:', linkResult.error);
+          } else {
+            console.log('✅ Employee linked to auth user');
+          }
+          
+          if (profileResult.error) {
+            console.error('⚠️ Error updating password_change_required:', profileResult.error);
+          } else {
+            console.log('✅ Updated password_change_required to false');
+          }
+        } catch (err: any) {
+          console.error('⚠️ Error in batch update:', err);
         }
-        if (profileResult.error) {
-          console.error('⚠️ Error updating password_change_required:', profileResult.error);
-        } else {
-          console.log('✅ Updated password_change_required to false');
-        }
-      });
+      })();
     } else {
       console.log(`✅ Employee already has user_id: ${userId}`);
       
       // Update profile async (non-blocking)
-      supabaseAdmin
-        .from('profiles')
-        .update({ password_change_required: false })
-        .eq('id', userId)
-        .then(({ error }) => {
-          if (error) {
-            console.error('⚠️ Warning: Could not update password_change_required:', error);
-          } else {
-            console.log('✅ Updated password_change_required to false for OTP user');
-          }
-        });
+      (async () => {
+        try {
+          await supabaseAdmin
+            .from('profiles')
+            .update({ password_change_required: false })
+            .eq('id', userId);
+          console.log('✅ Updated password_change_required to false for OTP user');
+        } catch (err: any) {
+          console.error('⚠️ Warning: Could not update password_change_required:', err);
+        }
+      })();
     }
 
     // ============================================
