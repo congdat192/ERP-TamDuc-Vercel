@@ -21,6 +21,7 @@ serve(async (req) => {
 
   try {
     console.log('[get-oauth-token] Fetching OAuth token...');
+    console.log('[get-oauth-token] Request URL:', 'https://kcirpjxbjqagrqrjfldu.supabase.co/functions/v1/get-token-supabase');
 
     const response = await fetch(
       'https://kcirpjxbjqagrqrjfldu.supabase.co/functions/v1/get-token-supabase',
@@ -35,6 +36,8 @@ serve(async (req) => {
         })
       }
     );
+
+    console.log('[get-oauth-token] Response status:', response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -53,7 +56,11 @@ serve(async (req) => {
     }
 
     const data: OAuthTokenResponse = await response.json();
-    console.log('[get-oauth-token] Token fetched successfully, expires in:', data.expires_in);
+    console.log('[get-oauth-token] Full response data:', JSON.stringify(data));
+    console.log('[get-oauth-token] Response keys:', Object.keys(data));
+    console.log('[get-oauth-token] Has access_token:', !!data.access_token);
+    console.log('[get-oauth-token] Token expires in:', data.expires_in);
+    console.log('[get-oauth-token] Token (first 20 chars):', data.access_token?.substring(0, 20));
 
     return new Response(
       JSON.stringify({

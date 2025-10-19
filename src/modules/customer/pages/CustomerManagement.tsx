@@ -95,19 +95,39 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
     
     if (isPhoneNumber && searchTerm.trim()) {
       setIsLoadingApi(true);
+      console.log('[CustomerManagement] Starting search for phone:', searchTerm);
+      
       try {
         const response = await fetchCustomerByPhone(searchTerm);
+        
+        console.log('[CustomerManagement] Search response:', {
+          hasResponse: !!response,
+          hasSuccess: response?.success,
+          hasData: !!response?.data,
+          customerName: response?.data?.name,
+          customerCode: response?.data?.code
+        });
         
         if (response && response.success && response.data) {
           const mappedCustomer = mapCustomerData(response.data);
           setApiCustomerData([mappedCustomer]);
           setCurrentPage(1);
+          
+          console.log('[CustomerManagement] Customer found and mapped successfully');
+          
           toast({
             title: "Thành công",
-            description: `Tìm thấy khách hàng: ${response.data.name}`,
+            description: `Tìm thấy: ${response.data.name} (${response.data.code})`,
           });
         } else {
           setApiCustomerData([]);
+          
+          console.warn('[CustomerManagement] No customer found:', {
+            hasResponse: !!response,
+            hasSuccess: response?.success,
+            hasData: !!response?.data
+          });
+          
           toast({
             title: "Không tìm thấy",
             description: "Không tìm thấy khách hàng với số điện thoại này",
@@ -115,10 +135,12 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
           });
         }
       } catch (error) {
-        console.error('Error fetching customer:', error);
+        console.error('[CustomerManagement] Search error:', error);
+        setApiCustomerData([]);
+        
         toast({
           title: "Lỗi",
-          description: "Không thể tải thông tin khách hàng",
+          description: "Không thể tải thông tin khách hàng. Vui lòng thử lại.",
           variant: "destructive",
         });
       } finally {

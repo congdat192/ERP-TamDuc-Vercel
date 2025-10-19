@@ -53,7 +53,9 @@ serve(async (req) => {
     const tokenData = await tokenResponse.json();
     const oauthToken = tokenData.data.access_token;
 
-    console.log('[get-customer-by-phone] OAuth token obtained, fetching customer...');
+    console.log('[get-customer-by-phone] OAuth token obtained');
+    console.log('[get-customer-by-phone] Token (first 20 chars):', oauthToken?.substring(0, 20));
+    console.log('[get-customer-by-phone] Calling API with phone:', phone);
 
     // Step 2: Fetch customer using OAuth token
     const customerResponse = await fetch(
@@ -66,6 +68,8 @@ serve(async (req) => {
         },
       }
     );
+
+    console.log('[get-customer-by-phone] Customer API response status:', customerResponse.status);
 
     if (!customerResponse.ok) {
       const errorText = await customerResponse.text();
@@ -84,7 +88,13 @@ serve(async (req) => {
     }
 
     const customerData = await customerResponse.json();
-    console.log('[get-customer-by-phone] Customer fetched successfully:', customerData.data?.code || 'N/A');
+    console.log('[get-customer-by-phone] Response structure:', {
+      hasSuccess: !!customerData.success,
+      hasData: !!customerData.data,
+      hasMeta: !!customerData.meta,
+      customerCode: customerData.data?.code
+    });
+    console.log('[get-customer-by-phone] Customer found:', customerData.data?.name || 'N/A', '(', customerData.data?.code || 'N/A', ')');
 
     return new Response(
       JSON.stringify(customerData),
