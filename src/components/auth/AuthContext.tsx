@@ -293,6 +293,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { toast } = useToast();
 
   const fetchAbortRef = useRef<AbortController | null>(null);
+  const refreshFailCountRef = useRef(0);
 
   const clearAuthState = async () => {
     try {
@@ -310,6 +311,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Validate session before making queries
+  const validateSession = async (): Promise<boolean> => {
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error || !session) {
+        console.error('❌ Session validation failed:', error);
+        return false;
+      }
+
+      // Check if session is about to expire (within 5 minutes)
+      const expiresAt = session.expires_at;
+      if (expiresAt) {
+        const expiryTime = expiresAt * 1000; // Convert to ms
+        const now = Date.now();
+        const timeUntilExpiry = expiryTime - now;
+        
+        if (timeUntilExpiry < 5 * 60 * 1000) { // Less than 5 minutes
+          console.warn('⚠️ Session expiring soon, attempting refresh...');
+          const { error: refreshError } = await supabase.auth.refreshSession();
+          if (refreshError) {
+            console.error('❌ Session refresh failed:', refreshError);
+            return false;
+          }
+        }
+      }
+
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   // Single source of truth: auth listener (tránh double-fetch)
   useEffect(() => {
     let mounted = true;
@@ -320,6 +354,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!mounted) return;
 
       if (session?.user) {
+        // Validate session before proceeding
+        const isValid = await validateSession();
+        if (!isValid) {
+          console.error('❌ Invalid session detected, logging out');
+          await clearAuthState();
+          setIsInitialized(true);
+          notifyOnce("invalid-session", () =>
+            toast({
+              title: "Phiên đăng nhập không hợp lệ",
+              description: "Vui lòng đăng nhập lại.",
+              variant: "destructive",
+            }),
+          );
+          if (window.location.pathname !== "/login") window.location.href = "/login";
+          return;
+        }
+
         // Quick status check INACTIVE - use maybeSingle to avoid errors
         const { data: st, error: stErr } = await supabase
           .from("profiles")
@@ -401,7 +452,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => clearTimeout(t);
   }, [isInitialized]);
 
-  // Auto-refresh session every 45 minutes to prevent expiry
+  // Auto-refresh session every 30 minutes to prevent expiry
   useEffect(() => {
     if (!currentUser) return;
 
@@ -411,17 +462,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) {
         console.error('❌ Session refresh failed:', error);
-        notifyOnce("session-refresh-failed", () =>
-          toast({
-            title: "Cảnh báo",
-            description: "Phiên đăng nhập sắp hết hạn. Vui lòng lưu công việc.",
-            variant: "default",
-          }),
-        );
+        refreshFailCountRef.current++;
+        
+        if (refreshFailCountRef.current >= 2) {
+          console.error('❌ Session refresh failed 2 times, forcing logout');
+          await clearAuthState();
+          notifyOnce("session-expired", () =>
+            toast({
+              title: "Phiên đăng nhập hết hạn",
+              description: "Vui lòng đăng nhập lại.",
+              variant: "destructive",
+            }),
+          );
+          if (window.location.pathname !== "/login") window.location.href = "/login";
+        } else {
+          notifyOnce("session-refresh-failed", () =>
+            toast({
+              title: "Cảnh báo",
+              description: "Phiên đăng nhập sắp hết hạn. Vui lòng lưu công việc.",
+              variant: "default",
+            }),
+          );
+        }
       } else {
         console.log('✅ Session refreshed successfully');
+        refreshFailCountRef.current = 0; // Reset fail count on success
       }
-    }, 45 * 60 * 1000); // 45 minutes
+    }, 30 * 60 * 1000); // 30 minutes
 
     return () => clearInterval(refreshInterval);
   }, [currentUser, toast]);
@@ -589,10 +656,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   if (!isInitialized) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">Đang khởi tạo...</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="text-center space-y-4 p-8">
+          <div className="animate-pulse space-y-4">
+            <div className="h-12 w-12 bg-primary/20 rounded-full mx-auto" />
+            <div className="h-4 w-32 bg-muted rounded mx-auto" />
+          </div>
         </div>
       </div>
     );

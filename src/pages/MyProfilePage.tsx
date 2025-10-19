@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/components/auth/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogOut, User, Gift, FileText, Send, Loader2 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { LogOut, User, Gift, FileText, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { EmployeePersonalInfoTab } from '@/components/profile/EmployeePersonalInfoTab';
 import { EmployeeBenefitsTab } from '@/components/profile/EmployeeBenefitsTab';
@@ -16,6 +17,8 @@ export function MyProfilePage() {
   const [activeTab, setActiveTab] = useState('personal');
   const [employee, setEmployee] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const retryCountRef = useRef(0);
+  const maxRetries = 3;
 
   useEffect(() => {
     console.log('🔍 [MyProfile] currentUser:', currentUser);
@@ -24,7 +27,7 @@ export function MyProfilePage() {
     if (!currentUser?.id) {
       console.log('⏳ [MyProfile] Waiting for currentUser...');
       
-      // Timeout fallback to prevent infinite loading
+      // Increased timeout to 15s for slower connections
       const timeout = setTimeout(() => {
         console.error('❌ [MyProfile] Timeout waiting for currentUser');
         setIsLoading(false);
@@ -33,13 +36,13 @@ export function MyProfilePage() {
           description: "Không thể tải thông tin. Vui lòng đăng nhập lại.",
           variant: "destructive",
         });
-      }, 10000); // 10s timeout
+      }, 15000); // 15s timeout
       
       return () => clearTimeout(timeout);
     }
 
-    let retryCount = 0;
-    const maxRetries = 3;
+    // Reset retry count when currentUser changes
+    retryCountRef.current = 0;
 
     const fetchEmployee = async () => {
       console.log(`📥 [MyProfile] Fetching employee for user_id: ${currentUser.id}`);
@@ -64,9 +67,9 @@ export function MyProfilePage() {
 
         console.log('📦 [MyProfile] Employee data:', data);
 
-        if (!data && retryCount < maxRetries) {
-          retryCount++;
-          console.log(`🔄 [MyProfile] Retry fetch employee (${retryCount}/${maxRetries})...`);
+        if (!data && retryCountRef.current < maxRetries) {
+          retryCountRef.current++;
+          console.log(`🔄 [MyProfile] Retry fetch employee (${retryCountRef.current}/${maxRetries})...`);
           setTimeout(fetchEmployee, 1000);
           return;
         }
@@ -85,12 +88,26 @@ export function MyProfilePage() {
     };
 
     fetchEmployee();
-  }, [currentUser?.id]);
+  }, [currentUser?.id, toast]);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
+        <div className="max-w-6xl mx-auto py-8">
+          <div className="flex justify-between items-center mb-6">
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-64" />
+              <Skeleton className="h-4 w-48" />
+            </div>
+            <Skeleton className="h-10 w-32" />
+          </div>
+          <Skeleton className="h-12 w-full mb-6" />
+          <div className="space-y-4">
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-32 w-full" />
+          </div>
+        </div>
       </div>
     );
   }
