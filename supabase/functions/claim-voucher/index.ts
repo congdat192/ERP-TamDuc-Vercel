@@ -17,7 +17,7 @@ serve(async (req) => {
       );
     }
 
-    console.log('[claim-voucher] Phone:', phone, 'Campaign:', campaign_id);
+    console.log('[claim-voucher] Claiming voucher - Phone:', phone, 'Campaign:', campaign_id);
 
     const data = await EXTERNAL_API.request<any>('/claim-voucher', {
       method: 'POST',
@@ -28,6 +28,7 @@ serve(async (req) => {
     return createResponse(data);
 
   } catch (error) {
+    console.error('[claim-voucher] Error:', error);
     return createErrorResponse(error);
   }
 });

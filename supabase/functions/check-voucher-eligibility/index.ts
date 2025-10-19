@@ -14,7 +14,7 @@ serve(async (req) => {
       return createErrorResponse({ message: 'Phone number is required' }, 400);
     }
 
-    console.log('[check-voucher-eligibility] Phone:', phone);
+    console.log('[check-voucher-eligibility] Checking for phone:', phone);
 
     const data = await EXTERNAL_API.request<any>(
       `/check-voucher-eligibility?phone=${encodeURIComponent(phone)}`
@@ -28,6 +28,7 @@ serve(async (req) => {
     return createResponse(data);
 
   } catch (error) {
+    console.error('[check-voucher-eligibility] Error:', error);
     return createErrorResponse(error);
   }
 });
