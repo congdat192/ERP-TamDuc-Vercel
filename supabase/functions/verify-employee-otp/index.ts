@@ -73,27 +73,22 @@ Deno.serve(async (req) => {
     // ============================================
     console.log(`🔍 Verifying OTP for ${emailLower}: ${otpCode}`);
 
+    // Tìm OTP (bỏ check verified = false để handle retry)
     const { data: otpRecord, error: otpError } = await supabaseAdmin
       .from('email_otp_codes')
       .select('*')
       .eq('email', emailLower)
       .eq('otp_code', otpCode)
-      .eq('verified', false)
       .order('created_at', { ascending: false })
       .limit(1)
-      .maybeSingle();
+      .single();
 
-    if (otpError) {
-      console.error('❌ Database error:', otpError);
-      throw new Error('Lỗi hệ thống khi kiểm tra OTP');
-    }
-
-    if (!otpRecord) {
-      console.error('❌ OTP not found or already used');
+    if (otpError || !otpRecord) {
+      console.error('❌ OTP not found');
       return new Response(
         JSON.stringify({ 
           success: false, 
-          message: 'Mã OTP không chính xác hoặc đã được sử dụng' 
+          message: 'Mã OTP không chính xác. Vui lòng kiểm tra lại.' 
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -106,7 +101,7 @@ Deno.serve(async (req) => {
     const now = new Date();
 
     if (now > expiresAt) {
-      console.error('❌ OTP expired:', { expiresAt: expiresAt.toISOString(), now: now.toISOString() });
+      console.error('❌ OTP expired');
       return new Response(
         JSON.stringify({ 
           success: false, 
@@ -119,20 +114,25 @@ Deno.serve(async (req) => {
     console.log('✅ OTP is valid and not expired');
 
     // ============================================
-    // STEP 4: MARK OTP AS VERIFIED
+    // STEP 4: MARK OTP AS VERIFIED (idempotent)
     // ============================================
-    const { error: updateError } = await supabaseAdmin
-      .from('email_otp_codes')
-      .update({
-        verified: true,
-        verified_at: now.toISOString()
-      })
-      .eq('id', otpRecord.id);
+    if (!otpRecord.verified) {
+      const { error: updateError } = await supabaseAdmin
+        .from('email_otp_codes')
+        .update({
+          verified: true,
+          verified_at: now.toISOString()
+        })
+        .eq('id', otpRecord.id);
 
-    if (updateError) {
-      console.error('❌ Error updating OTP status:', updateError);
+      if (updateError) {
+        console.error('❌ Error marking OTP as verified:', updateError);
+        // Continue anyway - OTP vẫn valid
+      } else {
+        console.log('✅ OTP marked as verified');
+      }
     } else {
-      console.log('✅ OTP marked as verified');
+      console.log('ℹ️ OTP already verified (retry detected)');
     }
 
     // ============================================
@@ -218,14 +218,27 @@ Deno.serve(async (req) => {
       throw new Error('Không thể tạo phiên đăng nhập. Vui lòng thử lại.');
     }
 
-    console.log('✅ Session tokens generated successfully');
+    console.log('✅ Session link generated successfully');
 
-    // Get updated user data with metadata
-    const { data: { user: userData }, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
-
-    if (userError) {
-      console.error('❌ Error fetching user data:', userError);
+    // Parse tokens from action_link URL
+    const actionLink = sessionData.properties?.action_link;
+    if (!actionLink) {
+      console.error('❌ No action_link in response');
+      throw new Error('Không thể tạo phiên đăng nhập. Vui lòng thử lại.');
     }
+
+    // Extract tokens using URL parsing
+    const url = new URL(actionLink);
+    const accessToken = url.searchParams.get('access_token');
+    const refreshToken = url.searchParams.get('refresh_token');
+
+    if (!accessToken || !refreshToken) {
+      console.error('❌ Missing tokens in action_link');
+      throw new Error('Không thể tạo phiên đăng nhập. Vui lòng thử lại.');
+    }
+
+    // Get user data
+    const { data: { user: userData }, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
 
     // ============================================
     // STEP 8: RETURN SESSION DATA
@@ -235,8 +248,8 @@ Deno.serve(async (req) => {
         success: true,
         message: 'Đăng nhập thành công!',
         session: {
-          access_token: sessionData.properties.action_link.split('access_token=')[1].split('&')[0],
-          refresh_token: sessionData.properties.action_link.split('refresh_token=')[1].split('&')[0],
+          access_token: accessToken,
+          refresh_token: refreshToken,
           user: {
             id: userId,
             email: emailLower,
