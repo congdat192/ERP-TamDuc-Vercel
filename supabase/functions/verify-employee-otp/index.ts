@@ -13,11 +13,8 @@ interface VerifyOTPRequest {
 interface VerifyOTPResponse {
   success: boolean;
   message: string;
-  session?: {
-    access_token: string;
-    refresh_token: string;
-    user: any;
-  };
+  hashed_token?: string;
+  email?: string;
 }
 
 // Generate random secure password (for auto-created users)
@@ -204,42 +201,32 @@ Deno.serve(async (req) => {
     }
 
     // ============================================
-    // STEP 7: CREATE SESSION DIRECTLY
+    // STEP 7: GENERATE MAGIC LINK WITH HASHED TOKEN
     // ============================================
-    console.log('🔑 Creating session for user...');
+    console.log('🔑 Generating magic link for user...');
 
-    const { data: sessionData, error: sessionError } = await supabaseAdmin.auth.admin.createSession({
-      user_id: userId
+    const { data: magicLinkData, error: magicLinkError } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'magiclink',
+      email: emailLower
     });
 
-    if (sessionError || !sessionData?.session) {
-      console.error('❌ Error creating session:', sessionError);
+    if (magicLinkError || !magicLinkData?.properties?.hashed_token) {
+      console.error('❌ Error generating magic link:', magicLinkError);
       throw new Error('Không thể tạo phiên đăng nhập. Vui lòng thử lại.');
     }
 
-    console.log('✅ Session created successfully');
-    console.log('📦 Session data:', {
-      access_token: sessionData.session.access_token ? '✅ Present' : '❌ Missing',
-      refresh_token: sessionData.session.refresh_token ? '✅ Present' : '❌ Missing',
-      user_id: sessionData.user.id
-    });
+    console.log('✅ Magic link generated successfully');
+    console.log('📦 Hashed token:', magicLinkData.properties.hashed_token ? '✅ Present' : '❌ Missing');
 
     // ============================================
-    // STEP 8: RETURN SESSION DATA
+    // STEP 8: RETURN HASHED TOKEN FOR FRONTEND
     // ============================================
     return new Response(
       JSON.stringify({
         success: true,
         message: 'Đăng nhập thành công!',
-        session: {
-          access_token: sessionData.session.access_token,
-          refresh_token: sessionData.session.refresh_token,
-          user: {
-            id: sessionData.user.id,
-            email: sessionData.user.email,
-            user_metadata: sessionData.user.user_metadata
-          }
-        }
+        hashed_token: magicLinkData.properties.hashed_token,
+        email: emailLower
       } as VerifyOTPResponse),
       {
         status: 200,

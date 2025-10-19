@@ -106,8 +106,9 @@ export function EmployeeOTPLoginPage() {
     setLoading(true);
 
     try {
-      console.log('🔐 Verifying OTP via custom Edge Function...');
+      console.log('🔐 Step 1: Verifying OTP with backend...');
       
+      // Step 1: Verify OTP and get hashed_token from backend
       const { data, error } = await supabase.functions.invoke('verify-employee-otp', {
         body: {
           email: email.toLowerCase(),
@@ -117,40 +118,44 @@ export function EmployeeOTPLoginPage() {
 
       if (error) throw error;
 
-      if (!data.success) {
-        toast({
-          title: 'Xác thực thất bại',
-          description: data.message || 'Mã OTP không chính xác',
-          variant: 'destructive',
-        });
-        return;
+      if (!data.success || !data.hashed_token) {
+        throw new Error(data.message || 'Không thể xác thực OTP');
       }
 
-      console.log('✅ OTP verified successfully');
+      console.log('✅ Step 1 complete: OTP verified by backend');
+      console.log('🔐 Step 2: Creating session with hashed_token...');
 
-      // Set session manually using tokens from Edge Function
-      const { error: sessionError } = await supabase.auth.setSession({
-        access_token: data.session.access_token,
-        refresh_token: data.session.refresh_token
+      // Step 2: Use hashed_token to verify OTP and create session
+      const { data: sessionData, error: verifyError } = await supabase.auth.verifyOtp({
+        token_hash: data.hashed_token,
+        type: 'email'
       });
 
-      if (sessionError) {
-        console.error('❌ Session error:', sessionError);
-        throw sessionError;
+      if (verifyError) {
+        console.error('❌ Step 2 failed:', verifyError);
+        throw new Error('Không thể tạo phiên đăng nhập. Vui lòng thử lại.');
       }
 
-      console.log('✅ Session created successfully');
+      if (!sessionData.session) {
+        throw new Error('Không nhận được session token');
+      }
+
+      console.log('✅ Step 2 complete: Session created');
+      console.log('📦 Session:', {
+        access_token: sessionData.session.access_token ? '✅ Present' : '❌ Missing',
+        user_id: sessionData.user?.id
+      });
 
       toast({
-        title: 'Đăng nhập thành công',
-        description: `Chào mừng ${data.session.user.user_metadata.full_name}!`,
+        title: 'Đăng nhập thành công!',
+        description: 'Chào mừng bạn quay trở lại',
       });
 
-      // Redirect to employee self-service portal
+      // Redirect to my profile
       navigate('/my-profile');
 
     } catch (error: any) {
-      console.error('❌ Error:', error);
+      console.error('❌ Login error:', error);
       
       if (error.message?.includes('expired') || error.message?.includes('hết hạn')) {
         toast({
@@ -167,7 +172,7 @@ export function EmployeeOTPLoginPage() {
       } else {
         toast({
           title: 'Lỗi xác thực',
-          description: error.message || 'Không thể xác thực mã OTP. Vui lòng thử lại.',
+          description: error.message || 'Mã OTP không chính xác hoặc đã hết hạn',
           variant: 'destructive',
         });
       }
