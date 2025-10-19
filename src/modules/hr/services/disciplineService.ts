@@ -82,48 +82,57 @@ export class DisciplineService {
   }
 
   /**
-   * Create new discipline record
+   * Create new discipline record (supports batch insert for multiple employees)
    */
   static async createRecord(data: CreateDisciplineData): Promise<DisciplineRecord> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Không tìm thấy thông tin người dùng');
 
-      // Validate employee exists
-      const { data: employee, error: empError } = await supabase
+      // Validate all employees exist
+      const { data: employees, error: empError } = await supabase
         .from('employees')
         .select('id')
-        .eq('id', data.employee_id)
-        .maybeSingle();
+        .in('id', data.employee_ids);
       
       if (empError) throw empError;
-      if (!employee) {
-        throw new Error('Không tìm thấy nhân viên với ID này');
+      if (!employees || employees.length !== data.employee_ids.length) {
+        throw new Error('Một hoặc nhiều nhân viên không tồn tại');
       }
 
-      // Generate record code
-      const record_code = await this.generateRecordCode();
+      // Generate unique code for this batch
+      const timestamp = Date.now();
+      
+      // Create array of inserts (one per employee)
+      const inserts = data.employee_ids.map((employee_id, index) => ({
+        employee_id,
+        violation_type: data.violation_type,
+        violation_date: data.violation_date,
+        description: data.description,
+        severity: data.severity,
+        penalty: data.penalty,
+        penalty_amount: data.penalty_amount,
+        notes: data.notes,
+        record_code: `KL-${timestamp}-${String(index + 1).padStart(3, '0')}`,
+        status: 'pending',
+        issued_by: user.id,
+      }));
 
-      const { data: record, error } = await supabase
+      const { data: records, error } = await supabase
         .from('hr_discipline_records')
-        .insert({
-          ...data,
-          record_code,
-          issued_by: user.id,
-        })
+        .insert(inserts)
         .select(`
           *,
           employee:employees(id, full_name, employee_code, position, department)
-        `)
-        .single();
+        `);
 
       if (error) {
-        console.error('❌ Error creating discipline record:', error);
+        console.error('❌ Error creating discipline records:', error);
         throw new Error(`Không thể tạo hồ sơ kỷ luật: ${error.message}`);
       }
 
-      console.log('✅ Discipline record created:', record);
-      return record as DisciplineRecord;
+      console.log(`✅ ${records.length} Discipline records created`);
+      return records[0] as DisciplineRecord; // Return first for compatibility
     } catch (error: any) {
       console.error('❌ Error in createRecord:', error);
       throw error;

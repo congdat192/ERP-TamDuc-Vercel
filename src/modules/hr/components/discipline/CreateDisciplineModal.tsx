@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { DisciplineService } from '../../services/disciplineService';
 import type { CreateDisciplineData } from '../../types/benefits';
-import { EmployeeSearchInput } from '../shared/EmployeeSearchInput';
+import { MultiSelectEmployeeSearch } from '../shared/MultiSelectEmployeeSearch';
 
 interface CreateDisciplineModalProps {
   isOpen: boolean;
@@ -18,7 +18,7 @@ interface CreateDisciplineModalProps {
 
 export function CreateDisciplineModal({ isOpen, onClose, onSuccess }: CreateDisciplineModalProps) {
   const [formData, setFormData] = useState<CreateDisciplineData>({
-    employee_id: '',
+    employee_ids: [], // Changed to array
     violation_type: 'late',
     violation_date: new Date().toISOString().split('T')[0],
     description: '',
@@ -33,10 +33,10 @@ export function CreateDisciplineModal({ isOpen, onClose, onSuccess }: CreateDisc
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.employee_id.trim() || !formData.description.trim()) {
+    if (formData.employee_ids.length === 0 || !formData.description.trim()) {
       toast({
         title: 'Lỗi',
-        description: 'Vui lòng điền đầy đủ thông tin bắt buộc',
+        description: 'Vui lòng chọn ít nhất 1 nhân viên và điền mô tả vi phạm',
         variant: 'destructive',
       });
       return;
@@ -69,15 +69,15 @@ export function CreateDisciplineModal({ isOpen, onClose, onSuccess }: CreateDisc
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Employee ID */}
+          {/* Employee IDs - Multi Select */}
           <div className="space-y-2">
-            <Label htmlFor="employee_id">
+            <Label htmlFor="employee_ids">
               Nhân Viên <span className="text-destructive">*</span>
             </Label>
-            <EmployeeSearchInput
-              value={formData.employee_id}
-              onValueChange={(value) => setFormData({ ...formData, employee_id: value })}
-              placeholder="Tìm kiếm nhân viên..."
+            <MultiSelectEmployeeSearch
+              value={formData.employee_ids}
+              onChange={(employeeIds) => setFormData({ ...formData, employee_ids: employeeIds })}
+              placeholder="Tìm và chọn nhân viên..."
             />
           </div>
 

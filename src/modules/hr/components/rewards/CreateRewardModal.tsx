@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { RewardsService } from '../../services/rewardsService';
 import type { CreateRewardData } from '../../types/benefits';
-import { EmployeeSearchInput } from '../shared/EmployeeSearchInput';
+import { MultiSelectEmployeeSearch } from '../shared/MultiSelectEmployeeSearch';
 
 interface CreateRewardModalProps {
   isOpen: boolean;
@@ -20,7 +20,7 @@ export function CreateRewardModal({ isOpen, onClose, onSuccess }: CreateRewardMo
   const [formData, setFormData] = useState<CreateRewardData>({
     reward_title: '',
     reward_type: 'bonus',
-    employee_id: '',
+    employee_ids: [], // Changed to array
     awarded_date: new Date().toISOString().split('T')[0],
     reason: '',
     amount: undefined,
@@ -31,10 +31,10 @@ export function CreateRewardModal({ isOpen, onClose, onSuccess }: CreateRewardMo
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.reward_title.trim() || !formData.employee_id.trim() || !formData.reason.trim()) {
+    if (!formData.reward_title.trim() || formData.employee_ids.length === 0 || !formData.reason.trim()) {
       toast({
         title: 'Lỗi',
-        description: 'Vui lòng điền đầy đủ thông tin bắt buộc',
+        description: 'Vui lòng điền đầy đủ thông tin và chọn ít nhất 1 nhân viên',
         variant: 'destructive',
       });
       return;
@@ -113,15 +113,15 @@ export function CreateRewardModal({ isOpen, onClose, onSuccess }: CreateRewardMo
             </div>
           </div>
 
-          {/* Employee ID */}
+          {/* Employee IDs - Multi Select */}
           <div className="space-y-2">
-            <Label htmlFor="employee_id">
+            <Label htmlFor="employee_ids">
               Nhân Viên <span className="text-destructive">*</span>
             </Label>
-            <EmployeeSearchInput
-              value={formData.employee_id}
-              onValueChange={(value) => setFormData({ ...formData, employee_id: value })}
-              placeholder="Tìm kiếm nhân viên..."
+            <MultiSelectEmployeeSearch
+              value={formData.employee_ids}
+              onChange={(employeeIds) => setFormData({ ...formData, employee_ids: employeeIds })}
+              placeholder="Tìm và chọn nhân viên..."
             />
           </div>
 

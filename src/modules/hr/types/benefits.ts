@@ -112,7 +112,7 @@ export interface UpdateBenefitData extends Partial<CreateBenefitData> {}
 export interface CreateRewardData {
   reward_title: string;
   reward_type: 'bonus' | 'recognition' | 'gift' | 'promotion' | 'other';
-  employee_id: string;
+  employee_ids: string[]; // Changed to array for multi-select
   awarded_date: string;
   reason: string;
   amount?: number;
@@ -124,7 +124,7 @@ export interface UpdateRewardData extends Partial<CreateRewardData> {
 }
 
 export interface CreateDisciplineData {
-  employee_id: string;
+  employee_ids: string[]; // Changed to array for multi-select
   violation_type: 'late' | 'absent' | 'policy-violation' | 'misconduct' | 'other';
   violation_date: string;
   description: string;

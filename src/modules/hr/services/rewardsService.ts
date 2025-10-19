@@ -79,48 +79,55 @@ export class RewardsService {
   }
 
   /**
-   * Create new reward
+   * Create new reward (supports batch insert for multiple employees)
    */
   static async createReward(data: CreateRewardData): Promise<Reward> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Không tìm thấy thông tin người dùng');
 
-      // Validate employee exists
-      const { data: employee, error: empError } = await supabase
+      // Validate all employees exist
+      const { data: employees, error: empError } = await supabase
         .from('employees')
         .select('id')
-        .eq('id', data.employee_id)
-        .maybeSingle();
+        .in('id', data.employee_ids);
       
       if (empError) throw empError;
-      if (!employee) {
-        throw new Error('Không tìm thấy nhân viên với ID này');
+      if (!employees || employees.length !== data.employee_ids.length) {
+        throw new Error('Một hoặc nhiều nhân viên không tồn tại');
       }
 
-      // Generate reward code
-      const reward_code = await this.generateRewardCode();
+      // Generate unique code for this batch
+      const timestamp = Date.now();
+      
+      // Create array of inserts (one per employee)
+      const inserts = data.employee_ids.map((employee_id, index) => ({
+        employee_id,
+        reward_title: data.reward_title,
+        reward_type: data.reward_type,
+        awarded_date: data.awarded_date,
+        reason: data.reason,
+        amount: data.amount,
+        reward_code: `KT-${timestamp}-${String(index + 1).padStart(3, '0')}`,
+        status: 'pending',
+        created_by: user.id,
+      }));
 
-      const { data: reward, error } = await supabase
+      const { data: rewards, error } = await supabase
         .from('hr_rewards')
-        .insert({
-          ...data,
-          reward_code,
-          created_by: user.id,
-        })
+        .insert(inserts)
         .select(`
           *,
           employee:employees(id, full_name, employee_code, position, department)
-        `)
-        .single();
+        `);
 
       if (error) {
-        console.error('❌ Error creating reward:', error);
+        console.error('❌ Error creating rewards:', error);
         throw new Error(`Không thể tạo khen thưởng: ${error.message}`);
       }
 
-      console.log('✅ Reward created:', reward);
-      return reward as Reward;
+      console.log(`✅ ${rewards.length} Rewards created`);
+      return rewards[0] as Reward; // Return first for compatibility
     } catch (error: any) {
       console.error('❌ Error in createReward:', error);
       throw error;

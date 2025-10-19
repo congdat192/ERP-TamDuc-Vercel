@@ -26,7 +26,6 @@ export function EditRewardModal({ isOpen, onClose, reward, onSuccess }: EditRewa
       setFormData({
         reward_title: reward.reward_title,
         reward_type: reward.reward_type,
-        employee_id: reward.employee_id,
         awarded_date: reward.awarded_date,
         reason: reward.reason,
         amount: reward.amount,
