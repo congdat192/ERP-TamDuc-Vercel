@@ -54,20 +54,23 @@ serve(async (req) => {
     const oauthToken = tokenData.data.access_token;
 
     console.log('[get-customer-by-phone] OAuth token obtained');
-    console.log('[get-customer-by-phone] Token (first 20 chars):', oauthToken?.substring(0, 20));
+    console.log('[get-customer-by-phone] Full token:', oauthToken);
+    console.log('[get-customer-by-phone] Token type:', typeof oauthToken);
+    console.log('[get-customer-by-phone] Token length:', oauthToken?.length);
     console.log('[get-customer-by-phone] Calling API with phone:', phone);
 
+    const apiUrl = `https://kcirpjxbjqagrqrjfldu.supabase.co/functions/v1/customer-by-phone?phone=${encodeURIComponent(phone.trim())}`;
+    console.log('[get-customer-by-phone] API URL:', apiUrl);
+    console.log('[get-customer-by-phone] Authorization header:', `Bearer ${oauthToken?.substring(0, 20)}...`);
+
     // Step 2: Fetch customer using OAuth token
-    const customerResponse = await fetch(
-      `https://kcirpjxbjqagrqrjfldu.supabase.co/functions/v1/customer-by-phone?phone=${encodeURIComponent(phone.trim())}`,
-      {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${oauthToken}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    const customerResponse = await fetch(apiUrl, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${oauthToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
 
     console.log('[get-customer-by-phone] Customer API response status:', customerResponse.status);
 
