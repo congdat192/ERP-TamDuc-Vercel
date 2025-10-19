@@ -18,16 +18,14 @@ interface OAuthTokenResponse {
 async function getOAuthToken(): Promise<string> {
   console.log('[claim-voucher] Fetching OAuth token...');
   
-  const response = await fetch(`${EXTERNAL_API_BASE}/oauth-token`, {
+  const response = await fetch(`${EXTERNAL_API_BASE}/get-token-supabase`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${EXTERNAL_API_KEY}`
+      'Content-Type': 'application/json'
     },
     body: JSON.stringify({
       client_id: 'mk_tamduc',
-      client_secret: 'Tamduc@123',
-      grant_type: 'client_credentials'
+      client_secret: 'Tamduc@123'
     })
   });
 
