@@ -1,41 +1,92 @@
+import { useState, useEffect } from 'react';
 import { Users, Clock, UserPlus, Target } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
+import { DashboardService, HRDashboardStats } from '../services/dashboardService';
 
 export function ThemedHRStats() {
-  const stats = [
+  const [stats, setStats] = useState<HRDashboardStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+      setIsLoading(true);
+      const data = await DashboardService.getStats();
+      setStats(data);
+    } catch (error: any) {
+      console.error('❌ Error fetching HR stats:', error);
+      toast({
+        title: "Lỗi",
+        description: "Không thể tải thống kê nhân sự",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map(i => (
+          <Card key={i} className="theme-card">
+            <CardContent className="p-6">
+              <Skeleton className="h-20 w-full" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (!stats) return null;
+
+  const statCards = [
     {
       title: 'Tổng Nhân Viên',
-      value: '0',
+      value: stats.totalEmployees.toString(),
       icon: Users,
-      trend: '+0%',
-      description: 'So với tháng trước',
+      trend: `${stats.activeEmployees} active`,
+      description: `${stats.probationEmployees} thử việc`,
     },
     {
       title: 'Đi Làm Hôm Nay',
-      value: '0',
+      value: stats.todayAttendance > 0 
+        ? `${stats.todayAttendance}/${stats.totalEmployees}` 
+        : '-',
       icon: Clock,
-      trend: '0%',
+      trend: stats.todayAttendanceRate > 0 
+        ? `${stats.todayAttendanceRate}%` 
+        : 'Chưa có data',
       description: 'Tỷ lệ chấm công',
     },
     {
       title: 'Đang Tuyển',
-      value: '0',
+      value: stats.openRecruitment.toString(),
       icon: UserPlus,
-      trend: '0',
+      trend: stats.openRecruitment > 0 ? `${stats.openRecruitment} vị trí` : 'Không có',
       description: 'Vị trí tuyển dụng',
     },
     {
       title: 'KPI Trung Bình',
-      value: '-',
+      value: stats.avgKpi > 0 ? `${stats.avgKpi}%` : '-',
       icon: Target,
-      trend: '0%',
+      trend: stats.lowKpiCount > 0 
+        ? `${stats.lowKpiCount} thấp (<60%)` 
+        : 'Tốt',
       description: 'Hiệu suất nhân viên',
     },
   ];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {stats.map((stat, index) => {
+      {statCards.map((stat, index) => {
         const Icon = stat.icon;
         return (
           <Card key={index} className="theme-card">
