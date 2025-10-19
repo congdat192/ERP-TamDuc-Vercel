@@ -44,38 +44,39 @@ Deno.serve(async (req) => {
 
     console.log('✅ User authenticated:', user.id);
 
-    // Check permission
-    const { data: hasPermission } = await supabaseAdmin
+    // Check permission - use maybeSingle to avoid errors
+    const { data: hasPermission, error: permError } = await supabaseAdmin
       .from('user_roles')
       .select(`
         *,
-        roles!inner(
-          id,
-          name,
-          role_permissions!inner(
-            features!inner(
-              code
-            )
-          )
-        )
+        roles!inner(name)
       `)
       .eq('user_id', user.id)
-      .or('roles.name.ilike.admin,roles.name.ilike.owner')
-      .single();
+      .in('roles.name', ['Owner', 'Admin', 'owner', 'admin'])
+      .maybeSingle();
+
+    if (permError) {
+      console.error('❌ Permission check error:', permError);
+      return new Response(
+        JSON.stringify({ error: 'Permission check failed' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     if (!hasPermission) {
+      console.error('❌ Permission denied for user:', user.id);
       return new Response(
         JSON.stringify({ error: 'Insufficient permissions' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('✅ Permission verified');
+    console.log('✅ Permission verified for user:', user.id);
 
     // Get request body
     const { requestId, approved, reviewNote } = await req.json();
 
-    console.log('📝 Processing document request:', { requestId, approved });
+    console.log('📝 Processing document request:', { requestId, approved, reviewNote });
 
     // Fetch request
     const { data: request, error: reqError } = await supabaseAdmin
@@ -96,7 +97,8 @@ Deno.serve(async (req) => {
       const fileName = oldPath.split('/').pop();
       const newPath = `documents/${fileName}`;
 
-      console.log('📂 Moving file:', oldPath, '→', newPath);
+      console.log('📂 Moving file from:', oldPath);
+      console.log('📂 Moving file to:', newPath);
 
       // Download file from temp location
       const { data: fileData, error: downloadError } = await supabaseAdmin.storage

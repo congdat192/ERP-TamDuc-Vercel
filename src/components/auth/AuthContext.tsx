@@ -320,25 +320,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!mounted) return;
 
       if (session?.user) {
-        // Quick status check INACTIVE
+        // Quick status check INACTIVE - use maybeSingle to avoid errors
         const { data: st, error: stErr } = await supabase
           .from("profiles")
           .select("status")
           .eq("id", session.user.id)
-          .single();
+          .maybeSingle();
 
         if (stErr) {
-          await clearAuthState();
-          setIsInitialized(true);
-          notifyOnce("status-error", () =>
+          console.error('⚠️ Profile status check failed:', stErr);
+          // Don't logout immediately - just warn user
+          notifyOnce("status-check-failed", () =>
             toast({
-              title: "Phiên đăng nhập hết hạn",
-              description: "Vui lòng đăng nhập lại.",
-              variant: "destructive",
+              title: "Cảnh báo",
+              description: "Không thể kiểm tra trạng thái tài khoản. Nếu lỗi tiếp tục, vui lòng đăng nhập lại.",
+              variant: "default",
             }),
           );
-          if (window.location.pathname !== "/login") window.location.href = "/login";
-          return;
+          // Continue with user fetch - don't block on profile check
         }
 
         if (st?.status === "INACTIVE") {
@@ -401,6 +400,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, 5000);
     return () => clearTimeout(t);
   }, [isInitialized]);
+
+  // Auto-refresh session every 45 minutes to prevent expiry
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const refreshInterval = setInterval(async () => {
+      console.log('🔄 Auto-refreshing session...');
+      const { data, error } = await supabase.auth.refreshSession();
+      
+      if (error) {
+        console.error('❌ Session refresh failed:', error);
+        notifyOnce("session-refresh-failed", () =>
+          toast({
+            title: "Cảnh báo",
+            description: "Phiên đăng nhập sắp hết hạn. Vui lòng lưu công việc.",
+            variant: "default",
+          }),
+        );
+      } else {
+        console.log('✅ Session refreshed successfully');
+      }
+    }, 45 * 60 * 1000); // 45 minutes
+
+    return () => clearInterval(refreshInterval);
+  }, [currentUser, toast]);
 
   // Realtime: lắng nghe thay đổi status của chính user
   useEffect(() => {
