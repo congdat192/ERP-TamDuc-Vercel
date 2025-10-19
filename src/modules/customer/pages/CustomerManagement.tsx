@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { fetchCustomerByPhone, mapCustomerData } from '../services/customerService';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useCustomerData } from '@/hooks/useCustomerData';
+import { useVoucherData } from '@/hooks/useVoucherData';
+import { useInvoiceHistory } from '@/hooks/useInvoiceHistory';
 import { ThemedCustomerStats } from '../components/ThemedCustomerStats';
 import { CustomerSearchActions } from '../components/CustomerSearchActions';
 import { CustomerFilters } from '../components/CustomerFilters';
@@ -9,6 +11,7 @@ import { CustomerTable } from '../components/CustomerTable';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ColumnConfig } from '../components/ColumnVisibilityFilter';
 import { mockCustomers } from '@/data/mockData';
+import { formatCurrency, formatDate } from '@/utils/formatters';
 
 interface CustomerManagementProps {
   currentUser?: any;
@@ -22,8 +25,12 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
-  const [isLoadingApi, setIsLoadingApi] = useState(false);
   const [apiCustomerData, setApiCustomerData] = useState<any[]>([]);
+
+  // Use new hooks for API integration
+  const { customer, loading: customerLoading, searchByPhone, clearCustomer } = useCustomerData();
+  const { voucherData, loading: voucherLoading, checkEligibility, claimVoucher, claiming } = useVoucherData();
+  const { invoiceData, loading: invoiceLoading, loadInvoices } = useInvoiceHistory();
 
   // Use API data if available, otherwise use mock data
   const customers = apiCustomerData.length > 0 ? apiCustomerData : mockCustomers;
@@ -90,61 +97,44 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
   };
 
   const handleSearch = async () => {
-    // Check if search term looks like a phone number
-    const isPhoneNumber = /^[\d\s\-\+\(\)]+$/.test(searchTerm.trim());
+    const phone = searchTerm.trim();
     
-    if (isPhoneNumber && searchTerm.trim()) {
-      setIsLoadingApi(true);
-      console.log('[CustomerManagement] Starting search for phone:', searchTerm);
+    // Check if search term looks like a phone number
+    const isPhoneNumber = /^[\d\s\-\+\(\)]+$/.test(phone);
+    
+    if (isPhoneNumber && phone) {
+      console.log('[CustomerManagement] Starting search for phone:', phone);
       
-      try {
-        const response = await fetchCustomerByPhone(searchTerm);
+      // Search customer and load related data in parallel
+      const foundCustomer = await searchByPhone(phone);
+      
+      if (foundCustomer) {
+        // Map customer data to table format
+        const mappedCustomer = {
+          id: foundCustomer.code,
+          customerCode: foundCustomer.code,
+          customerName: foundCustomer.name,
+          phone: foundCustomer.contactNumber,
+          birthDate: formatDate(foundCustomer.birthDate),
+          currentDebt: formatCurrency(foundCustomer.debt),
+          totalSales: formatCurrency(foundCustomer.totalRevenue),
+          currentPoints: foundCustomer.rewardPoint,
+          address: foundCustomer.address || '',
+          gender: foundCustomer.gender ? 'Nam' : 'Nữ',
+        };
         
-        console.log('[CustomerManagement] Search response:', {
-          hasResponse: !!response,
-          hasSuccess: response?.success,
-          hasData: !!response?.data,
-          customerName: response?.data?.name,
-          customerCode: response?.data?.code
-        });
+        setApiCustomerData([mappedCustomer]);
+        setCurrentPage(1);
         
-        if (response && response.success && response.data) {
-          const mappedCustomer = mapCustomerData(response.data);
-          setApiCustomerData([mappedCustomer]);
-          setCurrentPage(1);
-          
-          console.log('[CustomerManagement] Customer found and mapped successfully');
-          
-          toast({
-            title: "Thành công",
-            description: `Tìm thấy: ${response.data.name} (${response.data.code})`,
-          });
-        } else {
-          setApiCustomerData([]);
-          
-          console.warn('[CustomerManagement] No customer found:', {
-            hasResponse: !!response,
-            hasSuccess: response?.success,
-            hasData: !!response?.data
-          });
-          
-          toast({
-            title: "Không tìm thấy",
-            description: "Không tìm thấy khách hàng với số điện thoại này",
-            variant: "destructive",
-          });
-        }
-      } catch (error) {
-        console.error('[CustomerManagement] Search error:', error);
+        // Load voucher and invoice data in parallel
+        await Promise.all([
+          checkEligibility(phone),
+          loadInvoices(phone)
+        ]);
+        
+        console.log('[CustomerManagement] Customer data and related info loaded');
+      } else {
         setApiCustomerData([]);
-        
-        toast({
-          title: "Lỗi",
-          description: "Không thể tải thông tin khách hàng. Vui lòng thử lại.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoadingApi(false);
       }
     }
   };
@@ -153,6 +143,7 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
     setSearchTerm('');
     setApiCustomerData([]);
     setCurrentPage(1);
+    clearCustomer();
   };
 
   const clearAllFilters = () => {
@@ -216,7 +207,7 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
               setSearchTerm={setSearchTerm}
               onSearch={handleSearch}
               onResetSearch={handleResetSearch}
-              isLoadingApi={isLoadingApi}
+              isLoadingApi={customerLoading}
               columns={columns}
               handleColumnToggle={handleColumnToggle}
               onToggleSidebar={() => setIsFilterOpen(!isFilterOpen)}

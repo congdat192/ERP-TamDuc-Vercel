@@ -7,19 +7,23 @@ serve(async (req) => {
   if (corsResponse) return corsResponse;
 
   try {
-    const { phone } = await req.json();
+    const url = new URL(req.url);
+    const phone = url.searchParams.get('phone');
 
-    if (!phone || phone.trim() === '') {
+    if (!phone) {
       return createErrorResponse({ message: 'Phone number is required' }, 400);
     }
 
-    console.log('[get-customer-by-phone] Phone:', phone);
+    console.log('[get-invoice-history] Phone:', phone);
 
     const data = await EXTERNAL_API.request<any>(
-      `/customer-by-phone?phone=${encodeURIComponent(phone.trim())}`
+      `/invoices-history-customer?phone=${encodeURIComponent(phone)}`
     );
 
-    console.log('[get-customer-by-phone] Success:', data.data?.name || 'Customer found');
+    console.log('[get-invoice-history] Found:', 
+      data.data?.summary?.total_invoices || 0, 'invoices'
+    );
+
     return createResponse(data);
 
   } catch (error) {

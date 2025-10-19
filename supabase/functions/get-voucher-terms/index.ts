@@ -7,19 +7,20 @@ serve(async (req) => {
   if (corsResponse) return corsResponse;
 
   try {
-    const { phone } = await req.json();
+    const url = new URL(req.url);
+    const id = url.searchParams.get('id');
 
-    if (!phone || phone.trim() === '') {
-      return createErrorResponse({ message: 'Phone number is required' }, 400);
+    if (!id) {
+      return createErrorResponse({ message: 'ID is required' }, 400);
     }
 
-    console.log('[get-customer-by-phone] Phone:', phone);
+    console.log('[get-voucher-terms] ID:', id);
 
-    const data = await EXTERNAL_API.request<any>(
-      `/customer-by-phone?phone=${encodeURIComponent(phone.trim())}`
+    const data = await EXTERNAL_API.request(
+      `/voucher-popup-terms?id=${encodeURIComponent(id)}`
     );
 
-    console.log('[get-customer-by-phone] Success:', data.data?.name || 'Customer found');
+    console.log('[get-voucher-terms] Success');
     return createResponse(data);
 
   } catch (error) {
