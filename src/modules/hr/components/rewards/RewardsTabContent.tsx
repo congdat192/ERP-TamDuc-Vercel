@@ -13,7 +13,12 @@ import { ApproveRewardDialog } from './ApproveRewardDialog';
 import { PermissionGuard } from '@/components/auth/PermissionGuard';
 import type { Reward, RewardFilters as RewardFiltersType, RewardStats } from '../../types/benefits';
 
-export function RewardsTabContent() {
+interface Props {
+  employeeId?: string;
+  readOnly?: boolean;
+}
+
+export function RewardsTabContent({ employeeId, readOnly = false }: Props = {}) {
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [stats, setStats] = useState<RewardStats | null>(null);
   const [filters, setFilters] = useState<RewardFiltersType>({});
@@ -25,10 +30,10 @@ export function RewardsTabContent() {
   const { toast } = useToast();
   const { hasFeatureAccess } = usePermissions();
 
-  const canCreate = hasFeatureAccess('create_rewards');
-  const canEdit = hasFeatureAccess('edit_rewards');
-  const canDelete = hasFeatureAccess('delete_rewards');
-  const canApprove = hasFeatureAccess('approve_rewards');
+  const canCreate = !readOnly && hasFeatureAccess('create_rewards');
+  const canEdit = !readOnly && hasFeatureAccess('edit_rewards');
+  const canDelete = !readOnly && hasFeatureAccess('delete_rewards');
+  const canApprove = !readOnly && hasFeatureAccess('approve_rewards');
 
   useEffect(() => {
     loadRewards();
@@ -159,12 +164,14 @@ export function RewardsTabContent() {
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <RewardsFilters filters={filters} onFiltersChange={setFilters} />
         
-        <PermissionGuard requiredPermission="create_rewards" showError={false}>
-          <Button onClick={() => setShowCreateModal(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Tạo Khen Thưởng
-          </Button>
-        </PermissionGuard>
+        {!readOnly && (
+          <PermissionGuard requiredPermission="create_rewards" showError={false}>
+            <Button onClick={() => setShowCreateModal(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Tạo Khen Thưởng
+            </Button>
+          </PermissionGuard>
+        )}
       </div>
 
       {/* Table */}

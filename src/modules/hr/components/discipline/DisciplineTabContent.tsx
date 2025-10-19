@@ -13,7 +13,12 @@ import { ResolveDisciplineDialog } from './ResolveDisciplineDialog';
 import { PermissionGuard } from '@/components/auth/PermissionGuard';
 import type { DisciplineRecord, DisciplineFilters as DisciplineFiltersType, DisciplineStats } from '../../types/benefits';
 
-export function DisciplineTabContent() {
+interface Props {
+  employeeId?: string;
+  readOnly?: boolean;
+}
+
+export function DisciplineTabContent({ employeeId, readOnly = false }: Props = {}) {
   const [records, setRecords] = useState<DisciplineRecord[]>([]);
   const [stats, setStats] = useState<DisciplineStats | null>(null);
   const [filters, setFilters] = useState<DisciplineFiltersType>({});
@@ -25,7 +30,7 @@ export function DisciplineTabContent() {
   const { toast } = useToast();
   const { hasFeatureAccess } = usePermissions();
 
-  const canManage = hasFeatureAccess('manage_discipline');
+  const canManage = !readOnly && hasFeatureAccess('manage_discipline');
 
   useEffect(() => {
     loadRecords();
@@ -147,12 +152,14 @@ export function DisciplineTabContent() {
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <DisciplineFilters filters={filters} onFiltersChange={setFilters} />
         
-        <PermissionGuard requiredPermission="manage_discipline" showError={false}>
-          <Button onClick={() => setShowCreateModal(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Tạo Hồ Sơ Kỷ Luật
-          </Button>
-        </PermissionGuard>
+        {!readOnly && (
+          <PermissionGuard requiredPermission="manage_discipline" showError={false}>
+            <Button onClick={() => setShowCreateModal(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Tạo Hồ Sơ Kỷ Luật
+            </Button>
+          </PermissionGuard>
+        )}
       </div>
 
       {/* Table */}

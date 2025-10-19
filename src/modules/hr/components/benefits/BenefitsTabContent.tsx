@@ -13,7 +13,12 @@ import { BulkAssignBenefitsModal } from './BulkAssignBenefitsModal';
 import { PermissionGuard } from '@/components/auth/PermissionGuard';
 import type { Benefit, BenefitFilters as BenefitFiltersType, BenefitStats } from '../../types/benefits';
 
-export function BenefitsTabContent() {
+interface Props {
+  employeeId?: string;
+  readOnly?: boolean;
+}
+
+export function BenefitsTabContent({ employeeId, readOnly = false }: Props = {}) {
   const [benefits, setBenefits] = useState<Benefit[]>([]);
   const [stats, setStats] = useState<BenefitStats | null>(null);
   const [filters, setFilters] = useState<BenefitFiltersType>({});
@@ -25,9 +30,9 @@ export function BenefitsTabContent() {
   const { toast } = useToast();
   const { hasFeatureAccess } = usePermissions();
 
-  const canCreate = hasFeatureAccess('create_benefits');
-  const canEdit = hasFeatureAccess('edit_benefits');
-  const canDelete = hasFeatureAccess('delete_benefits');
+  const canCreate = !readOnly && hasFeatureAccess('create_benefits');
+  const canEdit = !readOnly && hasFeatureAccess('edit_benefits');
+  const canDelete = !readOnly && hasFeatureAccess('delete_benefits');
 
   useEffect(() => {
     loadBenefits();
@@ -160,24 +165,26 @@ export function BenefitsTabContent() {
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <BenefitsFilters filters={filters} onFiltersChange={setFilters} />
         
-        <div className="flex gap-2">
-          <PermissionGuard requiredPermission="create_benefits" showError={false}>
-            <Button 
-              variant="outline" 
-              onClick={() => handleBulkAssign()}
-            >
-              <Users className="h-4 w-4 mr-2" />
-              Gán Hàng Loạt
-            </Button>
-          </PermissionGuard>
+        {!readOnly && (
+          <div className="flex gap-2">
+            <PermissionGuard requiredPermission="create_benefits" showError={false}>
+              <Button 
+                variant="outline" 
+                onClick={() => handleBulkAssign()}
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Gán Hàng Loạt
+              </Button>
+            </PermissionGuard>
 
-          <PermissionGuard requiredPermission="create_benefits" showError={false}>
-            <Button onClick={() => setShowCreateModal(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Thêm Phúc Lợi
-            </Button>
-          </PermissionGuard>
-        </div>
+            <PermissionGuard requiredPermission="create_benefits" showError={false}>
+              <Button onClick={() => setShowCreateModal(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Thêm Phúc Lợi
+              </Button>
+            </PermissionGuard>
+          </div>
+        )}
       </div>
 
       {/* Table */}

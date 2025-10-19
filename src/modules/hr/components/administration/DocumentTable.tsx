@@ -30,8 +30,9 @@ interface DocumentTableProps {
   onView: (doc: AdministrativeDocument) => void;
   onEdit: (doc: AdministrativeDocument) => void;
   onDelete: (doc: AdministrativeDocument) => void;
-  canEdit: boolean;
-  canDelete: boolean;
+  canEdit?: boolean;
+  canDelete?: boolean;
+  readOnly?: boolean;
 }
 
 export function DocumentTable({
@@ -39,8 +40,9 @@ export function DocumentTable({
   onView,
   onEdit,
   onDelete,
-  canEdit,
-  canDelete,
+  canEdit = false,
+  canDelete = false,
+  readOnly = false,
 }: DocumentTableProps) {
   if (documents.length === 0) {
     return (
@@ -102,34 +104,36 @@ export function DocumentTable({
                 </Badge>
               </TableCell>
               <TableCell className="text-right">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => onView(doc)}>
-                      <Eye className="mr-2 h-4 w-4" />
-                      Xem chi tiết
-                    </DropdownMenuItem>
-                    {canEdit && doc.status === 'draft' && (
-                      <DropdownMenuItem onClick={() => onEdit(doc)}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        Chỉnh sửa
+                {!readOnly && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => onView(doc)}>
+                        <Eye className="mr-2 h-4 w-4" />
+                        Xem chi tiết
                       </DropdownMenuItem>
-                    )}
-                    {canDelete && (
-                      <DropdownMenuItem
-                        onClick={() => onDelete(doc)}
-                        className="text-destructive"
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Xóa
-                      </DropdownMenuItem>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      {canEdit && doc.status === 'draft' && (
+                        <DropdownMenuItem onClick={() => onEdit(doc)}>
+                          <Edit className="mr-2 h-4 w-4" />
+                          Chỉnh sửa
+                        </DropdownMenuItem>
+                      )}
+                      {canDelete && (
+                        <DropdownMenuItem
+                          onClick={() => onDelete(doc)}
+                          className="text-destructive"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Xóa
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
               </TableCell>
             </TableRow>
           ))}

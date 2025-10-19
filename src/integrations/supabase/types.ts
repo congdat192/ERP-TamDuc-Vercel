@@ -234,6 +234,113 @@ export type Database = {
         }
         Relationships: []
       }
+      employee_audit_log: {
+        Row: {
+          action: string
+          change_request_id: string | null
+          change_source: string | null
+          changed_at: string | null
+          changed_by: string | null
+          changed_fields: string[] | null
+          employee_id: string | null
+          id: string
+          new_values: Json | null
+          old_values: Json | null
+          table_name: string | null
+        }
+        Insert: {
+          action: string
+          change_request_id?: string | null
+          change_source?: string | null
+          changed_at?: string | null
+          changed_by?: string | null
+          changed_fields?: string[] | null
+          employee_id?: string | null
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          table_name?: string | null
+        }
+        Update: {
+          action?: string
+          change_request_id?: string | null
+          change_source?: string | null
+          changed_at?: string | null
+          changed_by?: string | null
+          changed_fields?: string[] | null
+          employee_id?: string | null
+          id?: string
+          new_values?: Json | null
+          old_values?: Json | null
+          table_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_audit_log_change_request_id_fkey"
+            columns: ["change_request_id"]
+            isOneToOne: false
+            referencedRelation: "employee_change_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_audit_log_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_change_requests: {
+        Row: {
+          changes: Json
+          created_at: string | null
+          employee_id: string
+          id: string
+          request_type: string
+          requested_at: string | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          changes: Json
+          created_at?: string | null
+          employee_id: string
+          id?: string
+          request_type?: string
+          requested_at?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          changes?: Json
+          created_at?: string | null
+          employee_id?: string
+          id?: string
+          request_type?: string
+          requested_at?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_change_requests_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_documents: {
         Row: {
           created_at: string | null
