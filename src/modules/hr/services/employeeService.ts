@@ -67,7 +67,7 @@ export class EmployeeService {
           avatar: emp.avatar_path || '',
           position: emp.position || 'Chưa xác định',
           department: emp.department || 'Chưa xác định',
-          team: emp.team,
+          team: emp.team || '',
           joinDate: emp.join_date,
           employmentType: emp.employment_type as 'Full-time' | 'Part-time' | 'CTV' | 'Thử việc' | 'Thực tập',
           seniorityMonths: emp.seniority_months,

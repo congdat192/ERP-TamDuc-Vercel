@@ -40,40 +40,47 @@ export function EmployeeSelector({
   const { toast } = useToast();
 
   useEffect(() => {
-    const loadEmployees = async () => {
-      setIsLoading(true);
+    // Reset states when modal opens
+    if (open) {
       setError(null);
-      try {
-        console.log('🔍 [EmployeeSelector] Loading employees...');
-        const data = await EmployeeService.getEmployees();
-        console.log(`✅ [EmployeeSelector] Loaded ${data.length} employees`);
-        
-        // Validate data structure
-        if (data.length > 0) {
-          const firstEmp = data[0];
-          if (!firstEmp.fullName || !firstEmp.employeeCode) {
-            console.error('❌ [EmployeeSelector] Invalid employee data structure:', firstEmp);
-            throw new Error('Dữ liệu nhân viên không hợp lệ');
+      setIsLoading(true);
+      setEmployees([]);
+      
+      const loadEmployees = async () => {
+        try {
+          console.log('🔍 [EmployeeSelector] Loading employees...');
+          const data = await EmployeeService.getEmployees();
+          console.log(`✅ [EmployeeSelector] Loaded ${data.length} employees`);
+          
+          // Validate data structure
+          if (data.length > 0) {
+            const firstEmp = data[0];
+            if (!firstEmp.fullName || !firstEmp.employeeCode) {
+              console.error('❌ [EmployeeSelector] Invalid employee data structure:', firstEmp);
+              throw new Error('Dữ liệu nhân viên không hợp lệ');
+            }
           }
+          
+          setEmployees(data);
+          setError(null);
+        } catch (err: any) {
+          console.error('❌ [EmployeeSelector] Error loading employees:', err);
+          const errorMessage = err.message || 'Không thể tải danh sách nhân viên';
+          setError(errorMessage);
+          setEmployees([]);
+          toast({
+            title: 'Lỗi',
+            description: errorMessage,
+            variant: 'destructive',
+          });
+        } finally {
+          setIsLoading(false);
         }
-        
-        setEmployees(data);
-      } catch (err: any) {
-        console.error('❌ [EmployeeSelector] Error loading employees:', err);
-        const errorMessage = err.message || 'Không thể tải danh sách nhân viên';
-        setError(errorMessage);
-        toast({
-          title: 'Lỗi',
-          description: errorMessage,
-          variant: 'destructive',
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
+      };
 
-    loadEmployees();
-  }, [toast]);
+      loadEmployees();
+    }
+  }, [open, toast]);
 
   const selectedEmployee = employees.find(emp => emp.id === value);
 
@@ -113,7 +120,7 @@ export function EmployeeSelector({
           <div className="p-4 text-center text-sm text-destructive">
             {error}
           </div>
-        ) : employees.length === 0 ? (
+        ) : !employees || employees.length === 0 ? (
           <div className="p-4 text-center text-sm text-muted-foreground">
             Không có nhân viên nào
           </div>
@@ -122,38 +129,46 @@ export function EmployeeSelector({
             <CommandInput placeholder="Tìm tên hoặc mã nhân viên..." />
             <CommandEmpty>Không tìm thấy nhân viên</CommandEmpty>
             <CommandGroup className="max-h-[300px] overflow-auto">
-              {employees.map((employee) => {
-                const searchValue = [
-                  employee.fullName || '',
-                  employee.employeeCode || '',
-                  employee.position || 'N/A',
-                  employee.department || 'N/A'
-                ].filter(Boolean).join(' ');
-                
-                return (
-                  <CommandItem
-                    key={employee.id}
-                    value={searchValue}
-                    onSelect={() => {
-                      onValueChange(employee.id);
-                      setOpen(false);
-                    }}
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        value === employee.id ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    <div className="flex flex-col">
-                      <span className="font-medium">{employee.fullName || 'N/A'}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {employee.employeeCode || 'N/A'} - {employee.position || 'N/A'} ({employee.department || 'N/A'})
-                      </span>
-                    </div>
-                  </CommandItem>
-                );
-              })}
+              {Array.isArray(employees) && employees.length > 0 ? (
+                employees.map((employee) => {
+                  if (!employee || !employee.id) {
+                    console.warn('⚠️ [EmployeeSelector] Skipping invalid employee:', employee);
+                    return null;
+                  }
+                  
+                  const searchValue = [
+                    employee.fullName || '',
+                    employee.employeeCode || '',
+                    employee.position || '',
+                    employee.department || '',
+                    employee.team || ''
+                  ].filter(val => val !== '').join(' ');
+                  
+                  return (
+                    <CommandItem
+                      key={employee.id}
+                      value={searchValue || employee.id}
+                      onSelect={() => {
+                        onValueChange(employee.id);
+                        setOpen(false);
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          value === employee.id ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      <div className="flex flex-col">
+                        <span className="font-medium">{employee.fullName || 'N/A'}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {employee.employeeCode || 'N/A'} - {employee.position || 'N/A'} ({employee.department || 'N/A'})
+                        </span>
+                      </div>
+                    </CommandItem>
+                  );
+                }).filter(Boolean)
+              ) : null}
             </CommandGroup>
           </Command>
         )}
