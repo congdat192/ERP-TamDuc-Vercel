@@ -87,10 +87,7 @@ serve(async (req) => {
     console.log('[get-customer-by-phone] Customer fetched successfully:', customerData.data?.code || 'N/A');
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        data: customerData
-      }),
+      JSON.stringify(customerData),
       {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
