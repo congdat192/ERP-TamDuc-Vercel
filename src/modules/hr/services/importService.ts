@@ -11,6 +11,8 @@ export interface ImportError {
 export interface ImportResult {
   totalRows: number;
   successCount: number;
+  updatedCount: number;
+  skippedCount: number;
   errorCount: number;
   errors: ImportError[];
 }
@@ -211,6 +213,8 @@ export class ImportService {
     return {
       totalRows: rows.length,
       successCount,
+      updatedCount: 0,
+      skippedCount: 0,
       errorCount: errors.length,
       errors
     };
@@ -224,19 +228,25 @@ export class ImportService {
     const errors: ImportError[] = [];
     const BATCH_SIZE = 10; // Process 10 rows at a time
     let successCount = 0;
+    let updatedCount = 0;
+    let skippedCount = 0;
 
     console.log(`📦 Starting batch import: ${rows.length} rows`);
 
-    // Pre-fetch all existing codes & emails (1 query instead of N queries)
+    // Pre-fetch all existing employees with full data (1 query)
     const { data: existingEmployees } = await supabase
       .from('employees')
-      .select('employee_code, email')
+      .select('*')
       .is('deleted_at', null);
     
-    const existingCodes = new Set(existingEmployees?.map(e => e.employee_code.toLowerCase()) || []);
-    const existingEmails = new Set(existingEmployees?.map(e => e.email.toLowerCase()) || []);
+    const existingByCode = new Map(
+      existingEmployees?.map(e => [e.employee_code.toLowerCase(), e]) || []
+    );
+    const existingByEmail = new Map(
+      existingEmployees?.map(e => [e.email.toLowerCase(), e]) || []
+    );
 
-    console.log(`✅ Pre-fetched ${existingCodes.size} codes, ${existingEmails.size} emails`);
+    console.log(`✅ Pre-fetched ${existingByCode.size} existing employees`);
 
     // Process in batches
     for (let i = 0; i < rows.length; i += BATCH_SIZE) {
@@ -249,49 +259,82 @@ export class ImportService {
         const rowIndex = i + batchIdx + 2;
         
         // Skip empty rows
-        if (!row || Object.keys(row).length === 0) return { success: false };
+        if (!row || Object.keys(row).length === 0) {
+          return { success: false, updated: false, skipped: false };
+        }
 
         // Map columns
         const mappedRow = this.mapColumnAliases(row);
 
-        // Validate row (with cached duplicates check)
+        // Validate row (without duplicate check - we'll handle that separately)
         const validation = await this.validateRowFast(
           mappedRow, 
           rowIndex, 
-          existingCodes, 
-          existingEmails
+          new Set(), // Empty sets - we'll handle duplicates separately
+          new Set()
         );
         
         if (!validation.isValid) {
           errors.push(...validation.errors);
-          return { success: false };
+          return { success: false, updated: false, skipped: false };
         }
 
-        // Insert to database
-        try {
-          await EmployeeService.createEmployee(mappedRow);
-          // Add to cache to prevent duplicates within the same import
-          if (mappedRow.employee_code) existingCodes.add(mappedRow.employee_code.toLowerCase());
-          if (mappedRow.email) existingEmails.add(mappedRow.email.toLowerCase());
-          return { success: true };
-        } catch (err: any) {
-          errors.push({
-            row: rowIndex,
-            field: 'database',
-            message: err.message || 'Lỗi khi lưu vào database'
-          });
-          return { success: false };
+        // Check if employee exists
+        const existingEmployee = existingByCode.get(mappedRow.employee_code.toLowerCase()) ||
+                                 existingByEmail.get(mappedRow.email.toLowerCase());
+
+        if (existingEmployee) {
+          // UPSERT: Compare and update if different
+          const hasChanges = this.hasDataChanges(existingEmployee, mappedRow);
+          
+          if (hasChanges) {
+            try {
+              await EmployeeService.updateEmployee(existingEmployee.id, mappedRow);
+              console.log(`🔄 Updated: ${mappedRow.employee_code}`);
+              return { success: false, updated: true, skipped: false };
+            } catch (err: any) {
+              errors.push({
+                row: rowIndex,
+                field: 'database',
+                message: `Lỗi update: ${err.message}`
+              });
+              return { success: false, updated: false, skipped: false };
+            }
+          } else {
+            console.log(`⏭️ Skipped (no changes): ${mappedRow.employee_code}`);
+            return { success: false, updated: false, skipped: true };
+          }
+        } else {
+          // Insert new employee
+          try {
+            await EmployeeService.createEmployee(mappedRow);
+            existingByCode.set(mappedRow.employee_code.toLowerCase(), mappedRow as any);
+            existingByEmail.set(mappedRow.email.toLowerCase(), mappedRow as any);
+            console.log(`✅ Added: ${mappedRow.employee_code}`);
+            return { success: true, updated: false, skipped: false };
+          } catch (err: any) {
+            errors.push({
+              row: rowIndex,
+              field: 'database',
+              message: err.message || 'Lỗi khi lưu vào database'
+            });
+            return { success: false, updated: false, skipped: false };
+          }
         }
       });
 
       const batchResults = await Promise.allSettled(batchPromises);
-      const batchSuccess = batchResults.filter(
-        r => r.status === 'fulfilled' && r.value.success
-      ).length;
       
-      successCount += batchSuccess;
+      // Count results
+      for (const result of batchResults) {
+        if (result.status === 'fulfilled') {
+          if (result.value.success) successCount++;
+          if (result.value.updated) updatedCount++;
+          if (result.value.skipped) skippedCount++;
+        }
+      }
 
-      console.log(`✅ Batch ${batchNum} complete: ${batchSuccess}/${batch.length} success`);
+      console.log(`✅ Batch ${batchNum} complete: ${successCount} added, ${updatedCount} updated, ${skippedCount} skipped`);
 
       // Report progress
       if (onProgress) {
@@ -299,14 +342,43 @@ export class ImportService {
       }
     }
 
-    console.log(`🎉 Import complete: ${successCount}/${rows.length} success, ${errors.length} errors`);
+    console.log(`🎉 Import complete: ${successCount} added, ${updatedCount} updated, ${skippedCount} skipped, ${errors.length} errors`);
 
     return {
       totalRows: rows.length,
       successCount,
+      updatedCount,
+      skippedCount,
       errorCount: errors.length,
       errors
     };
+  }
+
+  // Check if data has changed (compare relevant fields)
+  private static hasDataChanges(existing: any, newData: ParsedEmployee): boolean {
+    const fieldsToCompare = [
+      'full_name', 'email', 'phone', 'position', 'department', 'team',
+      'employment_type', 'status', 'gender', 'birth_date', 'current_address',
+      'emergency_contact_name', 'emergency_contact_phone', 'emergency_contact_relationship',
+      'salary_p1', 'allowance_meal', 'allowance_fuel', 'allowance_phone', 'allowance_other',
+      'salary_fulltime_probation', 'salary_fulltime_official',
+      'salary_parttime_probation', 'salary_parttime_official'
+    ];
+
+    for (const field of fieldsToCompare) {
+      const existingValue = existing[field];
+      const newValue = (newData as any)[field];
+      
+      // Skip comparison if both are null/undefined
+      if (!existingValue && !newValue) continue;
+      
+      // Compare values (convert to string for comparison)
+      if (String(existingValue || '').trim() !== String(newValue || '').trim()) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   static async validateRowFast(

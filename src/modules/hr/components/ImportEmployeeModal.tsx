@@ -38,6 +38,8 @@ export function ImportEmployeeModal({ onSuccess }: ImportEmployeeModalProps) {
   const [importResult, setImportResult] = useState<{
     totalRows: number;
     successCount: number;
+    updatedCount: number;
+    skippedCount: number;
     errorCount: number;
   } | null>(null);
   const [importProgress, setImportProgress] = useState<{
@@ -135,24 +137,35 @@ export function ImportEmployeeModal({ onSuccess }: ImportEmployeeModalProps) {
         }
       );
       
-      setImportResult(result);
+    setImportResult(result);
 
-      if (result.successCount > 0) {
-        toast({
-          title: 'Import thành công',
-          description: `Đã nhập ${result.successCount}/${result.totalRows} nhân viên`,
-        });
-        onSuccess();
-      }
+    const totalProcessed = result.successCount + result.updatedCount + result.skippedCount;
+    
+    if (totalProcessed > 0) {
+      const parts = [];
+      if (result.successCount > 0) parts.push(`✅ ${result.successCount} mới`);
+      if (result.updatedCount > 0) parts.push(`🔄 ${result.updatedCount} cập nhật`);
+      if (result.skippedCount > 0) parts.push(`⏭️ ${result.skippedCount} bỏ qua`);
+      if (result.errorCount > 0) parts.push(`❌ ${result.errorCount} lỗi`);
+      
+      toast({
+        title: 'Import hoàn tất',
+        description: parts.join(' | '),
+        variant: result.errorCount > 0 ? 'default' : 'default',
+      });
+      onSuccess();
+    }
 
-      if (result.errorCount > 0) {
-        setErrors(result.errors);
+    if (result.errorCount > 0) {
+      setErrors(result.errors);
+      if (totalProcessed === 0) {
         toast({
-          title: 'Import hoàn tất với lỗi',
-          description: `${result.successCount} thành công, ${result.errorCount} lỗi`,
+          title: 'Import thất bại',
+          description: `${result.errorCount} lỗi`,
           variant: 'destructive',
         });
       }
+    }
     } catch (err: any) {
       toast({
         title: 'Lỗi',
@@ -359,18 +372,24 @@ export function ImportEmployeeModal({ onSuccess }: ImportEmployeeModalProps) {
 
           {/* Import Result */}
           {importResult && (
-            <Alert>
-              <CheckCircle2 className="h-4 w-4" />
-              <AlertDescription>
-                <div className="font-medium">Kết quả import</div>
-                <div>
-                  Thành công: {importResult.successCount} / {importResult.totalRows}
-                </div>
-                {importResult.errorCount > 0 && (
-                  <div className="text-destructive">Lỗi: {importResult.errorCount}</div>
+            <div className="mt-4 p-4 bg-muted rounded-lg">
+              <div className="text-sm font-medium mb-2">Kết quả import:</div>
+              <div className="text-sm space-y-1">
+                <div>Tổng số dòng: {importResult.totalRows}</div>
+                {importResult.successCount > 0 && (
+                  <div className="text-green-600">✅ Thêm mới: {importResult.successCount}</div>
                 )}
-              </AlertDescription>
-            </Alert>
+                {importResult.updatedCount > 0 && (
+                  <div className="text-blue-600">🔄 Cập nhật: {importResult.updatedCount}</div>
+                )}
+                {importResult.skippedCount > 0 && (
+                  <div className="text-muted-foreground">⏭️ Bỏ qua (không thay đổi): {importResult.skippedCount}</div>
+                )}
+                {importResult.errorCount > 0 && (
+                  <div className="text-destructive">❌ Lỗi: {importResult.errorCount}</div>
+                )}
+              </div>
+            </div>
           )}
         </div>
 
