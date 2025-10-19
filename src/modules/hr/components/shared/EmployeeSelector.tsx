@@ -105,35 +105,58 @@ export function EmployeeSelector({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[500px] p-0" align="start">
-        <Command>
-          <CommandInput placeholder="Tìm tên hoặc mã nhân viên..." />
-          <CommandEmpty>Không tìm thấy nhân viên</CommandEmpty>
-          <CommandGroup className="max-h-[300px] overflow-auto">
-            {employees.map((employee) => (
-              <CommandItem
-                key={employee.id}
-                value={`${employee.fullName} ${employee.employeeCode} ${employee.position} ${employee.department}`}
-                onSelect={() => {
-                  onValueChange(employee.id);
-                  setOpen(false);
-                }}
-              >
-                <Check
-                  className={cn(
-                    "mr-2 h-4 w-4",
-                    value === employee.id ? "opacity-100" : "opacity-0"
-                  )}
-                />
-                <div className="flex flex-col">
-                  <span className="font-medium">{employee.fullName}</span>
-                  <span className="text-sm text-muted-foreground">
-                    {employee.employeeCode} - {employee.position} ({employee.department})
-                  </span>
-                </div>
-              </CommandItem>
-            ))}
-          </CommandGroup>
-        </Command>
+        {isLoading ? (
+          <div className="p-4 text-center text-sm text-muted-foreground">
+            Đang tải danh sách nhân viên...
+          </div>
+        ) : error ? (
+          <div className="p-4 text-center text-sm text-destructive">
+            {error}
+          </div>
+        ) : employees.length === 0 ? (
+          <div className="p-4 text-center text-sm text-muted-foreground">
+            Không có nhân viên nào
+          </div>
+        ) : (
+          <Command>
+            <CommandInput placeholder="Tìm tên hoặc mã nhân viên..." />
+            <CommandEmpty>Không tìm thấy nhân viên</CommandEmpty>
+            <CommandGroup className="max-h-[300px] overflow-auto">
+              {employees.map((employee) => {
+                const searchValue = [
+                  employee.fullName || '',
+                  employee.employeeCode || '',
+                  employee.position || 'N/A',
+                  employee.department || 'N/A'
+                ].filter(Boolean).join(' ');
+                
+                return (
+                  <CommandItem
+                    key={employee.id}
+                    value={searchValue}
+                    onSelect={() => {
+                      onValueChange(employee.id);
+                      setOpen(false);
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        "mr-2 h-4 w-4",
+                        value === employee.id ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                    <div className="flex flex-col">
+                      <span className="font-medium">{employee.fullName || 'N/A'}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {employee.employeeCode || 'N/A'} - {employee.position || 'N/A'} ({employee.department || 'N/A'})
+                      </span>
+                    </div>
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          </Command>
+        )}
       </PopoverContent>
     </Popover>
   );

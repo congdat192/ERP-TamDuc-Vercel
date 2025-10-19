@@ -50,42 +50,52 @@ export class EmployeeService {
 
     if (error) throw error;
 
-    return (data || []).map((emp: any) => ({
-      id: emp.id,
-      employeeCode: emp.employee_code,
-      fullName: emp.full_name,
-      email: emp.email,
-      phone: emp.phone || '',
-      avatar: emp.avatar_path || '',
-      position: emp.position,
-      department: emp.department,
-      team: emp.team,
-      joinDate: emp.join_date,
-      employmentType: emp.employment_type as 'Full-time' | 'Part-time' | 'CTV' | 'Thử việc' | 'Thực tập',
-      seniorityMonths: emp.seniority_months,
-      status: emp.status,
-      salary: {
-        basic: Number(emp.salary_p1) || 0,
-        allowanceMeal: Number(emp.allowance_meal) || 0,
-        allowanceFuel: Number(emp.allowance_fuel) || 0,
-        allowancePhone: Number(emp.allowance_phone) || 0,
-        allowanceOther: Number(emp.allowance_other) || 0,
-        totalFixed: Number(emp.total_fixed_salary) || 0,
-      },
-      performance: {
-        kpi: Number(emp.kpi_score) || 0,
-        lastReview: emp.last_review_date || ''
-      },
-      currentAddress: emp.current_address,
-      emergencyContact: emp.emergency_contact_name ? {
-        relationship: emp.emergency_contact_relationship as 'Cha' | 'Mẹ' | 'Vợ' | 'Chồng' | 'Anh' | 'Chị' | 'Em' | 'Khác',
-        name: emp.emergency_contact_name,
-        phone: emp.emergency_contact_phone
-      } : undefined,
-      notes: emp.notes,
-      deletedAt: emp.deleted_at,
-      deletedBy: emp.deleted_by,
-    }));
+    return (data || [])
+      .map((emp: any) => {
+        // Skip invalid records
+        if (!emp.employee_code || !emp.full_name) {
+          console.warn('⚠️ [EmployeeService] Skipping invalid employee record:', emp.id);
+          return null;
+        }
+        
+        return {
+          id: emp.id,
+          employeeCode: emp.employee_code,
+          fullName: emp.full_name,
+          email: emp.email,
+          phone: emp.phone || '',
+          avatar: emp.avatar_path || '',
+          position: emp.position || 'Chưa xác định',
+          department: emp.department || 'Chưa xác định',
+          team: emp.team,
+          joinDate: emp.join_date,
+          employmentType: emp.employment_type as 'Full-time' | 'Part-time' | 'CTV' | 'Thử việc' | 'Thực tập',
+          seniorityMonths: emp.seniority_months,
+          status: emp.status,
+          salary: {
+            basic: Number(emp.salary_p1) || 0,
+            allowanceMeal: Number(emp.allowance_meal) || 0,
+            allowanceFuel: Number(emp.allowance_fuel) || 0,
+            allowancePhone: Number(emp.allowance_phone) || 0,
+            allowanceOther: Number(emp.allowance_other) || 0,
+            totalFixed: Number(emp.total_fixed_salary) || 0,
+          },
+          performance: {
+            kpi: Number(emp.kpi_score) || 0,
+            lastReview: emp.last_review_date || ''
+          },
+          currentAddress: emp.current_address,
+          emergencyContact: emp.emergency_contact_name ? {
+            relationship: emp.emergency_contact_relationship as 'Cha' | 'Mẹ' | 'Vợ' | 'Chồng' | 'Anh' | 'Chị' | 'Em' | 'Khác',
+            name: emp.emergency_contact_name,
+            phone: emp.emergency_contact_phone
+          } : undefined,
+          notes: emp.notes,
+          deletedAt: emp.deleted_at,
+          deletedBy: emp.deleted_by,
+        };
+      })
+      .filter(Boolean) as Employee[];
   }
 
   static async getEmployeeById(id: string, includeDeleted = false, includeRelated = false): Promise<Employee | null> {
