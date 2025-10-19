@@ -9,6 +9,7 @@ import {
   Target, 
   Gift, 
   FileText,
+  FileCheck,
   ChevronLeft
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,7 @@ const hrPages = [
   { id: 'performance', path: '/ERP/HR/Performance', label: 'OKR/KPI & 360°', icon: Target, requiredPermission: 'view_performance' },
   { id: 'benefits', path: '/ERP/HR/Benefits', label: 'Phúc Lợi & Kỷ Luật', icon: Gift, requiredPermission: 'view_benefits' },
   { id: 'administration', path: '/ERP/HR/Administration', label: 'Hồ Sơ Hành Chính', icon: FileText, requiredPermission: 'view_admin_documents' },
+  { id: 'change-requests', path: '/ERP/HR/ChangeRequests', label: 'Yêu Cầu Thay Đổi', icon: FileCheck, requiredPermission: 'approve_change_requests' },
 ];
 
 export function HRModuleSidebar({ currentUser, onBackToModules }: HRModuleSidebarProps) {

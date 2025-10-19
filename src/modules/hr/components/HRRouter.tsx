@@ -8,6 +8,7 @@ import { TrainingPage } from '../pages/TrainingPage';
 import { PerformancePage } from '../pages/PerformancePage';
 import { BenefitsPage } from '../pages/BenefitsPage';
 import { AdministrationPage } from '../pages/AdministrationPage';
+import { ChangeRequestsPage } from '../pages/ChangeRequestsPage';
 import { ProtectedHRRoute } from './ProtectedHRRoute';
 
 interface HRRouterProps {
@@ -96,6 +97,15 @@ export function HRRouter({ currentUser }: HRRouterProps) {
         element={
           <ProtectedHRRoute requiredPermission="view_admin_documents">
             <AdministrationPage />
+          </ProtectedHRRoute>
+        } 
+      />
+      
+      <Route 
+        path="ChangeRequests" 
+        element={
+          <ProtectedHRRoute requiredPermission="approve_change_requests">
+            <ChangeRequestsPage />
           </ProtectedHRRoute>
         } 
       />
