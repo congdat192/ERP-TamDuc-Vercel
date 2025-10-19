@@ -1,9 +1,7 @@
 import { useState } from 'react';
+import { fetchCustomerByPhone, mapCustomerData } from '../services/customerService';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useCustomerData } from '@/hooks/useCustomerData';
-import { useVoucherData } from '@/hooks/useVoucherData';
-import { useInvoiceHistory } from '@/hooks/useInvoiceHistory';
 import { ThemedCustomerStats } from '../components/ThemedCustomerStats';
 import { CustomerSearchActions } from '../components/CustomerSearchActions';
 import { CustomerFilters } from '../components/CustomerFilters';
@@ -11,7 +9,6 @@ import { CustomerTable } from '../components/CustomerTable';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ColumnConfig } from '../components/ColumnVisibilityFilter';
 import { mockCustomers } from '@/data/mockData';
-import { formatCurrency, formatDate } from '@/utils/formatters';
 
 interface CustomerManagementProps {
   currentUser?: any;
@@ -25,12 +22,8 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [isLoadingApi, setIsLoadingApi] = useState(false);
   const [apiCustomerData, setApiCustomerData] = useState<any[]>([]);
-
-  // Use new hooks for API integration
-  const { customer, loading: customerLoading, searchByPhone, clearCustomer } = useCustomerData();
-  const { voucherData, loading: voucherLoading, checkEligibility, claimVoucher, claiming } = useVoucherData();
-  const { invoiceData, loading: invoiceLoading, loadInvoices } = useInvoiceHistory();
 
   // Use API data if available, otherwise use mock data
   const customers = apiCustomerData.length > 0 ? apiCustomerData : mockCustomers;
@@ -97,44 +90,39 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
   };
 
   const handleSearch = async () => {
-    const phone = searchTerm.trim();
-    
     // Check if search term looks like a phone number
-    const isPhoneNumber = /^[\d\s\-\+\(\)]+$/.test(phone);
+    const isPhoneNumber = /^[\d\s\-\+\(\)]+$/.test(searchTerm.trim());
     
-    if (isPhoneNumber && phone) {
-      console.log('[CustomerManagement] Starting search for phone:', phone);
-      
-      // Search customer and load related data in parallel
-      const foundCustomer = await searchByPhone(phone);
-      
-      if (foundCustomer) {
-        // Map customer data to table format
-        const mappedCustomer = {
-          id: foundCustomer.code,
-          customerCode: foundCustomer.code,
-          customerName: foundCustomer.name,
-          phone: foundCustomer.contactNumber,
-          birthDate: formatDate(foundCustomer.birthDate),
-          currentDebt: formatCurrency(foundCustomer.debt),
-          totalSales: formatCurrency(foundCustomer.totalRevenue),
-          currentPoints: foundCustomer.rewardPoint,
-          address: foundCustomer.address || '',
-          gender: foundCustomer.gender ? 'Nam' : 'Nữ',
-        };
+    if (isPhoneNumber && searchTerm.trim()) {
+      setIsLoadingApi(true);
+      try {
+        const response = await fetchCustomerByPhone(searchTerm);
         
-        setApiCustomerData([mappedCustomer]);
-        setCurrentPage(1);
-        
-        // Load voucher and invoice data in parallel
-        await Promise.all([
-          checkEligibility(phone),
-          loadInvoices(phone)
-        ]);
-        
-        console.log('[CustomerManagement] Customer data and related info loaded');
-      } else {
-        setApiCustomerData([]);
+        if (response && response.success && response.data) {
+          const mappedCustomer = mapCustomerData(response.data);
+          setApiCustomerData([mappedCustomer]);
+          setCurrentPage(1);
+          toast({
+            title: "Thành công",
+            description: `Tìm thấy khách hàng: ${response.data.name}`,
+          });
+        } else {
+          setApiCustomerData([]);
+          toast({
+            title: "Không tìm thấy",
+            description: "Không tìm thấy khách hàng với số điện thoại này",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching customer:', error);
+        toast({
+          title: "Lỗi",
+          description: "Không thể tải thông tin khách hàng",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoadingApi(false);
       }
     }
   };
@@ -143,7 +131,6 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
     setSearchTerm('');
     setApiCustomerData([]);
     setCurrentPage(1);
-    clearCustomer();
   };
 
   const clearAllFilters = () => {
@@ -207,7 +194,7 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
               setSearchTerm={setSearchTerm}
               onSearch={handleSearch}
               onResetSearch={handleResetSearch}
-              isLoadingApi={customerLoading}
+              isLoadingApi={isLoadingApi}
               columns={columns}
               handleColumnToggle={handleColumnToggle}
               onToggleSidebar={() => setIsFilterOpen(!isFilterOpen)}

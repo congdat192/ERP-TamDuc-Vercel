@@ -47,7 +47,7 @@ export async function fetchCustomerByPhone(phone: string): Promise<CustomerRespo
       return null;
     }
 
-    console.log('[customerService] Calling edge function with phone:', phone);
+    console.log('[customerService] Calling edge function to fetch customer...');
 
     // Call edge function
     const { data, error } = await supabase.functions.invoke('get-customer-by-phone', {
@@ -59,21 +59,13 @@ export async function fetchCustomerByPhone(phone: string): Promise<CustomerRespo
       return null;
     }
 
-    console.log('[customerService] Edge function response:', {
-      hasData: !!data,
-      hasSuccess: data?.success,
-      hasCustomerData: !!data?.data,
-      customerCode: data?.data?.code
-    });
-
-    // Data from edge function is already CustomerResponse format
-    if (!data || !data.success || !data.data) {
-      console.error('[customerService] Invalid response structure:', data);
+    if (!data || !data.success) {
+      console.error('[customerService] Invalid response from edge function:', data);
       return null;
     }
 
-    console.log('[customerService] Customer found:', data.data.name, '(', data.data.code, ')');
-    return data as CustomerResponse;
+    console.log('[customerService] Successfully fetched customer:', data.data.data?.code || 'N/A');
+    return data.data as CustomerResponse;
   } catch (error) {
     console.error('[customerService] Exception while fetching customer:', error);
     return null;

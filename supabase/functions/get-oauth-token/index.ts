@@ -21,23 +21,22 @@ serve(async (req) => {
 
   try {
     console.log('[get-oauth-token] Fetching OAuth token...');
-    console.log('[get-oauth-token] Request URL:', 'https://kcirpjxbjqagrqrjfldu.supabase.co/functions/v1/get-token-supabase');
 
     const response = await fetch(
-      'https://kcirpjxbjqagrqrjfldu.supabase.co/functions/v1/get-token-supabase',
+      'https://kcirpjxbjqagrqrjfldu.supabase.co/functions/v1/oauth-token',
       {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtjaXJwanhianFhZ3JxcmpmbGR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc0MTI3NjgsImV4cCI6MjA3Mjk4ODc2OH0.GXxO7aPgF00WOkQ96z2J1P3K3BluPfBcais3h8qLr1I'
         },
         body: JSON.stringify({
           client_id: 'mk_tamduc',
-          client_secret: 'Tamduc@123'
+          client_secret: 'Tamduc@123',
+          grant_type: 'client_credentials'
         })
       }
     );
-
-    console.log('[get-oauth-token] Response status:', response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -55,25 +54,13 @@ serve(async (req) => {
       );
     }
 
-    const data = await response.json();
-    console.log('[get-oauth-token] Full response data:', JSON.stringify(data));
-    console.log('[get-oauth-token] Response keys:', Object.keys(data));
-    
-    // ✅ FIX: Extract token from nested structure
-    const actualToken = data.data?.access_token || data.access_token;
-    const expiresAt = data.data?.expires_at_vn || data.expires_at_vn;
-    
-    console.log('[get-oauth-token] Has access_token:', !!actualToken);
-    console.log('[get-oauth-token] Token (first 20 chars):', actualToken?.substring(0, 20));
-    console.log('[get-oauth-token] Expires at:', expiresAt);
+    const data: OAuthTokenResponse = await response.json();
+    console.log('[get-oauth-token] Token fetched successfully, expires in:', data.expires_in);
 
     return new Response(
       JSON.stringify({
         success: true,
-        data: {
-          access_token: actualToken,
-          expires_at_vn: expiresAt
-        }
+        data: data
       }),
       {
         status: 200,
