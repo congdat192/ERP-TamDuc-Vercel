@@ -19,6 +19,7 @@ import { EmployeeBenefitsTab } from '@/components/profile/EmployeeBenefitsTab';
 import { EmployeePersonalDocumentsTab } from '@/components/profile/EmployeePersonalDocumentsTab';
 import { EmployeeChangeRequestsTab } from '@/components/profile/EmployeeChangeRequestsTab';
 import { Footer } from '@/components/layout/Footer';
+import logoTamDuc from '@/assets/logo_tamduc.jpg';
 
 export function MyProfilePage() {
   const { currentUser, logout } = useAuth();
@@ -141,10 +142,12 @@ export function MyProfilePage() {
         <div className="flex justify-between items-center mb-6 pb-4 border-b">
           {/* Left: Company Branding */}
           <div className="flex items-center gap-3">
-            {/* Logo placeholder */}
-            <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #4BCB9A, #455A64)' }}>
-              <span className="text-white font-bold text-xl">TD</span>
-            </div>
+            {/* Logo */}
+            <img 
+              src={logoTamDuc} 
+              alt="TamDuc Optical Logo" 
+              className="w-12 h-12 rounded-lg border border-border shadow-md object-contain bg-white p-1"
+            />
             <div>
               <h1 className="text-2xl font-bold text-foreground">TamDuc Optical</h1>
               <p className="text-sm text-muted-foreground">Employee Self Service Portal</p>
