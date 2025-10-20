@@ -110,7 +110,7 @@ serve(async (req: Request) => {
                 </p>
                 
                 <div style="text-align: center; margin: 30px 0;">
-                  <a href="https://preview--tam-duc-erp-final.lovable.app/employee-login" 
+                  <a href="https://danganhtri.cloud/employee-login" 
                      style="display: inline-block; background: #667eea; color: white; padding: 14px 32px; 
                             text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;
                             box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);">
