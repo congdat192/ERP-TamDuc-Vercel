@@ -18,6 +18,9 @@ import { SessionListTab } from '../components/training/SessionListTab';
 import { EnrollmentListTab } from '../components/training/EnrollmentListTab';
 import { CompetencyMatrixTab } from '../components/training/CompetencyMatrixTab';
 import { RecommendationsTab } from '../components/training/RecommendationsTab';
+import { QuizManagementTab } from '../components/training/QuizManagementTab';
+import { LearningMaterialsTab } from '../components/training/LearningMaterialsTab';
+import { FeedbackListTab } from '../components/training/FeedbackListTab';
 
 export function TrainingPage() {
   const { hasFeatureAccess } = usePermissions();
@@ -113,15 +116,11 @@ export function TrainingPage() {
         {canManageTraining && (
           <>
             <TabsContent value="quizzes" className="space-y-4">
-              <Card className="p-6">
-                <p className="text-muted-foreground">Quiz Management - Coming soon</p>
-              </Card>
+              <QuizManagementTab />
             </TabsContent>
 
             <TabsContent value="materials" className="space-y-4">
-              <Card className="p-6">
-                <p className="text-muted-foreground">Learning Materials - Coming soon</p>
-              </Card>
+              <LearningMaterialsTab />
             </TabsContent>
           </>
         )}
@@ -135,9 +134,7 @@ export function TrainingPage() {
         </TabsContent>
 
         <TabsContent value="feedback" className="space-y-4">
-          <Card className="p-6">
-            <p className="text-muted-foreground">Training Feedback - Coming soon</p>
-          </Card>
+          <FeedbackListTab />
         </TabsContent>
       </Tabs>
     </div>
