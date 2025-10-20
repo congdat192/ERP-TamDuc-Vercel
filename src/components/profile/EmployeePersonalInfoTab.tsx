@@ -251,6 +251,17 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
     .toUpperCase()
     .slice(0, 2);
 
+  // Map status to Vietnamese
+  const getStatusLabel = (status: string) => {
+    const statusMap: Record<string, string> = {
+      probation: "Thử việc",
+      active: "Đang làm",
+      resigned: "Nghỉ việc",
+      terminated: "Đã sa thải",
+    };
+    return statusMap[status] || status;
+  };
+
   return (
     <div className="space-y-6">
       {/* Summary Card - Thông Tin Tổng Quan */}
@@ -392,7 +403,7 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
             <div className="flex items-center gap-2 text-sm">
               <CheckCircle2 className="w-4 h-4 text-primary" />
               <span className="text-muted-foreground">Trạng Thái:</span>
-              <span className="font-medium">{employee.status || "Chưa cập nhật"}</span>
+              <span className="font-medium">{employee.status ? getStatusLabel(employee.status) : "Chưa cập nhật"}</span>
             </div>
           </div>
 
@@ -493,26 +504,6 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
                     </span>
                   </div>
                 )}
-
-                {employee.total_fixed_salary > 0 && (
-                  <div className="flex items-center gap-2 text-sm pt-2 mt-2 border-t">
-                    <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-                      />
-                    </svg>
-                    <span className="text-muted-foreground font-semibold">Tổng Thu Nhập Cố Định:</span>
-                    <span className="font-bold text-primary">
-                      {new Intl.NumberFormat("vi-VN", {
-                        style: "currency",
-                        currency: "VND",
-                      }).format(employee.total_fixed_salary)}
-                    </span>
-                  </div>
-                )}
               </div>
             </div>
           )}
@@ -603,13 +594,13 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
 
           {/* Thông Tin Cá Nhân - Editable */}
           <div>
-            <h3 className="text-base font-semibold mb-3 flex items-center gap-2">
+            <h3 className="text-base font-semibold mb-4 flex items-center gap-2">
               <User className="w-4 h-4 text-primary" />
               Thông Tin Cá Nhân
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
+              <div className="space-y-2">
                 <Label className="text-muted-foreground flex items-center gap-2">
                   <Phone className="w-4 h-4" />
                   Số Điện Thoại
@@ -624,7 +615,7 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
                 />
               </div>
 
-              <div>
+              <div className="space-y-2">
                 <Label className="text-muted-foreground flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
                   Ngày Sinh
@@ -639,7 +630,7 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
               </div>
             </div>
 
-            <div className="mt-4">
+            <div className="mt-4 space-y-2">
               <Label className="text-muted-foreground flex items-center gap-2">
                 <MapPin className="w-4 h-4" />
                 Địa Chỉ Hiện Tại
@@ -656,12 +647,12 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
 
           {/* Thông Tin Liên Hệ Khẩn Cấp - Editable */}
           <div className="border-t pt-4">
-            <h3 className="text-base font-semibold mb-3 flex items-center gap-2">
+            <h3 className="text-base font-semibold mb-4 flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-primary" />
               Thông Tin Liên Hệ Khẩn Cấp
             </h3>
 
-            <div>
+            <div className="space-y-2">
               <Label className="text-muted-foreground flex items-center gap-2">
                 <User className="w-4 h-4" />
                 Họ Tên
@@ -676,7 +667,7 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              <div>
+              <div className="space-y-2">
                 <Label className="text-muted-foreground flex items-center gap-2">
                   <Phone className="w-4 h-4" />
                   Số Điện Thoại
@@ -691,7 +682,7 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
                 />
               </div>
 
-              <div>
+              <div className="space-y-2">
                 <Label className="text-muted-foreground flex items-center gap-2">
                   <Users className="w-4 h-4" />
                   Mối Quan Hệ
