@@ -252,9 +252,6 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
             <User className="w-5 h-5 text-primary" />
             Thông Tin Nhân Viên
           </CardTitle>
-          <CardDescription>
-            Thông tin tổng quan về nhân viên
-          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col md:flex-row gap-6">

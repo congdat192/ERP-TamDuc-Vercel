@@ -177,7 +177,7 @@ export function MyProfilePage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="relative">
-          <div className="sticky top-0 z-20 bg-gradient-to-br from-green-50 via-white to-teal-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pb-2">
+          <div className="sticky top-0 z-20 bg-gradient-to-br from-green-50 via-white to-teal-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
             <TabsList className="grid w-full grid-cols-4 mb-6">
               <TabsTrigger value="personal">
                 <User className="w-4 h-4 mr-2" />
