@@ -1,5 +1,7 @@
 import { serve } from 'https://deno.land/std@0.190.0/http/server.ts';
-import { sendEmail } from '../_shared/email-service.ts';
+import { Resend } from 'https://esm.sh/resend@2.0.0';
+
+const resend = new Resend(Deno.env.get('RESEND_API_KEY')!);
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -23,7 +25,8 @@ serve(async (req: Request) => {
     console.log('Sending password reset email to:', email);
     console.log('Reset URL:', resetUrl);
 
-    const emailResult = await sendEmail({
+    const emailResponse = await resend.emails.send({
+      from: 'ERP System <noreply@dangphuocquan.cloud>',
       to: email,
       subject: 'Đặt lại mật khẩu ERP System',
       html: `
@@ -84,20 +87,15 @@ serve(async (req: Request) => {
           </div>
         </div>
       `,
-      emailType: 'password_reset',
-      metadata: {
-        reset_url: resetUrl,
-        user_name: userName
-      }
     });
 
-    console.log('Password reset email sent successfully:', emailResult);
+    console.log('Password reset email sent successfully:', emailResponse);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         message: 'Password reset email sent successfully',
-        response: emailResult
+        response: emailResponse
       }),
       {
         status: 200,

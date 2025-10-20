@@ -266,51 +266,6 @@ export type Database = {
           },
         ]
       }
-      email_logs: {
-        Row: {
-          created_at: string | null
-          email_type: string
-          error_message: string | null
-          from_email: string
-          id: string
-          metadata: Json | null
-          response_time_ms: number | null
-          sent_at: string | null
-          sent_by: string | null
-          status: string
-          subject: string
-          to_email: string
-        }
-        Insert: {
-          created_at?: string | null
-          email_type: string
-          error_message?: string | null
-          from_email: string
-          id?: string
-          metadata?: Json | null
-          response_time_ms?: number | null
-          sent_at?: string | null
-          sent_by?: string | null
-          status?: string
-          subject: string
-          to_email: string
-        }
-        Update: {
-          created_at?: string | null
-          email_type?: string
-          error_message?: string | null
-          from_email?: string
-          id?: string
-          metadata?: Json | null
-          response_time_ms?: number | null
-          sent_at?: string | null
-          sent_by?: string | null
-          status?: string
-          subject?: string
-          to_email?: string
-        }
-        Relationships: []
-      }
       email_otp_codes: {
         Row: {
           created_at: string | null
