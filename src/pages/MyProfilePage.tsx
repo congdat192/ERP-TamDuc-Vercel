@@ -4,7 +4,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { LogOut, User, Gift, FileText, Send } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { LogOut, User, Gift, FileText, Send, ChevronDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { EmployeePersonalInfoTab } from '@/components/profile/EmployeePersonalInfoTab';
 import { EmployeeBenefitsTab } from '@/components/profile/EmployeeBenefitsTab';
@@ -130,17 +138,42 @@ export function MyProfilePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
       <div className="max-w-6xl mx-auto py-8">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Hồ Sơ Nhân Viên</h1>
-            <p className="text-muted-foreground mt-1">
-              {employee.full_name} - {employee.employee_code}
-            </p>
+        <div className="flex justify-between items-center mb-6 pb-4 border-b">
+          {/* Left: Company Branding */}
+          <div className="flex items-center gap-3">
+            {/* Logo placeholder */}
+            <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary/60 rounded-lg flex items-center justify-center">
+              <span className="text-primary-foreground font-bold text-xl">TD</span>
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">TamDuc Optical</h1>
+              <p className="text-sm text-muted-foreground">Employee Self Service Portal</p>
+            </div>
           </div>
-          <Button variant="outline" onClick={logout}>
-            <LogOut className="w-4 h-4 mr-2" />
-            Đăng Xuất
-          </Button>
+
+          {/* Right: User Menu Dropdown (compact) */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="gap-2">
+                <User className="w-4 h-4" />
+                <span className="hidden sm:inline">{employee.full_name}</span>
+                <ChevronDown className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium">{employee.full_name}</p>
+                  <p className="text-xs text-muted-foreground">{employee.employee_code}</p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={logout} className="text-destructive cursor-pointer">
+                <LogOut className="w-4 h-4 mr-2" />
+                Đăng Xuất
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
