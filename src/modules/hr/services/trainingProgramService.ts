@@ -96,7 +96,7 @@ export class TrainingProgramService {
       throw new Error(`Không thể tạo chương trình: ${error.message}`);
     }
 
-    console.log('✅ [TrainingProgramService] Program created:', data.id);
+    console.log('✅ [TrainingProgramService] Program created:', (data as any).id);
     return data as unknown as TrainingProgram;
   }
 

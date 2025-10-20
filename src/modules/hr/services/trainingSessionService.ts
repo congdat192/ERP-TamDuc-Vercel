@@ -36,7 +36,7 @@ export class TrainingSessionService {
     console.log('🔍 [TrainingSessionService] Fetching sessions');
 
     let query = supabase
-      .from('training_sessions')
+      .from('training_sessions' as any)
       .select('*, training_programs(title), training_trainers(full_name, email)')
       .order('start_date', { ascending: false });
 
@@ -52,14 +52,14 @@ export class TrainingSessionService {
     }
 
     console.log('✅ [TrainingSessionService] Sessions loaded:', data?.length);
-    return data || [];
+    return (data || []) as unknown as TrainingSession[];
   }
 
   static async getSessionById(sessionId: string): Promise<TrainingSession> {
     console.log('🔍 [TrainingSessionService] Fetching session:', sessionId);
 
     const { data, error } = await supabase
-      .from('training_sessions')
+      .from('training_sessions' as any)
       .select('*, training_programs(title, description), training_trainers(full_name, email, phone)')
       .eq('id', sessionId)
       .single();
@@ -69,19 +69,19 @@ export class TrainingSessionService {
       throw new Error(`Không thể tải lớp học: ${error.message}`);
     }
 
-    return data;
+    return data as unknown as TrainingSession;
   }
 
   static async createSession(sessionData: CreateSessionData): Promise<TrainingSession> {
     console.log('🔍 [TrainingSessionService] Creating session:', sessionData.session_name);
 
     const { data, error } = await supabase
-      .from('training_sessions')
+      .from('training_sessions' as any)
       .insert({
         ...sessionData,
         status: 'scheduled',
         current_participants: 0
-      })
+      } as any)
       .select()
       .single();
 
@@ -92,16 +92,16 @@ export class TrainingSessionService {
       throw new Error(`Không thể tạo lớp học: ${error.message}`);
     }
 
-    console.log('✅ [TrainingSessionService] Session created:', data.id);
-    return data;
+    console.log('✅ [TrainingSessionService] Session created:', (data as any).id);
+    return data as unknown as TrainingSession;
   }
 
   static async updateSession(sessionId: string, updates: Partial<CreateSessionData>): Promise<TrainingSession> {
     console.log('🔍 [TrainingSessionService] Updating session:', sessionId);
 
     const { data, error } = await supabase
-      .from('training_sessions')
-      .update(updates)
+      .from('training_sessions' as any)
+      .update(updates as any)
       .eq('id', sessionId)
       .select()
       .single();
@@ -113,14 +113,14 @@ export class TrainingSessionService {
     }
 
     console.log('✅ [TrainingSessionService] Session updated');
-    return data;
+    return data as unknown as TrainingSession;
   }
 
   static async deleteSession(sessionId: string): Promise<void> {
     console.log('🔍 [TrainingSessionService] Deleting session:', sessionId);
 
     const { error } = await supabase
-      .from('training_sessions')
+      .from('training_sessions' as any)
       .delete()
       .eq('id', sessionId);
 
@@ -138,8 +138,8 @@ export class TrainingSessionService {
     console.log('🔍 [TrainingSessionService] Updating session status:', sessionId, status);
 
     const { error } = await supabase
-      .from('training_sessions')
-      .update({ status })
+      .from('training_sessions' as any)
+      .update({ status } as any)
       .eq('id', sessionId);
 
     if (error) {

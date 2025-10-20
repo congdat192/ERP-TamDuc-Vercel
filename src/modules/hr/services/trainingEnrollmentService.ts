@@ -63,7 +63,7 @@ export class TrainingEnrollmentService {
     }
 
     console.log('✅ [TrainingEnrollmentService] Enrollments loaded:', data?.length);
-    return (data || []) as TrainingEnrollment[];
+    return (data || []) as unknown as TrainingEnrollment[];
   }
 
   static async createEnrollment(enrollmentData: CreateEnrollmentData): Promise<TrainingEnrollment> {
@@ -88,8 +88,8 @@ export class TrainingEnrollmentService {
     // Update session participant count
     await this.updateSessionParticipantCount(enrollmentData.session_id);
 
-    console.log('✅ [TrainingEnrollmentService] Enrollment created:', data.id);
-    return data as TrainingEnrollment;
+    console.log('✅ [TrainingEnrollmentService] Enrollment created:', (data as any).id);
+    return data as unknown as TrainingEnrollment;
   }
 
   static async bulkCreateEnrollments(enrollments: CreateEnrollmentData[]): Promise<void> {
@@ -135,7 +135,7 @@ export class TrainingEnrollmentService {
     }
 
     console.log('✅ [TrainingEnrollmentService] Enrollment scores updated');
-    return data as TrainingEnrollment;
+    return data as unknown as TrainingEnrollment;
   }
 
   static async completeEnrollment(enrollmentId: string, finalScore: number, certificateUrl?: string): Promise<TrainingEnrollment> {
@@ -161,7 +161,7 @@ export class TrainingEnrollmentService {
     }
 
     console.log('✅ [TrainingEnrollmentService] Enrollment completed');
-    return data as TrainingEnrollment;
+    return data as unknown as TrainingEnrollment;
   }
 
   static async deleteEnrollment(enrollmentId: string): Promise<void> {
@@ -186,8 +186,8 @@ export class TrainingEnrollmentService {
     }
 
     // Update session participant count
-    if (enrollment?.session_id) {
-      await this.updateSessionParticipantCount(enrollment.session_id);
+    if ((enrollment as any)?.session_id) {
+      await this.updateSessionParticipantCount((enrollment as any).session_id);
     }
 
     console.log('✅ [TrainingEnrollmentService] Enrollment deleted');

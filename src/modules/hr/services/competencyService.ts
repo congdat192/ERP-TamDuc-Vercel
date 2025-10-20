@@ -48,7 +48,7 @@ export class CompetencyService {
       throw new Error(`Không thể tải danh sách level: ${error.message}`);
     }
 
-    return (data || []) as CompetencyLevel[];
+    return (data || []) as unknown as CompetencyLevel[];
   }
 
   static async getEmployeeCompetencies(employeeId: string): Promise<Competency[]> {
@@ -65,7 +65,7 @@ export class CompetencyService {
       throw new Error(`Không thể tải năng lực: ${error.message}`);
     }
 
-    return (data || []) as Competency[];
+    return (data || []) as unknown as Competency[];
   }
 
   static async upsertCompetency(competency: Omit<Competency, 'id' | 'created_at' | 'updated_at'>): Promise<Competency> {
@@ -91,7 +91,7 @@ export class CompetencyService {
     }
 
     console.log('✅ [CompetencyService] Competency upserted');
-    return data as Competency;
+    return data as unknown as Competency;
   }
 
   static async getRecommendations(employeeId: string): Promise<CourseRecommendation[]> {
@@ -119,7 +119,7 @@ export class CompetencyService {
       throw new Error(`Không thể tải gợi ý khóa học: ${error.message}`);
     }
 
-    return (data || []) as CourseRecommendation[];
+    return (data || []) as unknown as CourseRecommendation[];
   }
 
   static async dismissRecommendation(recommendationId: string): Promise<void> {
