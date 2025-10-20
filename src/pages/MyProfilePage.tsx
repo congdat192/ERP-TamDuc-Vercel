@@ -12,12 +12,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, User, Gift, FileText, Send, ChevronDown } from "lucide-react";
+import { LogOut, User, Gift, FileText, Send, ChevronDown, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { EmployeePersonalInfoTab } from "@/components/profile/EmployeePersonalInfoTab";
 import { EmployeeBenefitsTab } from "@/components/profile/EmployeeBenefitsTab";
 import { EmployeePersonalDocumentsTab } from "@/components/profile/EmployeePersonalDocumentsTab";
 import { EmployeeChangeRequestsTab } from "@/components/profile/EmployeeChangeRequestsTab";
+import EmployeePayrollTab from "@/components/profile/EmployeePayrollTab";
 import { Footer } from "@/components/layout/Footer";
 import logoTamDuc from "@/assets/logo_tamduc.jpg";
 
@@ -169,6 +170,11 @@ export function MyProfilePage() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setActiveTab('requests')} className="cursor-pointer">
+                <Send className="w-4 h-4 mr-2" />
+                Yêu Cầu Thay Đổi
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={logout} className="text-destructive cursor-pointer">
                 <LogOut className="w-4 h-4 mr-2" />
                 Đăng Xuất
@@ -192,9 +198,9 @@ export function MyProfilePage() {
                 <FileText className="w-4 h-4 mr-2" />
                 <span className="hidden sm:inline">Hồ Sơ</span>
               </TabsTrigger>
-              <TabsTrigger value="requests">
-                <Send className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Yêu Cầu</span>
+              <TabsTrigger value="payroll">
+                <DollarSign className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Phiếu Lương</span>
               </TabsTrigger>
             </TabsList>
           </div>
@@ -209,6 +215,10 @@ export function MyProfilePage() {
 
           <TabsContent value="documents">
             <EmployeePersonalDocumentsTab employeeId={employee.id} />
+          </TabsContent>
+
+          <TabsContent value="payroll">
+            <EmployeePayrollTab employeeId={employee.id} />
           </TabsContent>
 
           <TabsContent value="requests">

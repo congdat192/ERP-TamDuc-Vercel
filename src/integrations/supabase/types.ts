@@ -462,6 +462,95 @@ export type Database = {
           },
         ]
       }
+      employee_payrolls: {
+        Row: {
+          actual_days: number | null
+          actual_salary: number | null
+          company_name: string
+          created_at: string | null
+          created_by: string | null
+          employee_code: string
+          employee_id: string
+          employee_name: string
+          id: string
+          invoice_bonus: number | null
+          issued_at: string | null
+          month: string
+          net_payment: number | null
+          notes: string | null
+          ot_amount: number | null
+          ot_days: number | null
+          salary_fulltime_ct: number | null
+          standard_days: number | null
+          status: string
+          total_bonus: number | null
+          total_deductions: number | null
+          total_income: number | null
+          total_salary: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          actual_days?: number | null
+          actual_salary?: number | null
+          company_name: string
+          created_at?: string | null
+          created_by?: string | null
+          employee_code: string
+          employee_id: string
+          employee_name: string
+          id?: string
+          invoice_bonus?: number | null
+          issued_at?: string | null
+          month: string
+          net_payment?: number | null
+          notes?: string | null
+          ot_amount?: number | null
+          ot_days?: number | null
+          salary_fulltime_ct?: number | null
+          standard_days?: number | null
+          status?: string
+          total_bonus?: number | null
+          total_deductions?: number | null
+          total_income?: number | null
+          total_salary?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          actual_days?: number | null
+          actual_salary?: number | null
+          company_name?: string
+          created_at?: string | null
+          created_by?: string | null
+          employee_code?: string
+          employee_id?: string
+          employee_name?: string
+          id?: string
+          invoice_bonus?: number | null
+          issued_at?: string | null
+          month?: string
+          net_payment?: number | null
+          notes?: string | null
+          ot_amount?: number | null
+          ot_days?: number | null
+          salary_fulltime_ct?: number | null
+          standard_days?: number | null
+          status?: string
+          total_bonus?: number | null
+          total_deductions?: number | null
+          total_income?: number | null
+          total_salary?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_payrolls_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           allowance_fuel: number | null
@@ -986,6 +1075,44 @@ export type Database = {
           last_attempt_at?: string | null
         }
         Relationships: []
+      }
+      payroll_invoice_commissions: {
+        Row: {
+          created_at: string | null
+          id: string
+          invoice_level: string
+          payroll_id: string
+          quantity: number | null
+          return_quantity: number | null
+          return_value: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          invoice_level: string
+          payroll_id: string
+          quantity?: number | null
+          return_quantity?: number | null
+          return_value?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          invoice_level?: string
+          payroll_id?: string
+          quantity?: number | null
+          return_quantity?: number | null
+          return_value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_invoice_commissions_payroll_id_fkey"
+            columns: ["payroll_id"]
+            isOneToOne: false
+            referencedRelation: "employee_payrolls"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
