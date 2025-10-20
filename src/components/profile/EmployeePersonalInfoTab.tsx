@@ -1,27 +1,42 @@
-import { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { AlertCircle, Loader2, Camera, Mail, Phone, Calendar, MapPin, User, Users, Briefcase, Clock, BadgeCheck, Building2, FileText, CheckCircle2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
-import { z } from 'zod';
-import { AvatarService } from '@/modules/hr/services/avatarService';
+import { useState, useEffect, useRef } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  AlertCircle,
+  Loader2,
+  Camera,
+  Mail,
+  Phone,
+  Calendar,
+  MapPin,
+  User,
+  Users,
+  Briefcase,
+  Clock,
+  BadgeCheck,
+  Building2,
+  FileText,
+  CheckCircle2,
+} from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import { z } from "zod";
+import { AvatarService } from "@/modules/hr/services/avatarService";
 
 const validationSchema = z.object({
-  phone: z.string()
-    .regex(/^0\d{9,10}$/, 'Số điện thoại không hợp lệ (10-11 số, bắt đầu bằng 0)')
+  phone: z
+    .string()
+    .regex(/^0\d{9,10}$/, "Số điện thoại không hợp lệ (10-11 số, bắt đầu bằng 0)")
     .optional()
-    .or(z.literal('')),
-  current_address: z.string()
-    .max(500, 'Địa chỉ tối đa 500 ký tự')
-    .optional()
-    .or(z.literal('')),
-  birth_date: z.string()
+    .or(z.literal("")),
+  current_address: z.string().max(500, "Địa chỉ tối đa 500 ký tự").optional().or(z.literal("")),
+  birth_date: z
+    .string()
     .optional()
     .refine((val) => {
       if (!val) return true;
@@ -29,19 +44,14 @@ const validationSchema = z.object({
       const now = new Date();
       const age = (now.getTime() - date.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
       return age >= 16 && age <= 100;
-    }, 'Tuổi phải từ 16-100'),
-  emergency_contact_name: z.string()
-    .max(200, 'Tên người liên hệ tối đa 200 ký tự')
+    }, "Tuổi phải từ 16-100"),
+  emergency_contact_name: z.string().max(200, "Tên người liên hệ tối đa 200 ký tự").optional().or(z.literal("")),
+  emergency_contact_phone: z
+    .string()
+    .regex(/^0\d{9,10}$/, "Số điện thoại không hợp lệ")
     .optional()
-    .or(z.literal('')),
-  emergency_contact_phone: z.string()
-    .regex(/^0\d{9,10}$/, 'Số điện thoại không hợp lệ')
-    .optional()
-    .or(z.literal('')),
-  emergency_contact_relationship: z.string()
-    .max(100, 'Quan hệ tối đa 100 ký tự')
-    .optional()
-    .or(z.literal(''))
+    .or(z.literal("")),
+  emergency_contact_relationship: z.string().max(100, "Quan hệ tối đa 100 ký tự").optional().or(z.literal("")),
 });
 
 interface Props {
@@ -58,12 +68,12 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
   const [hasPendingRequest, setHasPendingRequest] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    phone: employee.phone || '',
-    current_address: employee.current_address || '',
-    birth_date: employee.birth_date || '',
-    emergency_contact_name: employee.emergency_contact_name || '',
-    emergency_contact_phone: employee.emergency_contact_phone || '',
-    emergency_contact_relationship: employee.emergency_contact_relationship || '',
+    phone: employee.phone || "",
+    current_address: employee.current_address || "",
+    birth_date: employee.birth_date || "",
+    emergency_contact_name: employee.emergency_contact_name || "",
+    emergency_contact_phone: employee.emergency_contact_phone || "",
+    emergency_contact_relationship: employee.emergency_contact_relationship || "",
   });
 
   useEffect(() => {
@@ -72,10 +82,10 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
 
   const checkPendingRequest = async () => {
     const { data } = await supabase
-      .from('employee_change_requests')
-      .select('id')
-      .eq('employee_id', employee.id)
-      .eq('status', 'pending')
+      .from("employee_change_requests")
+      .select("id")
+      .eq("employee_id", employee.id)
+      .eq("status", "pending")
       .limit(1);
 
     setHasPendingRequest(data && data.length > 0);
@@ -112,9 +122,9 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
 
       // Update employee record
       const { error: updateError } = await supabase
-        .from('employees')
+        .from("employees")
         .update({ avatar_path: avatarPath })
-        .eq('id', employee.id);
+        .eq("id", employee.id);
 
       if (updateError) throw updateError;
 
@@ -129,7 +139,7 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
       // Clear preview after successful upload
       setAvatarPreview(null);
     } catch (error: any) {
-      console.error('Error uploading avatar:', error);
+      console.error("Error uploading avatar:", error);
       toast({
         title: "Lỗi",
         description: error.message || "Không thể cập nhật avatar",
@@ -156,10 +166,10 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
 
     // 2. Double-check for pending requests
     const { data: pendingCheck } = await supabase
-      .from('employee_change_requests')
-      .select('id')
-      .eq('employee_id', employee.id)
-      .eq('status', 'pending')
+      .from("employee_change_requests")
+      .select("id")
+      .eq("employee_id", employee.id)
+      .eq("status", "pending")
       .limit(1);
 
     if (pendingCheck && pendingCheck.length > 0) {
@@ -175,12 +185,12 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
     const changes: Record<string, { old: any; new: any }> = {};
 
     const fieldsToCheck = [
-      'phone',
-      'current_address',
-      'birth_date',
-      'emergency_contact_name',
-      'emergency_contact_phone',
-      'emergency_contact_relationship'
+      "phone",
+      "current_address",
+      "birth_date",
+      "emergency_contact_name",
+      "emergency_contact_phone",
+      "emergency_contact_relationship",
     ];
 
     fieldsToCheck.forEach((field) => {
@@ -205,14 +215,12 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
     // 5. Insert change request
     setIsSubmitting(true);
     try {
-      const { error } = await supabase
-        .from('employee_change_requests')
-        .insert({
-          employee_id: employee.id,
-          request_type: 'personal_info',
-          changes: changes,
-          status: 'pending'
-        });
+      const { error } = await supabase.from("employee_change_requests").insert({
+        employee_id: employee.id,
+        request_type: "personal_info",
+        changes: changes,
+        status: "pending",
+      });
 
       if (error) throw error;
 
@@ -222,9 +230,9 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
       });
 
       setHasPendingRequest(true);
-      onChangeTab('requests');
+      onChangeTab("requests");
     } catch (error: any) {
-      console.error('Error submitting change request:', error);
+      console.error("Error submitting change request:", error);
       toast({
         title: "Lỗi",
         description: error.message || "Không thể gửi yêu cầu",
@@ -237,9 +245,9 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
 
   const currentAvatarUrl = avatarPreview || AvatarService.getAvatarUrl(employee.avatar_path);
   const initials = employee.full_name
-    .split(' ')
+    .split(" ")
     .map((n: string) => n[0])
-    .join('')
+    .join("")
     .toUpperCase()
     .slice(0, 2);
 
@@ -247,12 +255,6 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
     <div className="space-y-6">
       {/* Summary Card - Thông Tin Tổng Quan */}
       <Card className="bg-gradient-to-br from-primary/5 via-background to-primary/5 border-primary/20">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <User className="w-5 h-5 text-primary" />
-            Thông Tin Nhân Viên
-          </CardTitle>
-        </CardHeader>
         <CardContent>
           <div className="flex flex-col md:flex-row gap-6">
             {/* Avatar Section */}
@@ -260,11 +262,9 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
               <div className="relative group">
                 <Avatar className="w-32 h-32 border-4 border-primary/20">
                   <AvatarImage src={currentAvatarUrl} alt={employee.full_name} />
-                  <AvatarFallback className="text-2xl font-bold bg-primary/10 text-primary">
-                    {initials}
-                  </AvatarFallback>
+                  <AvatarFallback className="text-2xl font-bold bg-primary/10 text-primary">{initials}</AvatarFallback>
                 </Avatar>
-                
+
                 {/* Desktop: Hover Overlay */}
                 <button
                   onClick={handleAvatarClick}
@@ -277,7 +277,7 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
                     <Camera className="w-8 h-8 text-white" />
                   )}
                 </button>
-                
+
                 {/* Mobile: Icon ở góc */}
                 <button
                   onClick={handleAvatarClick}
@@ -290,7 +290,7 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
                     <Camera className="w-5 h-5 text-primary-foreground" />
                   )}
                 </button>
-                
+
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -299,15 +299,11 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
                   className="hidden"
                 />
               </div>
-              
+
               {/* Tên + Mã NV - Mobile Only (dưới avatar) */}
               <div className="md:hidden text-center">
-                <h2 className="text-xl font-bold text-foreground">
-                  {employee.full_name}
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  {employee.employee_code}
-                </p>
+                <h2 className="text-xl font-bold text-foreground">{employee.full_name}</h2>
+                <p className="text-sm text-muted-foreground">{employee.employee_code}</p>
               </div>
             </div>
 
@@ -315,12 +311,8 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
             <div className="flex-1 space-y-4">
               {/* Tên + Mã NV - Desktop Only */}
               <div className="hidden md:block">
-                <h2 className="text-2xl font-bold text-foreground">
-                  {employee.full_name}
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  Mã NV: {employee.employee_code}
-                </p>
+                <h2 className="text-2xl font-bold text-foreground">{employee.full_name}</h2>
+                <p className="text-sm text-muted-foreground">Mã NV: {employee.employee_code}</p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -345,15 +337,13 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
                 <div className="flex items-center gap-2 text-sm">
                   <Phone className="w-4 h-4 text-primary" />
                   <span className="text-muted-foreground">Điện thoại:</span>
-                  <span className="font-medium">{employee.phone || 'Chưa cập nhật'}</span>
+                  <span className="font-medium">{employee.phone || "Chưa cập nhật"}</span>
                 </div>
 
                 <div className="flex items-center gap-2 text-sm">
                   <Calendar className="w-4 h-4 text-primary" />
                   <span className="text-muted-foreground">Ngày vào:</span>
-                  <span className="font-medium">
-                    {new Date(employee.join_date).toLocaleDateString('vi-VN')}
-                  </span>
+                  <span className="font-medium">{new Date(employee.join_date).toLocaleDateString("vi-VN")}</span>
                 </div>
 
                 <div className="flex items-center gap-2 text-sm">
@@ -375,198 +365,216 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
         </CardContent>
       </Card>
 
-        {/* Thông Tin Cơ Bản - Combined Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5 text-primary" />
-              Thông Tin Cơ Bản
-            </CardTitle>
-      <CardDescription>
-        Tổng hợp toàn bộ thông tin cá nhân của nhân viên
-      </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* SECTION 1: Loại Hợp Đồng & Trạng Thái */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm">
-                <FileText className="w-4 h-4 text-primary" />
-                <span className="text-muted-foreground">Loại Hợp Đồng:</span>
-                <span className="font-medium">{employee.employment_type || 'Chưa cập nhật'}</span>
-              </div>
-
-              <div className="flex items-center gap-2 text-sm">
-                <CheckCircle2 className="w-4 h-4 text-primary" />
-                <span className="text-muted-foreground">Trạng Thái:</span>
-                <span className="font-medium">{employee.status || 'Chưa cập nhật'}</span>
-              </div>
+      {/* Thông Tin Cơ Bản - Combined Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="w-5 h-5 text-primary" />
+            Thông Tin Cơ Bản
+          </CardTitle>
+          <CardDescription>Tổng hợp toàn bộ thông tin cá nhân của nhân viên</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* SECTION 1: Loại Hợp Đồng & Trạng Thái */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm">
+              <FileText className="w-4 h-4 text-primary" />
+              <span className="text-muted-foreground">Loại Hợp Đồng:</span>
+              <span className="font-medium">{employee.employment_type || "Chưa cập nhật"}</span>
             </div>
 
-            {/* SECTION 2: Lương & Phụ Cấp */}
-            {(employee.salary_p1 > 0 || 
-              employee.allowance_meal > 0 || 
-              employee.allowance_fuel > 0 || 
-              employee.allowance_phone > 0 || 
-              employee.allowance_other > 0) && (
-              <div className="border-t pt-4">
-                <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
-                  <Briefcase className="w-5 h-5 text-primary" />
-                  Lương & Phụ Cấp
-                </h3>
-                <div className="space-y-2">
-                  {employee.salary_p1 > 0 && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Briefcase className="w-4 h-4 text-primary" />
-                      <span className="text-muted-foreground">Lương Cơ Bản:</span>
-                      <span className="font-medium">
-                        {new Intl.NumberFormat('vi-VN', {
-                          style: 'currency',
-                          currency: 'VND'
-                        }).format(employee.salary_p1)}
-                      </span>
-                    </div>
-                  )}
-                  
-                  {employee.allowance_meal > 0 && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4z" />
-                      </svg>
-                      <span className="text-muted-foreground">Phụ Cấp Ăn Trưa:</span>
-                      <span className="font-medium">
-                        {new Intl.NumberFormat('vi-VN', {
-                          style: 'currency',
-                          currency: 'VND'
-                        }).format(employee.allowance_meal)}
-                      </span>
-                    </div>
-                  )}
-                  
-                  {employee.allowance_fuel > 0 && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2" />
-                      </svg>
-                      <span className="text-muted-foreground">Phụ Cấp Xăng Xe:</span>
-                      <span className="font-medium">
-                        {new Intl.NumberFormat('vi-VN', {
-                          style: 'currency',
-                          currency: 'VND'
-                        }).format(employee.allowance_fuel)}
-                      </span>
-                    </div>
-                  )}
-                  
-                  {employee.allowance_phone > 0 && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Phone className="w-4 h-4 text-primary" />
-                      <span className="text-muted-foreground">Phụ Cấp Điện Thoại:</span>
-                      <span className="font-medium">
-                        {new Intl.NumberFormat('vi-VN', {
-                          style: 'currency',
-                          currency: 'VND'
-                        }).format(employee.allowance_phone)}
-                      </span>
-                    </div>
-                  )}
-                  
-                  {employee.allowance_other > 0 && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                      </svg>
-                      <span className="text-muted-foreground">Phụ Cấp Khác:</span>
-                      <span className="font-medium">
-                        {new Intl.NumberFormat('vi-VN', {
-                          style: 'currency',
-                          currency: 'VND'
-                        }).format(employee.allowance_other)}
-                      </span>
-                    </div>
-                  )}
-                  
-                  {employee.total_fixed_salary > 0 && (
-                    <div className="flex items-center gap-2 text-sm pt-2 mt-2 border-t">
-                      <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                      </svg>
-                      <span className="text-muted-foreground font-semibold">Tổng Thu Nhập Cố Định:</span>
-                      <span className="font-bold text-primary">
-                        {new Intl.NumberFormat('vi-VN', {
-                          style: 'currency',
-                          currency: 'VND'
-                        }).format(employee.total_fixed_salary)}
-                      </span>
-                    </div>
-                  )}
-                </div>
+            <div className="flex items-center gap-2 text-sm">
+              <CheckCircle2 className="w-4 h-4 text-primary" />
+              <span className="text-muted-foreground">Trạng Thái:</span>
+              <span className="font-medium">{employee.status || "Chưa cập nhật"}</span>
+            </div>
+          </div>
+
+          {/* SECTION 2: Lương & Phụ Cấp */}
+          {(employee.salary_p1 > 0 ||
+            employee.allowance_meal > 0 ||
+            employee.allowance_fuel > 0 ||
+            employee.allowance_phone > 0 ||
+            employee.allowance_other > 0) && (
+            <div className="border-t pt-4">
+              <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
+                <Briefcase className="w-5 h-5 text-primary" />
+                Lương & Phụ Cấp
+              </h3>
+              <div className="space-y-2">
+                {employee.salary_p1 > 0 && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Briefcase className="w-4 h-4 text-primary" />
+                    <span className="text-muted-foreground">Lương Cơ Bản:</span>
+                    <span className="font-medium">
+                      {new Intl.NumberFormat("vi-VN", {
+                        style: "currency",
+                        currency: "VND",
+                      }).format(employee.salary_p1)}
+                    </span>
+                  </div>
+                )}
+
+                {employee.allowance_meal > 0 && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4z"
+                      />
+                    </svg>
+                    <span className="text-muted-foreground">Phụ Cấp Ăn Trưa:</span>
+                    <span className="font-medium">
+                      {new Intl.NumberFormat("vi-VN", {
+                        style: "currency",
+                        currency: "VND",
+                      }).format(employee.allowance_meal)}
+                    </span>
+                  </div>
+                )}
+
+                {employee.allowance_fuel > 0 && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2"
+                      />
+                    </svg>
+                    <span className="text-muted-foreground">Phụ Cấp Xăng Xe:</span>
+                    <span className="font-medium">
+                      {new Intl.NumberFormat("vi-VN", {
+                        style: "currency",
+                        currency: "VND",
+                      }).format(employee.allowance_fuel)}
+                    </span>
+                  </div>
+                )}
+
+                {employee.allowance_phone > 0 && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Phone className="w-4 h-4 text-primary" />
+                    <span className="text-muted-foreground">Phụ Cấp Điện Thoại:</span>
+                    <span className="font-medium">
+                      {new Intl.NumberFormat("vi-VN", {
+                        style: "currency",
+                        currency: "VND",
+                      }).format(employee.allowance_phone)}
+                    </span>
+                  </div>
+                )}
+
+                {employee.allowance_other > 0 && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                      />
+                    </svg>
+                    <span className="text-muted-foreground">Phụ Cấp Khác:</span>
+                    <span className="font-medium">
+                      {new Intl.NumberFormat("vi-VN", {
+                        style: "currency",
+                        currency: "VND",
+                      }).format(employee.allowance_other)}
+                    </span>
+                  </div>
+                )}
+
+                {employee.total_fixed_salary > 0 && (
+                  <div className="flex items-center gap-2 text-sm pt-2 mt-2 border-t">
+                    <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                      />
+                    </svg>
+                    <span className="text-muted-foreground font-semibold">Tổng Thu Nhập Cố Định:</span>
+                    <span className="font-bold text-primary">
+                      {new Intl.NumberFormat("vi-VN", {
+                        style: "currency",
+                        currency: "VND",
+                      }).format(employee.total_fixed_salary)}
+                    </span>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
+          )}
 
-    {/* SECTION 3: Thông Tin Cá Nhân (Read-only Display) */}
-    <div className="border-t pt-4">
-      <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
-        <User className="w-5 h-5 text-primary" />
-        Thông Tin Cá Nhân
-      </h3>
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 text-sm">
-          <Phone className="w-4 h-4 text-primary" />
-          <span className="text-muted-foreground">Số Điện Thoại:</span>
-          <span className="font-medium">{employee.phone || 'Chưa cập nhật'}</span>
-        </div>
+          {/* SECTION 3: Thông Tin Cá Nhân (Read-only Display) */}
+          <div className="border-t pt-4">
+            <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
+              <User className="w-5 h-5 text-primary" />
+              Thông Tin Cá Nhân
+            </h3>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm">
+                <Phone className="w-4 h-4 text-primary" />
+                <span className="text-muted-foreground">Số Điện Thoại:</span>
+                <span className="font-medium">{employee.phone || "Chưa cập nhật"}</span>
+              </div>
 
-        <div className="flex items-center gap-2 text-sm">
-          <Calendar className="w-4 h-4 text-primary" />
-          <span className="text-muted-foreground">Ngày Sinh:</span>
-          <span className="font-medium">
-            {employee.birth_date ? format(new Date(employee.birth_date), 'dd/MM/yyyy') : 'Chưa cập nhật'}
-          </span>
-        </div>
+              <div className="flex items-center gap-2 text-sm">
+                <Calendar className="w-4 h-4 text-primary" />
+                <span className="text-muted-foreground">Ngày Sinh:</span>
+                <span className="font-medium">
+                  {employee.birth_date ? format(new Date(employee.birth_date), "dd/MM/yyyy") : "Chưa cập nhật"}
+                </span>
+              </div>
 
-        <div className="flex items-center gap-2 text-sm">
-          <MapPin className="w-4 h-4 text-primary" />
-          <span className="text-muted-foreground">Địa Chỉ Hiện Tại:</span>
-          <span className="font-medium">{employee.current_address || 'Chưa cập nhật'}</span>
-        </div>
-      </div>
-    </div>
+              <div className="flex items-center gap-2 text-sm">
+                <MapPin className="w-4 h-4 text-primary" />
+                <span className="text-muted-foreground">Địa Chỉ Hiện Tại:</span>
+                <span className="font-medium">{employee.current_address || "Chưa cập nhật"}</span>
+              </div>
+            </div>
+          </div>
 
-    {/* SECTION 4: Thông Tin Liên Hệ Khẩn Cấp (Read-only Display) */}
-    <div className="border-t pt-4">
-      <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
-        <AlertCircle className="w-5 h-5 text-primary" />
-        Thông Tin Liên Hệ Khẩn Cấp
-      </h3>
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 text-sm">
-          <User className="w-4 h-4 text-primary" />
-          <span className="text-muted-foreground">Họ Tên:</span>
-          <span className="font-medium">{employee.emergency_contact_name || 'Chưa cập nhật'}</span>
-        </div>
+          {/* SECTION 4: Thông Tin Liên Hệ Khẩn Cấp (Read-only Display) */}
+          <div className="border-t pt-4">
+            <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-primary" />
+              Thông Tin Liên Hệ Khẩn Cấp
+            </h3>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm">
+                <User className="w-4 h-4 text-primary" />
+                <span className="text-muted-foreground">Họ Tên:</span>
+                <span className="font-medium">{employee.emergency_contact_name || "Chưa cập nhật"}</span>
+              </div>
 
-        <div className="flex items-center gap-2 text-sm">
-          <Phone className="w-4 h-4 text-primary" />
-          <span className="text-muted-foreground">Số Điện Thoại:</span>
-          <span className="font-medium">{employee.emergency_contact_phone || 'Chưa cập nhật'}</span>
-        </div>
+              <div className="flex items-center gap-2 text-sm">
+                <Phone className="w-4 h-4 text-primary" />
+                <span className="text-muted-foreground">Số Điện Thoại:</span>
+                <span className="font-medium">{employee.emergency_contact_phone || "Chưa cập nhật"}</span>
+              </div>
 
-        <div className="flex items-center gap-2 text-sm">
-          <Users className="w-4 h-4 text-primary" />
-          <span className="text-muted-foreground">Mối Quan Hệ:</span>
-          <span className="font-medium">{employee.emergency_contact_relationship || 'Chưa cập nhật'}</span>
-        </div>
-      </div>
-    </div>
+              <div className="flex items-center gap-2 text-sm">
+                <Users className="w-4 h-4 text-primary" />
+                <span className="text-muted-foreground">Mối Quan Hệ:</span>
+                <span className="font-medium">{employee.emergency_contact_relationship || "Chưa cập nhật"}</span>
+              </div>
+            </div>
+          </div>
 
-    {/* Note cuối Card */}
-    <div className="pt-4 border-t">
-      <p className="text-xs text-muted-foreground text-center">
-        💡 Để chỉnh sửa thông tin cá nhân, vui lòng sử dụng card "Thông Tin Có Thể Yêu Cầu Thay Đổi" ở bên dưới.
-      </p>
-    </div>
-  </CardContent>
-</Card>
+          {/* Note cuối Card */}
+          <div className="pt-4 border-t">
+            <p className="text-xs text-muted-foreground text-center">
+              💡 Để chỉnh sửa thông tin cá nhân, vui lòng sử dụng card "Thông Tin Có Thể Yêu Cầu Thay Đổi" ở bên dưới.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Thông Tin Có Thể Yêu Cầu Thay Đổi - Edit Mode Card */}
       <Card>
@@ -575,9 +583,7 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
             <FileText className="w-5 h-5 text-primary" />
             Thông Tin Có Thể Yêu Cầu Thay Đổi
           </CardTitle>
-          <CardDescription>
-            Gửi yêu cầu chỉnh sửa thông tin cá nhân và liên hệ khẩn cấp
-          </CardDescription>
+          <CardDescription>Gửi yêu cầu chỉnh sửa thông tin cá nhân và liên hệ khẩn cấp</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {hasPendingRequest && (
@@ -708,7 +714,7 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
                 Đang gửi...
               </>
             ) : (
-              'Gửi Yêu Cầu Thay Đổi'
+              "Gửi Yêu Cầu Thay Đổi"
             )}
           </Button>
 
