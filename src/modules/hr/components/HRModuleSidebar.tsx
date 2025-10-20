@@ -10,7 +10,8 @@ import {
   Gift, 
   FileText,
   FileCheck,
-  ChevronLeft
+  ChevronLeft,
+  Receipt
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -26,6 +27,7 @@ const hrPages = [
   { id: 'hris', path: '/ERP/HR/HRIS', label: 'Hồ Sơ Nhân Sự', icon: Users, requiredPermission: 'view_employees' },
   { id: 'time-attendance', path: '/ERP/HR/TimeAttendance', label: 'Ca Làm & Chấm Công', icon: Clock, requiredPermission: 'view_attendance' },
   { id: 'payroll', path: '/ERP/HR/Payroll', label: 'Tính Lương (3P)', icon: DollarSign, requiredPermission: 'view_payroll' },
+  { id: 'manage-payroll-slips', path: '/ERP/HR/QuanLyPhieuLuong', label: 'Quản Lý Phiếu Lương', icon: Receipt, requiredPermission: 'manage_payroll' },
   { id: 'recruitment', path: '/ERP/HR/Recruitment', label: 'Tuyển Dụng', icon: UserPlus, requiredPermission: 'view_recruitment' },
   { id: 'training', path: '/ERP/HR/Training', label: 'Đào Tạo & Năng Lực', icon: GraduationCap, requiredPermission: 'view_training' },
   { id: 'performance', path: '/ERP/HR/Performance', label: 'OKR/KPI & 360°', icon: Target, requiredPermission: 'view_performance' },

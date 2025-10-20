@@ -3,6 +3,7 @@ import { HRDashboard } from '../pages/HRDashboard';
 import { HRISPage } from '../pages/HRISPage';
 import { TimeAttendancePage } from '../pages/TimeAttendancePage';
 import { PayrollPage } from '../pages/PayrollPage';
+import { ManagePayrollSlipsPage } from '../pages/ManagePayrollSlipsPage';
 import { RecruitmentPage } from '../pages/RecruitmentPage';
 import { TrainingPage } from '../pages/TrainingPage';
 import { PerformancePage } from '../pages/PerformancePage';
@@ -50,8 +51,17 @@ export function HRRouter({ currentUser }: HRRouterProps) {
       <Route 
         path="Payroll" 
         element={
-          <ProtectedHRRoute requiredPermission="manage_payroll">
+          <ProtectedHRRoute requiredPermission="view_payroll">
             <PayrollPage />
+          </ProtectedHRRoute>
+        } 
+      />
+      
+      <Route 
+        path="QuanLyPhieuLuong" 
+        element={
+          <ProtectedHRRoute requiredPermission="manage_payroll">
+            <ManagePayrollSlipsPage />
           </ProtectedHRRoute>
         } 
       />
