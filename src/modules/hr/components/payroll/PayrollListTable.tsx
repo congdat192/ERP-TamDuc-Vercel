@@ -53,7 +53,15 @@ export function PayrollListTable() {
         .select('month, status, net_payment');
 
       if (filters.month) {
-        query = query.eq('month', `${filters.month}-01`);
+        // Lọc theo range để bao gồm toàn bộ tháng
+        const startDate = `${filters.month}-01`;
+        const nextMonth = new Date(`${filters.month}-01`);
+        nextMonth.setMonth(nextMonth.getMonth() + 1);
+        const endDate = nextMonth.toISOString().split('T')[0];
+        
+        query = query
+          .gte('month', startDate)
+          .lt('month', endDate);
       }
       if (filters.status !== 'all') {
         query = query.eq('status', filters.status);
