@@ -27,23 +27,32 @@ serve(async (req) => {
 
     console.log('[get-invoices-by-phone] Fetching invoices for phone:', phone);
 
-    // Step 1: Get OAuth token
+    // Step 1: Get OAuth token from EXTERNAL API
+    console.log('[get-invoices-by-phone] Fetching OAuth token from External API...');
+
     const tokenResponse = await fetch(
-      `${Deno.env.get('SUPABASE_URL')}/functions/v1/get-oauth-token`,
+      'https://kcirpjxbjqagrqrjfldu.supabase.co/functions/v1/get-token-supabase',
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`
-        }
+        },
+        body: JSON.stringify({
+          client_id: Deno.env.get('EXTERNAL_API_CLIENT_ID'),
+          client_secret: Deno.env.get('EXTERNAL_API_CLIENT_SECRET'),
+        }),
       }
     );
 
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text();
-      console.error('[get-invoices-by-phone] Failed to get OAuth token:', errorText);
+      console.error('[get-invoices-by-phone] Failed to get OAuth token:', tokenResponse.status, errorText);
       return new Response(
-        JSON.stringify({ error: 'Failed to get authentication token' }),
+        JSON.stringify({ 
+          error: 'Failed to get authentication token',
+          status: tokenResponse.status,
+          details: errorText
+        }),
         {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -52,9 +61,31 @@ serve(async (req) => {
     }
 
     const tokenData = await tokenResponse.json();
-    const oauthToken = tokenData.data.access_token;
 
-    console.log('[get-invoices-by-phone] OAuth token obtained, fetching invoices...');
+    // Parse response từ External API
+    let oauthToken: string;
+
+    if (tokenData.success && tokenData.data?.access_token) {
+      // Format từ External API: { success: true, data: { access_token, ... } }
+      oauthToken = tokenData.data.access_token;
+    } else if (tokenData.access_token) {
+      // Fallback cho flat format
+      oauthToken = tokenData.access_token;
+    } else {
+      console.error('[get-invoices-by-phone] Invalid token response structure:', tokenData);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid token response structure',
+          details: tokenData
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    console.log('[get-invoices-by-phone] OAuth token obtained, preview:', oauthToken.substring(0, 20) + '...');
 
     // Step 2: Fetch invoices using OAuth token
     const invoicesResponse = await fetch(

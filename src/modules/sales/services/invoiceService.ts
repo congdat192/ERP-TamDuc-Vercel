@@ -83,8 +83,10 @@ export async function fetchInvoicesByPhone(phone: string): Promise<InvoiceHistor
       return null;
     }
 
-    console.log('[invoiceService] Successfully fetched invoices:', data.data.data?.summary?.total_invoices || 0);
-    return data.data as InvoiceHistoryResponse;
+      // Backend wraps External API response thêm 1 layer
+      const actualData = data.data?.data || data.data;
+      console.log('[invoiceService] Successfully fetched invoices:', actualData?.summary?.total_invoices || 0);
+      return actualData as InvoiceHistoryResponse;
   } catch (error) {
     console.error('[invoiceService] Exception while fetching invoices:', error);
     return null;
