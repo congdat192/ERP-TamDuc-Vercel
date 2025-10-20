@@ -91,7 +91,7 @@ export class EmployeeService {
       notes: emp.notes,
       deletedAt: emp.deleted_at,
       deletedBy: emp.deleted_by,
-      isEmployeeOnly: emp.is_employee_only || false,
+      isEmployeeOnly: emp.is_employee_only ?? true,
     }));
   }
 
@@ -158,6 +158,7 @@ export class EmployeeService {
           notes: emp.notes,
           deletedAt: emp.deleted_at,
           deletedBy: emp.deleted_by,
+          isEmployeeOnly: emp.is_employee_only ?? true,
         };
       })
       .filter(Boolean) as Employee[];
@@ -223,6 +224,7 @@ export class EmployeeService {
       notes: data.notes,
       deletedAt: data.deleted_at,
       deletedBy: data.deleted_by,
+      isEmployeeOnly: data.is_employee_only ?? true,
     };
 
     // Load related data if requested
@@ -297,6 +299,7 @@ export class EmployeeService {
         salary_fulltime_official: data.salary_fulltime_official || 0,
         salary_parttime_probation: data.salary_parttime_probation || 0,
         salary_parttime_official: data.salary_parttime_official || 0,
+        is_employee_only: data.is_employee_only ?? true,
         created_by: (await supabase.auth.getUser()).data.user?.id
       });
 
@@ -335,6 +338,7 @@ export class EmployeeService {
     if (data.salary_fulltime_official !== undefined) updates.salary_fulltime_official = data.salary_fulltime_official;
     if (data.salary_parttime_probation !== undefined) updates.salary_parttime_probation = data.salary_parttime_probation;
     if (data.salary_parttime_official !== undefined) updates.salary_parttime_official = data.salary_parttime_official;
+    if (data.is_employee_only !== undefined) updates.is_employee_only = data.is_employee_only;
 
     const { error } = await supabase
       .from('employees')

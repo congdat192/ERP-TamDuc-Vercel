@@ -62,7 +62,7 @@ export function EditEmployeeModal({ employee, onSuccess }: EditEmployeeModalProp
       salary_fulltime_official: employee.salary.fulltimeOfficial || 0,
       salary_parttime_probation: employee.salary.parttimeProbation || 0,
       salary_parttime_official: employee.salary.parttimeOfficial || 0,
-      is_employee_only: employee.isEmployeeOnly || false
+      is_employee_only: employee.isEmployeeOnly ?? true
     }
   });
 
@@ -97,7 +97,7 @@ export function EditEmployeeModal({ employee, onSuccess }: EditEmployeeModalProp
         salary_fulltime_official: employee.salary.fulltimeOfficial || 0,
         salary_parttime_probation: employee.salary.parttimeProbation || 0,
         salary_parttime_official: employee.salary.parttimeOfficial || 0,
-        is_employee_only: employee.isEmployeeOnly || false
+        is_employee_only: employee.isEmployeeOnly ?? true
       });
       
       // Set avatar preview if exists
