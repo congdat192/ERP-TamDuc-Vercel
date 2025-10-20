@@ -41,6 +41,7 @@ export interface Employee {
   notes?: string;
   deletedAt?: string | null;
   deletedBy?: string | null;
+  isEmployeeOnly?: boolean; // TRUE = ESS only, FALSE = Can access ERP
   // Benefits integration
   benefits?: BenefitAssignment[];
   rewards?: Reward[];

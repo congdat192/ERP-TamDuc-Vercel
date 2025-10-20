@@ -16,6 +16,7 @@ import { Label } from '@/components/ui/label';
 import { AvatarService } from '../services/avatarService';
 import { Textarea } from '@/components/ui/textarea';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface EditEmployeeModalProps {
   employee: Employee;
@@ -60,7 +61,8 @@ export function EditEmployeeModal({ employee, onSuccess }: EditEmployeeModalProp
       salary_fulltime_probation: employee.salary.fulltimeProbation || 0,
       salary_fulltime_official: employee.salary.fulltimeOfficial || 0,
       salary_parttime_probation: employee.salary.parttimeProbation || 0,
-      salary_parttime_official: employee.salary.parttimeOfficial || 0
+      salary_parttime_official: employee.salary.parttimeOfficial || 0,
+      is_employee_only: employee.isEmployeeOnly || false
     }
   });
 
@@ -94,7 +96,8 @@ export function EditEmployeeModal({ employee, onSuccess }: EditEmployeeModalProp
         salary_fulltime_probation: employee.salary.fulltimeProbation || 0,
         salary_fulltime_official: employee.salary.fulltimeOfficial || 0,
         salary_parttime_probation: employee.salary.parttimeProbation || 0,
-        salary_parttime_official: employee.salary.parttimeOfficial || 0
+        salary_parttime_official: employee.salary.parttimeOfficial || 0,
+        is_employee_only: employee.isEmployeeOnly || false
       });
       
       // Set avatar preview if exists
@@ -688,6 +691,35 @@ export function EditEmployeeModal({ employee, onSuccess }: EditEmployeeModalProp
                 💡 <strong>Ghi chú:</strong> Các mức lương này áp dụng khi nhân viên ở loại hợp đồng tương ứng. 
                 "Lương Cơ Bản" ở trên là mức lương hiện tại đang áp dụng.
               </p>
+            </div>
+
+            {/* Access Control Section */}
+            <div className="col-span-2 border-t pt-4">
+              <h3 className="text-lg font-semibold mb-4">Phân Quyền Truy Cập</h3>
+              
+              <FormField
+                control={form.control}
+                name="is_employee_only"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel className="text-base font-medium">
+                        🔒 Chỉ Truy Cập ESS (Employee Self-Service)
+                      </FormLabel>
+                      <p className="text-sm text-muted-foreground">
+                        Nếu được chọn, nhân viên này chỉ có thể xem hồ sơ cá nhân và không thể truy cập khu vực quản trị ERP.
+                        Thích hợp cho nhân viên thường không cần quyền quản lý.
+                      </p>
+                    </div>
+                  </FormItem>
+                )}
+              />
             </div>
 
             <DialogFooter className="sm:justify-between">

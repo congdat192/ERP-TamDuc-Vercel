@@ -691,6 +691,7 @@ export type Database = {
           full_name: string
           gender: string | null
           id: string
+          is_employee_only: boolean | null
           join_date: string
           kpi_score: number | null
           last_review_date: string | null
@@ -733,6 +734,7 @@ export type Database = {
           full_name: string
           gender?: string | null
           id?: string
+          is_employee_only?: boolean | null
           join_date: string
           kpi_score?: number | null
           last_review_date?: string | null
@@ -775,6 +777,7 @@ export type Database = {
           full_name?: string
           gender?: string | null
           id?: string
+          is_employee_only?: boolean | null
           join_date?: string
           kpi_score?: number | null
           last_review_date?: string | null

@@ -91,6 +91,7 @@ export class EmployeeService {
       notes: emp.notes,
       deletedAt: emp.deleted_at,
       deletedBy: emp.deleted_by,
+      isEmployeeOnly: emp.is_employee_only || false,
     }));
   }
 

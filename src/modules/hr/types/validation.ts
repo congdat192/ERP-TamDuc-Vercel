@@ -138,7 +138,10 @@ export const employeeSchema = z.object({
 
   salary_parttime_official: z.number()
     .min(0, 'Lương không được âm')
-    .optional()
+    .optional(),
+
+  is_employee_only: z.boolean().optional()
+    .describe('Chỉ truy cập ESS (không truy cập được ERP)')
 });
 
 export type EmployeeFormData = z.infer<typeof employeeSchema>;

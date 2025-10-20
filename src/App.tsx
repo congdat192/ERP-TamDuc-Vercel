@@ -8,8 +8,10 @@ import { AuthProvider } from "@/components/auth/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ThemeSystem } from "@/components/theme/ThemeSystem";
 import { ForceChangePasswordDialog } from "@/components/auth/ForceChangePasswordDialog";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { useAuth } from "@/components/auth/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { ForbiddenPage, ServerErrorPage, NetworkErrorPage } from "./pages/ErrorPages";
@@ -54,9 +56,50 @@ const queryClient = new QueryClient({
 const ProtectedERPRoute = ({ children, module }: { children: React.ReactNode; module: string }) => {
   const { currentUser, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const [isEmployeeOnly, setIsEmployeeOnly] = React.useState<boolean | null>(null);
+  const [isCheckingAccess, setIsCheckingAccess] = React.useState(true);
+  const { toast } = useToast();
 
   console.log('🔐 [ProtectedERPRoute] Checking access for module:', module);
   console.log('🔐 [ProtectedERPRoute] User authenticated:', isAuthenticated);
+
+  // Check if user is employee-only on mount
+  React.useEffect(() => {
+    const checkEmployeeAccess = async () => {
+      if (currentUser) {
+        try {
+          const { data: employee } = await supabase
+            .from('employees')
+            .select('is_employee_only')
+            .eq('user_id', currentUser.id)
+            .maybeSingle();
+          
+          const isEmpOnly = employee?.is_employee_only === true;
+          setIsEmployeeOnly(isEmpOnly);
+          
+          // If employee-only, block access to ERP and redirect
+          if (isEmpOnly) {
+            console.log('🚫 [ProtectedERPRoute] Employee-only user blocked from ERP');
+            toast({
+              title: "Truy cập bị từ chối",
+              description: "Bạn không có quyền truy cập khu vực quản trị. Vui lòng sử dụng trang Hồ Sơ Cá Nhân.",
+              variant: "destructive",
+            });
+            navigate('/my-profile', { replace: true });
+          }
+        } catch (error) {
+          console.error('❌ [ProtectedERPRoute] Error checking employee access:', error);
+          setIsEmployeeOnly(false);
+        } finally {
+          setIsCheckingAccess(false);
+        }
+      } else {
+        setIsCheckingAccess(false);
+      }
+    };
+    
+    checkEmployeeAccess();
+  }, [currentUser, navigate, toast]);
 
   const handleModuleChange = (newModule: string) => {
     switch (newModule) {
@@ -96,6 +139,23 @@ const ProtectedERPRoute = ({ children, module }: { children: React.ReactNode; mo
   if (!isAuthenticated || !currentUser) {
     console.log('❌ [ProtectedERPRoute] Not authenticated, redirecting to login');
     return <Navigate to="/login" replace />;
+  }
+
+  // Show loading while checking employee access
+  if (isCheckingAccess) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Đang kiểm tra quyền truy cập...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Block employee-only users
+  if (isEmployeeOnly === true) {
+    return null;
   }
 
   return (
