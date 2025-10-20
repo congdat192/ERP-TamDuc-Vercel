@@ -18,16 +18,14 @@ interface OAuthTokenResponse {
 async function getOAuthToken(): Promise<string> {
   console.log('[claim-voucher] Fetching OAuth token...');
   
-  const response = await fetch(`${EXTERNAL_API_BASE}/oauth-token`, {
+  const response = await fetch(`${EXTERNAL_API_BASE}/get-token-supabase`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${EXTERNAL_API_KEY}`
+      'Content-Type': 'application/json'
     },
     body: JSON.stringify({
       client_id: Deno.env.get('EXTERNAL_API_CLIENT_ID'),
-      client_secret: Deno.env.get('EXTERNAL_API_CLIENT_SECRET'),
-      grant_type: 'client_credentials'
+      client_secret: Deno.env.get('EXTERNAL_API_CLIENT_SECRET')
     })
   });
 
@@ -36,9 +34,17 @@ async function getOAuthToken(): Promise<string> {
     throw new Error(`Failed to get OAuth token: ${response.status} - ${errorText}`);
   }
 
-  const data: OAuthTokenResponse = await response.json();
+  const data = await response.json();
   console.log('[claim-voucher] OAuth token fetched successfully');
-  return data.access_token;
+  
+  // Handle response format: { success: true, data: { access_token, ... } }
+  if (data.success && data.data?.access_token) {
+    return data.data.access_token;
+  } else if (data.access_token) {
+    return data.access_token;
+  } else {
+    throw new Error('Invalid token response structure');
+  }
 }
 
 serve(async (req) => {

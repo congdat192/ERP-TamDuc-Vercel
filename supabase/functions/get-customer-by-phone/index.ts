@@ -22,13 +22,16 @@ serve(async (req) => {
 
     console.log("[get-customer-by-phone] Fetching customer for phone:", phone);
 
-    // Step 1: Get OAuth token
-    const tokenResponse = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/get-oauth-token`, {
+    // Step 1: Get OAuth token from External API
+    const tokenResponse = await fetch('https://kcirpjxbjqagrqrjfldu.supabase.co/functions/v1/get-token-supabase', {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
       },
+      body: JSON.stringify({
+        client_id: Deno.env.get("EXTERNAL_API_CLIENT_ID"),
+        client_secret: Deno.env.get("EXTERNAL_API_CLIENT_SECRET"),
+      }),
     });
 
     if (!tokenResponse.ok) {
@@ -42,16 +45,18 @@ serve(async (req) => {
 
     const tokenData = await tokenResponse.json();
 
-    // Parse đúng cấu trúc response
+    // Parse response from External API
     let oauthToken: string;
 
-    if (tokenData.data && tokenData.data.access_token) {
+    if (tokenData.success && tokenData.data?.access_token) {
+      // Format from External API: { success: true, data: { access_token, ... } }
       oauthToken = tokenData.data.access_token;
     } else if (tokenData.access_token) {
+      // Fallback for flat format: { access_token, token_type, expires_in }
       oauthToken = tokenData.access_token;
     } else {
       console.error("[get-customer-by-phone] Invalid token response structure:", tokenData);
-      return new Response(JSON.stringify({ error: "Invalid token response structure" }), {
+      return new Response(JSON.stringify({ error: "Invalid token response structure", details: tokenData }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

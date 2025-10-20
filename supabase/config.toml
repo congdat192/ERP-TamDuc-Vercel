@@ -1,8 +1,5 @@
 project_id = "dtdtwhrqvkrymtyqbatn"
 
-[functions.get-oauth-token]
-verify_jwt = false
-
 [functions.get-invoices-by-phone]
 verify_jwt = false
 
