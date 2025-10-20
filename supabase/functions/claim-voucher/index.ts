@@ -6,7 +6,7 @@ const corsHeaders = {
 };
 
 const EXTERNAL_API_BASE = 'https://kcirpjxbjqagrqrjfldu.supabase.co/functions/v1';
-const EXTERNAL_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtjaXJwanhianFhZ3JxcmpmbGR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc0MTI3NjgsImV4cCI6MjA3Mjk4ODc2OH0.GXxO7aPgF00WOkQ96z2J1P3K3BluPfBcais3h8qLr1I';
+const EXTERNAL_API_KEY = Deno.env.get('EXTERNAL_API_KEY');
 
 interface OAuthTokenResponse {
   access_token: string;
@@ -25,8 +25,8 @@ async function getOAuthToken(): Promise<string> {
       'Authorization': `Bearer ${EXTERNAL_API_KEY}`
     },
     body: JSON.stringify({
-      client_id: 'mk_tamduc',
-      client_secret: 'Tamduc@123',
+      client_id: Deno.env.get('EXTERNAL_API_CLIENT_ID'),
+      client_secret: Deno.env.get('EXTERNAL_API_CLIENT_SECRET'),
       grant_type: 'client_credentials'
     })
   });
@@ -48,6 +48,24 @@ serve(async (req) => {
   }
 
   try {
+    // Validate required secrets
+    const externalApiKey = Deno.env.get('EXTERNAL_API_KEY');
+    const clientId = Deno.env.get('EXTERNAL_API_CLIENT_ID');
+    const clientSecret = Deno.env.get('EXTERNAL_API_CLIENT_SECRET');
+
+    if (!externalApiKey || !clientId || !clientSecret) {
+      console.error('[claim-voucher] Missing required secrets');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Server configuration error',
+          message: 'Missing external API credentials'
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
     if (req.method !== 'POST') {
       return new Response(
         JSON.stringify({ error: 'Method not allowed' }),

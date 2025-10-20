@@ -20,6 +20,25 @@ serve(async (req) => {
   }
 
   try {
+    // Validate required secrets
+    const externalApiKey = Deno.env.get('EXTERNAL_API_KEY');
+    const clientId = Deno.env.get('EXTERNAL_API_CLIENT_ID');
+    const clientSecret = Deno.env.get('EXTERNAL_API_CLIENT_SECRET');
+
+    if (!externalApiKey || !clientId || !clientSecret) {
+      console.error('[get-oauth-token] Missing required secrets');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Server configuration error',
+          message: 'Missing external API credentials'
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
     console.log('[get-oauth-token] Fetching OAuth token...');
 
     const response = await fetch(
@@ -28,11 +47,11 @@ serve(async (req) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtjaXJwanhianFhZ3JxcmpmbGR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc0MTI3NjgsImV4cCI6MjA3Mjk4ODc2OH0.GXxO7aPgF00WOkQ96z2J1P3K3BluPfBcais3h8qLr1I'
+          'Authorization': `Bearer ${Deno.env.get('EXTERNAL_API_KEY')}`
         },
         body: JSON.stringify({
-          client_id: 'mk_tamduc',
-          client_secret: 'Tamduc@123',
+          client_id: Deno.env.get('EXTERNAL_API_CLIENT_ID'),
+          client_secret: Deno.env.get('EXTERNAL_API_CLIENT_SECRET'),
           grant_type: 'client_credentials'
         })
       }
