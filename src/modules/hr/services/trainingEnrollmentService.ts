@@ -42,7 +42,7 @@ export class TrainingEnrollmentService {
     console.log('🔍 [TrainingEnrollmentService] Fetching enrollments', filters);
 
     let query = supabase
-      .from('training_enrollments')
+      .from('training_enrollments' as any)
       .select(`
         *,
         employees(full_name, employee_code, email, department, position),
@@ -63,18 +63,18 @@ export class TrainingEnrollmentService {
     }
 
     console.log('✅ [TrainingEnrollmentService] Enrollments loaded:', data?.length);
-    return data || [];
+    return (data || []) as TrainingEnrollment[];
   }
 
   static async createEnrollment(enrollmentData: CreateEnrollmentData): Promise<TrainingEnrollment> {
     console.log('🔍 [TrainingEnrollmentService] Creating enrollment');
 
     const { data, error } = await supabase
-      .from('training_enrollments')
+      .from('training_enrollments' as any)
       .insert({
         ...enrollmentData,
         status: 'enrolled'
-      })
+      } as any)
       .select()
       .single();
 
@@ -89,19 +89,19 @@ export class TrainingEnrollmentService {
     await this.updateSessionParticipantCount(enrollmentData.session_id);
 
     console.log('✅ [TrainingEnrollmentService] Enrollment created:', data.id);
-    return data;
+    return data as TrainingEnrollment;
   }
 
   static async bulkCreateEnrollments(enrollments: CreateEnrollmentData[]): Promise<void> {
     console.log('🔍 [TrainingEnrollmentService] Bulk creating enrollments:', enrollments.length);
 
     const { error } = await supabase
-      .from('training_enrollments')
+      .from('training_enrollments' as any)
       .insert(
         enrollments.map(e => ({
           ...e,
           status: 'enrolled'
-        }))
+        })) as any
       );
 
     if (error) {
@@ -122,8 +122,8 @@ export class TrainingEnrollmentService {
     console.log('🔍 [TrainingEnrollmentService] Updating enrollment scores:', enrollmentId);
 
     const { data, error } = await supabase
-      .from('training_enrollments')
-      .update(scores)
+      .from('training_enrollments' as any)
+      .update(scores as any)
       .eq('id', enrollmentId)
       .select()
       .single();
@@ -135,7 +135,7 @@ export class TrainingEnrollmentService {
     }
 
     console.log('✅ [TrainingEnrollmentService] Enrollment scores updated');
-    return data;
+    return data as TrainingEnrollment;
   }
 
   static async completeEnrollment(enrollmentId: string, finalScore: number, certificateUrl?: string): Promise<TrainingEnrollment> {
@@ -144,13 +144,13 @@ export class TrainingEnrollmentService {
     const status = finalScore >= 70 ? 'completed' : 'failed';
 
     const { data, error } = await supabase
-      .from('training_enrollments')
+      .from('training_enrollments' as any)
       .update({
         final_score: finalScore,
         status,
         completion_date: new Date().toISOString(),
         certificate_url: certificateUrl
-      })
+      } as any)
       .eq('id', enrollmentId)
       .select()
       .single();
@@ -161,7 +161,7 @@ export class TrainingEnrollmentService {
     }
 
     console.log('✅ [TrainingEnrollmentService] Enrollment completed');
-    return data;
+    return data as TrainingEnrollment;
   }
 
   static async deleteEnrollment(enrollmentId: string): Promise<void> {
@@ -169,13 +169,13 @@ export class TrainingEnrollmentService {
 
     // Get session_id before delete
     const { data: enrollment } = await supabase
-      .from('training_enrollments')
+      .from('training_enrollments' as any)
       .select('session_id')
       .eq('id', enrollmentId)
-      .single();
+      .maybeSingle();
 
     const { error } = await supabase
-      .from('training_enrollments')
+      .from('training_enrollments' as any)
       .delete()
       .eq('id', enrollmentId);
 
@@ -195,13 +195,13 @@ export class TrainingEnrollmentService {
 
   private static async updateSessionParticipantCount(sessionId: string): Promise<void> {
     const { count } = await supabase
-      .from('training_enrollments')
+      .from('training_enrollments' as any)
       .select('id', { count: 'exact', head: true })
       .eq('session_id', sessionId);
 
     await supabase
-      .from('training_sessions')
-      .update({ current_participants: count || 0 })
+      .from('training_sessions' as any)
+      .update({ current_participants: count || 0 } as any)
       .eq('id', sessionId);
   }
 }

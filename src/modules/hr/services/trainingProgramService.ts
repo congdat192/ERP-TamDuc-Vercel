@@ -40,7 +40,7 @@ export class TrainingProgramService {
     console.log('🔍 [TrainingProgramService] Fetching programs');
 
     const { data, error } = await supabase
-      .from('training_programs')
+      .from('training_programs' as any)
       .select('*')
       .order('created_at', { ascending: false });
 
@@ -50,24 +50,28 @@ export class TrainingProgramService {
     }
 
     console.log('✅ [TrainingProgramService] Programs loaded:', data?.length);
-    return data || [];
+    return (data || []) as unknown as TrainingProgram[];
   }
 
   static async getProgramById(programId: string): Promise<TrainingProgram> {
     console.log('🔍 [TrainingProgramService] Fetching program:', programId);
 
     const { data, error } = await supabase
-      .from('training_programs')
+      .from('training_programs' as any)
       .select('*')
       .eq('id', programId)
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('❌ [TrainingProgramService] Error:', error);
       throw new Error(`Không thể tải chương trình: ${error.message}`);
     }
 
-    return data;
+    if (!data) {
+      throw new Error('Không tìm thấy chương trình');
+    }
+
+    return data as unknown as TrainingProgram;
   }
 
   static async createProgram(programData: CreateProgramData): Promise<TrainingProgram> {
@@ -77,12 +81,12 @@ export class TrainingProgramService {
     if (!user) throw new Error('Chưa đăng nhập');
 
     const { data, error } = await supabase
-      .from('training_programs')
+      .from('training_programs' as any)
       .insert({
         ...programData,
         created_by: user.id,
         status: 'draft'
-      })
+      } as any)
       .select()
       .single();
 
@@ -93,15 +97,15 @@ export class TrainingProgramService {
     }
 
     console.log('✅ [TrainingProgramService] Program created:', data.id);
-    return data;
+    return data as unknown as TrainingProgram;
   }
 
   static async updateProgram(programId: string, updates: Partial<CreateProgramData>): Promise<TrainingProgram> {
     console.log('🔍 [TrainingProgramService] Updating program:', programId);
 
     const { data, error } = await supabase
-      .from('training_programs')
-      .update(updates)
+      .from('training_programs' as any)
+      .update(updates as any)
       .eq('id', programId)
       .select()
       .single();
@@ -113,14 +117,14 @@ export class TrainingProgramService {
     }
 
     console.log('✅ [TrainingProgramService] Program updated');
-    return data;
+    return data as unknown as TrainingProgram;
   }
 
   static async deleteProgram(programId: string): Promise<void> {
     console.log('🔍 [TrainingProgramService] Deleting program:', programId);
 
     const { error } = await supabase
-      .from('training_programs')
+      .from('training_programs' as any)
       .delete()
       .eq('id', programId);
 
@@ -138,8 +142,8 @@ export class TrainingProgramService {
     console.log('🔍 [TrainingProgramService] Updating program status:', programId, status);
 
     const { error } = await supabase
-      .from('training_programs')
-      .update({ status })
+      .from('training_programs' as any)
+      .update({ status } as any)
       .eq('id', programId);
 
     if (error) {

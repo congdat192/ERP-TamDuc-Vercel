@@ -39,7 +39,7 @@ export class CompetencyService {
     console.log('🔍 [CompetencyService] Fetching competency levels');
 
     const { data, error } = await supabase
-      .from('training_competency_levels')
+      .from('training_competency_levels' as any)
       .select('*')
       .order('level', { ascending: true });
 
@@ -48,14 +48,14 @@ export class CompetencyService {
       throw new Error(`Không thể tải danh sách level: ${error.message}`);
     }
 
-    return data || [];
+    return (data || []) as CompetencyLevel[];
   }
 
   static async getEmployeeCompetencies(employeeId: string): Promise<Competency[]> {
     console.log('🔍 [CompetencyService] Fetching competencies for employee:', employeeId);
 
     const { data, error } = await supabase
-      .from('training_competencies')
+      .from('training_competencies' as any)
       .select('*')
       .eq('employee_id', employeeId)
       .order('competency_name', { ascending: true });
@@ -65,19 +65,19 @@ export class CompetencyService {
       throw new Error(`Không thể tải năng lực: ${error.message}`);
     }
 
-    return data || [];
+    return (data || []) as Competency[];
   }
 
   static async upsertCompetency(competency: Omit<Competency, 'id' | 'created_at' | 'updated_at'>): Promise<Competency> {
     console.log('🔍 [CompetencyService] Upserting competency:', competency.competency_name);
 
     const { data, error } = await supabase
-      .from('training_competencies')
+      .from('training_competencies' as any)
       .upsert(
         {
           ...competency,
           assessment_date: competency.assessment_date || new Date().toISOString()
-        },
+        } as any,
         {
           onConflict: 'employee_id,competency_name'
         }
@@ -91,14 +91,14 @@ export class CompetencyService {
     }
 
     console.log('✅ [CompetencyService] Competency upserted');
-    return data;
+    return data as Competency;
   }
 
   static async getRecommendations(employeeId: string): Promise<CourseRecommendation[]> {
     console.log('🔍 [CompetencyService] Fetching recommendations for employee:', employeeId);
 
     const { data, error } = await supabase
-      .from('training_course_recommendations')
+      .from('training_course_recommendations' as any)
       .select(`
         *,
         training_programs(
@@ -119,15 +119,15 @@ export class CompetencyService {
       throw new Error(`Không thể tải gợi ý khóa học: ${error.message}`);
     }
 
-    return data || [];
+    return (data || []) as CourseRecommendation[];
   }
 
   static async dismissRecommendation(recommendationId: string): Promise<void> {
     console.log('🔍 [CompetencyService] Dismissing recommendation:', recommendationId);
 
     const { error } = await supabase
-      .from('training_course_recommendations')
-      .update({ status: 'dismissed' })
+      .from('training_course_recommendations' as any)
+      .update({ status: 'dismissed' } as any)
       .eq('id', recommendationId);
 
     if (error) {
@@ -142,8 +142,8 @@ export class CompetencyService {
     console.log('🔍 [CompetencyService] Marking recommendation as enrolled:', recommendationId);
 
     const { error } = await supabase
-      .from('training_course_recommendations')
-      .update({ status: 'enrolled' })
+      .from('training_course_recommendations' as any)
+      .update({ status: 'enrolled' } as any)
       .eq('id', recommendationId);
 
     if (error) {
@@ -158,7 +158,7 @@ export class CompetencyService {
     console.log('🔍 [CompetencyService] Fetching competency matrix');
 
     const { data, error } = await supabase
-      .from('training_competencies')
+      .from('training_competencies' as any)
       .select(`
         *,
         employees(full_name, employee_code, department, position)
