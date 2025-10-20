@@ -256,6 +256,12 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
       {/* Summary Card - Thông Tin Tổng Quan */}
       <Card className="bg-gradient-to-br from-primary/5 via-background to-primary/5 border-primary/20">
         <CardContent>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="w-5 h-5 text-primary" />
+              Thông Tin Nhân Viên
+            </CardTitle>
+          </CardHeader>
           <div className="flex flex-col md:flex-row gap-6">
             {/* Avatar Section */}
             <div className="flex flex-col items-center md:items-start gap-3">
