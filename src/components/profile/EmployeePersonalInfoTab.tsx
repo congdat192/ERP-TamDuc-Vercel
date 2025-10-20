@@ -385,9 +385,9 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
               <FileText className="w-5 h-5 text-primary" />
               Thông Tin Cơ Bản
             </CardTitle>
-            <CardDescription>
-              Thông tin hợp đồng, trạng thái, lương và các thông tin cá nhân
-            </CardDescription>
+      <CardDescription>
+        Tổng hợp toàn bộ thông tin cá nhân của nhân viên
+      </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* SECTION 1: Loại Hợp Đồng & Trạng Thái */}
@@ -506,146 +506,223 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
               </div>
             )}
 
-            {/* SECTION 3: Thông Tin Cá Nhân (Editable) */}
-            <div className="border-t pt-4">
-              <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
-                <User className="w-5 h-5 text-primary" />
-                Thông Tin Cá Nhân
-              </h3>
-              
-              {hasPendingRequest && (
-                <Alert variant="default" className="mb-4">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    Bạn có yêu cầu đang chờ duyệt. Không thể chỉnh sửa cho đến khi yêu cầu được xử lý.
-                  </AlertDescription>
-                </Alert>
-              )}
+    {/* SECTION 3: Thông Tin Cá Nhân (Read-only Display) */}
+    <div className="border-t pt-4">
+      <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
+        <User className="w-5 h-5 text-primary" />
+        Thông Tin Cá Nhân
+      </h3>
+      <div className="space-y-2">
+        <div className="flex items-center gap-2 text-sm">
+          <Phone className="w-4 h-4 text-primary" />
+          <span className="text-muted-foreground">Số Điện Thoại:</span>
+          <span className="font-medium">{employee.phone || 'Chưa cập nhật'}</span>
+        </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-muted-foreground flex items-center gap-2">
-                    <Phone className="w-4 h-4" />
-                    Số Điện Thoại
-                  </Label>
-                  <Input
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="0901234567"
-                    disabled={hasPendingRequest}
-                    className="focus-visible:ring-primary"
-                  />
-                </div>
+        <div className="flex items-center gap-2 text-sm">
+          <Calendar className="w-4 h-4 text-primary" />
+          <span className="text-muted-foreground">Ngày Sinh:</span>
+          <span className="font-medium">
+            {employee.birth_date ? format(new Date(employee.birth_date), 'dd/MM/yyyy') : 'Chưa cập nhật'}
+          </span>
+        </div>
 
-                <div>
-                  <Label className="text-muted-foreground flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    Ngày Sinh
-                  </Label>
-                  <Input
-                    type="date"
-                    value={formData.birth_date}
-                    onChange={(e) => setFormData({ ...formData, birth_date: e.target.value })}
-                    disabled={hasPendingRequest}
-                    className="focus-visible:ring-primary"
-                  />
-                </div>
-              </div>
+        <div className="flex items-center gap-2 text-sm">
+          <MapPin className="w-4 h-4 text-primary" />
+          <span className="text-muted-foreground">Địa Chỉ Hiện Tại:</span>
+          <span className="font-medium">{employee.current_address || 'Chưa cập nhật'}</span>
+        </div>
+      </div>
+    </div>
 
-              <div className="mt-4">
+    {/* SECTION 4: Thông Tin Liên Hệ Khẩn Cấp (Read-only Display) */}
+    <div className="border-t pt-4">
+      <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
+        <AlertCircle className="w-5 h-5 text-primary" />
+        Thông Tin Liên Hệ Khẩn Cấp
+      </h3>
+      <div className="space-y-2">
+        <div className="flex items-center gap-2 text-sm">
+          <User className="w-4 h-4 text-primary" />
+          <span className="text-muted-foreground">Họ Tên:</span>
+          <span className="font-medium">{employee.emergency_contact_name || 'Chưa cập nhật'}</span>
+        </div>
+
+        <div className="flex items-center gap-2 text-sm">
+          <Phone className="w-4 h-4 text-primary" />
+          <span className="text-muted-foreground">Số Điện Thoại:</span>
+          <span className="font-medium">{employee.emergency_contact_phone || 'Chưa cập nhật'}</span>
+        </div>
+
+        <div className="flex items-center gap-2 text-sm">
+          <Users className="w-4 h-4 text-primary" />
+          <span className="text-muted-foreground">Mối Quan Hệ:</span>
+          <span className="font-medium">{employee.emergency_contact_relationship || 'Chưa cập nhật'}</span>
+        </div>
+      </div>
+    </div>
+
+    {/* Note cuối Card */}
+    <div className="pt-4 border-t">
+      <p className="text-xs text-muted-foreground text-center">
+        💡 Để chỉnh sửa thông tin cá nhân, vui lòng sử dụng card "Thông Tin Có Thể Yêu Cầu Thay Đổi" ở bên dưới.
+      </p>
+    </div>
+  </CardContent>
+</Card>
+
+      {/* Thông Tin Có Thể Yêu Cầu Thay Đổi - Edit Mode Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="w-5 h-5 text-primary" />
+            Thông Tin Có Thể Yêu Cầu Thay Đổi
+          </CardTitle>
+          <CardDescription>
+            Gửi yêu cầu chỉnh sửa thông tin cá nhân và liên hệ khẩn cấp
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {hasPendingRequest && (
+            <Alert variant="default" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Bạn có yêu cầu đang chờ duyệt. Không thể chỉnh sửa cho đến khi yêu cầu được xử lý.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Thông Tin Cá Nhân - Editable */}
+          <div>
+            <h3 className="text-base font-semibold mb-3 flex items-center gap-2">
+              <User className="w-4 h-4 text-primary" />
+              Thông Tin Cá Nhân
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
                 <Label className="text-muted-foreground flex items-center gap-2">
-                  <MapPin className="w-4 h-4" />
-                  Địa Chỉ Hiện Tại
+                  <Phone className="w-4 h-4" />
+                  Số Điện Thoại
                 </Label>
                 <Input
-                  value={formData.current_address}
-                  onChange={(e) => setFormData({ ...formData, current_address: e.target.value })}
-                  placeholder="123 Đường ABC, Quận XYZ..."
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="0901234567"
                   disabled={hasPendingRequest}
                   className="focus-visible:ring-primary"
                 />
               </div>
-            </div>
-
-            {/* SECTION 4: Thông Tin Liên Hệ Khẩn Cấp */}
-            <div className="border-t pt-4">
-              <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-primary" />
-                Thông Tin Liên Hệ Khẩn Cấp
-              </h3>
 
               <div>
                 <Label className="text-muted-foreground flex items-center gap-2">
-                  <User className="w-4 h-4" />
-                  Họ Tên
+                  <Calendar className="w-4 h-4" />
+                  Ngày Sinh
                 </Label>
                 <Input
-                  value={formData.emergency_contact_name}
-                  onChange={(e) => setFormData({ ...formData, emergency_contact_name: e.target.value })}
-                  placeholder="Nguyễn Văn A"
+                  type="date"
+                  value={formData.birth_date}
+                  onChange={(e) => setFormData({ ...formData, birth_date: e.target.value })}
+                  disabled={hasPendingRequest}
+                  className="focus-visible:ring-primary"
+                />
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <Label className="text-muted-foreground flex items-center gap-2">
+                <MapPin className="w-4 h-4" />
+                Địa Chỉ Hiện Tại
+              </Label>
+              <Input
+                value={formData.current_address}
+                onChange={(e) => setFormData({ ...formData, current_address: e.target.value })}
+                placeholder="123 Đường ABC, Quận XYZ..."
+                disabled={hasPendingRequest}
+                className="focus-visible:ring-primary"
+              />
+            </div>
+          </div>
+
+          {/* Thông Tin Liên Hệ Khẩn Cấp - Editable */}
+          <div className="border-t pt-4">
+            <h3 className="text-base font-semibold mb-3 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-primary" />
+              Thông Tin Liên Hệ Khẩn Cấp
+            </h3>
+
+            <div>
+              <Label className="text-muted-foreground flex items-center gap-2">
+                <User className="w-4 h-4" />
+                Họ Tên
+              </Label>
+              <Input
+                value={formData.emergency_contact_name}
+                onChange={(e) => setFormData({ ...formData, emergency_contact_name: e.target.value })}
+                placeholder="Nguyễn Văn A"
+                disabled={hasPendingRequest}
+                className="focus-visible:ring-primary"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div>
+                <Label className="text-muted-foreground flex items-center gap-2">
+                  <Phone className="w-4 h-4" />
+                  Số Điện Thoại
+                </Label>
+                <Input
+                  type="tel"
+                  value={formData.emergency_contact_phone}
+                  onChange={(e) => setFormData({ ...formData, emergency_contact_phone: e.target.value })}
+                  placeholder="0901234567"
                   disabled={hasPendingRequest}
                   className="focus-visible:ring-primary"
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <div>
-                  <Label className="text-muted-foreground flex items-center gap-2">
-                    <Phone className="w-4 h-4" />
-                    Số Điện Thoại
-                  </Label>
-                  <Input
-                    type="tel"
-                    value={formData.emergency_contact_phone}
-                    onChange={(e) => setFormData({ ...formData, emergency_contact_phone: e.target.value })}
-                    placeholder="0901234567"
-                    disabled={hasPendingRequest}
-                    className="focus-visible:ring-primary"
-                  />
-                </div>
-
-                <div>
-                  <Label className="text-muted-foreground flex items-center gap-2">
-                    <Users className="w-4 h-4" />
-                    Mối Quan Hệ
-                  </Label>
-                  <Input
-                    value={formData.emergency_contact_relationship}
-                    onChange={(e) => setFormData({ ...formData, emergency_contact_relationship: e.target.value })}
-                    placeholder="VD: Bố/Mẹ/Anh/Chị"
-                    disabled={hasPendingRequest}
-                    className="focus-visible:ring-primary"
-                  />
-                </div>
+              <div>
+                <Label className="text-muted-foreground flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  Mối Quan Hệ
+                </Label>
+                <Input
+                  value={formData.emergency_contact_relationship}
+                  onChange={(e) => setFormData({ ...formData, emergency_contact_relationship: e.target.value })}
+                  placeholder="VD: Bố/Mẹ/Anh/Chị"
+                  disabled={hasPendingRequest}
+                  className="focus-visible:ring-primary"
+                />
               </div>
             </div>
+          </div>
 
-            {/* Submit Button */}
-            <Button
-              onClick={handleSubmitChangeRequest}
-              disabled={hasPendingRequest || isSubmitting}
-              className="w-full"
-              size="lg"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Đang gửi...
-                </>
-              ) : (
-                'Gửi Yêu Cầu Thay Đổi'
-              )}
-            </Button>
+          {/* Submit Button */}
+          <Button
+            onClick={handleSubmitChangeRequest}
+            disabled={hasPendingRequest || isSubmitting}
+            className="w-full"
+            size="lg"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Đang gửi...
+              </>
+            ) : (
+              'Gửi Yêu Cầu Thay Đổi'
+            )}
+          </Button>
 
-            {/* Note nhỏ ở dưới */}
-            <div className="pt-4 border-t">
-              <p className="text-xs text-muted-foreground text-center">
-                💡 Thông tin hợp đồng và lương do HR quản lý. Thông tin cá nhân có thể yêu cầu thay đổi.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+          {/* Note */}
+          <div className="pt-4 border-t">
+            <p className="text-xs text-muted-foreground text-center">
+              📝 Yêu cầu của bạn sẽ được gửi đến HR để xem xét và phê duyệt.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
