@@ -1,8 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { Resend } from 'https://esm.sh/resend@2.0.0';
-
-const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
+import { sendEmail } from '../_shared/email-service.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -71,9 +69,8 @@ serve(async (req: Request) => {
       }).format(payroll.net_payment);
 
       try {
-        await resend.emails.send({
-          from: 'HR Department <hr@dangphuocquan.cloud>',
-          to: [employeeEmail],
+        const emailResult = await sendEmail({
+          to: employeeEmail,
           subject: `📊 Phiếu Lương Tháng ${monthFormatted}`,
           html: `
             <!DOCTYPE html>
@@ -133,7 +130,19 @@ serve(async (req: Request) => {
             </body>
             </html>
           `,
+          emailType: 'payroll',
+          metadata: {
+            payroll_id: payroll.id,
+            employee_id: payroll.employee_id,
+            employee_code: payroll.employee_code,
+            month: payroll.month,
+            net_payment: payroll.net_payment
+          }
         });
+
+        if (!emailResult.success) {
+          throw new Error(emailResult.error || 'Failed to send email');
+        }
 
         console.log(`✅ Email sent to ${employeeEmail}: ${monthFormatted} - ${netPaymentFormatted}`);
         

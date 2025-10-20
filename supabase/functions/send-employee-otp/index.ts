@@ -1,7 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.74.0';
-import { Resend } from 'https://esm.sh/resend@4.0.0';
-
-const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
+import { sendEmail } from '../_shared/email-service.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -174,13 +172,19 @@ Deno.serve(async (req) => {
     console.log('📧 Queuing OTP email for sending...');
     
     // Fire-and-forget email sending
-    resend.emails.send({
-      from: 'ERP System <noreply@dangphuocquan.cloud>',
-      to: [emailLower],
+    sendEmail({
+      to: emailLower,
       subject: `Mã OTP đăng nhập: ${otpCode} - Tam Duc ERP`,
-      html: emailHtml
-    }).then(() => {
-      console.log(`✅ OTP email sent successfully to ${emailLower}`);
+      html: emailHtml,
+      emailType: 'otp',
+      metadata: {
+        employee_id: employee.id,
+        employee_code: employee.employee_code,
+        otp_code: otpCode,
+        expires_at: expiresAt.toISOString()
+      }
+    }).then((result) => {
+      console.log(`✅ OTP email sent successfully to ${emailLower}:`, result);
     }).catch((emailError) => {
       console.error('⚠️ Email sending failed (non-blocking):', emailError);
       // Don't throw error - email failure shouldn't block OTP flow

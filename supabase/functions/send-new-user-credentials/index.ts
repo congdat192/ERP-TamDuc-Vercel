@@ -1,11 +1,9 @@
-import { Resend } from 'https://esm.sh/resend@2.0.0';
+import { sendEmail } from '../_shared/email-service.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-const resend = new Resend(Deno.env.get('RESEND_API_KEY')!);
 
 interface SendCredentialsRequest {
   email: string;
@@ -25,8 +23,7 @@ Deno.serve(async (req) => {
 
     console.log('📧 Sending credentials email to:', email);
 
-    const { data, error } = await resend.emails.send({
-      from: 'ERP System <noreply@dangphuocquan.cloud>',
+    const emailResult = await sendEmail({
       to: email,
       subject: '🎉 Tài khoản ERP System của bạn đã được tạo',
       html: `
@@ -48,55 +45,38 @@ Deno.serve(async (req) => {
 
               <!-- Content -->
               <div style="padding: 40px 30px;">
-                <h2 style="color: #333; margin: 0 0 20px 0; font-size: 22px;">
-                  Xin chào ${fullName}!
-                </h2>
+                <p style="font-size: 16px; color: #333; line-height: 1.6; margin: 0 0 20px 0;">
+                  Xin chào <strong style="color: #667eea;">${fullName}</strong>,
+                </p>
                 
-                <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
-                  Tài khoản ERP System của bạn đã được tạo thành công bởi quản trị viên. 
-                  Dưới đây là thông tin đăng nhập của bạn:
+                <p style="font-size: 15px; color: #555; line-height: 1.6; margin: 0 0 30px 0;">
+                  Tài khoản ERP System của bạn đã được tạo thành công! Dưới đây là thông tin đăng nhập của bạn:
                 </p>
 
                 <!-- Credentials Box -->
-                <div style="background-color: #f8f9fa; padding: 25px; border-radius: 8px; margin: 30px 0; border: 1px solid #e9ecef;">
-                  <h3 style="margin: 0 0 15px 0; color: #333; font-size: 16px;">
-                    📋 Thông tin đăng nhập
-                  </h3>
-                  <div style="margin-bottom: 12px;">
-                    <strong style="color: #555;">Email:</strong>
-                    <div style="color: #333; font-size: 15px; margin-top: 4px;">${email}</div>
+                <div style="background-color: #f8f9fa; border-left: 4px solid #667eea; padding: 20px; margin: 0 0 30px 0; border-radius: 4px;">
+                  <div style="margin-bottom: 15px;">
+                    <p style="margin: 0 0 5px 0; color: #666; font-size: 13px; font-weight: bold; text-transform: uppercase;">Email đăng nhập</p>
+                    <p style="margin: 0; color: #333; font-size: 16px; font-family: 'Courier New', monospace;">${email}</p>
                   </div>
+                  
                   <div>
-                    <strong style="color: #555;">Mật khẩu tạm thời:</strong>
-                    <div style="background: white; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 18px; font-weight: bold; color: #667eea; margin-top: 4px; border: 2px dashed #667eea; letter-spacing: 1px;">
+                    <p style="margin: 0 0 5px 0; color: #666; font-size: 13px; font-weight: bold; text-transform: uppercase;">Mật khẩu tạm thời</p>
+                    <p style="margin: 0; color: #333; font-size: 16px; font-family: 'Courier New', monospace; background-color: white; padding: 10px; border-radius: 4px; border: 1px solid #dee2e6;">
                       ${tempPassword}
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Warning Box -->
-                <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 25px 0; border-radius: 4px;">
-                  <div style="display: flex; align-items: flex-start;">
-                    <span style="font-size: 20px; margin-right: 10px;">⚠️</span>
-                    <div>
-                      <strong style="color: #856404; display: block; margin-bottom: 5px;">BẮT BUỘC ĐỔI MẬT KHẨU</strong>
-                      <p style="color: #856404; margin: 0; font-size: 14px;">
-                        Bạn phải đổi mật khẩu ngay khi đăng nhập lần đầu tiên để bảo mật tài khoản.
-                      </p>
-                    </div>
+                    </p>
                   </div>
                 </div>
 
                 <!-- Login Button -->
-                <div style="text-align: center; margin: 35px 0;">
-                  <a href="${loginUrl}" 
-                     style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 40px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                    Đăng nhập ngay →
+                <div style="text-align: center; margin: 0 0 30px 0;">
+                  <a href="${loginUrl}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; padding: 14px 40px; border-radius: 6px; font-size: 16px; font-weight: bold; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
+                    🚀 Đăng nhập ngay
                   </a>
                 </div>
 
                 <!-- Instructions -->
-                <div style="background-color: #e7f3ff; padding: 20px; border-radius: 6px; margin: 25px 0;">
+                <div style="background-color: #e8f4fd; padding: 20px; border-radius: 6px; margin: 0 0 20px 0;">
                   <h4 style="margin: 0 0 12px 0; color: #0066cc; font-size: 15px;">
                     📝 Hướng dẫn đăng nhập
                   </h4>
@@ -130,18 +110,19 @@ Deno.serve(async (req) => {
             </div>
           </body>
         </html>
-      `
+      `,
+      emailType: 'user_credentials',
+      metadata: {
+        user_email: email,
+        temp_password: tempPassword,
+        login_url: loginUrl
+      }
     });
 
-    if (error) {
-      console.error('❌ Resend error:', error);
-      throw error;
-    }
-
-    console.log('✅ Email sent successfully:', data);
+    console.log('✅ Email sent successfully:', emailResult);
 
     return new Response(
-      JSON.stringify({ success: true, emailId: data?.id }),
+      JSON.stringify({ success: true, emailId: emailResult.logId }),
       {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
