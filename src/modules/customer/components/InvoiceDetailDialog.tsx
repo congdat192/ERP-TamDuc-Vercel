@@ -2,7 +2,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Badge } from '@/components/ui/badge';
 import { X, ExternalLink, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { formatToVietnamDateTime } from '@/lib/dateUtils';
 
 interface InvoiceDetail {
   productcode: string;
@@ -48,6 +47,21 @@ export function InvoiceDetailDialog({ open, onOpenChange, invoice, customer }: I
     return new Intl.NumberFormat('vi-VN').format(amount);
   };
 
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString('vi-VN', {
+        timeZone: 'Asia/Ho_Chi_Minh',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return dateString;
+    }
+  };
 
   const getStatusBadge = (statusvalue: string) => {
     switch (statusvalue) {
@@ -116,7 +130,7 @@ export function InvoiceDetailDialog({ open, onOpenChange, invoice, customer }: I
           </div>
           <div>
             <span className="theme-text-muted">Ngày bán:</span>
-            <span className="ml-2 theme-text">{formatToVietnamDateTime(invoice.created_at_vn)}</span>
+            <span className="ml-2 theme-text">{formatDate(invoice.created_at_vn)}</span>
           </div>
           <div>
             <span className="theme-text-muted">Kênh bán:</span>

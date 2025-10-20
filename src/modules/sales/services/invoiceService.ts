@@ -1,5 +1,4 @@
 import { supabase } from '@/integrations/supabase/client';
-import { formatToVietnamDateTime } from '@/lib/dateUtils';
 
 export interface InvoiceDetail {
   productcode: string;
@@ -98,15 +97,12 @@ export async function fetchInvoicesByPhone(phone: string): Promise<InvoiceHistor
  * Map API response to internal sales data format
  */
 export function mapInvoiceToSalesData(invoice: Invoice, customer: Customer): any {
-  // Convert UTC time from External API to Vietnam time (GMT+7)
-  const vietnamTime = formatToVietnamDateTime(invoice.created_at_vn);
-  
   return {
     id: invoice.code,
     customerId: customer.code,
-    date: vietnamTime,
-    createdTime: vietnamTime,
-    lastUpdated: vietnamTime,
+    date: new Date(invoice.created_at_vn).toLocaleString('vi-VN'),
+    createdTime: new Date(invoice.created_at_vn).toLocaleString('vi-VN'),
+    lastUpdated: new Date(invoice.created_at_vn).toLocaleString('vi-VN'),
     orderCode: invoice.code,
     returnCode: '',
     customer: customer.name,
