@@ -42,17 +42,15 @@ serve(async (req) => {
     console.log('[get-oauth-token] Fetching OAuth token...');
 
     const response = await fetch(
-      'https://kcirpjxbjqagrqrjfldu.supabase.co/functions/v1/oauth-token',
+      'https://kcirpjxbjqagrqrjfldu.supabase.co/functions/v1/get-token-supabase',
       {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${Deno.env.get('EXTERNAL_API_KEY')}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           client_id: Deno.env.get('EXTERNAL_API_CLIENT_ID'),
-          client_secret: Deno.env.get('EXTERNAL_API_CLIENT_SECRET'),
-          grant_type: 'client_credentials'
+          client_secret: Deno.env.get('EXTERNAL_API_CLIENT_SECRET')
         })
       }
     );
