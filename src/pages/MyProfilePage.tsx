@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
-import { useAuth } from '@/components/auth/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useState, useEffect, useRef } from "react";
+import { useAuth } from "@/components/auth/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,34 +12,34 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, User, Gift, FileText, Send, ChevronDown } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { EmployeePersonalInfoTab } from '@/components/profile/EmployeePersonalInfoTab';
-import { EmployeeBenefitsTab } from '@/components/profile/EmployeeBenefitsTab';
-import { EmployeePersonalDocumentsTab } from '@/components/profile/EmployeePersonalDocumentsTab';
-import { EmployeeChangeRequestsTab } from '@/components/profile/EmployeeChangeRequestsTab';
-import { Footer } from '@/components/layout/Footer';
-import logoTamDuc from '@/assets/logo_tamduc.jpg';
+import { LogOut, User, Gift, FileText, Send, ChevronDown } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { EmployeePersonalInfoTab } from "@/components/profile/EmployeePersonalInfoTab";
+import { EmployeeBenefitsTab } from "@/components/profile/EmployeeBenefitsTab";
+import { EmployeePersonalDocumentsTab } from "@/components/profile/EmployeePersonalDocumentsTab";
+import { EmployeeChangeRequestsTab } from "@/components/profile/EmployeeChangeRequestsTab";
+import { Footer } from "@/components/layout/Footer";
+import logoTamDuc from "@/assets/logo_tamduc.jpg";
 
 export function MyProfilePage() {
   const { currentUser, logout } = useAuth();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('personal');
+  const [activeTab, setActiveTab] = useState("personal");
   const [employee, setEmployee] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const retryCountRef = useRef(0);
   const maxRetries = 3;
 
   useEffect(() => {
-    console.log('🔍 [MyProfile] currentUser:', currentUser);
-    console.log('🔍 [MyProfile] currentUser.id:', currentUser?.id);
-    
+    console.log("🔍 [MyProfile] currentUser:", currentUser);
+    console.log("🔍 [MyProfile] currentUser.id:", currentUser?.id);
+
     if (!currentUser?.id) {
-      console.log('⏳ [MyProfile] Waiting for currentUser...');
-      
+      console.log("⏳ [MyProfile] Waiting for currentUser...");
+
       // Increased timeout to 15s for slower connections
       const timeout = setTimeout(() => {
-        console.error('❌ [MyProfile] Timeout waiting for currentUser');
+        console.error("❌ [MyProfile] Timeout waiting for currentUser");
         setIsLoading(false);
         toast({
           title: "Lỗi Timeout",
@@ -47,7 +47,7 @@ export function MyProfilePage() {
           variant: "destructive",
         });
       }, 15000); // 15s timeout
-      
+
       return () => clearTimeout(timeout);
     }
 
@@ -56,16 +56,16 @@ export function MyProfilePage() {
 
     const fetchEmployee = async () => {
       console.log(`📥 [MyProfile] Fetching employee for user_id: ${currentUser.id}`);
-      
+
       try {
         const { data, error } = await supabase
-          .from('employees')
-          .select('*')
-          .eq('user_id', currentUser.id)
+          .from("employees")
+          .select("*")
+          .eq("user_id", currentUser.id)
           .maybeSingle();
 
         if (error) {
-          console.error('❌ [MyProfile] Error fetching employee:', error);
+          console.error("❌ [MyProfile] Error fetching employee:", error);
           toast({
             title: "Lỗi",
             description: "Không thể tải thông tin nhân viên",
@@ -75,7 +75,7 @@ export function MyProfilePage() {
           return;
         }
 
-        console.log('📦 [MyProfile] Employee data:', data);
+        console.log("📦 [MyProfile] Employee data:", data);
 
         if (!data && retryCountRef.current < maxRetries) {
           retryCountRef.current++;
@@ -87,7 +87,7 @@ export function MyProfilePage() {
         setEmployee(data);
         setIsLoading(false);
       } catch (err: any) {
-        console.error('❌ [MyProfile] Error in fetchEmployee:', err);
+        console.error("❌ [MyProfile] Error in fetchEmployee:", err);
         toast({
           title: "Lỗi",
           description: "Không thể tải thông tin nhân viên",
@@ -127,9 +127,7 @@ export function MyProfilePage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-2">Không Tìm Thấy Thông Tin</h2>
-          <p className="text-muted-foreground mb-4">
-            Tài khoản của bạn chưa được liên kết với hồ sơ nhân viên.
-          </p>
+          <p className="text-muted-foreground mb-4">Tài khoản của bạn chưa được liên kết với hồ sơ nhân viên.</p>
           <Button onClick={logout}>Đăng Xuất</Button>
         </div>
       </div>
@@ -143,13 +141,13 @@ export function MyProfilePage() {
           {/* Left: Company Branding */}
           <div className="flex items-center gap-3">
             {/* Logo */}
-            <img 
-              src={logoTamDuc} 
-              alt="TamDuc Optical Logo" 
+            <img
+              src={logoTamDuc}
+              alt="TamDuc Optical Logo"
               className="w-12 h-12 rounded-lg border border-border shadow-md object-contain bg-white p-1"
             />
             <div>
-              <h1 className="text-2xl font-bold text-foreground">TamDuc Optical</h1>
+              <h1 className="text-2xl font-bold text-foreground">Mắt Kính Tâm Đức</h1>
               <p className="text-sm text-muted-foreground">Employee Self Service Portal</p>
             </div>
           </div>
@@ -202,11 +200,7 @@ export function MyProfilePage() {
           </div>
 
           <TabsContent value="personal">
-            <EmployeePersonalInfoTab
-              employee={employee}
-              onChangeTab={setActiveTab}
-              onEmployeeUpdate={setEmployee}
-            />
+            <EmployeePersonalInfoTab employee={employee} onChangeTab={setActiveTab} onEmployeeUpdate={setEmployee} />
           </TabsContent>
 
           <TabsContent value="benefits">
@@ -218,14 +212,11 @@ export function MyProfilePage() {
           </TabsContent>
 
           <TabsContent value="requests">
-            <EmployeeChangeRequestsTab
-              employeeId={employee.id}
-              employeeName={employee.full_name}
-            />
+            <EmployeeChangeRequestsTab employeeId={employee.id} employeeName={employee.full_name} />
           </TabsContent>
         </Tabs>
       </div>
-      
+
       <Footer />
     </div>
   );
