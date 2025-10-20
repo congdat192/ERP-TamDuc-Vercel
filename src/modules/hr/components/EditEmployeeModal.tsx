@@ -704,17 +704,17 @@ export function EditEmployeeModal({ employee, onSuccess }: EditEmployeeModalProp
                   <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
                     <FormControl>
                       <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
+                        checked={!field.value}
+                        onCheckedChange={(checked) => field.onChange(!checked)}
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
                       <FormLabel className="text-base font-medium">
-                        🔒 Chỉ Truy Cập ESS (Employee Self-Service)
+                        ✅ Có Quyền Truy Cập ERP
                       </FormLabel>
                       <p className="text-sm text-muted-foreground">
-                        Nếu được chọn, nhân viên này chỉ có thể xem hồ sơ cá nhân và không thể truy cập khu vực quản trị ERP.
-                        Thích hợp cho nhân viên thường không cần quyền quản lý.
+                        Nếu được chọn, nhân viên này có thể đăng nhập vào khu vực quản trị ERP (ngoài ESS).
+                        Bỏ chọn nếu nhân viên chỉ cần truy cập Hồ Sơ Cá Nhân (ESS).
                       </p>
                     </div>
                   </FormItem>
