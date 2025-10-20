@@ -10,6 +10,7 @@ import { EmployeePersonalInfoTab } from '@/components/profile/EmployeePersonalIn
 import { EmployeeBenefitsTab } from '@/components/profile/EmployeeBenefitsTab';
 import { EmployeePersonalDocumentsTab } from '@/components/profile/EmployeePersonalDocumentsTab';
 import { EmployeeChangeRequestsTab } from '@/components/profile/EmployeeChangeRequestsTab';
+import { Footer } from '@/components/layout/Footer';
 
 export function MyProfilePage() {
   const { currentUser, logout } = useAuth();
@@ -186,6 +187,8 @@ export function MyProfilePage() {
           </TabsContent>
         </Tabs>
       </div>
+      
+      <Footer />
     </div>
   );
 }

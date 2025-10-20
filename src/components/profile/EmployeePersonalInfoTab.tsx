@@ -247,7 +247,16 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
     <div className="space-y-6">
       {/* Summary Card - Thông Tin Tổng Quan */}
       <Card className="bg-gradient-to-br from-primary/5 via-background to-primary/5 border-primary/20">
-        <CardContent className="pt-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <User className="w-5 h-5 text-primary" />
+            Thông Tin Nhân Viên
+          </CardTitle>
+          <CardDescription>
+            Thông tin tổng quan về nhân viên
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
           <div className="flex flex-col md:flex-row gap-6">
             {/* Avatar Section */}
             <div className="flex flex-col items-center md:items-start gap-3">
@@ -369,68 +378,33 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
         </CardContent>
       </Card>
 
-      {/* Thông Tin Cơ Bản - Read Only (Simple Text Display) */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="space-y-3">
-            {/* Mã Nhân Viên */}
-            <div className="flex items-center gap-2 text-sm">
-              <BadgeCheck className="w-4 h-4 text-primary" />
-              <span className="text-muted-foreground">Mã Nhân Viên:</span>
-              <span className="font-medium">{employee.employee_code}</span>
-            </div>
+        {/* Thông Tin Cơ Bản - Read Only (Simple Text Display) */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-primary" />
+              Thông Tin Cơ Bản
+            </CardTitle>
+            <CardDescription>
+              Thông tin hợp đồng và trạng thái làm việc
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {/* Loại Hợp Đồng */}
+              <div className="flex items-center gap-2 text-sm">
+                <FileText className="w-4 h-4 text-primary" />
+                <span className="text-muted-foreground">Loại Hợp Đồng:</span>
+                <span className="font-medium">{employee.employment_type || 'Chưa cập nhật'}</span>
+              </div>
 
-            {/* Họ Tên */}
-            <div className="flex items-center gap-2 text-sm">
-              <User className="w-4 h-4 text-primary" />
-              <span className="text-muted-foreground">Họ Tên:</span>
-              <span className="font-medium">{employee.full_name}</span>
+              {/* Trạng Thái */}
+              <div className="flex items-center gap-2 text-sm">
+                <CheckCircle2 className="w-4 h-4 text-primary" />
+                <span className="text-muted-foreground">Trạng Thái:</span>
+                <span className="font-medium">{employee.status || 'Chưa cập nhật'}</span>
+              </div>
             </div>
-
-            {/* Email */}
-            <div className="flex items-center gap-2 text-sm">
-              <Mail className="w-4 h-4 text-primary" />
-              <span className="text-muted-foreground">Email:</span>
-              <span className="font-medium">{employee.email}</span>
-            </div>
-
-            {/* Phòng Ban */}
-            <div className="flex items-center gap-2 text-sm">
-              <Building2 className="w-4 h-4 text-primary" />
-              <span className="text-muted-foreground">Phòng Ban:</span>
-              <span className="font-medium">{employee.department}</span>
-            </div>
-
-            {/* Chức Vụ */}
-            <div className="flex items-center gap-2 text-sm">
-              <Briefcase className="w-4 h-4 text-primary" />
-              <span className="text-muted-foreground">Chức Vụ:</span>
-              <span className="font-medium">{employee.position}</span>
-            </div>
-
-            {/* Ngày Vào Làm */}
-            <div className="flex items-center gap-2 text-sm">
-              <Calendar className="w-4 h-4 text-primary" />
-              <span className="text-muted-foreground">Ngày Vào Làm:</span>
-              <span className="font-medium">
-                {employee.join_date ? format(new Date(employee.join_date), 'dd/MM/yyyy') : 'N/A'}
-              </span>
-            </div>
-
-            {/* Loại Hợp Đồng */}
-            <div className="flex items-center gap-2 text-sm">
-              <FileText className="w-4 h-4 text-primary" />
-              <span className="text-muted-foreground">Loại Hợp Đồng:</span>
-              <span className="font-medium">{employee.employment_type || 'Chưa cập nhật'}</span>
-            </div>
-
-            {/* Trạng Thái */}
-            <div className="flex items-center gap-2 text-sm">
-              <CheckCircle2 className="w-4 h-4 text-primary" />
-              <span className="text-muted-foreground">Trạng Thái:</span>
-              <span className="font-medium">{employee.status || 'Chưa cập nhật'}</span>
-            </div>
-          </div>
 
           {/* Note nhỏ ở dưới */}
           <div className="mt-6 pt-4 border-t">
