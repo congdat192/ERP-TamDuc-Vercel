@@ -31,6 +31,7 @@ import { HRPage } from "./pages/HRPage";
 import { ProductDetailPage } from "./pages/ProductDetailPage";
 import { InvoiceDetailPage } from "./pages/InvoiceDetailPage";
 import { UserProfilePage } from "./pages/UserProfilePage";
+import { EmployeeSelfServicePage } from "./modules/ess/pages/EmployeeSelfServicePage";
 import { Settings } from "./modules/admin/pages/Settings";
 import { UserManagementLayout, MembersPage, RolesPage, UserManagementDashboard } from "./modules/user-management";
 import { AffiliateModule } from "./modules/affiliate";
@@ -232,6 +233,14 @@ const AppContent = () => {
                       <ProtectedERPRoute module="hr">
                         <HRPage />
                       </ProtectedERPRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/ERP/ESS" 
+                    element={
+                      <ProtectedRoute>
+                        <EmployeeSelfServicePage />
+                      </ProtectedRoute>
                     } 
                   />
                   <Route 
