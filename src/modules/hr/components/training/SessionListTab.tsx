@@ -6,11 +6,13 @@ import { TrainingSessionService, TrainingSession } from '../../services/training
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import { CreateSessionModal } from './CreateSessionModal';
 
 export function SessionListTab() {
   const { toast } = useToast();
   const [sessions, setSessions] = useState<TrainingSession[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
     loadSessions();
@@ -56,17 +58,24 @@ export function SessionListTab() {
   }
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Lớp Học</CardTitle>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Tạo Lớp Học
-            </Button>
-          </div>
-        </CardHeader>
+    <>
+      <CreateSessionModal 
+        open={showCreateModal}
+        onOpenChange={setShowCreateModal}
+        onSuccess={loadSessions}
+      />
+
+      <div className="space-y-4">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Lớp Học</CardTitle>
+              <Button onClick={() => setShowCreateModal(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Tạo Lớp Học
+              </Button>
+            </div>
+          </CardHeader>
         <CardContent>
           {sessions.length === 0 ? (
             <div className="text-center py-12">
@@ -142,5 +151,6 @@ export function SessionListTab() {
         </CardContent>
       </Card>
     </div>
+    </>
   );
 }

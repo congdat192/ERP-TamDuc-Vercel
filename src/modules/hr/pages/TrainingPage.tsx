@@ -16,6 +16,8 @@ import { TrainingDashboardTab } from '../components/training/TrainingDashboardTa
 import { CourseListTab } from '../components/training/CourseListTab';
 import { SessionListTab } from '../components/training/SessionListTab';
 import { EnrollmentListTab } from '../components/training/EnrollmentListTab';
+import { CompetencyMatrixTab } from '../components/training/CompetencyMatrixTab';
+import { RecommendationsTab } from '../components/training/RecommendationsTab';
 
 export function TrainingPage() {
   const { hasFeatureAccess } = usePermissions();
@@ -125,15 +127,11 @@ export function TrainingPage() {
         )}
 
         <TabsContent value="recommendations" className="space-y-4">
-          <Card className="p-6">
-            <p className="text-muted-foreground">Course Recommendations - Coming soon</p>
-          </Card>
+          <RecommendationsTab />
         </TabsContent>
 
         <TabsContent value="competency" className="space-y-4">
-          <Card className="p-6">
-            <p className="text-muted-foreground">Competency Matrix - Coming soon</p>
-          </Card>
+          <CompetencyMatrixTab />
         </TabsContent>
 
         <TabsContent value="feedback" className="space-y-4">

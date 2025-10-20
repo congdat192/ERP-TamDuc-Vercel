@@ -7,12 +7,14 @@ import { TrainingProgramService, TrainingProgram } from '../../services/training
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import { CreateProgramModal } from './CreateProgramModal';
 
 export function CourseListTab() {
   const { toast } = useToast();
   const [programs, setPrograms] = useState<TrainingProgram[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
     loadPrograms();
@@ -63,17 +65,24 @@ export function CourseListTab() {
   }
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Chương Trình Đào Tạo</CardTitle>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Tạo Chương Trình
-            </Button>
-          </div>
-        </CardHeader>
+    <>
+      <CreateProgramModal 
+        open={showCreateModal}
+        onOpenChange={setShowCreateModal}
+        onSuccess={loadPrograms}
+      />
+
+      <div className="space-y-4">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Chương Trình Đào Tạo</CardTitle>
+              <Button onClick={() => setShowCreateModal(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Tạo Chương Trình
+              </Button>
+            </div>
+          </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-4">
             <div className="relative flex-1">
@@ -133,5 +142,6 @@ export function CourseListTab() {
         </CardContent>
       </Card>
     </div>
+    </>
   );
 }
