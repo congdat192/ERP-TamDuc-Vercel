@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Loader2 } from 'lucide-react';
 import { InvoiceDetailDialog } from '../InvoiceDetailDialog';
+import { formatToVietnamDateTime } from '@/lib/dateUtils';
 
 interface CustomerSalesHistoryTabProps {
   invoices: Invoice[] | null;
@@ -70,21 +71,6 @@ export function CustomerSalesHistoryTab({ invoices, customer, isLoading, error }
     }
   };
 
-  const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleString('vi-VN', {
-        timeZone: 'Asia/Ho_Chi_Minh',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch {
-      return dateString;
-    }
-  };
 
   if (isLoading) {
     return (
@@ -165,7 +151,7 @@ export function CustomerSalesHistoryTab({ invoices, customer, isLoading, error }
                       </button>
                     </td>
                     <td className="px-4 py-3 text-sm theme-text-muted font-sans">
-                      {formatDate(invoice.created_at_vn)}
+                      {formatToVietnamDateTime(invoice.created_at_vn)}
                     </td>
                     <td className="px-4 py-3 text-sm theme-text font-sans">
                       {invoice.branchname}
