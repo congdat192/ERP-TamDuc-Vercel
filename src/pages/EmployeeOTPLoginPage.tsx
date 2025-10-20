@@ -6,9 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, KeyRound, ArrowLeft, Loader2 } from 'lucide-react';
+import { Mail, KeyRound, ArrowLeft, Loader2, Lock } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { CreatePasswordDialog } from '@/components/auth/CreatePasswordDialog';
 
 type Step = 'email' | 'otp';
 
@@ -24,12 +26,16 @@ export function EmployeeOTPLoginPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
   
+  const [activeTab, setActiveTab] = useState<'otp' | 'password'>('otp');
   const [step, setStep] = useState<Step>('email');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [employeeData, setEmployeeData] = useState<EmployeeData | null>(null);
   const [resendCountdown, setResendCountdown] = useState(0);
+  const [showCreatePasswordDialog, setShowCreatePasswordDialog] = useState(false);
+  const [passwordRequired, setPasswordRequired] = useState(false);
 
   // ============================================
   // STEP 1: SEND OTP VIA CUSTOM EDGE FUNCTION
@@ -154,13 +160,42 @@ export function EmployeeOTPLoginPage() {
         user_id: sessionData.user?.id
       });
 
+      // Check if user already has a password
+      const { data: { user } } = await supabase.auth.getUser();
+      const hasPassword = user?.app_metadata?.providers?.includes('email');
+
+      // Check if user has ERP access
+      const { data: employee } = await supabase
+        .from('employees')
+        .select('is_employee_only, full_name')
+        .eq('user_id', sessionData.user.id)
+        .maybeSingle();
+
+      const hasERPAccess = employee?.is_employee_only === false;
+
       toast({
         title: 'Đăng nhập thành công!',
-        description: 'Chào mừng bạn quay trở lại',
+        description: `Chào mừng ${employee?.full_name || 'bạn'} quay trở lại`,
       });
 
-      // Redirect to my profile (profile data already cached)
+      // Navigate to /my-profile first
       navigate('/my-profile');
+
+      // CASE 1: Has ERP access but NO password → Bắt buộc tạo password
+      if (hasERPAccess && !hasPassword) {
+        setTimeout(() => {
+          setShowCreatePasswordDialog(true);
+          setPasswordRequired(true); // Không cho skip
+        }, 500);
+      }
+      // CASE 2: No ERP access + No password + First time → Khuyến khích tạo password (chỉ 1 lần)
+      else if (!hasPassword && !sessionStorage.getItem('password_prompt_shown_once')) {
+        setTimeout(() => {
+          setShowCreatePasswordDialog(true);
+          setPasswordRequired(false); // Cho phép skip
+          sessionStorage.setItem('password_prompt_shown_once', 'true'); // Đánh dấu đã hiện
+        }, 500);
+      }
 
     } catch (error: any) {
       console.error('❌ Login error:', error);
@@ -219,6 +254,50 @@ export function EmployeeOTPLoginPage() {
   };
 
   // ============================================
+  // PASSWORD LOGIN
+  // ============================================
+  const handlePasswordLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { data: { user }, error } = await supabase.auth.signInWithPassword({
+        email: email.toLowerCase(),
+        password
+      });
+
+      if (error) throw error;
+
+      // Check if user is an employee
+      const { data: employee, error: empError } = await supabase
+        .from('employees')
+        .select('is_employee_only, full_name')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (empError || !employee) {
+        throw new Error('Tài khoản không phải nhân viên. Vui lòng sử dụng /login để đăng nhập hệ thống ERP.');
+      }
+
+      toast({
+        title: 'Đăng nhập thành công!',
+        description: `Chào mừng ${employee.full_name}`,
+      });
+
+      navigate('/my-profile');
+
+    } catch (error: any) {
+      toast({
+        title: 'Đăng nhập thất bại',
+        description: error.message || 'Email hoặc mật khẩu không chính xác',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ============================================
   // RENDER
   // ============================================
   return (
@@ -226,165 +305,226 @@ export function EmployeeOTPLoginPage() {
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="space-y-1 text-center">
           <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-            {step === 'email' ? (
-              <Mail className="w-6 h-6 text-blue-600" />
-            ) : (
-              <KeyRound className="w-6 h-6 text-blue-600" />
-            )}
+            <Mail className="w-6 h-6 text-blue-600" />
           </div>
-          <CardTitle className="text-2xl font-bold">
-            {step === 'email' ? 'Đăng Nhập Nhân Viên' : 'Nhập Mã OTP'}
-          </CardTitle>
-          <CardDescription>
-            {step === 'email' 
-              ? 'Nhập email công ty của bạn để nhận mã xác thực'
-              : `Mã OTP đã được gửi đến ${email}`
-            }
-          </CardDescription>
+          <CardTitle className="text-2xl font-bold">Đăng Nhập Nhân Viên</CardTitle>
+          <CardDescription>Chọn phương thức đăng nhập bên dưới</CardDescription>
         </CardHeader>
 
         <CardContent>
-          {step === 'email' ? (
-            // ============================================
-            // FORM: EMAIL INPUT
-            // ============================================
-            <form onSubmit={handleSendOTP} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="nhanvien@company.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  disabled={loading}
-                  className="text-base"
-                  autoFocus
-                />
-              </div>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'otp' | 'password')} defaultValue="otp">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="otp">
+                <Mail className="w-4 h-4 mr-2" />
+                OTP qua Email
+              </TabsTrigger>
+              <TabsTrigger value="password">
+                <Lock className="w-4 h-4 mr-2" />
+                Mật khẩu
+              </TabsTrigger>
+            </TabsList>
 
-              <Alert>
-                <AlertDescription className="text-sm">
-                  💡 Chỉ nhân viên có email trong hệ thống HR mới có thể đăng nhập. 
-                  Mã OTP sẽ có hiệu lực trong <strong>5 phút</strong>.
-                </AlertDescription>
-              </Alert>
+            {/* TAB 1: OTP LOGIN */}
+            <TabsContent value="otp">
+              {step === 'email' ? (
+                // ============================================
+                // FORM: EMAIL INPUT
+                // ============================================
+                <form onSubmit={handleSendOTP} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="nhanvien@company.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      disabled={loading}
+                      className="text-base"
+                      autoFocus
+                    />
+                  </div>
 
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={loading || !email}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Đang gửi...
-                  </>
-                ) : (
-                  'Gửi Mã OTP'
-                )}
-              </Button>
+                  <Alert>
+                    <AlertDescription className="text-sm">
+                      💡 Chỉ nhân viên có email trong hệ thống HR mới có thể đăng nhập. 
+                      Mã OTP sẽ có hiệu lực trong <strong>5 phút</strong>.
+                    </AlertDescription>
+                  </Alert>
 
-              <div className="text-center">
-                <Button
-                  type="button"
-                  variant="link"
-                  onClick={() => navigate('/login')}
-                  className="text-sm"
-                >
-                  Đăng nhập bằng mật khẩu (Admin/HR)
-                </Button>
-              </div>
-            </form>
-          ) : (
-            // ============================================
-            // FORM: OTP INPUT
-            // ============================================
-            <form onSubmit={handleVerifyOTP} className="space-y-4">
-              {employeeData && (
-                <Alert className="bg-blue-50 border-blue-200">
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={loading || !email}
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Đang gửi...
+                      </>
+                    ) : (
+                      'Gửi Mã OTP'
+                    )}
+                  </Button>
+                </form>
+              ) : (
+                // ============================================
+                // FORM: OTP INPUT
+                // ============================================
+                <form onSubmit={handleVerifyOTP} className="space-y-4">
+                  {employeeData && (
+                    <Alert className="bg-blue-50 border-blue-200">
+                      <AlertDescription className="text-sm">
+                        <strong>{employeeData.fullName}</strong><br />
+                        {employeeData.employeeCode} • {employeeData.position}<br />
+                        {employeeData.department}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label htmlFor="otp">Mã OTP (6 số)</Label>
+                    <div className="flex justify-center">
+                      <InputOTP
+                        maxLength={6}
+                        value={otp}
+                        onChange={setOtp}
+                        disabled={loading}
+                      >
+                        <InputOTPGroup>
+                          <InputOTPSlot index={0} />
+                          <InputOTPSlot index={1} />
+                          <InputOTPSlot index={2} />
+                          <InputOTPSlot index={3} />
+                          <InputOTPSlot index={4} />
+                          <InputOTPSlot index={5} />
+                        </InputOTPGroup>
+                      </InputOTP>
+                    </div>
+                  </div>
+
+                  <Alert>
+                    <AlertDescription className="text-sm">
+                      ⏱️ Mã OTP có hiệu lực trong <strong>5 phút</strong>. 
+                      Vui lòng kiểm tra hộp thư đến hoặc thư spam.
+                    </AlertDescription>
+                  </Alert>
+
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={loading || otp.length !== 6}
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Đang xác thực...
+                      </>
+                    ) : (
+                      'Xác Thực'
+                    )}
+                  </Button>
+
+                  <div className="flex items-center justify-between text-sm">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleBackToEmail}
+                      disabled={loading}
+                      className="gap-1"
+                    >
+                      <ArrowLeft className="w-3 h-3" />
+                      Đổi email
+                    </Button>
+                    
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleResendOTP}
+                      disabled={loading || resendCountdown > 0}
+                    >
+                      {resendCountdown > 0 
+                        ? `Gửi lại (${resendCountdown}s)` 
+                        : 'Gửi lại mã'
+                      }
+                    </Button>
+                  </div>
+                </form>
+              )}
+            </TabsContent>
+
+            {/* TAB 2: PASSWORD LOGIN */}
+            <TabsContent value="password">
+              <form onSubmit={handlePasswordLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email-password">Email</Label>
+                  <Input
+                    id="email-password"
+                    type="email"
+                    placeholder="nhanvien@company.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    disabled={loading}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password">Mật khẩu</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Nhập mật khẩu"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    disabled={loading}
+                  />
+                </div>
+
+                <Alert>
                   <AlertDescription className="text-sm">
-                    <strong>{employeeData.fullName}</strong><br />
-                    {employeeData.employeeCode} • {employeeData.position}<br />
-                    {employeeData.department}
+                    💡 Chưa có mật khẩu? Đăng nhập bằng OTP và tạo mật khẩu sau đó.
                   </AlertDescription>
                 </Alert>
-              )}
 
-              <div className="space-y-2">
-                <Label htmlFor="otp">Mã OTP (6 số)</Label>
-                <div className="flex justify-center">
-                  <InputOTP
-                    maxLength={6}
-                    value={otp}
-                    onChange={setOtp}
-                    disabled={loading}
-                  >
-                    <InputOTPGroup>
-                      <InputOTPSlot index={0} />
-                      <InputOTPSlot index={1} />
-                      <InputOTPSlot index={2} />
-                      <InputOTPSlot index={3} />
-                      <InputOTPSlot index={4} />
-                      <InputOTPSlot index={5} />
-                    </InputOTPGroup>
-                  </InputOTP>
-                </div>
-              </div>
-
-              <Alert>
-                <AlertDescription className="text-sm">
-                  ⏱️ Mã OTP có hiệu lực trong <strong>5 phút</strong>. 
-                  Vui lòng kiểm tra hộp thư đến hoặc thư spam.
-                </AlertDescription>
-              </Alert>
-
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={loading || otp.length !== 6}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Đang xác thực...
-                  </>
-                ) : (
-                  'Xác Thực'
-                )}
-              </Button>
-
-              <div className="flex items-center justify-between text-sm">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleBackToEmail}
-                  disabled={loading}
-                  className="gap-1"
-                >
-                  <ArrowLeft className="w-3 h-3" />
-                  Đổi email
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Đang đăng nhập...
+                    </>
+                  ) : (
+                    'Đăng nhập'
+                  )}
                 </Button>
-                
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleResendOTP}
-                  disabled={loading || resendCountdown > 0}
-                >
-                  {resendCountdown > 0 
-                    ? `Gửi lại (${resendCountdown}s)` 
-                    : 'Gửi lại mã'
-                  }
-                </Button>
-              </div>
-            </form>
-          )}
+              </form>
+            </TabsContent>
+          </Tabs>
+
+          {/* Link to admin login */}
+          <div className="text-center mt-4 border-t pt-4">
+            <Button
+              type="button"
+              variant="link"
+              onClick={() => navigate('/login')}
+              className="text-sm"
+            >
+              Đăng nhập hệ thống ERP (Admin/Manager) →
+            </Button>
+          </div>
         </CardContent>
       </Card>
+
+      {/* Dialog tạo mật khẩu */}
+      <CreatePasswordDialog
+        isOpen={showCreatePasswordDialog}
+        onClose={() => setShowCreatePasswordDialog(false)}
+        isRequired={passwordRequired}
+      />
     </div>
   );
 }

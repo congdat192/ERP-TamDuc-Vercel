@@ -164,15 +164,27 @@ export function EditEmployeeModal({ employee, onSuccess }: EditEmployeeModalProp
         avatarPath = await AvatarService.uploadAvatar(avatarFile, employee.id);
       }
 
+      // Check if granting ERP access for the first time
+      const previousStatus = employee.isEmployeeOnly; // TRUE/FALSE ban đầu
+      const newStatus = data.is_employee_only; // TRUE/FALSE mới
+
       await EmployeeService.updateEmployee(employee.id, {
         ...data,
         avatar_path: avatarPath
       });
       
-      toast({
-        title: 'Thành công',
-        description: 'Cập nhật thông tin nhân viên thành công'
-      });
+      // Show specific toast if granting ERP access
+      if (previousStatus === true && newStatus === false) {
+        toast({
+          title: '✅ Đã cấp quyền ERP',
+          description: 'Nhân viên sẽ được yêu cầu tạo mật khẩu khi đăng nhập ESS lần tiếp theo.',
+        });
+      } else {
+        toast({
+          title: 'Thành công',
+          description: 'Cập nhật thông tin nhân viên thành công'
+        });
+      }
       
       setOpen(false);
       onSuccess();

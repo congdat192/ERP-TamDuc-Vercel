@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, User, Gift, FileText, Send, ChevronDown, DollarSign } from "lucide-react";
+import { LogOut, User, Gift, FileText, Send, ChevronDown, DollarSign, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { EmployeePersonalInfoTab } from "@/components/profile/EmployeePersonalInfoTab";
 import { EmployeeBenefitsTab } from "@/components/profile/EmployeeBenefitsTab";
@@ -21,6 +21,7 @@ import { EmployeeChangeRequestsTab } from "@/components/profile/EmployeeChangeRe
 import EmployeePayrollTab from "@/components/profile/EmployeePayrollTab";
 import { Footer } from "@/components/layout/Footer";
 import logoTamDuc from "@/assets/logo_tamduc.jpg";
+import { CreatePasswordDialog } from "@/components/auth/CreatePasswordDialog";
 
 export function MyProfilePage() {
   const { currentUser, logout } = useAuth();
@@ -28,6 +29,8 @@ export function MyProfilePage() {
   const [activeTab, setActiveTab] = useState("personal");
   const [employee, setEmployee] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasPassword, setHasPassword] = useState(true);
+  const [showCreatePasswordDialog, setShowCreatePasswordDialog] = useState(false);
   const retryCountRef = useRef(0);
   const maxRetries = 3;
 
@@ -100,6 +103,16 @@ export function MyProfilePage() {
 
     fetchEmployee();
   }, [currentUser?.id, toast]);
+
+  useEffect(() => {
+    const checkPassword = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setHasPassword(user?.app_metadata?.providers?.includes('email') || false);
+    };
+    if (currentUser) {
+      checkPassword();
+    }
+  }, [currentUser]);
 
   if (isLoading) {
     return (
@@ -174,6 +187,15 @@ export function MyProfilePage() {
                 <Send className="w-4 h-4 mr-2" />
                 Yêu Cầu Thay Đổi
               </DropdownMenuItem>
+              {!hasPassword && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setShowCreatePasswordDialog(true)} className="cursor-pointer">
+                    <Lock className="w-4 h-4 mr-2" />
+                    Tạo Mật Khẩu
+                  </DropdownMenuItem>
+                </>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={logout} className="text-destructive cursor-pointer">
                 <LogOut className="w-4 h-4 mr-2" />
@@ -228,6 +250,19 @@ export function MyProfilePage() {
       </div>
 
       <Footer />
+      
+      {/* Dialog tạo mật khẩu */}
+      <CreatePasswordDialog
+        isOpen={showCreatePasswordDialog}
+        onClose={() => {
+          setShowCreatePasswordDialog(false);
+          // Refresh password status after creating password
+          supabase.auth.getUser().then(({ data: { user } }) => {
+            setHasPassword(user?.app_metadata?.providers?.includes('email') || false);
+          });
+        }}
+        isRequired={false}
+      />
     </div>
   );
 }
