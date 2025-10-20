@@ -50,7 +50,7 @@ export function HRRouter({ currentUser }: HRRouterProps) {
       <Route 
         path="Payroll" 
         element={
-          <ProtectedHRRoute requiredPermission="view_payroll">
+          <ProtectedHRRoute requiredPermission="manage_payroll">
             <PayrollPage />
           </ProtectedHRRoute>
         } 

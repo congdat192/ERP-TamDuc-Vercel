@@ -466,79 +466,196 @@ export type Database = {
         Row: {
           actual_days: number | null
           actual_salary: number | null
+          allowance_meal: number | null
+          allowance_parking: number | null
+          allowance_responsibility: number | null
+          bonus_invoice_bh_cs: number | null
+          bonus_invoice_ktv: number | null
+          bonus_performance: number | null
           company_name: string
           created_at: string | null
           created_by: string | null
+          ct_actual_days: number | null
+          ct_holiday_days: number | null
+          ct_ot_days: number | null
+          ct_ot_hours: number | null
+          ct_ot_sessions: number | null
+          ct_regime_days: number | null
+          daily_meal_allowance: number | null
+          deduction_other: number | null
+          deduction_social_insurance: number | null
+          department: string | null
           employee_code: string
           employee_id: string
           employee_name: string
+          happy_birthday: number | null
           id: string
           invoice_bonus: number | null
           issued_at: string | null
+          leave_settlement: number | null
           month: string
           net_payment: number | null
           notes: string | null
           ot_amount: number | null
           ot_days: number | null
+          paid_advance: number | null
+          paid_day_15: number | null
+          paid_day_3: number | null
+          paid_leave_days: number | null
+          parttime_days: number | null
+          payment_surplus: number | null
+          position: string | null
+          responsibility_allowance: number | null
+          salary_advance: number | null
           salary_fulltime_ct: number | null
+          salary_fulltime_official: number | null
+          salary_fulltime_probation: number | null
+          salary_parttime_official: number | null
+          salary_parttime_probation: number | null
           standard_days: number | null
           status: string
+          support_other_1: number | null
+          support_other_2: number | null
           total_bonus: number | null
+          total_company_paid: number | null
           total_deductions: number | null
           total_income: number | null
           total_salary: number | null
+          tv_actual_days: number | null
+          tv_holiday_days: number | null
+          tv_ot_hours: number | null
+          tv_ot_sessions: number | null
+          tv_regime_days: number | null
           updated_at: string | null
         }
         Insert: {
           actual_days?: number | null
           actual_salary?: number | null
+          allowance_meal?: number | null
+          allowance_parking?: number | null
+          allowance_responsibility?: number | null
+          bonus_invoice_bh_cs?: number | null
+          bonus_invoice_ktv?: number | null
+          bonus_performance?: number | null
           company_name: string
           created_at?: string | null
           created_by?: string | null
+          ct_actual_days?: number | null
+          ct_holiday_days?: number | null
+          ct_ot_days?: number | null
+          ct_ot_hours?: number | null
+          ct_ot_sessions?: number | null
+          ct_regime_days?: number | null
+          daily_meal_allowance?: number | null
+          deduction_other?: number | null
+          deduction_social_insurance?: number | null
+          department?: string | null
           employee_code: string
           employee_id: string
           employee_name: string
+          happy_birthday?: number | null
           id?: string
           invoice_bonus?: number | null
           issued_at?: string | null
+          leave_settlement?: number | null
           month: string
           net_payment?: number | null
           notes?: string | null
           ot_amount?: number | null
           ot_days?: number | null
+          paid_advance?: number | null
+          paid_day_15?: number | null
+          paid_day_3?: number | null
+          paid_leave_days?: number | null
+          parttime_days?: number | null
+          payment_surplus?: number | null
+          position?: string | null
+          responsibility_allowance?: number | null
+          salary_advance?: number | null
           salary_fulltime_ct?: number | null
+          salary_fulltime_official?: number | null
+          salary_fulltime_probation?: number | null
+          salary_parttime_official?: number | null
+          salary_parttime_probation?: number | null
           standard_days?: number | null
           status?: string
+          support_other_1?: number | null
+          support_other_2?: number | null
           total_bonus?: number | null
+          total_company_paid?: number | null
           total_deductions?: number | null
           total_income?: number | null
           total_salary?: number | null
+          tv_actual_days?: number | null
+          tv_holiday_days?: number | null
+          tv_ot_hours?: number | null
+          tv_ot_sessions?: number | null
+          tv_regime_days?: number | null
           updated_at?: string | null
         }
         Update: {
           actual_days?: number | null
           actual_salary?: number | null
+          allowance_meal?: number | null
+          allowance_parking?: number | null
+          allowance_responsibility?: number | null
+          bonus_invoice_bh_cs?: number | null
+          bonus_invoice_ktv?: number | null
+          bonus_performance?: number | null
           company_name?: string
           created_at?: string | null
           created_by?: string | null
+          ct_actual_days?: number | null
+          ct_holiday_days?: number | null
+          ct_ot_days?: number | null
+          ct_ot_hours?: number | null
+          ct_ot_sessions?: number | null
+          ct_regime_days?: number | null
+          daily_meal_allowance?: number | null
+          deduction_other?: number | null
+          deduction_social_insurance?: number | null
+          department?: string | null
           employee_code?: string
           employee_id?: string
           employee_name?: string
+          happy_birthday?: number | null
           id?: string
           invoice_bonus?: number | null
           issued_at?: string | null
+          leave_settlement?: number | null
           month?: string
           net_payment?: number | null
           notes?: string | null
           ot_amount?: number | null
           ot_days?: number | null
+          paid_advance?: number | null
+          paid_day_15?: number | null
+          paid_day_3?: number | null
+          paid_leave_days?: number | null
+          parttime_days?: number | null
+          payment_surplus?: number | null
+          position?: string | null
+          responsibility_allowance?: number | null
+          salary_advance?: number | null
           salary_fulltime_ct?: number | null
+          salary_fulltime_official?: number | null
+          salary_fulltime_probation?: number | null
+          salary_parttime_official?: number | null
+          salary_parttime_probation?: number | null
           standard_days?: number | null
           status?: string
+          support_other_1?: number | null
+          support_other_2?: number | null
           total_bonus?: number | null
+          total_company_paid?: number | null
           total_deductions?: number | null
           total_income?: number | null
           total_salary?: number | null
+          tv_actual_days?: number | null
+          tv_holiday_days?: number | null
+          tv_ot_hours?: number | null
+          tv_ot_sessions?: number | null
+          tv_regime_days?: number | null
           updated_at?: string | null
         }
         Relationships: [
@@ -1078,6 +1195,8 @@ export type Database = {
       }
       payroll_invoice_commissions: {
         Row: {
+          commission_amount: number | null
+          commission_type: string
           created_at: string | null
           id: string
           invoice_level: string
@@ -1087,6 +1206,8 @@ export type Database = {
           return_value: string | null
         }
         Insert: {
+          commission_amount?: number | null
+          commission_type?: string
           created_at?: string | null
           id?: string
           invoice_level: string
@@ -1096,6 +1217,8 @@ export type Database = {
           return_value?: string | null
         }
         Update: {
+          commission_amount?: number | null
+          commission_type?: string
           created_at?: string | null
           id?: string
           invoice_level?: string
