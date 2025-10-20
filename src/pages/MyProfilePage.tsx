@@ -136,14 +136,14 @@ export function MyProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
+    <div className="green-forest-theme min-h-screen bg-gradient-to-br from-green-50 via-white to-teal-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
       <div className="max-w-6xl mx-auto py-8">
         <div className="flex justify-between items-center mb-6 pb-4 border-b">
           {/* Left: Company Branding */}
           <div className="flex items-center gap-3">
             {/* Logo placeholder */}
-            <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary/60 rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-xl">TD</span>
+            <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #4BCB9A, #455A64)' }}>
+              <span className="text-white font-bold text-xl">TD</span>
             </div>
             <div>
               <h1 className="text-2xl font-bold text-foreground">TamDuc Optical</h1>
@@ -176,25 +176,27 @@ export function MyProfilePage() {
           </DropdownMenu>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4 mb-6">
-            <TabsTrigger value="personal">
-              <User className="w-4 h-4 mr-2" />
-              Thông Tin
-            </TabsTrigger>
-            <TabsTrigger value="benefits">
-              <Gift className="w-4 h-4 mr-2" />
-              Phúc Lợi
-            </TabsTrigger>
-            <TabsTrigger value="documents">
-              <FileText className="w-4 h-4 mr-2" />
-              Hồ Sơ
-            </TabsTrigger>
-            <TabsTrigger value="requests">
-              <Send className="w-4 h-4 mr-2" />
-              Yêu Cầu
-            </TabsTrigger>
-          </TabsList>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="relative">
+          <div className="sticky top-0 z-20 bg-gradient-to-br from-green-50 via-white to-teal-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pb-2">
+            <TabsList className="grid w-full grid-cols-4 mb-6">
+              <TabsTrigger value="personal">
+                <User className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Thông Tin</span>
+              </TabsTrigger>
+              <TabsTrigger value="benefits">
+                <Gift className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Phúc Lợi</span>
+              </TabsTrigger>
+              <TabsTrigger value="documents">
+                <FileText className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Hồ Sơ</span>
+              </TabsTrigger>
+              <TabsTrigger value="requests">
+                <Send className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Yêu Cầu</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="personal">
             <EmployeePersonalInfoTab

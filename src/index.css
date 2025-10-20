@@ -245,6 +245,41 @@
   }
 }
 
+/* Green Forest Theme - For Employee Profile */
+.green-forest-theme {
+  /* Primary becomes Green Forest */
+  --voucher-primary-50: 141 46% 96%;   /* Very light green */
+  --voucher-primary-100: 141 46% 88%;  /* Light green */
+  --voucher-primary-200: 141 46% 78%;  /* Lighter green */
+  --voucher-primary-300: 141 50% 65%;  /* Light-medium green */
+  --voucher-primary-400: 160 51% 58%;  /* #4BCB9A - main green from hr-gradient */
+  --voucher-primary-500: 160 51% 48%;  /* Darker shade of 4BCB9A */
+  --voucher-primary-600: 160 51% 38%;  /* Even darker */
+  --voucher-primary-700: 160 60% 30%;  /* Dark green */
+  --voucher-primary-800: 160 70% 22%;  /* Very dark green */
+  --voucher-primary-900: 160 80% 15%;  /* Darkest green */
+  
+  /* Secondary becomes Dark Slate */
+  --voucher-secondary-50: 200 18% 96%;  /* Very light slate */
+  --voucher-secondary-100: 200 18% 90%; /* Light slate */
+  --voucher-secondary-200: 200 18% 80%; /* Lighter slate */
+  --voucher-secondary-300: 200 18% 65%; /* Light-medium slate */
+  --voucher-secondary-400: 200 18% 50%; /* Medium slate */
+  --voucher-secondary-500: 200 18% 35%; /* #455A64 - main slate from hr-gradient */
+  --voucher-secondary-600: 200 18% 28%; /* Darker slate */
+  --voucher-secondary-700: 200 20% 22%; /* Dark slate */
+  --voucher-secondary-800: 200 25% 16%; /* Very dark slate */
+  --voucher-secondary-900: 200 30% 10%; /* Darkest slate */
+  
+  /* Update legacy variables */
+  --voucher-primary: var(--voucher-primary-400);
+  --voucher-primary-light: var(--voucher-primary-200);
+  --voucher-primary-dark: var(--voucher-primary-700);
+  --voucher-secondary: var(--voucher-secondary-500);
+  --voucher-secondary-light: var(--voucher-secondary-300);
+  --voucher-secondary-dark: var(--voucher-secondary-800);
+}
+
 @layer components {
   /* Theme Button Animations */
   @keyframes theme-spin {
