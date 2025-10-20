@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { AlertCircle, Loader2, Camera, Mail, Phone, Calendar, MapPin, User, Users, Briefcase, Clock } from 'lucide-react';
+import { AlertCircle, Loader2, Camera, Mail, Phone, Calendar, MapPin, User, Users, Briefcase, Clock, BadgeCheck, Building2, FileText, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
@@ -250,7 +250,7 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row gap-6">
             {/* Avatar Section */}
-            <div className="flex flex-col items-center gap-3">
+            <div className="flex flex-col items-center md:items-start gap-3">
               <div className="relative group">
                 <Avatar className="w-32 h-32 border-4 border-primary/20">
                   <AvatarImage src={currentAvatarUrl} alt={employee.full_name} />
@@ -259,16 +259,29 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
                   </AvatarFallback>
                 </Avatar>
                 
-                {/* Upload Overlay */}
+                {/* Desktop: Hover Overlay */}
                 <button
                   onClick={handleAvatarClick}
                   disabled={isUploadingAvatar}
-                  className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer disabled:cursor-not-allowed"
+                  className="absolute inset-0 bg-black/50 rounded-full hidden md:flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer disabled:cursor-not-allowed"
                 >
                   {isUploadingAvatar ? (
                     <Loader2 className="w-8 h-8 text-white animate-spin" />
                   ) : (
                     <Camera className="w-8 h-8 text-white" />
+                  )}
+                </button>
+                
+                {/* Mobile: Icon ở góc */}
+                <button
+                  onClick={handleAvatarClick}
+                  disabled={isUploadingAvatar}
+                  className="absolute bottom-0 right-0 md:hidden w-10 h-10 bg-primary rounded-full flex items-center justify-center shadow-lg border-2 border-background cursor-pointer disabled:opacity-50"
+                >
+                  {isUploadingAvatar ? (
+                    <Loader2 className="w-5 h-5 text-primary-foreground animate-spin" />
+                  ) : (
+                    <Camera className="w-5 h-5 text-primary-foreground" />
                   )}
                 </button>
                 
@@ -281,30 +294,21 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
                 />
               </div>
               
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleAvatarClick}
-                disabled={isUploadingAvatar}
-                className="gap-2"
-              >
-                {isUploadingAvatar ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Đang tải...
-                  </>
-                ) : (
-                  <>
-                    <Camera className="w-4 h-4" />
-                    Thay Đổi Avatar
-                  </>
-                )}
-              </Button>
+              {/* Tên + Mã NV - Mobile Only (dưới avatar) */}
+              <div className="md:hidden text-center">
+                <h2 className="text-xl font-bold text-foreground">
+                  {employee.full_name}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {employee.employee_code}
+                </p>
+              </div>
             </div>
 
             {/* Info Section */}
             <div className="flex-1 space-y-4">
-              <div>
+              {/* Tên + Mã NV - Desktop Only */}
+              <div className="hidden md:block">
                 <h2 className="text-2xl font-bold text-foreground">
                   {employee.full_name}
                 </h2>
@@ -365,50 +369,181 @@ export function EmployeePersonalInfoTab({ employee, onChangeTab, onEmployeeUpdat
         </CardContent>
       </Card>
 
-      {/* Thông Tin Cơ Bản - Read Only */}
+      {/* Thông Tin Cơ Bản - Read Only (Simple Text Display) */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="space-y-3">
+            {/* Mã Nhân Viên */}
+            <div className="flex items-center gap-2 text-sm">
+              <BadgeCheck className="w-4 h-4 text-primary" />
+              <span className="text-muted-foreground">Mã Nhân Viên:</span>
+              <span className="font-medium">{employee.employee_code}</span>
+            </div>
+
+            {/* Họ Tên */}
+            <div className="flex items-center gap-2 text-sm">
+              <User className="w-4 h-4 text-primary" />
+              <span className="text-muted-foreground">Họ Tên:</span>
+              <span className="font-medium">{employee.full_name}</span>
+            </div>
+
+            {/* Email */}
+            <div className="flex items-center gap-2 text-sm">
+              <Mail className="w-4 h-4 text-primary" />
+              <span className="text-muted-foreground">Email:</span>
+              <span className="font-medium">{employee.email}</span>
+            </div>
+
+            {/* Phòng Ban */}
+            <div className="flex items-center gap-2 text-sm">
+              <Building2 className="w-4 h-4 text-primary" />
+              <span className="text-muted-foreground">Phòng Ban:</span>
+              <span className="font-medium">{employee.department}</span>
+            </div>
+
+            {/* Chức Vụ */}
+            <div className="flex items-center gap-2 text-sm">
+              <Briefcase className="w-4 h-4 text-primary" />
+              <span className="text-muted-foreground">Chức Vụ:</span>
+              <span className="font-medium">{employee.position}</span>
+            </div>
+
+            {/* Ngày Vào Làm */}
+            <div className="flex items-center gap-2 text-sm">
+              <Calendar className="w-4 h-4 text-primary" />
+              <span className="text-muted-foreground">Ngày Vào Làm:</span>
+              <span className="font-medium">
+                {employee.join_date ? format(new Date(employee.join_date), 'dd/MM/yyyy') : 'N/A'}
+              </span>
+            </div>
+
+            {/* Loại Hợp Đồng */}
+            <div className="flex items-center gap-2 text-sm">
+              <FileText className="w-4 h-4 text-primary" />
+              <span className="text-muted-foreground">Loại Hợp Đồng:</span>
+              <span className="font-medium">{employee.employment_type || 'Chưa cập nhật'}</span>
+            </div>
+
+            {/* Trạng Thái */}
+            <div className="flex items-center gap-2 text-sm">
+              <CheckCircle2 className="w-4 h-4 text-primary" />
+              <span className="text-muted-foreground">Trạng Thái:</span>
+              <span className="font-medium">{employee.status || 'Chưa cập nhật'}</span>
+            </div>
+          </div>
+
+          {/* Note nhỏ ở dưới */}
+          <div className="mt-6 pt-4 border-t">
+            <p className="text-xs text-muted-foreground text-center">
+              💡 Thông tin này do HR quản lý. Vui lòng liên hệ HR để thay đổi.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Thông Tin Lương & Phụ Cấp - Read Only */}
       <Card>
         <CardHeader>
-          <CardTitle>Thông Tin Cơ Bản</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Briefcase className="w-5 h-5 text-primary" />
+            Lương & Phụ Cấp
+          </CardTitle>
           <CardDescription>
-            Thông tin này do HR quản lý. Vui lòng liên hệ HR để thay đổi.
+            Thông tin lương và phụ cấp do HR quản lý
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label>Mã Nhân Viên</Label>
-            <Input value={employee.employee_code} disabled className="bg-muted" />
-          </div>
-          <div>
-            <Label>Họ Tên</Label>
-            <Input value={employee.full_name} disabled className="bg-muted" />
-          </div>
-          <div>
-            <Label>Email</Label>
-            <Input value={employee.email} disabled className="bg-muted" />
-          </div>
-          <div>
-            <Label>Phòng Ban</Label>
-            <Input value={employee.department} disabled className="bg-muted" />
-          </div>
-          <div>
-            <Label>Chức Vụ</Label>
-            <Input value={employee.position} disabled className="bg-muted" />
-          </div>
-          <div>
-            <Label>Ngày Vào Làm</Label>
-            <Input
-              value={employee.join_date ? format(new Date(employee.join_date), 'dd/MM/yyyy') : ''}
-              disabled
-              className="bg-muted"
-            />
-          </div>
-          <div>
-            <Label>Loại Hợp Đồng</Label>
-            <Input value={employee.employment_type || 'N/A'} disabled className="bg-muted" />
-          </div>
-          <div>
-            <Label>Trạng Thái</Label>
-            <Input value={employee.status || 'N/A'} disabled className="bg-muted" />
+        <CardContent>
+          <div className="space-y-3">
+            {/* Lương Cơ Bản - Always show if > 0 */}
+            {employee.salary_p1 > 0 && (
+              <div className="flex justify-between items-center py-2 border-b">
+                <span className="text-muted-foreground">Lương Cơ Bản</span>
+                <span className="font-semibold text-lg">
+                  {new Intl.NumberFormat('vi-VN', {
+                    style: 'currency',
+                    currency: 'VND'
+                  }).format(employee.salary_p1)}
+                </span>
+              </div>
+            )}
+            
+            {/* Phụ Cấp Ăn Trưa */}
+            {employee.allowance_meal > 0 && (
+              <div className="flex justify-between items-center py-2 border-b">
+                <span className="text-muted-foreground">Phụ Cấp Ăn Trưa</span>
+                <span className="font-semibold">
+                  {new Intl.NumberFormat('vi-VN', {
+                    style: 'currency',
+                    currency: 'VND'
+                  }).format(employee.allowance_meal)}
+                </span>
+              </div>
+            )}
+            
+            {/* Phụ Cấp Xăng Xe */}
+            {employee.allowance_fuel > 0 && (
+              <div className="flex justify-between items-center py-2 border-b">
+                <span className="text-muted-foreground">Phụ Cấp Xăng Xe</span>
+                <span className="font-semibold">
+                  {new Intl.NumberFormat('vi-VN', {
+                    style: 'currency',
+                    currency: 'VND'
+                  }).format(employee.allowance_fuel)}
+                </span>
+              </div>
+            )}
+            
+            {/* Phụ Cấp Điện Thoại */}
+            {employee.allowance_phone > 0 && (
+              <div className="flex justify-between items-center py-2 border-b">
+                <span className="text-muted-foreground">Phụ Cấp Điện Thoại</span>
+                <span className="font-semibold">
+                  {new Intl.NumberFormat('vi-VN', {
+                    style: 'currency',
+                    currency: 'VND'
+                  }).format(employee.allowance_phone)}
+                </span>
+              </div>
+            )}
+            
+            {/* Phụ Cấp Khác */}
+            {employee.allowance_other > 0 && (
+              <div className="flex justify-between items-center py-2 border-b">
+                <span className="text-muted-foreground">Phụ Cấp Khác</span>
+                <span className="font-semibold">
+                  {new Intl.NumberFormat('vi-VN', {
+                    style: 'currency',
+                    currency: 'VND'
+                  }).format(employee.allowance_other)}
+                </span>
+              </div>
+            )}
+            
+            {/* Tổng Lương Cố Định */}
+            {employee.total_fixed_salary > 0 && (
+              <div className="flex justify-between items-center py-3 bg-primary/5 px-4 rounded-lg mt-2">
+                <span className="font-semibold text-foreground">Tổng Thu Nhập Cố Định</span>
+                <span className="font-bold text-xl text-primary">
+                  {new Intl.NumberFormat('vi-VN', {
+                    style: 'currency',
+                    currency: 'VND'
+                  }).format(employee.total_fixed_salary)}
+                </span>
+              </div>
+            )}
+            
+            {/* Message nếu không có dữ liệu lương */}
+            {!employee.salary_p1 && 
+             !employee.allowance_meal && 
+             !employee.allowance_fuel && 
+             !employee.allowance_phone && 
+             !employee.allowance_other && (
+              <div className="text-center py-8 text-muted-foreground">
+                <AlertCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <p>Chưa có thông tin lương và phụ cấp</p>
+                <p className="text-sm mt-1">Vui lòng liên hệ HR để biết thêm chi tiết</p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
