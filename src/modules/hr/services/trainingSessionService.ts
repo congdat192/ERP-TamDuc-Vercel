@@ -15,8 +15,15 @@ export interface TrainingSession {
   status: 'draft' | 'scheduled' | 'ongoing' | 'completed' | 'cancelled';
   created_at: string;
   updated_at: string;
-  training_programs?: any;
-  training_trainers?: any;
+  training_programs?: {
+    title: string;
+    description?: string;
+  };
+  training_trainers?: {
+    full_name: string;
+    email: string;
+    phone?: string;
+  };
 }
 
 export interface CreateSessionData {
@@ -37,7 +44,7 @@ export class TrainingSessionService {
 
     let query = supabase
       .from('training_sessions' as any)
-      .select('*, training_programs(title), training_trainers(full_name, email)')
+      .select('*, training_programs(title, description), training_trainers(full_name, email, phone)')
       .order('start_date', { ascending: false });
 
     if (programId) {

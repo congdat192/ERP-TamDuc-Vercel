@@ -131,7 +131,7 @@ export function SessionListTab() {
                           <div className="mt-2 text-sm">
                             <span className="text-muted-foreground">Giảng viên: </span>
                             <span className="font-medium">
-                              {(session.training_trainers as any).full_name}
+                              {session.training_trainers.full_name}
                             </span>
                           </div>
                         )}

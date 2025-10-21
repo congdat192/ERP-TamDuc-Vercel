@@ -564,6 +564,20 @@ export type Database = {
             referencedRelation: "employees"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_competencies_assessor"
+            columns: ["assessed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_competencies_employee"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
         ]
       }
       employee_documents: {
@@ -1607,13 +1621,17 @@ export type Database = {
           created_at: string
           employee_id: string
           enrolled_by: string | null
-          enrollment_date: string
+          enrolled_date: string
+          enrollment_type: string | null
           final_score: number | null
           id: string
           notes: string | null
+          post_test_score: number | null
+          pre_test_score: number | null
           program_id: string
-          session_id: string | null
+          session_id: string
           status: string
+          trainer_remarks: string | null
           updated_at: string
         }
         Insert: {
@@ -1624,13 +1642,17 @@ export type Database = {
           created_at?: string
           employee_id: string
           enrolled_by?: string | null
-          enrollment_date?: string
+          enrolled_date?: string
+          enrollment_type?: string | null
           final_score?: number | null
           id?: string
           notes?: string | null
+          post_test_score?: number | null
+          pre_test_score?: number | null
           program_id: string
-          session_id?: string | null
+          session_id: string
           status?: string
+          trainer_remarks?: string | null
           updated_at?: string
         }
         Update: {
@@ -1641,13 +1663,17 @@ export type Database = {
           created_at?: string
           employee_id?: string
           enrolled_by?: string | null
-          enrollment_date?: string
+          enrolled_date?: string
+          enrollment_type?: string | null
           final_score?: number | null
           id?: string
           notes?: string | null
+          post_test_score?: number | null
+          pre_test_score?: number | null
           program_id?: string
-          session_id?: string | null
+          session_id?: string
           status?: string
+          trainer_remarks?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -2017,17 +2043,21 @@ export type Database = {
         Row: {
           agenda: string | null
           created_at: string
-          end_date: string | null
+          current_participants: number | null
+          end_date: string
           end_time: string
           id: string
           location: string | null
+          location_type: string | null
+          max_participants: number | null
+          meeting_url: string | null
           notes: string | null
           online_meeting_link: string | null
           program_id: string
           session_date: string
           session_name: string
           session_number: number
-          start_date: string | null
+          start_date: string
           start_time: string
           status: string
           trainer_id: string | null
@@ -2037,17 +2067,21 @@ export type Database = {
         Insert: {
           agenda?: string | null
           created_at?: string
-          end_date?: string | null
+          current_participants?: number | null
+          end_date?: string
           end_time: string
           id?: string
           location?: string | null
+          location_type?: string | null
+          max_participants?: number | null
+          meeting_url?: string | null
           notes?: string | null
           online_meeting_link?: string | null
           program_id: string
           session_date: string
           session_name: string
           session_number: number
-          start_date?: string | null
+          start_date?: string
           start_time: string
           status?: string
           trainer_id?: string | null
@@ -2057,17 +2091,21 @@ export type Database = {
         Update: {
           agenda?: string | null
           created_at?: string
-          end_date?: string | null
+          current_participants?: number | null
+          end_date?: string
           end_time?: string
           id?: string
           location?: string | null
+          location_type?: string | null
+          max_participants?: number | null
+          meeting_url?: string | null
           notes?: string | null
           online_meeting_link?: string | null
           program_id?: string
           session_date?: string
           session_name?: string
           session_number?: number
-          start_date?: string | null
+          start_date?: string
           start_time?: string
           status?: string
           trainer_id?: string | null
@@ -2080,6 +2118,13 @@ export type Database = {
             columns: ["program_id"]
             isOneToOne: false
             referencedRelation: "training_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_sessions_trainer"
+            columns: ["trainer_id"]
+            isOneToOne: false
+            referencedRelation: "training_trainers"
             referencedColumns: ["id"]
           },
           {

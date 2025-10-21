@@ -17,9 +17,23 @@ export interface TrainingEnrollment {
   trainer_remarks?: string;
   created_at: string;
   updated_at: string;
-  employees?: any;
-  training_sessions?: any;
-  training_programs?: any;
+  employees?: {
+    full_name: string;
+    employee_code: string;
+    email: string;
+    department?: string;
+    position?: string;
+  };
+  training_sessions?: {
+    session_name: string;
+    start_date: string;
+    end_date: string;
+    location?: string;
+  };
+  training_programs?: {
+    title: string;
+    course_category?: string;
+  };
 }
 
 export interface CreateEnrollmentData {
@@ -46,7 +60,7 @@ export class TrainingEnrollmentService {
       .select(`
         *,
         employees(full_name, employee_code, email, department, position),
-        training_sessions(session_name, start_date, end_date),
+        training_sessions(session_name, start_date, end_date, location),
         training_programs(title, course_category)
       `)
       .order('enrolled_date', { ascending: false });

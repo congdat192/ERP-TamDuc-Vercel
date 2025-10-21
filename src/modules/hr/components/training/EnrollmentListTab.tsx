@@ -87,16 +87,10 @@ export function EnrollmentListTab() {
               {enrollments.map(enrollment => (
                 <TableRow key={enrollment.id}>
                   <TableCell>
-                    {enrollment.employees ? 
-                      (enrollment.employees as any).full_name : 
-                      'N/A'
-                    }
+                    {enrollment.employees?.full_name || 'N/A'}
                   </TableCell>
                   <TableCell>
-                    {enrollment.training_sessions ? 
-                      (enrollment.training_sessions as any).session_name : 
-                      'N/A'
-                    }
+                    {enrollment.training_sessions?.session_name || 'N/A'}
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline">{enrollment.enrollment_type}</Badge>
