@@ -4,7 +4,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, BookOpen, Clock, Award } from 'lucide-react';
-import { TrainingQuizService, type TrainingQuiz } from '../../services/trainingQuizService';
+import { TrainingQuizService } from '../../services/trainingQuizService';
+
+type TrainingQuiz = {
+  id: string;
+  program_id?: string;
+  title: string;
+  quiz_type: string;
+  total_questions: number;
+  time_limit_minutes?: number;
+  passing_score?: number;
+};
 import { CreateQuizModal } from './CreateQuizModal';
 
 export function QuizManagementTab() {

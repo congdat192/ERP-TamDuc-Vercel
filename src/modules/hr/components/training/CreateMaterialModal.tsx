@@ -6,7 +6,19 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { TrainingDocumentService, type CreateDocumentData } from '../../services/trainingDocumentService';
+import { TrainingDocumentService } from '../../services/trainingDocumentService';
+
+type CreateDocumentData = {
+  program_id: string;
+  session_id?: string;
+  title: string;
+  description?: string;
+  document_type: 'slide' | 'reading' | 'video' | 'exercise';
+  file_url?: string;
+  embed_url?: string;
+  is_required?: boolean;
+  display_order?: number;
+};
 
 interface CreateMaterialModalProps {
   open: boolean;

@@ -4,7 +4,27 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Star, MessageSquare } from 'lucide-react';
-import { TrainingFeedbackService, type TrainingFeedback } from '../../services/trainingFeedbackService';
+import { TrainingFeedbackService } from '../../services/trainingFeedbackService';
+
+type TrainingFeedback = {
+  id: string;
+  program_id?: string;
+  session_id?: string;
+  employee_id: string;
+  trainer_rating?: number;
+  content_rating?: number;
+  facility_rating?: number;
+  overall_rating?: number;
+  comments?: string;
+  suggestions?: string;
+  created_at: string;
+  training_programs?: {
+    title: string;
+  };
+  training_sessions?: {
+    session_name: string;
+  };
+};
 import { useAuth } from '@/components/auth/AuthContext';
 
 export function FeedbackListTab() {

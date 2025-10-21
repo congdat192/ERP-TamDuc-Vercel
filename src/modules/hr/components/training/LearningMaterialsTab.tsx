@@ -4,7 +4,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, FileText, Download, ExternalLink } from 'lucide-react';
-import { TrainingDocumentService, type TrainingDocument } from '../../services/trainingDocumentService';
+import { TrainingDocumentService } from '../../services/trainingDocumentService';
+
+type TrainingDocument = {
+  id: string;
+  program_id?: string;
+  title: string;
+  description?: string;
+  document_type: string;
+  file_url?: string;
+  embed_url?: string;
+};
 import { CreateMaterialModal } from './CreateMaterialModal';
 
 export function LearningMaterialsTab() {

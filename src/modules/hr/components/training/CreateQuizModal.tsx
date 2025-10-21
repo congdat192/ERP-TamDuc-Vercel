@@ -5,7 +5,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { TrainingQuizService, type CreateQuizData } from '../../services/trainingQuizService';
+import { TrainingQuizService } from '../../services/trainingQuizService';
+
+type CreateQuizData = {
+  program_id: string;
+  session_id?: string;
+  title: string;
+  description?: string;
+  quiz_type: 'pre_test' | 'mid_test' | 'post_test';
+  time_limit_minutes: number;
+  passing_score: number;
+  total_questions: number;
+  questions: any[];
+  max_attempts?: number;
+  score_policy?: 'best' | 'latest' | 'average';
+};
 
 interface CreateQuizModalProps {
   open: boolean;
@@ -39,7 +53,10 @@ export function CreateQuizModal({ open, onClose, onSuccess }: CreateQuizModalPro
 
     try {
       setLoading(true);
-      await TrainingQuizService.createQuiz(formData as CreateQuizData);
+      await TrainingQuizService.createQuiz({
+        ...formData,
+        questions: formData.questions || [],
+      } as CreateQuizData);
       toast({
         title: 'Thành công',
         description: 'Đã tạo bài kiểm tra',
