@@ -98,7 +98,7 @@ export class CompetencyService {
     console.log('🔍 [CompetencyService] Fetching recommendations for employee:', employeeId);
 
     const { data, error } = await supabase
-      .from('training_course_recommendations' as any)
+      .from('course_recommendations' as any)
       .select(`
         *,
         training_programs(
@@ -126,7 +126,7 @@ export class CompetencyService {
     console.log('🔍 [CompetencyService] Dismissing recommendation:', recommendationId);
 
     const { error } = await supabase
-      .from('training_course_recommendations' as any)
+      .from('course_recommendations' as any)
       .update({ status: 'dismissed' } as any)
       .eq('id', recommendationId);
 
@@ -142,7 +142,7 @@ export class CompetencyService {
     console.log('🔍 [CompetencyService] Marking recommendation as enrolled:', recommendationId);
 
     const { error } = await supabase
-      .from('training_course_recommendations' as any)
+      .from('course_recommendations' as any)
       .update({ status: 'enrolled' } as any)
       .eq('id', recommendationId);
 

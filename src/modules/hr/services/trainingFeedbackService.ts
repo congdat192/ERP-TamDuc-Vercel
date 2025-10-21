@@ -36,7 +36,7 @@ export class TrainingFeedbackService {
     console.log('🔍 [TrainingFeedbackService] Fetching feedback for session:', sessionId);
 
     const { data, error } = await supabase
-      .from('training_feedbacks' as any)
+      .from('training_feedback' as any)
       .select(`
         *,
         employees(full_name, employee_code),
@@ -58,7 +58,7 @@ export class TrainingFeedbackService {
     console.log('🔍 [TrainingFeedbackService] Fetching feedback for program:', programId);
 
     const { data, error } = await supabase
-      .from('training_feedbacks' as any)
+      .from('training_feedback' as any)
       .select(`
         *,
         employees(full_name, employee_code),
@@ -80,7 +80,7 @@ export class TrainingFeedbackService {
     console.log('🔍 [TrainingFeedbackService] Fetching feedback for employee:', employeeId);
 
     const { data, error } = await supabase
-      .from('training_feedbacks' as any)
+      .from('training_feedback' as any)
       .select(`
         *,
         training_sessions(session_name),
@@ -112,7 +112,7 @@ export class TrainingFeedbackService {
       : undefined;
 
     const { data, error } = await supabase
-      .from('training_feedbacks' as any)
+      .from('training_feedback' as any)
       .insert({
         ...feedbackData,
         overall_rating
@@ -148,7 +148,7 @@ export class TrainingFeedbackService {
     }
 
     const { data, error } = await supabase
-      .from('training_feedbacks' as any)
+      .from('training_feedback' as any)
       .update({
         ...updates,
         ...(overall_rating !== undefined && { overall_rating })
@@ -170,7 +170,7 @@ export class TrainingFeedbackService {
     console.log('🔍 [TrainingFeedbackService] Deleting feedback:', feedbackId);
 
     const { error } = await supabase
-      .from('training_feedbacks' as any)
+      .from('training_feedback' as any)
       .delete()
       .eq('id', feedbackId);
 

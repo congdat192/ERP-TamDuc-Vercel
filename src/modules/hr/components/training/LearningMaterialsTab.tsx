@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, FileText, Download, ExternalLink } from 'lucide-react';
 import { TrainingDocumentService } from '../../services/trainingDocumentService';
+import { supabase } from '@/integrations/supabase/client';
 
 type TrainingDocument = {
   id: string;
@@ -26,9 +27,15 @@ export function LearningMaterialsTab() {
   const loadMaterials = async () => {
     try {
       setLoading(true);
-      // Get all materials (you may want to filter by program/session)
-      const data = await TrainingDocumentService.getDocumentsByProgram('all');
-      setMaterials(data);
+      // Lấy tất cả tài liệu thay vì truyền 'all'
+      const { data, error } = await supabase
+        .from('training_documents' as any)
+        .select('*')
+        .order('display_order', { ascending: true });
+
+      if (error) throw new Error(`Không thể tải tài liệu: ${error.message}`);
+      
+      setMaterials((data || []) as any);
     } catch (error: any) {
       toast({
         title: 'Lỗi',

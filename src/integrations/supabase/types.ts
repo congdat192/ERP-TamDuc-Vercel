@@ -1526,6 +1526,33 @@ export type Database = {
           },
         ]
       }
+      training_competency_levels: {
+        Row: {
+          color: string
+          created_at: string
+          description: string | null
+          id: string
+          level: number
+          name: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          level: number
+          name: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          level?: number
+          name?: string
+        }
+        Relationships: []
+      }
       training_documents: {
         Row: {
           created_at: string
@@ -1963,6 +1990,7 @@ export type Database = {
           session_number: number
           start_time: string
           status: string
+          trainer_id: string | null
           trainer_name: string | null
           updated_at: string
         }
@@ -1980,6 +2008,7 @@ export type Database = {
           session_number: number
           start_time: string
           status?: string
+          trainer_id?: string | null
           trainer_name?: string | null
           updated_at?: string
         }
@@ -1997,6 +2026,7 @@ export type Database = {
           session_number?: number
           start_time?: string
           status?: string
+          trainer_id?: string | null
           trainer_name?: string | null
           updated_at?: string
         }
@@ -2008,7 +2038,53 @@ export type Database = {
             referencedRelation: "training_programs"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "training_sessions_trainer_id_fkey"
+            columns: ["trainer_id"]
+            isOneToOne: false
+            referencedRelation: "training_trainers"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      training_trainers: {
+        Row: {
+          avatar_path: string | null
+          bio: string | null
+          created_at: string
+          email: string
+          expertise: string | null
+          full_name: string
+          id: string
+          phone: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_path?: string | null
+          bio?: string | null
+          created_at?: string
+          email: string
+          expertise?: string | null
+          full_name: string
+          id?: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_path?: string | null
+          bio?: string | null
+          created_at?: string
+          email?: string
+          expertise?: string | null
+          full_name?: string
+          id?: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {

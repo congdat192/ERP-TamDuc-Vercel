@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, BookOpen, Clock, Award } from 'lucide-react';
 import { TrainingQuizService } from '../../services/trainingQuizService';
+import { supabase } from '@/integrations/supabase/client';
 
 type TrainingQuiz = {
   id: string;
@@ -26,9 +27,15 @@ export function QuizManagementTab() {
   const loadQuizzes = async () => {
     try {
       setLoading(true);
-      // For now, load quizzes for all programs (you may want to filter by program)
-      const data = await TrainingQuizService.getQuizzesByProgram('all');
-      setQuizzes(data);
+      // Lấy tất cả quizzes thay vì truyền 'all'
+      const { data, error } = await supabase
+        .from('training_quizzes' as any)
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw new Error(`Không thể tải đề thi: ${error.message}`);
+      
+      setQuizzes((data || []) as any);
     } catch (error: any) {
       toast({
         title: 'Lỗi',
