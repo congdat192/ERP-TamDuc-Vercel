@@ -134,6 +134,20 @@ export type Database = {
             referencedRelation: "training_programs"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_recommendations_employee"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_recommendations_program"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "training_programs"
+            referencedColumns: ["id"]
+          },
         ]
       }
       document_change_requests: {
@@ -1491,41 +1505,6 @@ export type Database = {
         }
         Relationships: []
       }
-      training_competencies: {
-        Row: {
-          competency_code: string
-          competency_name: string
-          created_at: string
-          id: string
-          program_id: string
-          target_level: number
-        }
-        Insert: {
-          competency_code: string
-          competency_name: string
-          created_at?: string
-          id?: string
-          program_id: string
-          target_level: number
-        }
-        Update: {
-          competency_code?: string
-          competency_name?: string
-          created_at?: string
-          id?: string
-          program_id?: string
-          target_level?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "training_competencies_program_id_fkey"
-            columns: ["program_id"]
-            isOneToOne: false
-            referencedRelation: "training_programs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       training_competency_levels: {
         Row: {
           color: string
@@ -1633,6 +1612,7 @@ export type Database = {
           id: string
           notes: string | null
           program_id: string
+          session_id: string | null
           status: string
           updated_at: string
         }
@@ -1649,6 +1629,7 @@ export type Database = {
           id?: string
           notes?: string | null
           program_id: string
+          session_id?: string | null
           status?: string
           updated_at?: string
         }
@@ -1665,10 +1646,32 @@ export type Database = {
           id?: string
           notes?: string | null
           program_id?: string
+          session_id?: string | null
           status?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_enrollments_employee"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_enrollments_program"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "training_programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_enrollments_session"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "training_sessions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "training_enrollments_employee_id_fkey"
             columns: ["employee_id"]
@@ -1748,6 +1751,41 @@ export type Database = {
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "training_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_program_competencies: {
+        Row: {
+          competency_code: string
+          competency_name: string
+          created_at: string
+          id: string
+          program_id: string
+          target_level: number
+        }
+        Insert: {
+          competency_code: string
+          competency_name: string
+          created_at?: string
+          id?: string
+          program_id: string
+          target_level: number
+        }
+        Update: {
+          competency_code?: string
+          competency_name?: string
+          created_at?: string
+          id?: string
+          program_id?: string
+          target_level?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_competencies_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "training_programs"
             referencedColumns: ["id"]
           },
         ]
@@ -1979,6 +2017,7 @@ export type Database = {
         Row: {
           agenda: string | null
           created_at: string
+          end_date: string | null
           end_time: string
           id: string
           location: string | null
@@ -1988,6 +2027,7 @@ export type Database = {
           session_date: string
           session_name: string
           session_number: number
+          start_date: string | null
           start_time: string
           status: string
           trainer_id: string | null
@@ -1997,6 +2037,7 @@ export type Database = {
         Insert: {
           agenda?: string | null
           created_at?: string
+          end_date?: string | null
           end_time: string
           id?: string
           location?: string | null
@@ -2006,6 +2047,7 @@ export type Database = {
           session_date: string
           session_name: string
           session_number: number
+          start_date?: string | null
           start_time: string
           status?: string
           trainer_id?: string | null
@@ -2015,6 +2057,7 @@ export type Database = {
         Update: {
           agenda?: string | null
           created_at?: string
+          end_date?: string | null
           end_time?: string
           id?: string
           location?: string | null
@@ -2024,6 +2067,7 @@ export type Database = {
           session_date?: string
           session_name?: string
           session_number?: number
+          start_date?: string | null
           start_time?: string
           status?: string
           trainer_id?: string | null
@@ -2031,6 +2075,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_sessions_program"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "training_programs"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "training_sessions_program_id_fkey"
             columns: ["program_id"]

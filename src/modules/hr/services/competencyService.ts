@@ -55,7 +55,7 @@ export class CompetencyService {
     console.log('🔍 [CompetencyService] Fetching competencies for employee:', employeeId);
 
     const { data, error } = await supabase
-      .from('training_competencies' as any)
+      .from('employee_competencies' as any)
       .select('*')
       .eq('employee_id', employeeId)
       .order('competency_name', { ascending: true });
@@ -72,14 +72,14 @@ export class CompetencyService {
     console.log('🔍 [CompetencyService] Upserting competency:', competency.competency_name);
 
     const { data, error } = await supabase
-      .from('training_competencies' as any)
+      .from('employee_competencies' as any)
       .upsert(
         {
           ...competency,
           assessment_date: competency.assessment_date || new Date().toISOString()
         } as any,
         {
-          onConflict: 'employee_id,competency_name'
+          onConflict: 'employee_id,competency_code'
         }
       )
       .select()
@@ -158,7 +158,7 @@ export class CompetencyService {
     console.log('🔍 [CompetencyService] Fetching competency matrix');
 
     const { data, error } = await supabase
-      .from('training_competencies' as any)
+      .from('employee_competencies' as any)
       .select(`
         *,
         employees(full_name, employee_code, department, position)
