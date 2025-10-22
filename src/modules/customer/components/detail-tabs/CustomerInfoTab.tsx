@@ -1,9 +1,12 @@
 
+import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { ZoomIn } from 'lucide-react';
 
 interface Customer {
   id: string;
@@ -33,6 +36,8 @@ interface CustomerInfoTabProps {
 }
 
 export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
+  const [isZoomOpen, setIsZoomOpen] = useState(false);
+  
   const getInitials = (name: string) => {
     if (!name || typeof name !== 'string') return 'NA';
     return name.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2);
@@ -43,18 +48,29 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Dòng 1: Avatar, Mã khách hàng, Tên khách hàng, Loại khách hàng */}
         <div className="space-y-2 flex flex-col items-center">
-          <Avatar className="w-16 h-16 mb-2">
+          <div 
+            className="relative group cursor-pointer"
+            onClick={() => customer.avatarUrl && setIsZoomOpen(true)}
+          >
+            <Avatar className="w-20 h-20 border-4 border-white shadow-lg ring-2 ring-gray-200 transition-all duration-300 group-hover:shadow-xl group-hover:ring-4 group-hover:ring-blue-300">
+              {customer.avatarUrl && (
+                <AvatarImage 
+                  src={customer.avatarUrl} 
+                  alt={customer.name}
+                  className="object-cover"
+                />
+              )}
+              <AvatarFallback className="theme-bg-primary text-white text-lg font-semibold">
+                {getInitials(customer.name)}
+              </AvatarFallback>
+            </Avatar>
+            
             {customer.avatarUrl && (
-              <AvatarImage 
-                src={customer.avatarUrl} 
-                alt={customer.name}
-                className="object-cover"
-              />
+              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 rounded-full flex items-center justify-center transition-all duration-300 opacity-0 group-hover:opacity-100">
+                <ZoomIn className="w-8 h-8 text-white" />
+              </div>
             )}
-            <AvatarFallback className="theme-bg-primary text-white text-lg font-semibold">
-              {getInitials(customer.name)}
-            </AvatarFallback>
-          </Avatar>
+          </div>
           <Label className="theme-text text-sm font-medium text-center">Ảnh đại diện</Label>
         </div>
         <div className="space-y-2">
@@ -219,6 +235,30 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
           />
         </div>
       </div>
+
+      {/* Zoom Dialog */}
+      <Dialog open={isZoomOpen} onOpenChange={setIsZoomOpen}>
+        <DialogContent className="max-w-2xl">
+          <div className="flex flex-col items-center space-y-4">
+            <Avatar className="w-64 h-64 border-4 border-white shadow-2xl">
+              {customer.avatarUrl && (
+                <AvatarImage 
+                  src={customer.avatarUrl} 
+                  alt={customer.name}
+                  className="object-cover"
+                />
+              )}
+              <AvatarFallback className="theme-bg-primary text-white text-6xl font-semibold">
+                {getInitials(customer.name)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="text-center">
+              <h3 className="text-xl font-semibold theme-text">{customer.name}</h3>
+              <p className="text-sm theme-text-muted">{customer.phone}</p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
