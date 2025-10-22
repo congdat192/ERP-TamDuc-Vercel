@@ -6,11 +6,12 @@ export interface ExcelRow {
   'Mã SKU*': string;
   'Tên sản phẩm*': string;
   'Thương hiệu*': string;
-  'Giá (VNĐ)*': number;
+  'Giá niêm yết (VNĐ)*': number;
+  'Giá giảm (VNĐ)': number | '';
   'Chất liệu': string;
   'Chỉ số khúc xạ': string;
   'Xuất xứ': string;
-  'Bảo hành (tháng)': number;
+  'Bảo hành (tháng)': number | '';
   'Đặc tính (code, phân cách bởi ,)': string;
   'Mô tả': string;
   'Khuyến mãi (true/false)': string;
@@ -65,13 +66,23 @@ export class LensExcelService {
     const sku = row['Mã SKU*']?.toString().trim();
     const name = row['Tên sản phẩm*']?.toString().trim();
     const brandName = row['Thương hiệu*']?.toString().trim();
-    const price = Number(row['Giá (VNĐ)*']);
+    const price = Number(row['Giá niêm yết (VNĐ)*']);
+    const salePrice = row['Giá giảm (VNĐ)'] ? Number(row['Giá giảm (VNĐ)']) : null;
 
     // Required fields
     if (!sku) errors.push('SKU là bắt buộc');
     if (!name) errors.push('Tên sản phẩm là bắt buộc');
     if (!brandName) errors.push('Thương hiệu là bắt buộc');
-    if (!price || isNaN(price) || price <= 0) errors.push('Giá phải là số > 0');
+    if (!price || isNaN(price) || price <= 0) errors.push('Giá niêm yết phải là số > 0');
+    
+    // Validate sale price
+    if (salePrice !== null && salePrice !== undefined) {
+      if (isNaN(salePrice) || salePrice <= 0) {
+        errors.push('Giá giảm phải là số > 0');
+      } else if (salePrice >= price) {
+        errors.push('Giá giảm phải nhỏ hơn giá niêm yết');
+      }
+    }
 
     // SKU format
     if (sku && !/^[A-Za-z0-9-_]+$/.test(sku)) {
@@ -104,15 +115,26 @@ export class LensExcelService {
     // Parse promotion
     const isPromotion = row['Khuyến mãi (true/false)']?.toString().toLowerCase() === 'true';
 
+    // Calculate discount percent
+    const discountPercent = salePrice && price ? Math.round((1 - salePrice / price) * 100) : null;
+
+    // Parse warranty
+    const warrantyValue = row['Bảo hành (tháng)'];
+    const warrantyMonths = warrantyValue !== '' && warrantyValue !== null && warrantyValue !== undefined 
+      ? Number(warrantyValue) 
+      : null;
+
     const parsedProduct: ParsedProduct = {
       sku,
       name,
       brand_id: brand?.id,
       price,
+      sale_price: salePrice,
+      discount_percent: discountPercent,
       material: row['Chất liệu']?.toString().trim() || null,
       refractive_index: row['Chỉ số khúc xạ']?.toString().trim() || null,
       origin: row['Xuất xứ']?.toString().trim() || null,
-      warranty_months: Number(row['Bảo hành (tháng)']) || null,
+      warranty_months: warrantyMonths,
       description: row['Mô tả']?.toString().trim() || null,
       is_promotion: isPromotion,
       promotion_text: row['Text khuyến mãi']?.toString().trim() || null,
@@ -177,6 +199,8 @@ export class LensExcelService {
           name: p.name,
           brand_id: p.brand_id,
           price: p.price,
+          sale_price: p.sale_price,
+          discount_percent: p.discount_percent,
           material: p.material,
           refractive_index: p.refractive_index,
           origin: p.origin,
@@ -270,7 +294,8 @@ export class LensExcelService {
       'Mã SKU*': 'EXAMPLE-SKU',
       'Tên sản phẩm*': 'Tên sản phẩm mẫu',
       'Thương hiệu*': 'Essilor',
-      'Giá (VNĐ)*': 500000,
+      'Giá niêm yết (VNĐ)*': 1000000,
+      'Giá giảm (VNĐ)': 800000,
       'Chất liệu': 'Resin',
       'Chỉ số khúc xạ': '1.56',
       'Xuất xứ': 'Pháp',

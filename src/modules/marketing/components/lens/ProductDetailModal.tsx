@@ -96,9 +96,27 @@ export function ProductDetailModal({
             {/* Right: Product Info */}
             <div className="space-y-4">
               <div>
-                <p className="text-2xl font-bold text-green-700">
-                  Giá: {product.price.toLocaleString('vi-VN')}₫
-                </p>
+                {product.sale_price ? (
+                  <div className="space-y-2">
+                    <div className="flex items-baseline gap-3">
+                      <p className="text-3xl font-bold text-red-600">
+                        {product.sale_price.toLocaleString('vi-VN')}₫
+                      </p>
+                      {product.discount_percent && (
+                        <Badge variant="destructive" className="text-base">
+                          -{product.discount_percent}%
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-lg line-through text-muted-foreground">
+                      Giá gốc: {product.price.toLocaleString('vi-VN')}₫
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-3xl font-bold text-green-700">
+                    {product.price.toLocaleString('vi-VN')}₫
+                  </p>
+                )}
               </div>
 
               <div>

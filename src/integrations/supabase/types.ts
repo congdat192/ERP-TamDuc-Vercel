@@ -1430,11 +1430,11 @@ export type Database = {
       }
       lens_products: {
         Row: {
-          base_sku: string | null
           brand_id: string
           created_at: string | null
           created_by: string | null
           description: string | null
+          discount_percent: number | null
           id: string
           image_urls: Json | null
           is_active: boolean | null
@@ -1443,20 +1443,20 @@ export type Database = {
           name: string
           origin: string | null
           price: number
-          product_type: string
           promotion_text: string | null
           refractive_index: string | null
+          sale_price: number | null
           sku: string | null
           updated_at: string | null
           view_count: number | null
           warranty_months: number | null
         }
         Insert: {
-          base_sku?: string | null
           brand_id: string
           created_at?: string | null
           created_by?: string | null
           description?: string | null
+          discount_percent?: number | null
           id?: string
           image_urls?: Json | null
           is_active?: boolean | null
@@ -1465,20 +1465,20 @@ export type Database = {
           name: string
           origin?: string | null
           price?: number
-          product_type?: string
           promotion_text?: string | null
           refractive_index?: string | null
+          sale_price?: number | null
           sku?: string | null
           updated_at?: string | null
           view_count?: number | null
           warranty_months?: number | null
         }
         Update: {
-          base_sku?: string | null
           brand_id?: string
           created_at?: string | null
           created_by?: string | null
           description?: string | null
+          discount_percent?: number | null
           id?: string
           image_urls?: Json | null
           is_active?: boolean | null
@@ -1487,9 +1487,9 @@ export type Database = {
           name?: string
           origin?: string | null
           price?: number
-          product_type?: string
           promotion_text?: string | null
           refractive_index?: string | null
+          sale_price?: number | null
           sku?: string | null
           updated_at?: string | null
           view_count?: number | null

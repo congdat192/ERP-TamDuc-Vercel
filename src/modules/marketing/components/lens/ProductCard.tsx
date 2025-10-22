@@ -58,9 +58,29 @@ export function ProductCard({
         </div>
 
         <div className="flex items-center justify-between pt-2 border-t">
-          <span className="text-lg font-bold text-green-700">
-            {product.price.toLocaleString('vi-VN')}₫
-          </span>
+          <div>
+            {product.sale_price ? (
+              <div className="flex flex-col gap-1">
+                <span className="text-lg font-bold text-red-600">
+                  {product.sale_price.toLocaleString('vi-VN')}₫
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm line-through text-muted-foreground">
+                    {product.price.toLocaleString('vi-VN')}₫
+                  </span>
+                  {product.discount_percent && (
+                    <Badge variant="destructive" className="text-xs px-1 py-0">
+                      -{product.discount_percent}%
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <span className="text-lg font-bold text-green-700">
+                {product.price.toLocaleString('vi-VN')}₫
+              </span>
+            )}
+          </div>
 
           <button
             onClick={(e) => {

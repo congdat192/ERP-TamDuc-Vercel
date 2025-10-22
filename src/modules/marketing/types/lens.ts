@@ -21,6 +21,18 @@ export interface LensFeature {
   updated_at: string;
 }
 
+export interface LensProductAttribute {
+  id: string;
+  name: string;
+  slug: string;
+  type: 'select' | 'multiselect';
+  options: string[];
+  display_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface LensProduct {
   id: string;
   brand_id: string;
@@ -28,6 +40,8 @@ export interface LensProduct {
   sku: string | null;
   description: string | null;
   price: number;
+  sale_price: number | null;
+  discount_percent: number | null;
   image_urls: string[];
   material: string | null;
   refractive_index: string | null;

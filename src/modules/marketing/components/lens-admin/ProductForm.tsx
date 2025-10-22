@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { useQuery } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,11 +22,12 @@ const schema = z.object({
   name: z.string().min(1, 'Vui lòng nhập tên sản phẩm'),
   sku: z.string().optional(),
   description: z.string().optional(),
-  price: z.number().min(0, 'Giá phải lớn hơn 0'),
+  price: z.number().min(0, 'Giá niêm yết phải lớn hơn 0'),
+  sale_price: z.number().optional(),
   material: z.string().optional(),
   refractive_index: z.string().optional(),
   origin: z.string().optional(),
-  warranty_months: z.number().optional(),
+  warranty_months: z.string().optional(),
   is_promotion: z.boolean(),
   promotion_text: z.string().optional(),
   is_active: z.boolean(),
@@ -48,6 +50,11 @@ export function ProductForm({ open, product, brands, features, onClose }: Produc
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const { data: attributes = [] } = useQuery({
+    queryKey: ['lens-attributes'],
+    queryFn: () => lensApi.getAttributes(),
+  });
+
   const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -58,6 +65,13 @@ export function ProductForm({ open, product, brands, features, onClose }: Produc
   });
 
   const isPromotion = watch('is_promotion');
+  const price = watch('price');
+  const salePrice = watch('sale_price');
+  
+  const discountPercent = useMemo(() => {
+    if (!salePrice || !price || salePrice >= price) return null;
+    return Math.round((1 - salePrice / price) * 100);
+  }, [price, salePrice]);
 
   useEffect(() => {
     if (product) {
@@ -67,10 +81,11 @@ export function ProductForm({ open, product, brands, features, onClose }: Produc
         sku: product.sku || '',
         description: product.description || '',
         price: product.price,
+        sale_price: product.sale_price || undefined,
         material: product.material || '',
         refractive_index: product.refractive_index || '',
         origin: product.origin || '',
-        warranty_months: product.warranty_months || undefined,
+        warranty_months: product.warranty_months?.toString() || '',
         is_promotion: product.is_promotion,
         promotion_text: product.promotion_text || '',
         is_active: product.is_active,
@@ -78,7 +93,7 @@ export function ProductForm({ open, product, brands, features, onClose }: Produc
       setExistingImages(product.image_urls || []);
       setImageFiles([]);
       setImagePreviews([]);
-      setSelectedFeatures([]);
+      setSelectedFeatures(product.features?.map(f => f.id) || []);
     } else {
       reset({
         is_promotion: false,
@@ -122,6 +137,11 @@ export function ProductForm({ open, product, brands, features, onClose }: Produc
   };
 
   const onSubmit = async (data: FormData) => {
+    if (data.sale_price && data.sale_price >= data.price) {
+      toast.error('Giá giảm phải nhỏ hơn giá niêm yết');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       let newImageUrls: string[] = [];
@@ -131,9 +151,22 @@ export function ProductForm({ open, product, brands, features, onClose }: Produc
       
       const allImageUrls = [...existingImages, ...newImageUrls];
       
-      const productData = {
+      const sanitizedData = {
         ...data,
+        sku: data.sku?.trim() || null,
+        description: data.description?.trim() || null,
+        material: data.material?.trim() || null,
+        refractive_index: data.refractive_index?.trim() || null,
+        origin: data.origin?.trim() || null,
+        warranty_months: data.warranty_months ? parseInt(data.warranty_months) : null,
+        sale_price: data.sale_price || null,
+        promotion_text: data.promotion_text?.trim() || null,
+      };
+      
+      const productData = {
+        ...sanitizedData,
         image_urls: allImageUrls,
+        discount_percent: discountPercent,
         created_by: product?.created_by || undefined,
       };
 
@@ -258,13 +291,48 @@ export function ProductForm({ open, product, brands, features, onClose }: Produc
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>SKU</Label>
-              <Input {...register('sku')} />
+              <Input {...register('sku')} placeholder="RODEN-CM-156" />
             </div>
 
             <div>
-              <Label>Giá *</Label>
+              <Label>Giá niêm yết * (VD: 1,000,000)</Label>
               <Input type="number" {...register('price', { valueAsNumber: true })} />
               {errors.price && <p className="text-sm text-destructive mt-1">{errors.price.message}</p>}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Giá giảm (để trống nếu không KM)</Label>
+              <Input 
+                type="number" 
+                {...register('sale_price', { valueAsNumber: true })} 
+                placeholder="VD: 800,000"
+              />
+              {discountPercent && (
+                <p className="text-xs text-green-600 mt-1 font-semibold">
+                  ⚡ Giảm {discountPercent}%
+                </p>
+              )}
+              {salePrice && price && salePrice >= price && (
+                <p className="text-xs text-destructive mt-1">
+                  Giá giảm phải nhỏ hơn giá niêm yết
+                </p>
+              )}
+            </div>
+
+            <div className="flex items-end">
+              <div className="flex-1">
+                <p className="text-sm text-muted-foreground">
+                  {!salePrice ? (
+                    'Chưa có giảm giá'
+                  ) : (
+                    <>
+                      Giá bán: <span className="font-semibold text-foreground">{salePrice.toLocaleString('vi-VN')}₫</span>
+                    </>
+                  )}
+                </p>
+              </div>
             </div>
           </div>
 
@@ -274,27 +342,28 @@ export function ProductForm({ open, product, brands, features, onClose }: Produc
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Chất liệu</Label>
-              <Input {...register('material')} />
-            </div>
-
-            <div>
-              <Label>Chiết suất</Label>
-              <Input {...register('refractive_index')} placeholder="1.56" />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Xuất xứ</Label>
-              <Input {...register('origin')} />
-            </div>
-
-            <div>
-              <Label>Bảo hành (tháng)</Label>
-              <Input type="number" {...register('warranty_months', { valueAsNumber: true })} />
-            </div>
+            {attributes.map(attr => (
+              <div key={attr.id}>
+                <Label>{attr.name}</Label>
+                <Select 
+                  onValueChange={(v) => setValue(attr.slug as keyof FormData, v as any)}
+                  defaultValue={
+                    attr.slug === 'warranty_months'
+                      ? product?.warranty_months?.toString()
+                      : (product?.[attr.slug as keyof LensProduct] as string) || undefined
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={`Chọn ${attr.name.toLowerCase()}`} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {attr.options.map(option => (
+                      <SelectItem key={option} value={option}>{option}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ))}
           </div>
 
           <div>

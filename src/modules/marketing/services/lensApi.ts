@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { LensBrand, LensFeature, LensProduct, LensBanner, LensFilters, LensProductWithDetails } from '../types/lens';
+import { LensBrand, LensFeature, LensProduct, LensBanner, LensFilters, LensProductWithDetails, LensProductAttribute } from '../types/lens';
 
 export const lensApi = {
   // Brands
@@ -202,6 +202,77 @@ export const lensApi = {
 
       if (error) throw error;
     }
+  },
+
+  // Attributes
+  async getAttributes(): Promise<LensProductAttribute[]> {
+    const { data, error } = await supabase
+      .from('lens_product_attributes')
+      .select('*')
+      .eq('is_active', true)
+      .order('display_order');
+    
+    if (error) throw error;
+    
+    return (data || []).map(attr => ({
+      ...attr,
+      type: attr.type as 'select' | 'multiselect',
+      options: typeof attr.options === 'string' 
+        ? JSON.parse(attr.options) 
+        : Array.isArray(attr.options) ? attr.options : []
+    }));
+  },
+
+  async createAttribute(
+    attribute: Omit<LensProductAttribute, 'id' | 'created_at' | 'updated_at'>
+  ): Promise<LensProductAttribute> {
+    const { data, error } = await supabase
+      .from('lens_product_attributes')
+      .insert({
+        ...attribute,
+        options: JSON.stringify(attribute.options)
+      })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return { 
+      ...data,
+      type: data.type as 'select' | 'multiselect',
+      options: typeof data.options === 'string' ? JSON.parse(data.options) : data.options 
+    };
+  },
+
+  async updateAttribute(
+    id: string,
+    attribute: Partial<LensProductAttribute>
+  ): Promise<LensProductAttribute> {
+    const { data, error } = await supabase
+      .from('lens_product_attributes')
+      .update({
+        ...attribute,
+        options: attribute.options ? JSON.stringify(attribute.options) : undefined,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return { 
+      ...data,
+      type: data.type as 'select' | 'multiselect',
+      options: typeof data.options === 'string' ? JSON.parse(data.options) : data.options 
+    };
+  },
+
+  async deleteAttribute(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('lens_product_attributes')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
   },
 
   // Banners
