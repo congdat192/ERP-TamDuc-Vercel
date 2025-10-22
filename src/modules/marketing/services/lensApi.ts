@@ -119,6 +119,27 @@ export const lensApi = {
     return { products, total: count || 0 };
   },
 
+  // Get product variants by parent_sku
+  async getProductVariants(parentSku: string): Promise<LensProduct[]> {
+    const { data, error } = await supabase
+      .from('lens_products')
+      .select(`
+        *,
+        brand:lens_brands(*)
+      `)
+      .eq('parent_sku', parentSku)
+      .eq('is_active', true)
+      .order('price', { ascending: true });
+    
+    if (error) throw error;
+    
+    // Transform image_urls from Json to string[]
+    return (data || []).map(product => ({
+      ...product,
+      image_urls: Array.isArray(product.image_urls) ? product.image_urls as string[] : []
+    }));
+  },
+
   async getProductById(id: string): Promise<LensProductWithDetails | null> {
     const { data, error } = await supabase
       .from('lens_products')

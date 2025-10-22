@@ -1,9 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { LensProductWithDetails } from '../../types/lens';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { LensProductWithDetails, LensProduct } from '../../types/lens';
+import { lensApi } from '../../services/lensApi';
 import { Plus, Check } from 'lucide-react';
 
 interface ProductDetailModalProps {
@@ -24,8 +27,29 @@ export function ProductDetailModal({
   canAddMore,
 }: ProductDetailModalProps) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const images = product.image_urls || [];
+  const [variants, setVariants] = useState<LensProduct[]>([]);
+  const [selectedVariant, setSelectedVariant] = useState<LensProduct>(product);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (open && product.parent_sku) {
+      setLoading(true);
+      lensApi.getProductVariants(product.parent_sku)
+        .then(data => {
+          setVariants(data.length > 0 ? data : [product]);
+          setSelectedVariant(product);
+        })
+        .catch(() => setVariants([product]))
+        .finally(() => setLoading(false));
+    } else if (open) {
+      setVariants([product]);
+      setSelectedVariant(product);
+    }
+  }, [open, product]);
+
+  const images = selectedVariant.image_urls || [];
   const hasImages = images.length > 0;
+  const hasVariants = variants.length > 1;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -95,23 +119,53 @@ export function ProductDetailModal({
 
             {/* Right: Product Info */}
             <div className="space-y-4">
+              {/* Variant Selector */}
+              {hasVariants && (
+                <div className="border-b pb-4">
+                  <Label className="text-sm font-medium mb-2 block">Chọn phiên bản</Label>
+                  <Select 
+                    value={selectedVariant.id}
+                    onValueChange={(id) => {
+                      const variant = variants.find(v => v.id === id);
+                      if (variant) {
+                        setSelectedVariant(variant);
+                        setSelectedImageIndex(0);
+                      }
+                    }}
+                    disabled={loading}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {variants.map(v => (
+                        <SelectItem key={v.id} value={v.id}>
+                          {v.refractive_index && `${v.refractive_index} - `}
+                          {v.price.toLocaleString('vi-VN')}₫
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
               <div>
                 <p className="text-2xl font-bold text-green-700">
-                  Giá: {product.price.toLocaleString('vi-VN')}₫
+                  Giá: {selectedVariant.price.toLocaleString('vi-VN')}₫
                 </p>
               </div>
 
               <div>
                 <p className="text-base">
                   <span className="text-muted-foreground">Thương hiệu:</span>{' '}
-                  <span className="font-semibold">{product.brand?.name}</span>
+                  <span className="font-semibold">{selectedVariant.brand?.name || product.brand?.name}</span>
                 </p>
               </div>
 
-              {product.description && (
+              {selectedVariant.description && (
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Mô tả</p>
-                  <p className="text-sm">{product.description}</p>
+                  <p className="text-sm">{selectedVariant.description}</p>
                 </div>
               )}
 
@@ -119,31 +173,31 @@ export function ProductDetailModal({
                 <h3 className="font-semibold">Thông số kỹ thuật</h3>
                 
                 <div className="grid grid-cols-2 gap-2 text-sm">
-                  {product.material && (
+                  {selectedVariant.material && (
                     <>
                       <span className="text-muted-foreground">Chất liệu:</span>
-                      <span className="font-medium">{product.material}</span>
+                      <span className="font-medium">{selectedVariant.material}</span>
                     </>
                   )}
                   
-                  {product.refractive_index && (
+                  {selectedVariant.refractive_index && (
                     <>
                       <span className="text-muted-foreground">Chiết suất:</span>
-                      <span className="font-medium">{product.refractive_index}</span>
+                      <span className="font-medium">{selectedVariant.refractive_index}</span>
                     </>
                   )}
                   
-                  {product.origin && (
+                  {selectedVariant.origin && (
                     <>
                       <span className="text-muted-foreground">Xuất xứ:</span>
-                      <span className="font-medium">{product.origin}</span>
+                      <span className="font-medium">{selectedVariant.origin}</span>
                     </>
                   )}
                   
-                  {product.warranty_months && (
+                  {selectedVariant.warranty_months && (
                     <>
                       <span className="text-muted-foreground">Bảo hành:</span>
-                      <span className="font-medium">{product.warranty_months} tháng</span>
+                      <span className="font-medium">{selectedVariant.warranty_months} tháng</span>
                     </>
                   )}
                 </div>

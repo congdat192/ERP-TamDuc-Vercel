@@ -26,6 +26,7 @@ export interface LensProduct {
   brand_id: string;
   name: string;
   sku: string | null;
+  parent_sku: string | null;
   description: string | null;
   price: number;
   image_urls: string[];

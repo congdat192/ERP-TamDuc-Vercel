@@ -20,6 +20,7 @@ const schema = z.object({
   brand_id: z.string().min(1, 'Vui lòng chọn thương hiệu'),
   name: z.string().min(1, 'Vui lòng nhập tên sản phẩm'),
   sku: z.string().optional(),
+  parent_sku: z.string().optional(),
   description: z.string().optional(),
   price: z.number().min(0, 'Giá phải lớn hơn 0'),
   material: z.string().optional(),
@@ -65,6 +66,7 @@ export function ProductForm({ open, product, brands, features, onClose }: Produc
         brand_id: product.brand_id,
         name: product.name,
         sku: product.sku || '',
+        parent_sku: product.parent_sku || '',
         description: product.description || '',
         price: product.price,
         material: product.material || '',
@@ -81,9 +83,19 @@ export function ProductForm({ open, product, brands, features, onClose }: Produc
       setSelectedFeatures([]);
     } else {
       reset({
-        is_promotion: false,
-        is_active: true,
+        brand_id: '',
+        name: '',
+        sku: '',
+        parent_sku: '',
+        description: '',
         price: 0,
+        material: '',
+        refractive_index: '',
+        origin: '',
+        warranty_months: 0,
+        is_promotion: false,
+        promotion_text: '',
+        is_active: true,
       });
       setExistingImages([]);
       setImageFiles([]);
@@ -258,14 +270,22 @@ export function ProductForm({ open, product, brands, features, onClose }: Produc
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>SKU</Label>
-              <Input {...register('sku')} />
+              <Input {...register('sku')} placeholder="VD: ESSILOR-VARILUX-156" />
             </div>
 
             <div>
-              <Label>Giá *</Label>
-              <Input type="number" {...register('price', { valueAsNumber: true })} />
-              {errors.price && <p className="text-sm text-destructive mt-1">{errors.price.message}</p>}
+              <Label>Parent SKU (để group biến thể)</Label>
+              <Input {...register('parent_sku')} placeholder="VD: ESSILOR-VARILUX" />
+              <p className="text-xs text-muted-foreground mt-1">
+                Để trống nếu sản phẩm không có biến thể
+              </p>
             </div>
+          </div>
+
+          <div>
+            <Label>Giá *</Label>
+            <Input type="number" {...register('price', { valueAsNumber: true })} />
+            {errors.price && <p className="text-sm text-destructive mt-1">{errors.price.message}</p>}
           </div>
 
           <div>
