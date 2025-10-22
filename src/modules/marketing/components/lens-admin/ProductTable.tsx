@@ -1,5 +1,5 @@
-import { useState, Fragment } from 'react';
-import { Pencil, Trash2, Copy, ChevronDown, ChevronRight, Link2 } from 'lucide-react';
+import { useState } from 'react';
+import { Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -26,40 +26,10 @@ interface ProductTableProps {
 
 export function ProductTable({ products, brands, onEdit, onRefetch }: ProductTableProps) {
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
 
   const getBrandName = (brandId: string) => {
     return brands.find(b => b.id === brandId)?.name || '-';
   };
-
-  const toggleGroup = (groupKey: string) => {
-    setExpandedGroups(prev => 
-      prev.includes(groupKey) 
-        ? prev.filter(k => k !== groupKey)
-        : [...prev, groupKey]
-    );
-  };
-
-  const handleDuplicateAsVariant = (product: LensProduct) => {
-    const newProduct = {
-      ...product,
-      id: '',
-      sku: `${product.sku}-COPY`,
-      parent_sku: product.parent_sku || product.sku,
-      name: `${product.name} (Bản sao)`,
-    } as LensProduct;
-    onEdit(newProduct);
-  };
-
-  // Group products by parent_sku
-  const groupedProducts = products.reduce((acc, product) => {
-    const key = product.parent_sku || product.id;
-    if (!acc[key]) {
-      acc[key] = [];
-    }
-    acc[key].push(product);
-    return acc;
-  }, {} as Record<string, LensProduct[]>);
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -98,127 +68,38 @@ export function ProductTable({ products, brands, onEdit, onRefetch }: ProductTab
                 </TableCell>
               </TableRow>
             ) : (
-              Object.entries(groupedProducts).map(([groupKey, variants]) => {
-                const mainProduct = variants[0];
-                const hasVariants = variants.length > 1;
-                const isExpanded = expandedGroups.includes(groupKey);
-
-                return (
-                  <Fragment key={groupKey}>
-                    {/* Main Product Row */}
-                    <TableRow>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          {hasVariants && (
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="h-6 w-6 p-0"
-                              onClick={() => toggleGroup(groupKey)}
-                            >
-                              {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                            </Button>
-                          )}
-                          <span>{mainProduct.name}</span>
-                          {hasVariants && (
-                            <Badge variant="secondary" className="text-xs">
-                              {variants.length} variants
-                            </Badge>
-                          )}
-                          {mainProduct.parent_sku && (
-                            <Badge variant="outline" className="text-xs">
-                              <Link2 className="w-3 h-3 mr-1" />
-                              Variant
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>{getBrandName(mainProduct.brand_id)}</TableCell>
-                      <TableCell>{mainProduct.price.toLocaleString('vi-VN')}₫</TableCell>
-                      <TableCell>{mainProduct.material || '-'}</TableCell>
-                      <TableCell>{mainProduct.refractive_index || '-'}</TableCell>
-                      <TableCell>
-                        <Badge variant={mainProduct.is_active ? 'default' : 'secondary'}>
-                          {mainProduct.is_active ? 'Hoạt động' : 'Tạm ẩn'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleDuplicateAsVariant(mainProduct)}
-                            title="Tạo biến thể"
-                          >
-                            <Copy className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => onEdit(mainProduct)}
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setDeleteId(mainProduct.id)}
-                          >
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-
-                    {/* Variant Rows (Expanded) */}
-                    {isExpanded && hasVariants && variants.slice(1).map((variant) => (
-                      <TableRow key={variant.id} className="bg-muted/30">
-                        <TableCell className="pl-14">
-                          <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground">└</span>
-                            <span>{variant.name}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>{getBrandName(variant.brand_id)}</TableCell>
-                        <TableCell>{variant.price.toLocaleString('vi-VN')}₫</TableCell>
-                        <TableCell>{variant.material || '-'}</TableCell>
-                        <TableCell>{variant.refractive_index || '-'}</TableCell>
-                        <TableCell>
-                          <Badge variant={variant.is_active ? 'default' : 'secondary'}>
-                            {variant.is_active ? 'Hoạt động' : 'Tạm ẩn'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-1">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleDuplicateAsVariant(variant)}
-                              title="Tạo biến thể"
-                            >
-                              <Copy className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => onEdit(variant)}
-                            >
-                              <Pencil className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => setDeleteId(variant.id)}
-                            >
-                              <Trash2 className="w-4 h-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </Fragment>
-                );
-              })
+              products.map((product) => (
+                <TableRow key={product.id}>
+                  <TableCell className="font-medium">{product.name}</TableCell>
+                  <TableCell>{getBrandName(product.brand_id)}</TableCell>
+                  <TableCell>{product.price.toLocaleString('vi-VN')}₫</TableCell>
+                  <TableCell>{product.material || '-'}</TableCell>
+                  <TableCell>{product.refractive_index || '-'}</TableCell>
+                  <TableCell>
+                    <Badge variant={product.is_active ? 'default' : 'secondary'}>
+                      {product.is_active ? 'Hoạt động' : 'Tạm ẩn'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => onEdit(product)}
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setDeleteId(product.id)}
+                      >
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
             )}
           </TableBody>
         </Table>

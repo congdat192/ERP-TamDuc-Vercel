@@ -1428,6 +1428,59 @@ export type Database = {
           },
         ]
       }
+      lens_product_variants: {
+        Row: {
+          attributes: Json | null
+          created_at: string | null
+          display_order: number | null
+          id: string
+          image_urls: Json | null
+          is_active: boolean | null
+          price: number
+          product_id: string
+          sku: string
+          stock_quantity: number | null
+          updated_at: string | null
+          variant_name: string
+        }
+        Insert: {
+          attributes?: Json | null
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          image_urls?: Json | null
+          is_active?: boolean | null
+          price?: number
+          product_id: string
+          sku: string
+          stock_quantity?: number | null
+          updated_at?: string | null
+          variant_name: string
+        }
+        Update: {
+          attributes?: Json | null
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          image_urls?: Json | null
+          is_active?: boolean | null
+          price?: number
+          product_id?: string
+          sku?: string
+          stock_quantity?: number | null
+          updated_at?: string | null
+          variant_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lens_product_variants_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "lens_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lens_products: {
         Row: {
           base_sku: string | null
@@ -1442,7 +1495,6 @@ export type Database = {
           material: string | null
           name: string
           origin: string | null
-          parent_sku: string | null
           price: number
           product_type: string
           promotion_text: string | null
@@ -1465,7 +1517,6 @@ export type Database = {
           material?: string | null
           name: string
           origin?: string | null
-          parent_sku?: string | null
           price?: number
           product_type?: string
           promotion_text?: string | null
@@ -1488,7 +1539,6 @@ export type Database = {
           material?: string | null
           name?: string
           origin?: string | null
-          parent_sku?: string | null
           price?: number
           product_type?: string
           promotion_text?: string | null

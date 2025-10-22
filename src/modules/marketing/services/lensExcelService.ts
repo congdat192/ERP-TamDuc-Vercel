@@ -4,7 +4,6 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface ExcelRow {
   'Mã SKU*': string;
-  'Parent SKU': string;
   'Tên sản phẩm*': string;
   'Thương hiệu*': string;
   'Giá (VNĐ)*': number;
@@ -107,7 +106,6 @@ export class LensExcelService {
 
     const parsedProduct: ParsedProduct = {
       sku,
-      parent_sku: row['Parent SKU']?.toString().trim() || null,
       name,
       brand_id: brand?.id,
       price,
@@ -176,7 +174,6 @@ export class LensExcelService {
         // Prepare products for upsert (remove validation metadata)
         const productsToUpsert = batch.map(p => ({
           sku: p.sku,
-          parent_sku: p.parent_sku,
           name: p.name,
           brand_id: p.brand_id,
           price: p.price,
@@ -270,9 +267,8 @@ export class LensExcelService {
   // Get empty template
   static downloadTemplate() {
     const template: ExcelRow[] = [{
-      'Mã SKU*': 'EXAMPLE-SKU-156',
-      'Parent SKU': 'EXAMPLE-SKU',
-      'Tên sản phẩm*': 'Tên sản phẩm mẫu 1.56',
+      'Mã SKU*': 'EXAMPLE-SKU',
+      'Tên sản phẩm*': 'Tên sản phẩm mẫu',
       'Thương hiệu*': 'Essilor',
       'Giá (VNĐ)*': 500000,
       'Chất liệu': 'Resin',

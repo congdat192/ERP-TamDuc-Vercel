@@ -21,14 +21,42 @@ export interface LensFeature {
   updated_at: string;
 }
 
+export interface LensProductAttribute {
+  id: string;
+  name: string;
+  slug: string;
+  type: 'select' | 'color' | 'text';
+  options: string[];
+  is_active: boolean;
+  display_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LensProductVariant {
+  id: string;
+  product_id: string;
+  sku: string;
+  variant_name: string;
+  attributes: Record<string, string>; // { "chiet_suat": "1.56", "mau_sac": "Clear" }
+  price: number;
+  stock_quantity: number;
+  image_urls: string[];
+  is_active: boolean;
+  display_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface LensProduct {
   id: string;
   brand_id: string;
   name: string;
-  sku: string | null;
-  parent_sku: string | null;
+  product_type: 'simple' | 'variable';
+  base_sku: string | null;
+  sku: string | null; // For simple products only
   description: string | null;
-  price: number;
+  price: number; // Base price for simple, min price for variable
   image_urls: string[];
   material: string | null;
   refractive_index: string | null;
@@ -43,6 +71,7 @@ export interface LensProduct {
   created_by: string | null;
   brand?: LensBrand;
   features?: LensFeature[];
+  variants?: LensProductVariant[];
 }
 
 export interface LensBanner {
@@ -73,4 +102,15 @@ export interface LensFilters {
 export interface LensProductWithDetails extends LensProduct {
   brand: LensBrand;
   features: LensFeature[];
+  variants?: LensProductVariant[];
+}
+
+export interface CreateVariantInput {
+  sku: string;
+  variant_name: string;
+  attributes: Record<string, string>;
+  price: number;
+  stock_quantity: number;
+  image_urls?: string[];
+  display_order?: number;
 }
