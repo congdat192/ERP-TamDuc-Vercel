@@ -7,6 +7,8 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { lensApi } from '@/modules/marketing/services/lensApi';
 import { ProductTable } from '@/modules/marketing/components/lens-admin/ProductTable';
 import { ProductForm } from '@/modules/marketing/components/lens-admin/ProductForm';
+import { ImportExcelDialog } from '@/modules/marketing/components/lens-admin/ImportExcelDialog';
+import { ExportExcelButton } from '@/modules/marketing/components/lens-admin/ExportExcelButton';
 import { LensProduct } from '@/modules/marketing/types/lens';
 
 export function LensAdminPage() {
@@ -27,6 +29,7 @@ export function LensAdminPage() {
   }
 
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<LensProduct | null>(null);
 
   const { data: productsData, refetch } = useQuery({
@@ -72,10 +75,16 @@ export function LensAdminPage() {
           <p className="text-muted-foreground">Quản lý sản phẩm tròng kính</p>
         </div>
 
-        <Button onClick={handleCreate} className="bg-green-600 hover:bg-green-700">
-          <Plus className="w-4 h-4 mr-2" />
-          Thêm sản phẩm
-        </Button>
+        <div className="flex gap-2">
+          <ExportExcelButton />
+          <Button variant="outline" onClick={() => setIsImportOpen(true)}>
+            Nhập Excel
+          </Button>
+          <Button onClick={handleCreate} className="bg-green-600 hover:bg-green-700">
+            <Plus className="w-4 h-4 mr-2" />
+            Thêm sản phẩm
+          </Button>
+        </div>
       </div>
 
       <ProductTable
@@ -91,6 +100,14 @@ export function LensAdminPage() {
         brands={brands || []}
         features={features || []}
         onClose={handleFormClose}
+      />
+
+      <ImportExcelDialog
+        open={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
+        brands={brands || []}
+        features={features || []}
+        onImportSuccess={refetch}
       />
     </div>
   );
