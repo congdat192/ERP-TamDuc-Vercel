@@ -66,7 +66,7 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
             </Avatar>
             
             {customer.avatarUrl && (
-              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 rounded-lg flex items-center justify-center transition-all duration-300 opacity-0 group-hover:opacity-100">
+              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 rounded-full flex items-center justify-center transition-all duration-300 opacity-0 group-hover:opacity-100">
                 <ZoomIn className="w-8 h-8 text-white" />
               </div>
             )}
