@@ -5,6 +5,7 @@ import { CustomerListTab } from '../components/tabs/CustomerListTab';
 import { CustomerFilterTab } from '../components/tabs/CustomerFilterTab';
 import { SavedFiltersTab } from '../components/tabs/SavedFiltersTab';
 import { MarketingCampaignsTab } from '../components/tabs/MarketingCampaignsTab';
+import { LensAdminTab } from '../components/tabs/LensAdminTab';
 
 export function MarketingDashboard() {
   const [activeTab, setActiveTab] = useState('customers');
@@ -16,7 +17,7 @@ export function MarketingDashboard() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 max-w-4xl">
+        <TabsList className="grid w-full grid-cols-5 max-w-5xl">
           <TabsTrigger 
             value="customers"
             className="data-[state=active]:theme-bg-primary data-[state=active]:text-white"
@@ -41,6 +42,12 @@ export function MarketingDashboard() {
           >
             Chiến dịch Marketing
           </TabsTrigger>
+          <TabsTrigger 
+            value="lens-admin"
+            className="data-[state=active]:theme-bg-primary data-[state=active]:text-white"
+          >
+            Lens Catalog Admin
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="customers" className="mt-6">
@@ -57,6 +64,10 @@ export function MarketingDashboard() {
 
         <TabsContent value="campaigns" className="mt-6">
           <MarketingCampaignsTab />
+        </TabsContent>
+
+        <TabsContent value="lens-admin" className="mt-6">
+          <LensAdminTab />
         </TabsContent>
       </Tabs>
     </div>

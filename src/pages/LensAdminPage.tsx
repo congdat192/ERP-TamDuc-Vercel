@@ -1,13 +1,31 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Plus } from 'lucide-react';
+import { Plus, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { usePermissions } from '@/hooks/usePermissions';
 import { lensApi } from '@/modules/marketing/services/lensApi';
 import { ProductTable } from '@/modules/marketing/components/lens-admin/ProductTable';
 import { ProductForm } from '@/modules/marketing/components/lens-admin/ProductForm';
 import { LensProduct } from '@/modules/marketing/types/lens';
 
 export function LensAdminPage() {
+  const { hasFeatureAccess } = usePermissions();
+  
+  // Check permission
+  if (!hasFeatureAccess('manage_lens_products')) {
+    return (
+      <div className="container mx-auto py-6">
+        <Alert variant="destructive">
+          <ShieldAlert className="h-4 w-4" />
+          <AlertDescription>
+            Bạn không có quyền truy cập trang này. Vui lòng liên hệ admin để được cấp quyền "Quản lý Sản phẩm Tròng".
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<LensProduct | null>(null);
 
