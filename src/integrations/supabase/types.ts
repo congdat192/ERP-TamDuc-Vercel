@@ -1356,6 +1356,42 @@ export type Database = {
         }
         Relationships: []
       }
+      lens_product_attributes: {
+        Row: {
+          created_at: string | null
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          name: string
+          options: Json | null
+          slug: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          options?: Json | null
+          slug: string
+          type?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          options?: Json | null
+          slug?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       lens_product_features: {
         Row: {
           created_at: string | null
@@ -1394,6 +1430,7 @@ export type Database = {
       }
       lens_products: {
         Row: {
+          base_sku: string | null
           brand_id: string
           created_at: string | null
           created_by: string | null
@@ -1406,6 +1443,7 @@ export type Database = {
           name: string
           origin: string | null
           price: number
+          product_type: string
           promotion_text: string | null
           refractive_index: string | null
           sku: string | null
@@ -1414,6 +1452,7 @@ export type Database = {
           warranty_months: number | null
         }
         Insert: {
+          base_sku?: string | null
           brand_id: string
           created_at?: string | null
           created_by?: string | null
@@ -1426,6 +1465,7 @@ export type Database = {
           name: string
           origin?: string | null
           price?: number
+          product_type?: string
           promotion_text?: string | null
           refractive_index?: string | null
           sku?: string | null
@@ -1434,6 +1474,7 @@ export type Database = {
           warranty_months?: number | null
         }
         Update: {
+          base_sku?: string | null
           brand_id?: string
           created_at?: string | null
           created_by?: string | null
@@ -1446,6 +1487,7 @@ export type Database = {
           name?: string
           origin?: string | null
           price?: number
+          product_type?: string
           promotion_text?: string | null
           refractive_index?: string | null
           sku?: string | null
@@ -2428,32 +2470,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      cleanup_expired_otp: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      cleanup_expired_otp: { Args: never; Returns: undefined }
       generate_doc_number: {
         Args: { _doc_type: string; _year: number }
         Returns: string
       }
-      get_user_profile_simple: {
-        Args: { _user_id: string }
-        Returns: Json
-      }
-      get_user_role_level: {
-        Args: { _user_id: string }
-        Returns: number
-      }
-      has_role: {
-        Args:
-          | { _role: Database["public"]["Enums"]["app_role"]; _user_id: string }
-          | { _role_name: string; _user_id: string }
-        Returns: boolean
-      }
-      is_admin: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
+      get_user_profile_simple: { Args: { _user_id: string }; Returns: Json }
+      get_user_role_level: { Args: { _user_id: string }; Returns: number }
+      has_role:
+        | { Args: { _role_name: string; _user_id: string }; Returns: boolean }
+        | {
+            Args: {
+              _role: Database["public"]["Enums"]["app_role"]
+              _user_id: string
+            }
+            Returns: boolean
+          }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
       revoke_user_sessions: {
         Args: { target_user_id: string }
         Returns: undefined
