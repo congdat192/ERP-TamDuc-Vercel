@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 import { LensProduct, LensBrand, LensFeature } from '../../types/lens';
 import { lensApi } from '../../services/lensApi';
 import { toast } from 'sonner';
@@ -42,8 +43,9 @@ interface ProductFormProps {
 
 export function ProductForm({ open, product, brands, features, onClose }: ProductFormProps) {
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<FormData>({
@@ -73,9 +75,9 @@ export function ProductForm({ open, product, brands, features, onClose }: Produc
         promotion_text: product.promotion_text || '',
         is_active: product.is_active,
       });
-      setImagePreview(product.image_url);
-      // Load features for this product
-      // Note: We'd need to fetch this separately if needed
+      setExistingImages(product.image_urls || []);
+      setImageFiles([]);
+      setImagePreviews([]);
       setSelectedFeatures([]);
     } else {
       reset({
@@ -83,40 +85,63 @@ export function ProductForm({ open, product, brands, features, onClose }: Produc
         is_active: true,
         price: 0,
       });
-      setImagePreview(null);
+      setExistingImages([]);
+      setImageFiles([]);
+      setImagePreviews([]);
       setSelectedFeatures([]);
     }
   }, [product, reset]);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
+  const handleImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const totalImages = existingImages.length + imagePreviews.length + files.length;
+    
+    if (totalImages > 10) {
+      toast.error('Tối đa 10 ảnh');
+      return;
+    }
+    
+    setImageFiles(prev => [...prev, ...files]);
+    
+    files.forEach(file => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result as string);
+        setImagePreviews(prev => [...prev, reader.result as string]);
       };
       reader.readAsDataURL(file);
-    }
+    });
+  };
+
+  const handleRemoveNewImage = (index: number) => {
+    setImageFiles(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleRemoveExistingImage = (url: string) => {
+    setExistingImages(prev => prev.filter(u => u !== url));
   };
 
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
     try {
-      let imageUrl = product?.image_url || null;
-
-      if (imageFile) {
-        imageUrl = await lensApi.uploadImage(imageFile, 'products');
+      let newImageUrls: string[] = [];
+      if (imageFiles.length > 0) {
+        newImageUrls = await lensApi.uploadImages(imageFiles);
       }
-
+      
+      const allImageUrls = [...existingImages, ...newImageUrls];
+      
       const productData = {
         ...data,
-        image_url: imageUrl,
+        image_urls: allImageUrls,
         created_by: product?.created_by || undefined,
       };
 
       if (product) {
-        await lensApi.updateProduct(product.id, productData);
+        const removedImages = (product.image_urls || []).filter(url => !existingImages.includes(url));
+        await Promise.all(removedImages.map(url => lensApi.deleteImage(url).catch(() => {})));
+        
+        await lensApi.updateProduct(product.id, productData as any);
         await lensApi.linkProductFeatures(product.id, selectedFeatures);
         toast.success('Cập nhật sản phẩm thành công');
       } else {
@@ -141,34 +166,70 @@ export function ProductForm({ open, product, brands, features, onClose }: Produc
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Image Upload */}
+          {/* Multi-Image Upload */}
           <div>
-            <Label>Hình ảnh</Label>
-            <div className="mt-2">
-              {imagePreview ? (
-                <div className="relative w-40 h-40 border rounded-lg overflow-hidden">
-                  <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setImageFile(null);
-                      setImagePreview(null);
-                    }}
-                    className="absolute top-2 right-2 p-1 bg-destructive rounded-full text-white"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+            <Label>Hình ảnh (tối đa 10 ảnh)</Label>
+            <div className="mt-2 space-y-4">
+              {/* Existing Images */}
+              {existingImages.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {existingImages.map((url, index) => (
+                    <div key={url} className="relative w-24 h-24 border rounded-lg overflow-hidden group">
+                      <img src={url} alt={`Ảnh ${index + 1}`} className="w-full h-full object-cover" />
+                      {index === 0 && (
+                        <Badge className="absolute top-1 left-1 text-xs">Chính</Badge>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveExistingImage(url)}
+                        className="absolute inset-0 bg-black/50 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
-              ) : (
-                <label className="flex items-center justify-center w-40 h-40 border-2 border-dashed rounded-lg cursor-pointer hover:bg-accent">
+              )}
+              
+              {/* New Image Previews */}
+              {imagePreviews.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {imagePreviews.map((preview, index) => (
+                    <div key={preview} className="relative w-24 h-24 border rounded-lg overflow-hidden group">
+                      <img src={preview} alt={`Ảnh mới ${index + 1}`} className="w-full h-full object-cover" />
+                      <Badge className="absolute top-1 left-1 text-xs bg-blue-600">Mới</Badge>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveNewImage(index)}
+                        className="absolute inset-0 bg-black/50 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {/* Upload Button */}
+              {(existingImages.length + imagePreviews.length) < 10 && (
+                <label className="flex items-center justify-center w-24 h-24 border-2 border-dashed rounded-lg cursor-pointer hover:bg-accent">
                   <div className="text-center">
-                    <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">Tải ảnh lên</span>
+                    <Upload className="w-6 h-6 mx-auto mb-1 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">Thêm ảnh</span>
                   </div>
-                  <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    multiple
+                    onChange={handleImagesChange} 
+                    className="hidden" 
+                  />
                 </label>
               )}
             </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Ảnh đầu tiên sẽ là ảnh đại diện
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

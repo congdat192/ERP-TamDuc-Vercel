@@ -28,7 +28,7 @@ export interface LensProduct {
   sku: string | null;
   description: string | null;
   price: number;
-  image_url: string | null;
+  image_urls: string[];
   material: string | null;
   refractive_index: string | null;
   origin: string | null;

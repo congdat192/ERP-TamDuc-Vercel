@@ -109,9 +109,10 @@ export const lensApi = {
 
     if (error) throw error;
 
-    // Transform features array
+    // Transform features array and cast image_urls
     const products = (data || []).map(product => ({
       ...product,
+      image_urls: Array.isArray(product.image_urls) ? product.image_urls as string[] : [],
       features: product.features?.map((f: any) => f.feature).filter(Boolean) || []
     }));
 
@@ -143,6 +144,7 @@ export const lensApi = {
 
     return {
       ...data,
+      image_urls: Array.isArray(data.image_urls) ? data.image_urls as string[] : [],
       features: data.features?.map((f: any) => f.feature).filter(Boolean) || []
     };
   },
@@ -155,7 +157,10 @@ export const lensApi = {
       .single();
 
     if (error) throw error;
-    return data;
+    return {
+      ...data,
+      image_urls: Array.isArray(data.image_urls) ? data.image_urls as string[] : []
+    };
   },
 
   async updateProduct(id: string, product: Partial<LensProduct>): Promise<LensProduct> {
@@ -167,7 +172,10 @@ export const lensApi = {
       .single();
 
     if (error) throw error;
-    return data;
+    return {
+      ...data,
+      image_urls: Array.isArray(data.image_urls) ? data.image_urls as string[] : []
+    };
   },
 
   async deleteProduct(id: string): Promise<void> {
@@ -224,5 +232,59 @@ export const lensApi = {
       .getPublicUrl(fileName);
 
     return publicUrl;
+  },
+
+  // Upload multiple images
+  async uploadImages(files: File[]): Promise<string[]> {
+    const uploadPromises = files.map(file => this.uploadImage(file, 'products'));
+    return Promise.all(uploadPromises);
+  },
+
+  // Delete image from storage
+  async deleteImage(imageUrl: string): Promise<void> {
+    const urlParts = imageUrl.split('/storage/v1/object/public/lens-images/');
+    const filePath = urlParts[1];
+    
+    if (!filePath) throw new Error('Invalid image URL');
+    
+    const { error } = await supabase.storage
+      .from('lens-images')
+      .remove([filePath]);
+    
+    if (error) throw error;
+  },
+
+  // Upsert products (for Excel import)
+  async upsertProducts(products: any[]): Promise<{
+    inserted: number;
+    updated: number;
+    errors: string[];
+  }> {
+    const results = { inserted: 0, updated: 0, errors: [] as string[] };
+    
+    try {
+      const { data, error } = await supabase
+        .from('lens_products')
+        .upsert(products, {
+          onConflict: 'sku',
+          ignoreDuplicates: false
+        })
+        .select();
+      
+      if (error) throw error;
+      
+      data?.forEach(p => {
+        if (p.created_at === p.updated_at) {
+          results.inserted++;
+        } else {
+          results.updated++;
+        }
+      });
+      
+    } catch (err: any) {
+      results.errors.push(err.message);
+    }
+    
+    return results;
   }
 };

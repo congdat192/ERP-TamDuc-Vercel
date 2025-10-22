@@ -72,9 +72,9 @@ export function CompareModal({ productIds, open, onOpenChange, onRemove }: Compa
                   {products.map((product) => (
                     <td key={product!.id} className="border p-2">
                       <div className="aspect-square bg-muted rounded overflow-hidden">
-                        {product!.image_url ? (
+                        {product!.image_urls && product!.image_urls.length > 0 ? (
                           <img
-                            src={product!.image_url}
+                            src={product!.image_urls[0]}
                             alt={product!.name}
                             className="w-full h-full object-cover"
                           />

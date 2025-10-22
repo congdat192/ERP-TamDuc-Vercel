@@ -1399,7 +1399,7 @@ export type Database = {
           created_by: string | null
           description: string | null
           id: string
-          image_url: string | null
+          image_urls: Json | null
           is_active: boolean | null
           is_promotion: boolean | null
           material: string | null
@@ -1419,7 +1419,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
-          image_url?: string | null
+          image_urls?: Json | null
           is_active?: boolean | null
           is_promotion?: boolean | null
           material?: string | null
@@ -1439,7 +1439,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
-          image_url?: string | null
+          image_urls?: Json | null
           is_active?: boolean | null
           is_promotion?: boolean | null
           material?: string | null
