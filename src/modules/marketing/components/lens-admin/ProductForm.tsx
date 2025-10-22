@@ -17,7 +17,7 @@ import { toast } from 'sonner';
 import { Upload, X } from 'lucide-react';
 
 const schema = z.object({
-  brand_id: z.string().min(1, 'Vui lòng chọn thương hiệu'),
+  brand_id: z.string().uuid('Vui lòng chọn thương hiệu hợp lệ'),
   name: z.string().min(1, 'Vui lòng nhập tên sản phẩm'),
   sku: z.string().optional(),
   parent_sku: z.string().optional(),
@@ -143,8 +143,21 @@ export function ProductForm({ open, product, brands, features, onClose }: Produc
       
       const allImageUrls = [...existingImages, ...newImageUrls];
       
-      const productData = {
+      // Sanitize data: Convert empty strings to null for optional fields
+      const sanitizedData = {
         ...data,
+        parent_sku: data.parent_sku?.trim() || null,
+        sku: data.sku?.trim() || null,
+        description: data.description?.trim() || null,
+        material: data.material?.trim() || null,
+        refractive_index: data.refractive_index?.trim() || null,
+        origin: data.origin?.trim() || null,
+        promotion_text: data.promotion_text?.trim() || null,
+        warranty_months: data.warranty_months || null,
+      };
+      
+      const productData = {
+        ...sanitizedData,
         image_urls: allImageUrls,
         created_by: product?.created_by || undefined,
       };
@@ -247,7 +260,7 @@ export function ProductForm({ open, product, brands, features, onClose }: Produc
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Thương hiệu *</Label>
-              <Select onValueChange={(v) => setValue('brand_id', v)} defaultValue={product?.brand_id}>
+              <Select onValueChange={(v) => setValue('brand_id', v)} value={watch('brand_id')}>
                 <SelectTrigger>
                   <SelectValue placeholder="Chọn thương hiệu" />
                 </SelectTrigger>
