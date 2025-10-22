@@ -136,7 +136,7 @@ export function LensCatalogPage() {
           product={selectedProduct}
           open={!!selectedProduct}
           onOpenChange={(open) => !open && setSelectedProduct(null)}
-          onAddCompare={compareState.addToCompare}
+          onAddCompare={() => compareState.addToCompare(selectedProduct.id)}
           isInCompare={compareState.isInCompare(selectedProduct.id)}
           canAddMore={compareState.canAddMore}
         />

@@ -23,6 +23,8 @@ import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { ChangePasswordPage } from "./pages/ChangePasswordPage";
 import { EmployeeOTPLoginPage } from "./pages/EmployeeOTPLoginPage";
 import { MyProfilePage } from "./pages/MyProfilePage";
+import { LensCatalogPage } from "./pages/LensCatalogPage";
+import { LensAdminPage } from "./pages/LensAdminPage";
 import { ERPHome } from "./pages/ERPHome";
 import { CustomerPage } from "./pages/CustomerPage";
 import { SalesPage } from "./pages/SalesPage";
@@ -218,6 +220,9 @@ const AppContent = () => {
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="/doi-mat-khau/" element={<ResetPasswordPage />} />
                 <Route path="/change-password" element={<ChangePasswordPage />} />
+                
+                {/* Public Lens Catalog - No login required */}
+                <Route path="/lens-catalog" element={<LensCatalogPage />} />
                   
                   {/* Redirect /ERP to /ERP/Dashboard */}
                   <Route path="/ERP" element={<Navigate to="/ERP/Dashboard" replace />} />
@@ -276,6 +281,14 @@ const AppContent = () => {
                     element={
                       <ProtectedERPRoute module="inventory">
                         <ProductDetailPage />
+                      </ProtectedERPRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/ERP/Marketing/Lens-Admin" 
+                    element={
+                      <ProtectedERPRoute module="marketing">
+                        <LensAdminPage />
                       </ProtectedERPRoute>
                     } 
                   />
