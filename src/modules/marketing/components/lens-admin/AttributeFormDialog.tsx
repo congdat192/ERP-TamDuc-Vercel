@@ -72,8 +72,8 @@ export function AttributeFormDialog({ open, attribute, onClose }: Props) {
   };
 
   const onSubmit = async (data: FormData) => {
-    if (options.length === 0) {
-      toast.error('Vui lòng thêm ít nhất 1 giá trị');
+    if (data.type === 'select' && options.length === 0) {
+      toast.error('Vui lòng thêm ít nhất 1 giá trị cho type Select');
       return;
     }
 
@@ -84,7 +84,8 @@ export function AttributeFormDialog({ open, attribute, onClose }: Props) {
         slug: data.slug,
         type: data.type,
         display_order: data.display_order,
-        options,
+        options: data.type === 'select' ? options : [],
+        icon: (data as any).icon || null,
         is_active: true
       };
 
@@ -124,6 +125,14 @@ export function AttributeFormDialog({ open, attribute, onClose }: Props) {
             {errors.slug && <p className="text-sm text-destructive mt-1">{errors.slug.message}</p>}
             <p className="text-xs text-muted-foreground mt-1">
               Ví dụ: material, refractive_index, origin, warranty_months
+            </p>
+          </div>
+
+          <div>
+            <Label>Icon (emoji)</Label>
+            <Input {...register('icon' as any)} placeholder="🧪" maxLength={3} defaultValue={attribute?.icon || ''} />
+            <p className="text-xs text-muted-foreground mt-1">
+              Emoji để hiển thị (VD: 🧪 🔍 🌍 ⏱️ ☀️ 🛡️)
             </p>
           </div>
 

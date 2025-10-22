@@ -1320,46 +1320,11 @@ export type Database = {
         }
         Relationships: []
       }
-      lens_features: {
-        Row: {
-          code: string
-          created_at: string | null
-          description: string | null
-          display_order: number | null
-          icon: string | null
-          id: string
-          is_active: boolean | null
-          name: string
-          updated_at: string | null
-        }
-        Insert: {
-          code: string
-          created_at?: string | null
-          description?: string | null
-          display_order?: number | null
-          icon?: string | null
-          id?: string
-          is_active?: boolean | null
-          name: string
-          updated_at?: string | null
-        }
-        Update: {
-          code?: string
-          created_at?: string | null
-          description?: string | null
-          display_order?: number | null
-          icon?: string | null
-          id?: string
-          is_active?: boolean | null
-          name?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       lens_product_attributes: {
         Row: {
           created_at: string | null
           display_order: number | null
+          icon: string | null
           id: string
           is_active: boolean | null
           name: string
@@ -1371,6 +1336,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           display_order?: number | null
+          icon?: string | null
           id?: string
           is_active?: boolean | null
           name: string
@@ -1382,6 +1348,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           display_order?: number | null
+          icon?: string | null
           id?: string
           is_active?: boolean | null
           name?: string
@@ -1392,44 +1359,9 @@ export type Database = {
         }
         Relationships: []
       }
-      lens_product_features: {
-        Row: {
-          created_at: string | null
-          feature_id: string
-          id: string
-          product_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          feature_id: string
-          id?: string
-          product_id: string
-        }
-        Update: {
-          created_at?: string | null
-          feature_id?: string
-          id?: string
-          product_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "lens_product_features_feature_id_fkey"
-            columns: ["feature_id"]
-            isOneToOne: false
-            referencedRelation: "lens_features"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "lens_product_features_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "lens_products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       lens_products: {
         Row: {
+          attributes: Json | null
           brand_id: string
           created_at: string | null
           created_by: string | null
@@ -1452,6 +1384,7 @@ export type Database = {
           warranty_months: number | null
         }
         Insert: {
+          attributes?: Json | null
           brand_id: string
           created_at?: string | null
           created_by?: string | null
@@ -1474,6 +1407,7 @@ export type Database = {
           warranty_months?: number | null
         }
         Update: {
+          attributes?: Json | null
           brand_id?: string
           created_at?: string | null
           created_by?: string | null

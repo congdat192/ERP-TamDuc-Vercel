@@ -1,18 +1,18 @@
 import { useLensFilters } from '../../hooks/useLensFilters';
-import { LensFeature } from '../../types/lens';
-import { cn } from '@/lib/utils';
 
 interface FeatureFilterChipsProps {
-  features: LensFeature[];
+  features: any[];
 }
 
 export function FeatureFilterChips({ features }: FeatureFilterChipsProps) {
   const { filters, toggleFeature } = useLensFilters();
+  
+  const multiselectAttrs = features.filter(f => f.type === 'multiselect');
 
   return (
     <div className="px-4 py-3 overflow-x-auto">
       <div className="flex gap-2 min-w-max">
-        {features.map((feature) => {
+        {multiselectAttrs.map((feature) => {
           const isActive = filters.featureIds.includes(feature.id);
           return (
             <button

@@ -9,24 +9,13 @@ export interface LensBrand {
   updated_at: string;
 }
 
-export interface LensFeature {
-  id: string;
-  name: string;
-  code: string;
-  icon: string | null;
-  description: string | null;
-  display_order: number;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface LensProductAttribute {
   id: string;
   name: string;
   slug: string;
   type: 'select' | 'multiselect';
   options: string[];
+  icon: string | null;
   display_order: number;
   is_active: boolean;
   created_at: string;
@@ -47,6 +36,7 @@ export interface LensProduct {
   refractive_index: string | null;
   origin: string | null;
   warranty_months: number | null;
+  attributes: Record<string, any>;
   is_promotion: boolean;
   promotion_text: string | null;
   view_count: number;
@@ -55,7 +45,6 @@ export interface LensProduct {
   updated_at: string;
   created_by: string | null;
   brand?: LensBrand;
-  features?: LensFeature[];
 }
 
 export interface LensBanner {
@@ -85,5 +74,4 @@ export interface LensFilters {
 
 export interface LensProductWithDetails extends LensProduct {
   brand: LensBrand;
-  features: LensFeature[];
 }

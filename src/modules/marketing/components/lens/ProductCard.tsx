@@ -50,11 +50,14 @@ export function ProductCard({
         <p className="text-sm text-muted-foreground">{product.brand?.name}</p>
 
         <div className="flex gap-1 flex-wrap min-h-[24px]">
-          {product.features?.slice(0, 4).map((feature) => (
-            <span key={feature.id} className="text-lg" title={feature.name}>
-              {feature.icon}
-            </span>
-          ))}
+          {product.attributes?.features?.slice(0, 4).map((featureId: string) => {
+            const feature = (window as any).__allAttributes?.find((a: any) => a.id === featureId);
+            return feature ? (
+              <span key={featureId} className="text-lg" title={feature.name}>
+                {feature.icon}
+              </span>
+            ) : null;
+          })}
         </div>
 
         <div className="flex items-center justify-between pt-2 border-t">

@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { LensBrand, LensFeature, LensProduct, LensBanner, LensFilters, LensProductWithDetails, LensProductAttribute } from '../types/lens';
+import { LensBrand, LensProduct, LensBanner, LensFilters, LensProductWithDetails, LensProductAttribute } from '../types/lens';
 
 export const lensApi = {
   // Brands
@@ -14,28 +14,13 @@ export const lensApi = {
     return data || [];
   },
 
-  // Features
-  async getFeatures(): Promise<LensFeature[]> {
-    const { data, error } = await supabase
-      .from('lens_features')
-      .select('*')
-      .eq('is_active', true)
-      .order('display_order');
-    
-    if (error) throw error;
-    return data || [];
-  },
-
   // Products
   async getProducts(filters?: Partial<LensFilters>, page = 1, perPage = 8): Promise<{ products: LensProductWithDetails[]; total: number }> {
     let query = supabase
       .from('lens_products')
       .select(`
         *,
-        brand:lens_brands(*),
-        features:lens_product_features(
-          feature:lens_features(*)
-        )
+        brand:lens_brands(*)
       `, { count: 'exact' })
       .eq('is_active', true);
 
@@ -45,15 +30,8 @@ export const lensApi = {
     }
 
     if (filters?.featureIds && filters.featureIds.length > 0) {
-      const { data: productIds } = await supabase
-        .from('lens_product_features')
-        .select('product_id')
-        .in('feature_id', filters.featureIds);
-      
-      if (productIds) {
-        const ids = productIds.map(p => p.product_id);
-        query = query.in('id', ids);
-      }
+      // Filter by feature IDs in attributes JSONB
+      query = query.contains('attributes', { features: filters.featureIds });
     }
 
     if (filters?.material) {
@@ -109,12 +87,12 @@ export const lensApi = {
 
     if (error) throw error;
 
-    // Transform features array and cast image_urls
+    // Cast image_urls and attributes
     const products = (data || []).map(product => ({
       ...product,
       image_urls: Array.isArray(product.image_urls) ? product.image_urls as string[] : [],
-      features: product.features?.map((f: any) => f.feature).filter(Boolean) || []
-    }));
+      attributes: product.attributes || {}
+    })) as LensProductWithDetails[];
 
     return { products, total: count || 0 };
   },
@@ -124,10 +102,7 @@ export const lensApi = {
       .from('lens_products')
       .select(`
         *,
-        brand:lens_brands(*),
-        features:lens_product_features(
-          feature:lens_features(*)
-        )
+        brand:lens_brands(*)
       `)
       .eq('id', id)
       .eq('is_active', true)
@@ -145,8 +120,8 @@ export const lensApi = {
     return {
       ...data,
       image_urls: Array.isArray(data.image_urls) ? data.image_urls as string[] : [],
-      features: data.features?.map((f: any) => f.feature).filter(Boolean) || []
-    };
+      attributes: data.attributes || {}
+    } as LensProductWithDetails;
   },
 
   async createProduct(product: Omit<LensProduct, 'id' | 'created_at' | 'updated_at' | 'view_count'>): Promise<LensProduct> {
@@ -159,8 +134,9 @@ export const lensApi = {
     if (error) throw error;
     return {
       ...data,
-      image_urls: Array.isArray(data.image_urls) ? data.image_urls as string[] : []
-    };
+      image_urls: Array.isArray(data.image_urls) ? data.image_urls as string[] : [],
+      attributes: data.attributes || {}
+    } as LensProduct;
   },
 
   async updateProduct(id: string, product: Partial<LensProduct>): Promise<LensProduct> {
@@ -174,8 +150,9 @@ export const lensApi = {
     if (error) throw error;
     return {
       ...data,
-      image_urls: Array.isArray(data.image_urls) ? data.image_urls as string[] : []
-    };
+      image_urls: Array.isArray(data.image_urls) ? data.image_urls as string[] : [],
+      attributes: data.attributes || {}
+    } as LensProduct;
   },
 
   async deleteProduct(id: string): Promise<void> {
@@ -185,23 +162,6 @@ export const lensApi = {
       .eq('id', id);
 
     if (error) throw error;
-  },
-
-  async linkProductFeatures(productId: string, featureIds: string[]): Promise<void> {
-    // Delete existing links
-    await supabase
-      .from('lens_product_features')
-      .delete()
-      .eq('product_id', productId);
-
-    // Insert new links
-    if (featureIds.length > 0) {
-      const { error } = await supabase
-        .from('lens_product_features')
-        .insert(featureIds.map(featureId => ({ product_id: productId, feature_id: featureId })));
-
-      if (error) throw error;
-    }
   },
 
   // Attributes
@@ -219,7 +179,8 @@ export const lensApi = {
       type: attr.type as 'select' | 'multiselect',
       options: typeof attr.options === 'string' 
         ? JSON.parse(attr.options) 
-        : Array.isArray(attr.options) ? attr.options : []
+        : (Array.isArray(attr.options) ? attr.options : []),
+      icon: attr.icon || null
     }));
   },
 

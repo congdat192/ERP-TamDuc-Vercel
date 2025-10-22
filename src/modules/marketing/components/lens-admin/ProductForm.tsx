@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { LensProduct, LensBrand, LensFeature } from '../../types/lens';
+import { LensProduct, LensBrand } from '../../types/lens';
 import { lensApi } from '../../services/lensApi';
 import { toast } from 'sonner';
 import { Upload, X } from 'lucide-react';
@@ -39,12 +39,11 @@ interface ProductFormProps {
   open: boolean;
   product: LensProduct | null;
   brands: LensBrand[];
-  features: LensFeature[];
   onClose: (success?: boolean) => void;
 }
 
-export function ProductForm({ open, product, brands, features, onClose }: ProductFormProps) {
-  const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
+export function ProductForm({ open, product, brands, onClose }: ProductFormProps) {
+  const [attributeValues, setAttributeValues] = useState<Record<string, any>>({});
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
@@ -93,7 +92,7 @@ export function ProductForm({ open, product, brands, features, onClose }: Produc
       setExistingImages(product.image_urls || []);
       setImageFiles([]);
       setImagePreviews([]);
-      setSelectedFeatures(product.features?.map(f => f.id) || []);
+      setAttributeValues(product.attributes || {});
     } else {
       reset({
         is_promotion: false,
@@ -103,7 +102,7 @@ export function ProductForm({ open, product, brands, features, onClose }: Produc
       setExistingImages([]);
       setImageFiles([]);
       setImagePreviews([]);
-      setSelectedFeatures([]);
+      setAttributeValues({});
     }
   }, [product, reset]);
 
@@ -167,6 +166,7 @@ export function ProductForm({ open, product, brands, features, onClose }: Produc
         ...sanitizedData,
         image_urls: allImageUrls,
         discount_percent: discountPercent,
+        attributes: attributeValues,
         created_by: product?.created_by || undefined,
       };
 
@@ -175,11 +175,9 @@ export function ProductForm({ open, product, brands, features, onClose }: Produc
         await Promise.all(removedImages.map(url => lensApi.deleteImage(url).catch(() => {})));
         
         await lensApi.updateProduct(product.id, productData as any);
-        await lensApi.linkProductFeatures(product.id, selectedFeatures);
         toast.success('Cập nhật sản phẩm thành công');
       } else {
-        const newProduct = await lensApi.createProduct(productData as any);
-        await lensApi.linkProductFeatures(newProduct.id, selectedFeatures);
+        await lensApi.createProduct(productData as any);
         toast.success('Tạo sản phẩm thành công');
       }
 
@@ -342,53 +340,64 @@ export function ProductForm({ open, product, brands, features, onClose }: Produc
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            {attributes.map(attr => (
-              <div key={attr.id}>
-                <Label>{attr.name}</Label>
-                <Select 
-                  onValueChange={(v) => setValue(attr.slug as keyof FormData, v as any)}
-                  defaultValue={
-                    attr.slug === 'warranty_months'
-                      ? product?.warranty_months?.toString()
-                      : (product?.[attr.slug as keyof LensProduct] as string) || undefined
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={`Chọn ${attr.name.toLowerCase()}`} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {attr.options.map(option => (
-                      <SelectItem key={option} value={option}>{option}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            ))}
-          </div>
-
-          <div>
-            <Label>Tính năng</Label>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              {features.map(feature => (
-                <div key={feature.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`feature-${feature.id}`}
-                    checked={selectedFeatures.includes(feature.id)}
-                    onCheckedChange={(checked) => {
-                      setSelectedFeatures(prev =>
-                        checked
-                          ? [...prev, feature.id]
-                          : prev.filter(id => id !== feature.id)
-                      );
-                    }}
-                  />
-                  <Label htmlFor={`feature-${feature.id}`} className="cursor-pointer">
-                    {feature.icon} {feature.name}
+            {attributes
+              .filter(attr => attr.type === 'select')
+              .map(attr => (
+                <div key={attr.id}>
+                  <Label>
+                    {attr.icon && <span className="mr-2">{attr.icon}</span>}
+                    {attr.name}
                   </Label>
+                  <Select 
+                    onValueChange={(v) => {
+                      setAttributeValues(prev => ({
+                        ...prev,
+                        [attr.slug]: v
+                      }));
+                    }}
+                    value={attributeValues[attr.slug] || ''}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={`Chọn ${attr.name.toLowerCase()}`} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {attr.options.map(option => (
+                        <SelectItem key={option} value={option}>{option}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               ))}
-            </div>
           </div>
+
+          {attributes.filter(attr => attr.type === 'multiselect').length > 0 && (
+            <div>
+              <Label>Tính năng</Label>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                {attributes
+                  .filter(attr => attr.type === 'multiselect')
+                  .map(attr => (
+                    <div key={attr.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`attr-${attr.id}`}
+                        checked={(attributeValues.features || []).includes(attr.id)}
+                        onCheckedChange={(checked) => {
+                          setAttributeValues(prev => ({
+                            ...prev,
+                            features: checked
+                              ? [...(prev.features || []), attr.id]
+                              : (prev.features || []).filter((id: string) => id !== attr.id)
+                          }));
+                        }}
+                      />
+                      <Label htmlFor={`attr-${attr.id}`} className="cursor-pointer">
+                        {attr.icon} {attr.name}
+                      </Label>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
 
           <div className="flex items-center space-x-2">
             <Switch

@@ -29,9 +29,9 @@ export function LensCatalogPage() {
     queryFn: () => lensApi.getBrands(),
   });
 
-  const { data: featuresData } = useQuery({
-    queryKey: ['lens-features'],
-    queryFn: () => lensApi.getFeatures(),
+  const { data: attributes } = useQuery({
+    queryKey: ['lens-attributes'],
+    queryFn: () => lensApi.getAttributes(),
   });
 
   const { data: productsData, isLoading } = useQuery({
@@ -45,10 +45,17 @@ export function LensCatalogPage() {
   });
 
   const brands = brandsData || [];
-  const features = featuresData || [];
+  const features = attributes || [];
   const products = productsData?.products || [];
   const total = productsData?.total || 0;
   const banners = bannersData || [];
+  
+  // Store attributes globally for product cards
+  useEffect(() => {
+    if (attributes) {
+      (window as any).__allAttributes = attributes;
+    }
+  }, [attributes]);
 
   useEffect(() => {
     setPage(1);

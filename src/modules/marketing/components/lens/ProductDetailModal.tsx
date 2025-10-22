@@ -167,15 +167,18 @@ export function ProductDetailModal({
                 </div>
               </div>
 
-              {product.features && product.features.length > 0 && (
+              {product.attributes?.features && Array.isArray(product.attributes.features) && product.attributes.features.length > 0 && (
                 <div>
                   <p className="text-sm text-muted-foreground mb-2">Tính năng</p>
                   <div className="flex flex-wrap gap-2">
-                    {product.features.map((feature) => (
-                      <Badge key={feature.id} variant="secondary">
-                        {feature.icon} {feature.name}
-                      </Badge>
-                    ))}
+                    {product.attributes.features.map((featureId: string) => {
+                      const feature = (window as any).__allAttributes?.find((a: any) => a.id === featureId);
+                      return feature ? (
+                        <Badge key={featureId} variant="secondary">
+                          {feature.icon} {feature.name}
+                        </Badge>
+                      ) : null;
+                    })}
                   </div>
                 </div>
               )}

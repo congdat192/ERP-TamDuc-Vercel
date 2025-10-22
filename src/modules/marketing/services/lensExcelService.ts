@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx';
-import { LensProduct, LensBrand, LensFeature } from '../types/lens';
+import { LensProduct, LensBrand } from '../types/lens';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface ExcelRow {
@@ -12,7 +12,7 @@ export interface ExcelRow {
   'Chỉ số khúc xạ': string;
   'Xuất xứ': string;
   'Bảo hành (tháng)': number | '';
-  'Đặc tính (code, phân cách bởi ,)': string;
+  'Tính năng (IDs)': string;
   'Mô tả': string;
   'Khuyến mãi (true/false)': string;
   'Text khuyến mãi': string;
@@ -23,7 +23,7 @@ export interface ValidationResult {
   errors: string[];
   action: 'INSERT' | 'UPDATE';
   brandId?: string;
-  featureCodes?: string[];
+  featureIds?: string[];
 }
 
 export interface ParsedProduct extends Partial<LensProduct> {
@@ -59,7 +59,7 @@ export class LensExcelService {
     row: ExcelRow,
     rowIndex: number,
     brands: LensBrand[],
-    features: LensFeature[],
+    allAttributes: any[],
     existingSKUs: Set<string>
   ): Promise<ParsedProduct> {
     const errors: string[] = [];
@@ -95,18 +95,20 @@ export class LensExcelService {
       errors.push(`Thương hiệu "${brandName}" không tồn tại trong hệ thống`);
     }
 
-    // Parse features
-    const featureCodesStr = row['Đặc tính (code, phân cách bởi ,)']?.toString().trim();
-    const featureCodes = featureCodesStr 
-      ? featureCodesStr.split(',').map(f => f.trim()).filter(Boolean)
+    // Parse feature IDs
+    const featureIdsStr = row['Tính năng (IDs)']?.toString().trim();
+    const featureIds = featureIdsStr 
+      ? featureIdsStr.split(',').map(f => f.trim()).filter(Boolean)
       : [];
 
-    // Validate features
-    const invalidFeatures = featureCodes.filter(
-      code => !features.some(f => f.code === code)
-    );
-    if (invalidFeatures.length > 0) {
-      errors.push(`Đặc tính không tồn tại: ${invalidFeatures.join(', ')}`);
+    // Validate feature IDs exist in attributes
+    const validFeatureIds = allAttributes
+      .filter(a => a.type === 'multiselect')
+      .map(a => a.id);
+    
+    const invalidIds = featureIds.filter(id => !validFeatureIds.includes(id));
+    if (invalidIds.length > 0) {
+      errors.push(`Tính năng không tồn tại: ${invalidIds.join(', ')}`);
     }
 
     // Check if SKU exists (for upsert indicator)
@@ -143,7 +145,7 @@ export class LensExcelService {
         errors,
         action,
         brandId: brand?.id,
-        featureCodes
+        featureIds
       },
       _originalRow: rowIndex + 2 // +2 because Excel is 1-indexed and has header row
     };
@@ -154,8 +156,7 @@ export class LensExcelService {
   // Validate all rows
   static async validateData(
     rows: ExcelRow[],
-    brands: LensBrand[],
-    features: LensFeature[]
+    brands: LensBrand[]
   ): Promise<ParsedProduct[]> {
     // Get existing SKUs from database
     const { data: existingProducts } = await supabase
@@ -164,10 +165,15 @@ export class LensExcelService {
     
     const existingSKUs = new Set(existingProducts?.map(p => p.sku) || []);
 
+    // Get all attributes for validation
+    const { data: allAttributes } = await supabase
+      .from('lens_product_attributes')
+      .select('id, slug, type');
+
     // Validate each row
     const validatedProducts = await Promise.all(
       rows.map((row, index) => 
-        this.validateRow(row, index, brands, features, existingSKUs)
+        this.validateRow(row, index, brands, allAttributes || [], existingSKUs)
       )
     );
 
@@ -221,35 +227,20 @@ export class LensExcelService {
 
         if (error) throw error;
 
-        // Link features for each product
+        // Update attributes JSONB for each product
         for (let j = 0; j < batch.length; j++) {
           const product = batch[j];
           const upsertedProduct = upsertedProducts.find(up => up.sku === product.sku);
           
-          if (upsertedProduct && product._validation?.featureCodes?.length) {
-            // Get feature IDs
-            const { data: featureData } = await supabase
-              .from('lens_features')
-              .select('id, code')
-              .in('code', product._validation.featureCodes);
-
-            const featureIds = featureData?.map(f => f.id) || [];
-
-            if (featureIds.length > 0) {
-              // Delete existing links
-              await supabase
-                .from('lens_product_features')
-                .delete()
-                .eq('product_id', upsertedProduct.id);
-
-              // Insert new links
-              const links = featureIds.map(featureId => ({
-                product_id: upsertedProduct.id,
-                feature_id: featureId
-              }));
-
-              await supabase.from('lens_product_features').insert(links);
-            }
+          if (upsertedProduct && product._validation?.featureIds?.length) {
+            await supabase
+              .from('lens_products')
+              .update({ 
+                attributes: { 
+                  features: product._validation.featureIds 
+                } 
+              })
+              .eq('id', upsertedProduct.id);
           }
 
           // Count inserts vs updates
@@ -300,7 +291,7 @@ export class LensExcelService {
       'Chỉ số khúc xạ': '1.56',
       'Xuất xứ': 'Pháp',
       'Bảo hành (tháng)': 12,
-      'Đặc tính (code, phân cách bởi ,)': 'blue_light,anti_scratch',
+      'Tính năng (IDs)': 'id1,id2',
       'Mô tả': 'Mô tả sản phẩm',
       'Khuyến mãi (true/false)': 'false',
       'Text khuyến mãi': ''
