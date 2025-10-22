@@ -167,21 +167,32 @@ export function ProductDetailModal({
                 </div>
               </div>
 
-              {product.attributes?.features && Array.isArray(product.attributes.features) && product.attributes.features.length > 0 && (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Tính năng</p>
-                  <div className="flex flex-wrap gap-2">
-                    {product.attributes.features.map((featureId: string) => {
-                      const feature = (window as any).__allAttributes?.find((a: any) => a.id === featureId);
-                      return feature ? (
-                        <Badge key={featureId} variant="secondary">
-                          {feature.icon} {feature.name}
-                        </Badge>
-                      ) : null;
-                    })}
+              {(() => {
+                const allAttributes = (window as any).__allAttributes || [];
+                const multiselectAttrs = allAttributes.filter((a: any) => a.type === 'multiselect');
+                const hasAnyFeatures = multiselectAttrs.some((attr: any) => {
+                  const valueKey = `${attr.slug}_values`;
+                  return product.attributes?.[valueKey]?.length > 0;
+                });
+
+                return hasAnyFeatures ? (
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-2">Tính năng</p>
+                    <div className="flex flex-wrap gap-2">
+                      {multiselectAttrs.map((attr: any) => {
+                        const valueKey = `${attr.slug}_values`;
+                        const selectedValues = product.attributes?.[valueKey] || [];
+                        
+                        return selectedValues.map((value: string) => (
+                          <Badge key={`${attr.id}-${value}`} variant="secondary">
+                            {attr.icon} {value}
+                          </Badge>
+                        ));
+                      })}
+                    </div>
                   </div>
-                </div>
-              )}
+                ) : null;
+              })()}
 
               <Button
                 className="w-full bg-green-600 hover:bg-green-700"

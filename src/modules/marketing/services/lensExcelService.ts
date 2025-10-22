@@ -12,10 +12,10 @@ export interface ExcelRow {
   'Chỉ số khúc xạ': string;
   'Xuất xứ': string;
   'Bảo hành (tháng)': number | '';
-  'Tính năng (IDs)': string;
   'Mô tả': string;
   'Khuyến mãi (true/false)': string;
   'Text khuyến mãi': string;
+  [key: string]: any; // Allow dynamic multiselect columns
 }
 
 export interface ValidationResult {
@@ -95,21 +95,26 @@ export class LensExcelService {
       errors.push(`Thương hiệu "${brandName}" không tồn tại trong hệ thống`);
     }
 
-    // Parse feature IDs
-    const featureIdsStr = row['Tính năng (IDs)']?.toString().trim();
-    const featureIds = featureIdsStr 
-      ? featureIdsStr.split(',').map(f => f.trim()).filter(Boolean)
-      : [];
-
-    // Validate feature IDs exist in attributes
-    const validFeatureIds = allAttributes
-      .filter(a => a.type === 'multiselect')
-      .map(a => a.id);
+    // Parse multiselect attributes from columns
+    const multiselectAttrs = allAttributes.filter(a => a.type === 'multiselect');
+    const attributesData: Record<string, any> = {};
     
-    const invalidIds = featureIds.filter(id => !validFeatureIds.includes(id));
-    if (invalidIds.length > 0) {
-      errors.push(`Tính năng không tồn tại: ${invalidIds.join(', ')}`);
-    }
+    multiselectAttrs.forEach(attr => {
+      const valueKey = `${attr.slug}_values`;
+      const selectedValues: string[] = [];
+      
+      // Check each option column (e.g., "Chống UV" = "Có")
+      attr.options.forEach((option: string) => {
+        const columnValue = row[option as keyof ExcelRow]?.toString().trim().toLowerCase();
+        if (columnValue === 'có' || columnValue === 'true') {
+          selectedValues.push(option);
+        }
+      });
+      
+      if (selectedValues.length > 0) {
+        attributesData[valueKey] = selectedValues;
+      }
+    });
 
     // Check if SKU exists (for upsert indicator)
     const action = existingSKUs.has(sku) ? 'UPDATE' : 'INSERT';
@@ -140,12 +145,12 @@ export class LensExcelService {
       description: row['Mô tả']?.toString().trim() || null,
       is_promotion: isPromotion,
       promotion_text: row['Text khuyến mãi']?.toString().trim() || null,
+      attributes: attributesData,
       _validation: {
         valid: errors.length === 0,
         errors,
         action,
         brandId: brand?.id,
-        featureIds
       },
       _originalRow: rowIndex + 2 // +2 because Excel is 1-indexed and has header row
     };
@@ -214,6 +219,7 @@ export class LensExcelService {
           description: p.description,
           is_promotion: p.is_promotion,
           promotion_text: p.promotion_text,
+          attributes: p.attributes || {},
           is_active: true
         }));
 
@@ -227,23 +233,11 @@ export class LensExcelService {
 
         if (error) throw error;
 
-        // Update attributes JSONB for each product
+        // Count inserts vs updates
         for (let j = 0; j < batch.length; j++) {
           const product = batch[j];
-          const upsertedProduct = upsertedProducts.find(up => up.sku === product.sku);
+          const upsertedProduct = upsertedProducts?.find(up => up.sku === product.sku);
           
-          if (upsertedProduct && product._validation?.featureIds?.length) {
-            await supabase
-              .from('lens_products')
-              .update({ 
-                attributes: { 
-                  features: product._validation.featureIds 
-                } 
-              })
-              .eq('id', upsertedProduct.id);
-          }
-
-          // Count inserts vs updates
           if (upsertedProduct) {
             if (upsertedProduct.created_at === upsertedProduct.updated_at) {
               results.inserted++;
@@ -291,8 +285,8 @@ export class LensExcelService {
       'Chỉ số khúc xạ': '1.56',
       'Xuất xứ': 'Pháp',
       'Bảo hành (tháng)': 12,
-      'Tính năng (IDs)': 'id1,id2',
       'Mô tả': 'Mô tả sản phẩm',
+      // Note: Multiselect columns will be added dynamically based on attributes
       'Khuyến mãi (true/false)': 'false',
       'Text khuyến mãi': ''
     }];

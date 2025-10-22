@@ -50,14 +50,26 @@ export function ProductCard({
         <p className="text-sm text-muted-foreground">{product.brand?.name}</p>
 
         <div className="flex gap-1 flex-wrap min-h-[24px]">
-          {product.attributes?.features?.slice(0, 4).map((featureId: string) => {
-            const feature = (window as any).__allAttributes?.find((a: any) => a.id === featureId);
-            return feature ? (
-              <span key={featureId} className="text-lg" title={feature.name}>
-                {feature.icon}
-              </span>
-            ) : null;
-          })}
+          {(() => {
+            const allAttributes = (window as any).__allAttributes || [];
+            const multiselectAttrs = allAttributes.filter((a: any) => a.type === 'multiselect');
+            const features: JSX.Element[] = [];
+            
+            multiselectAttrs.forEach((attr: any) => {
+              const valueKey = `${attr.slug}_values`;
+              const selectedValues = product.attributes?.[valueKey] || [];
+              
+              selectedValues.slice(0, 4 - features.length).forEach((value: string) => {
+                features.push(
+                  <span key={`${attr.id}-${value}`} className="text-lg" title={`${attr.name}: ${value}`}>
+                    {attr.icon}
+                  </span>
+                );
+              });
+            });
+            
+            return features;
+          })()}
         </div>
 
         <div className="flex items-center justify-between pt-2 border-t">

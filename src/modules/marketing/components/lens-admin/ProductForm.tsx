@@ -372,27 +372,44 @@ export function ProductForm({ open, product, brands, onClose }: ProductFormProps
 
           {attributes.filter(attr => attr.type === 'multiselect').length > 0 && (
             <div>
-              <Label>Tính năng</Label>
-              <div className="mt-2 grid grid-cols-2 gap-2">
+              <Label>Tính năng (chọn nhiều)</Label>
+              <div className="mt-2 space-y-4">
                 {attributes
                   .filter(attr => attr.type === 'multiselect')
                   .map(attr => (
-                    <div key={attr.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`attr-${attr.id}`}
-                        checked={(attributeValues.features || []).includes(attr.id)}
-                        onCheckedChange={(checked) => {
-                          setAttributeValues(prev => ({
-                            ...prev,
-                            features: checked
-                              ? [...(prev.features || []), attr.id]
-                              : (prev.features || []).filter((id: string) => id !== attr.id)
-                          }));
-                        }}
-                      />
-                      <Label htmlFor={`attr-${attr.id}`} className="cursor-pointer">
+                    <div key={attr.id}>
+                      <Label className="font-semibold mb-2 flex items-center">
                         {attr.icon} {attr.name}
                       </Label>
+                      <div className="grid grid-cols-2 gap-2 pl-6">
+                        {attr.options.map(option => {
+                          const valueKey = `${attr.slug}_values`;
+                          const isChecked = (attributeValues[valueKey] || []).includes(option);
+                          
+                          return (
+                            <div key={option} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`${attr.id}-${option}`}
+                                checked={isChecked}
+                                onCheckedChange={(checked) => {
+                                  setAttributeValues(prev => {
+                                    const currentValues = prev[valueKey] || [];
+                                    return {
+                                      ...prev,
+                                      [valueKey]: checked
+                                        ? [...currentValues, option]
+                                        : currentValues.filter((v: string) => v !== option)
+                                    };
+                                  });
+                                }}
+                              />
+                              <Label htmlFor={`${attr.id}-${option}`} className="cursor-pointer text-sm">
+                                {option}
+                              </Label>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   ))}
               </div>

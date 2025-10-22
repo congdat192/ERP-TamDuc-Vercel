@@ -134,14 +134,21 @@ export function CompareModal({ productIds, open, onOpenChange, onRemove }: Compa
                   {products.map((product) => (
                     <td key={product!.id} className="border p-2">
                       <div className="flex flex-wrap gap-1">
-                        {product!.attributes?.features?.map((featureId: string) => {
-                          const feature = (window as any).__allAttributes?.find((a: any) => a.id === featureId);
-                          return feature ? (
-                            <span key={featureId} className="text-lg" title={feature.name}>
-                              {feature.icon}
-                            </span>
-                          ) : null;
-                        })}
+                        {(() => {
+                          const allAttributes = (window as any).__allAttributes || [];
+                          const multiselectAttrs = allAttributes.filter((a: any) => a.type === 'multiselect');
+                          
+                          return multiselectAttrs.map((attr: any) => {
+                            const valueKey = `${attr.slug}_values`;
+                            const selectedValues = product!.attributes?.[valueKey] || [];
+                            
+                            return selectedValues.map((value: string) => (
+                              <span key={`${attr.id}-${value}`} className="text-sm" title={`${attr.name}: ${value}`}>
+                                {attr.icon} {value}
+                              </span>
+                            ));
+                          });
+                        })()}
                       </div>
                     </td>
                   ))}
