@@ -1356,6 +1356,42 @@ export type Database = {
         }
         Relationships: []
       }
+      lens_product_attributes: {
+        Row: {
+          created_at: string | null
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          name: string
+          options: Json | null
+          slug: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          options?: Json | null
+          slug: string
+          type?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          options?: Json | null
+          slug?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       lens_product_features: {
         Row: {
           created_at: string | null
@@ -1392,8 +1428,62 @@ export type Database = {
           },
         ]
       }
+      lens_product_variants: {
+        Row: {
+          attributes: Json | null
+          created_at: string | null
+          display_order: number | null
+          id: string
+          image_urls: Json | null
+          is_active: boolean | null
+          price: number
+          product_id: string
+          sku: string
+          stock_quantity: number | null
+          updated_at: string | null
+          variant_name: string
+        }
+        Insert: {
+          attributes?: Json | null
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          image_urls?: Json | null
+          is_active?: boolean | null
+          price?: number
+          product_id: string
+          sku: string
+          stock_quantity?: number | null
+          updated_at?: string | null
+          variant_name: string
+        }
+        Update: {
+          attributes?: Json | null
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          image_urls?: Json | null
+          is_active?: boolean | null
+          price?: number
+          product_id?: string
+          sku?: string
+          stock_quantity?: number | null
+          updated_at?: string | null
+          variant_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lens_product_variants_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "lens_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lens_products: {
         Row: {
+          base_sku: string | null
           brand_id: string
           created_at: string | null
           created_by: string | null
@@ -1406,6 +1496,7 @@ export type Database = {
           name: string
           origin: string | null
           price: number
+          product_type: string
           promotion_text: string | null
           refractive_index: string | null
           sku: string | null
@@ -1414,6 +1505,7 @@ export type Database = {
           warranty_months: number | null
         }
         Insert: {
+          base_sku?: string | null
           brand_id: string
           created_at?: string | null
           created_by?: string | null
@@ -1426,6 +1518,7 @@ export type Database = {
           name: string
           origin?: string | null
           price?: number
+          product_type?: string
           promotion_text?: string | null
           refractive_index?: string | null
           sku?: string | null
@@ -1434,6 +1527,7 @@ export type Database = {
           warranty_months?: number | null
         }
         Update: {
+          base_sku?: string | null
           brand_id?: string
           created_at?: string | null
           created_by?: string | null
@@ -1446,6 +1540,7 @@ export type Database = {
           name?: string
           origin?: string | null
           price?: number
+          product_type?: string
           promotion_text?: string | null
           refractive_index?: string | null
           sku?: string | null
