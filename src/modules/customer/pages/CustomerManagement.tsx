@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { fetchCustomerByPhone, mapCustomerData } from '../services/customerService';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { ThemedCustomerStats } from '../components/ThemedCustomerStats';
 import { CustomerSearchActions } from '../components/CustomerSearchActions';
 import { CustomerFilters } from '../components/CustomerFilters';
 import { CustomerTable } from '../components/CustomerTable';
@@ -145,7 +144,7 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
   const totalPages = Math.ceil(totalCustomers / itemsPerPage);
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden theme-background">
+    <div className="flex flex-col h-screen overflow-hidden theme-background pt-6">
       {/* Mobile overlay */}
       {isFilterOpen && isMobile && (
         <div 
@@ -153,11 +152,6 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
           onClick={() => setIsFilterOpen(false)}
         />
       )}
-
-      {/* Stats Section - Fixed height */}
-      <div className="flex-shrink-0 px-6 pt-4 pb-1">
-        <ThemedCustomerStats />
-      </div>
 
       {/* Main Content Layout - Takes remaining height */}
       <div className="flex flex-1 min-h-0 px-6 pb-6 gap-3">
