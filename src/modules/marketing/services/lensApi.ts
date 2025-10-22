@@ -30,8 +30,12 @@ export const lensApi = {
     }
 
     if (filters?.featureIds && filters.featureIds.length > 0) {
-      // Filter by feature IDs in attributes JSONB
-      query = query.contains('attributes', { features: filters.featureIds });
+      // NOTE: Filter logic simplified - multiselect attributes are now in slug_values format
+      // Client-side filtering is performed in the UI components instead
+      // This allows more flexible dynamic filtering based on user-defined attributes
+      
+      // For now, we skip backend filtering for features to maintain simplicity
+      // Products will be filtered on the frontend based on multiselect attribute values
     }
 
     if (filters?.material) {

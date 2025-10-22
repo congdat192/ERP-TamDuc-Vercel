@@ -22,6 +22,10 @@ export function ExportExcelButton() {
 
       // Fetch all products
       const { products } = await lensApi.getProducts({}, 1, 10000);
+      
+      // Fetch all attributes to lookup multiselect options
+      const allAttributes = await lensApi.getAttributes();
+      const multiselectAttrs = allAttributes.filter(a => a.type === 'multiselect');
 
       if (products.length === 0) {
         toast({
@@ -33,21 +37,35 @@ export function ExportExcelButton() {
       }
 
       // Format data for Excel
-      const excelData = products.map(p => ({
-        'Mã SKU*': p.sku,
-        'Tên sản phẩm*': p.name,
-        'Thương hiệu*': p.brand?.name || '',
-        'Giá niêm yết (VNĐ)*': p.price,
-        'Giá giảm (VNĐ)': p.sale_price || '',
-        'Chất liệu': p.material || '',
-        'Chỉ số khúc xạ': p.refractive_index || '',
-        'Xuất xứ': p.origin || '',
-        'Bảo hành (tháng)': p.warranty_months || '',
-        'Tính năng (IDs)': p.attributes?.features?.join(',') || '',
-        'Mô tả': p.description || '',
-        'Khuyến mãi (true/false)': p.is_promotion ? 'true' : 'false',
-        'Text khuyến mãi': p.promotion_text || ''
-      }));
+      const excelData = products.map(p => {
+        const row: any = {
+          'Mã SKU*': p.sku,
+          'Tên sản phẩm*': p.name,
+          'Thương hiệu*': p.brand?.name || '',
+          'Giá niêm yết (VNĐ)*': p.price,
+          'Giá giảm (VNĐ)': p.sale_price || '',
+          'Chất liệu': p.material || '',
+          'Chỉ số khúc xạ': p.refractive_index || '',
+          'Xuất xứ': p.origin || '',
+          'Bảo hành (tháng)': p.warranty_months || '',
+          'Mô tả': p.description || '',
+          'Khuyến mãi (true/false)': p.is_promotion ? 'true' : 'false',
+          'Text khuyến mãi': p.promotion_text || ''
+        };
+
+        // Add multiselect columns dynamically
+        multiselectAttrs.forEach(attr => {
+          const valueKey = `${attr.slug}_values`;
+          const selectedValues = p.attributes?.[valueKey] || [];
+          
+          // Create column for each option: "Chống UV" = "Có" or "Không"
+          attr.options.forEach((option: string) => {
+            row[option] = selectedValues.includes(option) ? 'Có' : 'Không';
+          });
+        });
+
+        return row;
+      });
 
       // Download Excel
       const timestamp = new Date().toISOString().split('T')[0];

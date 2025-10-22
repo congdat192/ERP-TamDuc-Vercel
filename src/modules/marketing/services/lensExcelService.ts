@@ -274,8 +274,20 @@ export class LensExcelService {
   }
 
   // Get empty template
-  static downloadTemplate() {
-    const template: ExcelRow[] = [{
+  static async downloadTemplate() {
+    // Fetch all multiselect attributes from database
+    const { data: allAttributes } = await supabase
+      .from('lens_product_attributes')
+      .select('*')
+      .eq('type', 'multiselect')
+      .eq('is_active', true);
+    
+    const multiselectAttrs = (allAttributes || []).map(attr => ({
+      ...attr,
+      options: typeof attr.options === 'string' ? JSON.parse(attr.options) : attr.options
+    }));
+
+    const template: any = {
       'Mã SKU*': 'EXAMPLE-SKU',
       'Tên sản phẩm*': 'Tên sản phẩm mẫu',
       'Thương hiệu*': 'Essilor',
@@ -286,12 +298,23 @@ export class LensExcelService {
       'Xuất xứ': 'Pháp',
       'Bảo hành (tháng)': 12,
       'Mô tả': 'Mô tả sản phẩm',
-      // Note: Multiselect columns will be added dynamically based on attributes
       'Khuyến mãi (true/false)': 'false',
       'Text khuyến mãi': ''
-    }];
+    };
 
-    this.downloadExcel(template, `lens-template-${Date.now()}.xlsx`);
+    // Add multiselect columns dynamically
+    multiselectAttrs.forEach(attr => {
+      attr.options.forEach((option: string) => {
+        template[option] = 'Không'; // Default value
+      });
+    });
+
+    // Add 1 example with "Có"
+    if (multiselectAttrs.length > 0 && multiselectAttrs[0].options.length > 0) {
+      template[multiselectAttrs[0].options[0]] = 'Có';
+    }
+
+    this.downloadExcel([template], `lens-template-${Date.now()}.xlsx`);
   }
 }
 
