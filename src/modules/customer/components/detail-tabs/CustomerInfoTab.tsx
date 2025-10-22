@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface Customer {
   id: string;
@@ -24,7 +24,8 @@ interface Customer {
   totalSpent: number;
   totalDebt: number;
   status: string;
-  gender: string; // Thêm trường giới tính
+  gender: string;
+  avatarUrl?: string;
 }
 
 interface CustomerInfoTabProps {
@@ -43,6 +44,13 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
         {/* Dòng 1: Avatar, Mã khách hàng, Tên khách hàng, Loại khách hàng */}
         <div className="space-y-2 flex flex-col items-center">
           <Avatar className="w-16 h-16 mb-2">
+            {customer.avatarUrl && (
+              <AvatarImage 
+                src={customer.avatarUrl} 
+                alt={customer.name}
+                className="object-cover"
+              />
+            )}
             <AvatarFallback className="theme-bg-primary text-white text-lg font-semibold">
               {getInitials(customer.name)}
             </AvatarFallback>

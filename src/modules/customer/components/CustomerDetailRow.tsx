@@ -28,12 +28,14 @@ interface Customer {
   address: string;
   deliveryArea: string;
   points: number;
+  totalPoints?: number;
   totalSpent: number;
   totalDebt: number;
   status: string;
   gender: string;
+  avatarUrl?: string;
   images?: any[];
-  customerCode?: string; // Add this
+  customerCode?: string;
 }
 
 interface CustomerDetailRowProps {
@@ -203,6 +205,7 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
                 <CustomerPointsHistoryTab 
                   customerId={customer.id}
                   currentPoints={customer.points}
+                  totalPoints={customer.totalPoints}
                 />
               </TabsContent>
 

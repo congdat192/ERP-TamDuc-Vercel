@@ -24,6 +24,7 @@ export interface CustomerData {
   groups: string | null;
   rewardPoint: number;
   psidFacebook: number;
+  avatarkiotviet: string;
 }
 
 export interface CustomerResponse {
@@ -113,6 +114,7 @@ export function mapCustomerData(customer: CustomerData): any {
     note: customer.comments || '',
     points: customer.rewardPoint || 0,
     totalSpent: customer.totalRevenue || 0,
-    totalDebt: customer.debt || 0
+    totalDebt: customer.debt || 0,
+    avatarUrl: customer.avatarkiotviet || null
   };
 }

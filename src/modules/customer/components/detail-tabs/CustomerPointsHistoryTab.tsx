@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 interface CustomerPointsHistoryTabProps {
   customerId: string;
   currentPoints?: number;
+  totalPoints?: number;
 }
 
 interface PointsRecord {
@@ -16,7 +17,7 @@ interface PointsRecord {
   invoiceCode?: string;
 }
 
-export function CustomerPointsHistoryTab({ customerId, currentPoints = 0 }: CustomerPointsHistoryTabProps) {
+export function CustomerPointsHistoryTab({ customerId, currentPoints = 0, totalPoints = 0 }: CustomerPointsHistoryTabProps) {
   // Mock points history data
   const pointsHistory: PointsRecord[] = [
     {
@@ -83,29 +84,23 @@ export function CustomerPointsHistoryTab({ customerId, currentPoints = 0 }: Cust
     return points > 0 ? `+${points.toLocaleString('vi-VN')}` : points.toLocaleString('vi-VN');
   };
 
-  const pointsBalance = currentPoints > 0 ? currentPoints : (pointsHistory[0]?.balance || 0);
-  const totalEarned = pointsHistory
-    .filter(record => record.type === 'earn')
-    .reduce((sum, record) => sum + record.points, 0);
-  const totalRedeemed = Math.abs(pointsHistory
-    .filter(record => record.type === 'redeem')
-    .reduce((sum, record) => sum + record.points, 0));
-
   return (
     <div className="space-y-6">
       {/* Tổng quan điểm */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="theme-card rounded-lg border theme-border-primary p-4">
-          <div className="text-sm theme-text-muted mb-1">Điểm hiện tại (từ API)</div>
-          <div className="text-2xl font-bold theme-text-primary">{pointsBalance.toLocaleString('vi-VN')}</div>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="theme-card rounded-lg border theme-border-primary p-4">
           <div className="text-sm theme-text-muted mb-1">Tổng điểm tích lũy</div>
-          <div className="text-2xl font-bold text-green-600">{totalEarned.toLocaleString('vi-VN')}</div>
+          <div className="text-2xl font-bold theme-text-primary">
+            {(totalPoints || 0).toLocaleString('vi-VN')}
+          </div>
+          <div className="text-xs theme-text-muted mt-1">Tổng số điểm đã tích từ đầu</div>
         </div>
         <div className="theme-card rounded-lg border theme-border-primary p-4">
-          <div className="text-sm theme-text-muted mb-1">Tổng điểm đã dùng</div>
-          <div className="text-2xl font-bold text-orange-600">{totalRedeemed.toLocaleString('vi-VN')}</div>
+          <div className="text-sm theme-text-muted mb-1">Điểm hiện tại</div>
+          <div className="text-2xl font-bold text-blue-600">
+            {(currentPoints || 0).toLocaleString('vi-VN')}
+          </div>
+          <div className="text-xs theme-text-muted mt-1">Điểm có thể sử dụng</div>
         </div>
       </div>
 
