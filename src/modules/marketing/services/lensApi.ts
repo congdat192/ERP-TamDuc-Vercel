@@ -45,7 +45,8 @@ export const lensApi = {
         brand:lens_brands(*),
         features:lens_product_features(
           feature:lens_features(*)
-        )
+        ),
+        variants:lens_product_variants(*)
       `, { count: 'exact' })
       .eq('is_active', true);
 
@@ -127,7 +128,18 @@ export const lensApi = {
       features: product.features?.map((f: any) => f.feature).filter(Boolean) || []
     })) as LensProductWithDetails[];
 
-    return { products, total: count || 0 };
+    // Load attribute_values separately for simple products
+    const productsWithAttrs = await Promise.all(
+      products.map(async (product) => {
+        if (product.product_type === 'simple') {
+          const attrValues = await this.getAttributeValues(product.id);
+          return { ...product, attribute_values: attrValues };
+        }
+        return product;
+      })
+    );
+
+    return { products: productsWithAttrs, total: count || 0 };
   },
 
   async getProductById(id: string): Promise<LensProductWithDetails | null> {
@@ -138,7 +150,8 @@ export const lensApi = {
         brand:lens_brands(*),
         features:lens_product_features(
           feature:lens_features(*)
-        )
+        ),
+        variants:lens_product_variants(*)
       `)
       .eq('id', id)
       .eq('is_active', true)
@@ -153,11 +166,18 @@ export const lensApi = {
       .update({ view_count: (data.view_count || 0) + 1 })
       .eq('id', id);
 
+    // Load attribute_values if simple product
+    let attribute_values: any[] = [];
+    if (data.product_type === 'simple') {
+      attribute_values = await this.getAttributeValues(id);
+    }
+
     return {
       ...data,
       product_type: data.product_type as 'simple' | 'variable',
       image_urls: Array.isArray(data.image_urls) ? data.image_urls as string[] : [],
-      features: data.features?.map((f: any) => f.feature).filter(Boolean) || []
+      features: data.features?.map((f: any) => f.feature).filter(Boolean) || [],
+      attribute_values
     } as LensProductWithDetails;
   },
 
@@ -437,5 +457,35 @@ export const lensApi = {
       .eq('product_id', productId);
 
     if (error) throw error;
-  }
+  },
+
+  // ==================== ATTRIBUTE VALUES ====================
+  
+  async getAttributeValues(productId: string): Promise<any[]> {
+    const { data, error } = await (supabase as any)
+      .from('lens_product_attribute_values')
+      .select('*, attribute:lens_product_attributes(*)')
+      .eq('product_id', productId);
+    
+    if (error) throw error;
+    return data || [];
+  },
+
+  async upsertAttributeValues(productId: string, values: { attribute_id: string; value: string }[]): Promise<void> {
+    // Delete all old values first
+    await (supabase as any)
+      .from('lens_product_attribute_values')
+      .delete()
+      .eq('product_id', productId);
+
+    // Insert new values
+    if (values.length > 0) {
+      const rows = values.map(v => ({ product_id: productId, ...v }));
+      const { error } = await (supabase as any)
+        .from('lens_product_attribute_values')
+        .insert(rows);
+      
+      if (error) throw error;
+    }
+  },
 };

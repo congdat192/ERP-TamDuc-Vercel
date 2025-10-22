@@ -25,12 +25,23 @@ export interface LensProductAttribute {
   id: string;
   name: string;
   slug: string;
-  type: 'select' | 'color' | 'text';
+  type: 'select' | 'color' | 'text' | 'checkbox';
   options: string[];
+  icon: string | null;
+  description: string | null;
   is_active: boolean;
   display_order: number;
   created_at: string;
   updated_at: string;
+}
+
+export interface LensProductAttributeValue {
+  id: string;
+  product_id: string;
+  attribute_id: string;
+  value: string;
+  created_at: string;
+  attribute?: LensProductAttribute;
 }
 
 export interface LensProductVariant {
@@ -72,6 +83,7 @@ export interface LensProduct {
   brand?: LensBrand;
   features?: LensFeature[];
   variants?: LensProductVariant[];
+  attribute_values?: LensProductAttributeValue[];
 }
 
 export interface LensBanner {

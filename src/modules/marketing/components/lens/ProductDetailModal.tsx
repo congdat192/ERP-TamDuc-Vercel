@@ -115,39 +115,60 @@ export function ProductDetailModal({
                 </div>
               )}
 
-              <div className="border-t pt-4 space-y-3">
-                <h3 className="font-semibold">Thông số kỹ thuật</h3>
-                
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  {product.material && (
-                    <>
-                      <span className="text-muted-foreground">Chất liệu:</span>
-                      <span className="font-medium">{product.material}</span>
-                    </>
-                  )}
-                  
-                  {product.refractive_index && (
-                    <>
-                      <span className="text-muted-foreground">Chiết suất:</span>
-                      <span className="font-medium">{product.refractive_index}</span>
-                    </>
-                  )}
-                  
-                  {product.origin && (
-                    <>
-                      <span className="text-muted-foreground">Xuất xứ:</span>
-                      <span className="font-medium">{product.origin}</span>
-                    </>
-                  )}
-                  
-                  {product.warranty_months && (
-                    <>
-                      <span className="text-muted-foreground">Bảo hành:</span>
-                      <span className="font-medium">{product.warranty_months} tháng</span>
-                    </>
-                  )}
+              {/* Thông số kỹ thuật - Simple Product */}
+              {product.product_type === 'simple' && product.attribute_values && product.attribute_values.length > 0 && (
+                <div className="border-t pt-4">
+                  <h3 className="font-semibold mb-3">Thông số kỹ thuật</h3>
+                  <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                    {product.attribute_values
+                      .filter(av => av.attribute && av.value !== 'false')
+                      .map(av => (
+                        <div key={av.id} className="contents">
+                          <dt className="text-muted-foreground">
+                            {av.attribute?.icon && <span className="mr-1">{av.attribute.icon}</span>}
+                            {av.attribute?.name}:
+                          </dt>
+                          <dd className="font-medium">
+                            {av.attribute?.type === 'checkbox' && av.value === 'true' ? '✓' : av.value}
+                          </dd>
+                        </div>
+                      ))}
+                  </dl>
                 </div>
-              </div>
+              )}
+
+              {/* Legacy fields - sẽ xóa sau khi migrate */}
+              {product.product_type === 'simple' && (product.material || product.refractive_index || product.origin || product.warranty_months) && (
+                <div className="border-t pt-4 space-y-3">
+                  <h3 className="font-semibold">Thông số (Legacy)</h3>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    {product.material && (
+                      <>
+                        <span className="text-muted-foreground">Chất liệu:</span>
+                        <span className="font-medium">{product.material}</span>
+                      </>
+                    )}
+                    {product.refractive_index && (
+                      <>
+                        <span className="text-muted-foreground">Chiết suất:</span>
+                        <span className="font-medium">{product.refractive_index}</span>
+                      </>
+                    )}
+                    {product.origin && (
+                      <>
+                        <span className="text-muted-foreground">Xuất xứ:</span>
+                        <span className="font-medium">{product.origin}</span>
+                      </>
+                    )}
+                    {product.warranty_months && (
+                      <>
+                        <span className="text-muted-foreground">Bảo hành:</span>
+                        <span className="font-medium">{product.warranty_months} tháng</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {product.features && product.features.length > 0 && (
                 <div>

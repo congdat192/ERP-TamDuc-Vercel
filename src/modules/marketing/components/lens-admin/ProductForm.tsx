@@ -15,8 +15,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LensProduct, LensBrand, LensFeature, LensProductAttribute, LensProductVariant, CreateVariantInput } from '../../types/lens';
 import { lensApi } from '../../services/lensApi';
 import { toast } from 'sonner';
-import { Upload, X, Plus, Trash2, Box, Grid3x3 } from 'lucide-react';
+import { Upload, X, Plus, Trash2, Box, Grid3x3, Settings } from 'lucide-react';
 import { VariantsTable } from './VariantsTable';
+import { AttributeManager } from './AttributeManager';
 
 const schema = z.object({
   brand_id: z.string().min(1, 'Vui lòng chọn thương hiệu'),
@@ -26,10 +27,6 @@ const schema = z.object({
   sku: z.string().optional(),
   description: z.string().optional(),
   price: z.number().min(0, 'Giá phải lớn hơn 0'),
-  material: z.string().optional(),
-  refractive_index: z.string().optional(),
-  origin: z.string().optional(),
-  warranty_months: z.number().optional(),
   is_promotion: z.boolean(),
   promotion_text: z.string().optional(),
   is_active: z.boolean(),
@@ -56,6 +53,10 @@ export function ProductForm({ open, product, brands, features, onClose }: Produc
   const [attributes, setAttributes] = useState<LensProductAttribute[]>([]);
   const [selectedAttributes, setSelectedAttributes] = useState<string[]>([]);
   const [variants, setVariants] = useState<(LensProductVariant & { _isNew?: boolean })[]>([]);
+  
+  // Attribute values for simple products
+  const [attributeValues, setAttributeValues] = useState<Record<string, string>>({});
+  const [showAttributeManager, setShowAttributeManager] = useState(false);
 
   const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -90,10 +91,6 @@ export function ProductForm({ open, product, brands, features, onClose }: Produc
         sku: product.sku || '',
         description: product.description || '',
         price: product.price,
-        material: product.material || '',
-        refractive_index: product.refractive_index || '',
-        origin: product.origin || '',
-        warranty_months: product.warranty_months || undefined,
         is_promotion: product.is_promotion,
         promotion_text: product.promotion_text || '',
         is_active: product.is_active,
@@ -102,6 +99,15 @@ export function ProductForm({ open, product, brands, features, onClose }: Produc
       setImageFiles([]);
       setImagePreviews([]);
       setSelectedFeatures(product.features?.map(f => f.id) || []);
+
+      // Load attribute values for simple products
+      if (product.product_type === 'simple' && product.attribute_values) {
+        const values: Record<string, string> = {};
+        product.attribute_values.forEach(av => {
+          values[av.attribute_id] = av.value;
+        });
+        setAttributeValues(values);
+      }
 
       // Load variants if variable product
       if (product.product_type === 'variable') {
@@ -122,6 +128,7 @@ export function ProductForm({ open, product, brands, features, onClose }: Produc
       setSelectedFeatures([]);
       setVariants([]);
       setSelectedAttributes([]);
+      setAttributeValues({});
     }
   }, [product, reset]);
 
@@ -243,6 +250,15 @@ export function ProductForm({ open, product, brands, features, onClose }: Produc
         await lensApi.linkProductFeatures(newProduct.id, selectedFeatures);
         productId = newProduct.id;
         toast.success('Tạo sản phẩm thành công');
+      }
+
+      // Save attribute values for simple products
+      if (data.product_type === 'simple') {
+        const values = Object.entries(attributeValues)
+          .filter(([_, value]) => value && value !== 'false')
+          .map(([attribute_id, value]) => ({ attribute_id, value }));
+        
+        await lensApi.upsertAttributeValues(productId, values);
       }
 
       // Handle variants for variable products
@@ -371,32 +387,123 @@ export function ProductForm({ open, product, brands, features, onClose }: Produc
                 <Textarea {...register('description')} rows={3} />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Chất liệu</Label>
-                  <Input {...register('material')} placeholder="Nhựa, kính..." />
+              {/* Dynamic Attributes Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base font-semibold">Thuộc tính sản phẩm</Label>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setShowAttributeManager(true)}
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    Quản lý thuộc tính
+                  </Button>
                 </div>
 
-                <div>
-                  <Label>Chiết suất</Label>
-                  <Input {...register('refractive_index')} placeholder="1.56" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Xuất xứ</Label>
-                  <Input {...register('origin')} placeholder="Đức, Nhật Bản..." />
-                </div>
-
-                <div>
-                  <Label>Bảo hành (tháng)</Label>
-                  <Input type="number" {...register('warranty_months', { valueAsNumber: true })} />
-                </div>
+                {productType === 'simple' ? (
+                  // SIMPLE PRODUCT: Show form inputs
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      {attributes
+                        .filter(attr => attr.type === 'select' || attr.type === 'text')
+                        .map(attr => (
+                          <div key={attr.id}>
+                            <Label>
+                              {attr.icon && <span className="mr-1">{attr.icon}</span>}
+                              {attr.name}
+                            </Label>
+                            {attr.type === 'select' ? (
+                              <Select 
+                                value={attributeValues[attr.id] || ''} 
+                                onValueChange={(v) => setAttributeValues(prev => ({ ...prev, [attr.id]: v }))}
+                              >
+                                <SelectTrigger><SelectValue placeholder={`Chọn ${attr.name}`} /></SelectTrigger>
+                                <SelectContent>
+                                  {attr.options.map(opt => (
+                                    <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <Input 
+                                value={attributeValues[attr.id] || ''} 
+                                onChange={(e) => setAttributeValues(prev => ({ ...prev, [attr.id]: e.target.value }))}
+                                placeholder={attr.description || ''}
+                              />
+                            )}
+                          </div>
+                        ))}
+                    </div>
+                    
+                    {/* Checkbox attributes */}
+                    <div>
+                      <Label className="mb-2 block">Tính năng</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {attributes
+                          .filter(attr => attr.type === 'checkbox')
+                          .map(attr => (
+                            <label 
+                              key={attr.id} 
+                              className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all ${
+                                attributeValues[attr.id] === 'true' 
+                                  ? "bg-green-50 border-green-600 text-green-700"
+                                  : "bg-background hover:bg-accent"
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={attributeValues[attr.id] === 'true'}
+                                onChange={(e) => setAttributeValues(prev => ({ 
+                                  ...prev, 
+                                  [attr.id]: e.target.checked ? 'true' : 'false' 
+                                }))}
+                                className="hidden"
+                              />
+                              {attr.icon && <span>{attr.icon}</span>}
+                              <span className="text-sm font-medium">{attr.name}</span>
+                            </label>
+                          ))}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  // VARIABLE PRODUCT: Select attributes for variations
+                  <div className="p-4 border rounded-lg bg-muted/30 space-y-3">
+                    <Label className="text-sm text-muted-foreground">
+                      Chọn thuộc tính để tạo biến thể:
+                    </Label>
+                    {attributes
+                      .filter(attr => attr.type === 'select' && attr.options.length > 0)
+                      .map(attr => (
+                        <div key={attr.id} className="flex items-start space-x-3">
+                          <Checkbox
+                            id={`var-attr-${attr.id}`}
+                            checked={selectedAttributes.includes(attr.id)}
+                            onCheckedChange={(checked) => {
+                              setSelectedAttributes(prev =>
+                                checked ? [...prev, attr.id] : prev.filter(id => id !== attr.id)
+                              );
+                            }}
+                          />
+                          <div className="flex-1">
+                            <Label htmlFor={`var-attr-${attr.id}`} className="cursor-pointer font-medium">
+                              {attr.icon && <span className="mr-1">{attr.icon}</span>}
+                              {attr.name}
+                            </Label>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {attr.options.join(', ')}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
               </div>
 
               <div>
-                <Label>Tính năng</Label>
+                <Label>Tính năng (Legacy)</Label>
                 <div className="mt-2 grid grid-cols-2 gap-2">
                   {features.map(feature => (
                     <div key={feature.id} className="flex items-center space-x-2">
@@ -581,6 +688,17 @@ export function ProductForm({ open, product, brands, features, onClose }: Produc
             </Button>
           </div>
         </form>
+
+        {/* Attribute Manager Modal */}
+        {showAttributeManager && (
+          <AttributeManager 
+            open={showAttributeManager}
+            onClose={() => {
+              setShowAttributeManager(false);
+              lensApi.getAttributes().then(setAttributes);
+            }}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );
