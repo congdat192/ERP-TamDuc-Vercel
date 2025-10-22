@@ -1,4 +1,5 @@
 import { useLensFilters } from '../../hooks/useLensFilters';
+import { cn } from '@/lib/utils';
 
 interface FeatureFilterChipsProps {
   features: any[];
