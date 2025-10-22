@@ -33,13 +33,15 @@ export function AttributeFormDialog({ open, attribute, onClose }: Props) {
   const [newOption, setNewOption] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm<FormData>({
+  const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       type: 'select',
       display_order: 0,
     },
   });
+
+  const selectedType = watch('type');
 
   useEffect(() => {
     if (attribute) {
@@ -157,35 +159,49 @@ export function AttributeFormDialog({ open, attribute, onClose }: Props) {
             <Input type="number" {...register('display_order', { valueAsNumber: true })} />
           </div>
 
-          <div>
-            <Label>Giá trị *</Label>
-            <div className="flex gap-2 mb-2">
-              <Input
-                value={newOption}
-                onChange={(e) => setNewOption(e.target.value)}
-                placeholder="Nhập giá trị (VD: Plastic)"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddOption();
-                  }
-                }}
-              />
-              <Button type="button" onClick={handleAddOption}>Thêm</Button>
+          {selectedType === 'select' && (
+            <div>
+              <Label>Giá trị *</Label>
+              <div className="flex gap-2 mb-2">
+                <Input
+                  value={newOption}
+                  onChange={(e) => setNewOption(e.target.value)}
+                  placeholder="Nhập giá trị (VD: Plastic)"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddOption();
+                    }
+                  }}
+                />
+                <Button type="button" onClick={handleAddOption}>Thêm</Button>
+              </div>
+              <div className="flex flex-wrap gap-2 min-h-[40px] border rounded-md p-2">
+                {options.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Chưa có giá trị nào</p>
+                ) : (
+                  options.map(opt => (
+                    <Badge key={opt} variant="secondary" className="cursor-pointer hover:bg-destructive hover:text-destructive-foreground">
+                      {opt}
+                      <X className="w-3 h-3 ml-1" onClick={() => handleRemoveOption(opt)} />
+                    </Badge>
+                  ))
+                )}
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2 min-h-[40px] border rounded-md p-2">
-              {options.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Chưa có giá trị nào</p>
-              ) : (
-                options.map(opt => (
-                  <Badge key={opt} variant="secondary" className="cursor-pointer hover:bg-destructive hover:text-destructive-foreground">
-                    {opt}
-                    <X className="w-3 h-3 ml-1" onClick={() => handleRemoveOption(opt)} />
-                  </Badge>
-                ))
-              )}
+          )}
+
+          {selectedType === 'multiselect' && (
+            <div className="p-3 border rounded-md bg-muted/50">
+              <p className="text-sm text-muted-foreground">
+                💡 <strong>Multiselect</strong> dùng để chọn nhiều tính năng (checkbox).
+                <br />
+                Ví dụ: Chống UV, Chống xước, Đổi màu, v.v.
+                <br />
+                Không cần nhập giá trị cố định.
+              </p>
             </div>
-          </div>
+          )}
 
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => onClose()}>Hủy</Button>
