@@ -1,0 +1,155 @@
+import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { lensApi } from '@/modules/marketing/services/lensApi';
+import { useLensFilters } from '@/modules/marketing/hooks/useLensFilters';
+import { useCompare } from '@/modules/marketing/hooks/useCompare';
+import { LensAppBar } from '@/modules/marketing/components/lens/LensAppBar';
+import { FeatureFilterChips } from '@/modules/marketing/components/lens/FeatureFilterChips';
+import { BrandFilterChips } from '@/modules/marketing/components/lens/BrandFilterChips';
+import { AdvancedFilterDrawer } from '@/modules/marketing/components/lens/AdvancedFilterDrawer';
+import { QuickTags } from '@/modules/marketing/components/lens/QuickTags';
+import { SortDropdown } from '@/modules/marketing/components/lens/SortDropdown';
+import { ProductGrid } from '@/modules/marketing/components/lens/ProductGrid';
+import { BannerGrid } from '@/modules/marketing/components/lens/BannerGrid';
+import { FooterBar } from '@/modules/marketing/components/lens/FooterBar';
+import { ProductDetailModal } from '@/modules/marketing/components/lens/ProductDetailModal';
+import { CompareModal } from '@/modules/marketing/components/lens/CompareModal';
+import { LensProductWithDetails } from '@/modules/marketing/types/lens';
+
+export function LensCatalogPage() {
+  const { filters, updateFilter, clearFilters, hasActiveFilters } = useLensFilters();
+  const compareState = useCompare();
+  const [page, setPage] = useState(1);
+  const [selectedProduct, setSelectedProduct] = useState<LensProductWithDetails | null>(null);
+  const [showCompareModal, setShowCompareModal] = useState(false);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+
+  const { data: brandsData } = useQuery({
+    queryKey: ['lens-brands'],
+    queryFn: () => lensApi.getBrands(),
+  });
+
+  const { data: featuresData } = useQuery({
+    queryKey: ['lens-features'],
+    queryFn: () => lensApi.getFeatures(),
+  });
+
+  const { data: productsData, isLoading } = useQuery({
+    queryKey: ['lens-products', filters, page],
+    queryFn: () => lensApi.getProducts(filters, page, 8),
+  });
+
+  const { data: bannersData } = useQuery({
+    queryKey: ['lens-banners'],
+    queryFn: () => lensApi.getBanners(),
+  });
+
+  const brands = brandsData || [];
+  const features = featuresData || [];
+  const products = productsData?.products || [];
+  const total = productsData?.total || 0;
+  const banners = bannersData || [];
+
+  useEffect(() => {
+    setPage(1);
+  }, [filters]);
+
+  return (
+    <div className="min-h-screen bg-background">
+      <LensAppBar 
+        onSearchChange={(q) => updateFilter('search', q)}
+        compareCount={compareState.count}
+        onCompareClick={() => setShowCompareModal(true)}
+      />
+
+      {/* Sticky Filter Section */}
+      <div className="sticky top-16 z-40 bg-background border-b">
+        <FeatureFilterChips features={features} />
+        <BrandFilterChips brands={brands} />
+        
+        <div className="flex items-center gap-2 px-4 py-3 border-t">
+          <button
+            onClick={() => setShowAdvancedFilters(true)}
+            className="px-4 py-2 text-sm font-medium rounded-lg border border-border hover:bg-accent transition-colors"
+          >
+            Lọc nâng cao
+          </button>
+          
+          <QuickTags />
+          
+          <div className="ml-auto">
+            <SortDropdown />
+          </div>
+        </div>
+      </div>
+
+      <main className="container mx-auto px-4 py-6 space-y-8">
+        <ProductGrid
+          products={products}
+          isLoading={isLoading}
+          onProductClick={(product) => setSelectedProduct(product)}
+          onAddCompare={compareState.addToCompare}
+          isInCompare={compareState.isInCompare}
+          canAddMore={compareState.canAddMore}
+        />
+
+        {products.length > 0 && (
+          <div className="flex justify-center gap-2">
+            <button
+              disabled={page === 1}
+              onClick={() => setPage(p => p - 1)}
+              className="px-4 py-2 text-sm font-medium rounded-lg border border-border disabled:opacity-50 disabled:cursor-not-allowed hover:bg-accent"
+            >
+              Trước
+            </button>
+            <span className="px-4 py-2 text-sm">
+              Trang {page} / {Math.ceil(total / 8)}
+            </span>
+            <button
+              disabled={page >= Math.ceil(total / 8)}
+              onClick={() => setPage(p => p + 1)}
+              className="px-4 py-2 text-sm font-medium rounded-lg border border-border disabled:opacity-50 disabled:cursor-not-allowed hover:bg-accent"
+            >
+              Sau
+            </button>
+          </div>
+        )}
+
+        <BannerGrid banners={banners} />
+      </main>
+
+      <FooterBar
+        totalProducts={total}
+        hasFilters={hasActiveFilters}
+        onClearFilters={clearFilters}
+        compareCount={compareState.count}
+        onCompareClick={() => setShowCompareModal(true)}
+      />
+
+      <AdvancedFilterDrawer
+        open={showAdvancedFilters}
+        onOpenChange={setShowAdvancedFilters}
+      />
+
+      {selectedProduct && (
+        <ProductDetailModal
+          product={selectedProduct}
+          open={!!selectedProduct}
+          onOpenChange={(open) => !open && setSelectedProduct(null)}
+          onAddCompare={compareState.addToCompare}
+          isInCompare={compareState.isInCompare(selectedProduct.id)}
+          canAddMore={compareState.canAddMore}
+        />
+      )}
+
+      {showCompareModal && (
+        <CompareModal
+          productIds={compareState.compareList}
+          open={showCompareModal}
+          onOpenChange={setShowCompareModal}
+          onRemove={compareState.removeFromCompare}
+        />
+      )}
+    </div>
+  );
+}
