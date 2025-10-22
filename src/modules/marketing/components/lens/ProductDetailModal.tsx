@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { LensProductWithDetails } from '../../types/lens';
 import { Plus, Check } from 'lucide-react';
 
@@ -62,7 +62,7 @@ export function ProductDetailModal({
 
               {/* Thumbnail Gallery */}
               {images.length > 1 && (
-                <ScrollArea className="w-full">
+                <ScrollArea className="w-full" type="always">
                   <div className="flex gap-2 pb-2">
                     {images.map((url, index) => (
                       <button
@@ -71,8 +71,8 @@ export function ProductDetailModal({
                         className={`
                           flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all
                           ${index === selectedImageIndex 
-                            ? 'border-primary ring-2 ring-primary ring-offset-2' 
-                            : 'border-transparent hover:border-border'
+                            ? 'border-green-600 ring-2 ring-green-600 ring-offset-2' 
+                            : 'border-transparent hover:border-gray-300'
                           }
                         `}
                       >
@@ -84,6 +84,7 @@ export function ProductDetailModal({
                       </button>
                     ))}
                   </div>
+                  <ScrollBar orientation="horizontal" />
                 </ScrollArea>
               )}
 
@@ -95,14 +96,15 @@ export function ProductDetailModal({
             {/* Right: Product Info */}
             <div className="space-y-4">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Thương hiệu</p>
-                <p className="font-semibold">{product.brand?.name}</p>
+                <p className="text-2xl font-bold text-green-700">
+                  Giá: {product.price.toLocaleString('vi-VN')}₫
+                </p>
               </div>
 
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Giá</p>
-                <p className="text-3xl font-bold text-green-700">
-                  {product.price.toLocaleString('vi-VN')}₫
+                <p className="text-base">
+                  <span className="text-muted-foreground">Thương hiệu:</span>{' '}
+                  <span className="font-semibold">{product.brand?.name}</span>
                 </p>
               </div>
 
