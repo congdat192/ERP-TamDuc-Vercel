@@ -238,20 +238,24 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
 
       {/* Zoom Dialog */}
       <Dialog open={isZoomOpen} onOpenChange={setIsZoomOpen}>
-        <DialogContent className="max-w-2xl">
-          <div className="flex flex-col items-center space-y-4">
-            <Avatar className="w-64 h-64 border-4 border-white shadow-2xl">
-              {customer.avatarUrl && (
-                <AvatarImage 
-                  src={customer.avatarUrl} 
+        <DialogContent className="max-w-3xl">
+          <div className="flex flex-col items-center space-y-4 p-4">
+            {customer.avatarUrl ? (
+              <div className="relative overflow-hidden rounded-xl shadow-2xl border-4 border-white">
+                <img
+                  src={customer.avatarUrl}
                   alt={customer.name}
-                  className="object-cover"
+                  className="max-w-full max-h-[70vh] w-auto h-auto object-contain"
                 />
-              )}
-              <AvatarFallback className="theme-bg-primary text-white text-6xl font-semibold">
-                {getInitials(customer.name)}
-              </AvatarFallback>
-            </Avatar>
+              </div>
+            ) : (
+              <div className="w-64 h-64 rounded-xl shadow-2xl border-4 border-white theme-bg-primary flex items-center justify-center">
+                <span className="text-white text-6xl font-semibold">
+                  {getInitials(customer.name)}
+                </span>
+              </div>
+            )}
+            
             <div className="text-center">
               <h3 className="text-xl font-semibold theme-text">{customer.name}</h3>
               <p className="text-sm theme-text-muted">{customer.phone}</p>
