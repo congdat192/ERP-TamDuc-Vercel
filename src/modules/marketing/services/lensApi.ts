@@ -1,15 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  LensBrand, 
-  LensFeature, 
-  LensProduct, 
-  LensBanner, 
-  LensFilters, 
-  LensProductWithDetails,
-  LensProductAttribute,
-  LensProductVariant,
-  CreateVariantInput
-} from '../types/lens';
+import { LensBrand, LensFeature, LensProduct, LensBanner, LensFilters, LensProductWithDetails } from '../types/lens';
 
 export const lensApi = {
   // Brands
@@ -122,10 +112,9 @@ export const lensApi = {
     // Transform features array and cast image_urls
     const products = (data || []).map(product => ({
       ...product,
-      product_type: product.product_type as 'simple' | 'variable',
       image_urls: Array.isArray(product.image_urls) ? product.image_urls as string[] : [],
       features: product.features?.map((f: any) => f.feature).filter(Boolean) || []
-    })) as LensProductWithDetails[];
+    }));
 
     return { products, total: count || 0 };
   },
@@ -155,10 +144,9 @@ export const lensApi = {
 
     return {
       ...data,
-      product_type: data.product_type as 'simple' | 'variable',
       image_urls: Array.isArray(data.image_urls) ? data.image_urls as string[] : [],
       features: data.features?.map((f: any) => f.feature).filter(Boolean) || []
-    } as LensProductWithDetails;
+    };
   },
 
   async createProduct(product: Omit<LensProduct, 'id' | 'created_at' | 'updated_at' | 'view_count'>): Promise<LensProduct> {
@@ -171,9 +159,8 @@ export const lensApi = {
     if (error) throw error;
     return {
       ...data,
-      product_type: data.product_type as 'simple' | 'variable',
       image_urls: Array.isArray(data.image_urls) ? data.image_urls as string[] : []
-    } as LensProduct;
+    };
   },
 
   async updateProduct(id: string, product: Partial<LensProduct>): Promise<LensProduct> {
@@ -187,9 +174,8 @@ export const lensApi = {
     if (error) throw error;
     return {
       ...data,
-      product_type: data.product_type as 'simple' | 'variable',
       image_urls: Array.isArray(data.image_urls) ? data.image_urls as string[] : []
-    } as LensProduct;
+    };
   },
 
   async deleteProduct(id: string): Promise<void> {
@@ -300,142 +286,5 @@ export const lensApi = {
     }
     
     return results;
-  },
-
-  // ==================== ATTRIBUTES ====================
-  
-  async getAttributes(): Promise<LensProductAttribute[]> {
-    const { data, error } = await supabase
-      .from('lens_product_attributes')
-      .select('*')
-      .eq('is_active', true)
-      .order('display_order');
-    
-    if (error) throw error;
-    return (data || []).map(attr => ({
-      ...attr,
-      options: Array.isArray(attr.options) ? attr.options as string[] : []
-    })) as LensProductAttribute[];
-  },
-
-  async createAttribute(attribute: Omit<LensProductAttribute, 'id' | 'created_at' | 'updated_at'>): Promise<LensProductAttribute> {
-    const { data, error } = await supabase
-      .from('lens_product_attributes')
-      .insert(attribute)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return {
-      ...data,
-      options: Array.isArray(data.options) ? data.options as string[] : []
-    } as LensProductAttribute;
-  },
-
-  async updateAttribute(id: string, attribute: Partial<LensProductAttribute>): Promise<LensProductAttribute> {
-    const { data, error } = await supabase
-      .from('lens_product_attributes')
-      .update(attribute)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return {
-      ...data,
-      options: Array.isArray(data.options) ? data.options as string[] : []
-    } as LensProductAttribute;
-  },
-
-  async deleteAttribute(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('lens_product_attributes')
-      .delete()
-      .eq('id', id);
-
-    if (error) throw error;
-  },
-
-  // ==================== VARIANTS ====================
-  
-  async getVariantsByProductId(productId: string): Promise<LensProductVariant[]> {
-    const { data, error } = await supabase
-      .from('lens_product_variants')
-      .select('*')
-      .eq('product_id', productId)
-      .order('display_order');
-    
-    if (error) throw error;
-    return (data || []).map(variant => ({
-      ...variant,
-      image_urls: Array.isArray(variant.image_urls) ? variant.image_urls as string[] : [],
-      attributes: variant.attributes as Record<string, string>
-    })) as LensProductVariant[];
-  },
-
-  async createVariant(productId: string, variant: CreateVariantInput): Promise<LensProductVariant> {
-    const { data, error } = await supabase
-      .from('lens_product_variants')
-      .insert({
-        product_id: productId,
-        ...variant
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-    return {
-      ...data,
-      image_urls: Array.isArray(data.image_urls) ? data.image_urls as string[] : [],
-      attributes: data.attributes as Record<string, string>
-    } as LensProductVariant;
-  },
-
-  async createVariantsBulk(productId: string, variants: CreateVariantInput[]): Promise<LensProductVariant[]> {
-    const { data, error } = await supabase
-      .from('lens_product_variants')
-      .insert(variants.map(v => ({ product_id: productId, ...v })))
-      .select();
-
-    if (error) throw error;
-    return (data || []).map(variant => ({
-      ...variant,
-      image_urls: Array.isArray(variant.image_urls) ? variant.image_urls as string[] : [],
-      attributes: variant.attributes as Record<string, string>
-    })) as LensProductVariant[];
-  },
-
-  async updateVariant(id: string, variant: Partial<CreateVariantInput>): Promise<LensProductVariant> {
-    const { data, error } = await supabase
-      .from('lens_product_variants')
-      .update(variant)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return {
-      ...data,
-      image_urls: Array.isArray(data.image_urls) ? data.image_urls as string[] : [],
-      attributes: data.attributes as Record<string, string>
-    } as LensProductVariant;
-  },
-
-  async deleteVariant(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('lens_product_variants')
-      .delete()
-      .eq('id', id);
-
-    if (error) throw error;
-  },
-
-  async deleteVariantsByProductId(productId: string): Promise<void> {
-    const { error } = await supabase
-      .from('lens_product_variants')
-      .delete()
-      .eq('product_id', productId);
-
-    if (error) throw error;
   }
 };
