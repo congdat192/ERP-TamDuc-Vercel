@@ -21,53 +21,13 @@ export interface LensFeature {
   updated_at: string;
 }
 
-export interface LensProductAttribute {
-  id: string;
-  name: string;
-  slug: string;
-  type: 'select' | 'color' | 'text' | 'checkbox';
-  options: string[];
-  icon: string | null;
-  description: string | null;
-  is_active: boolean;
-  display_order: number;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface LensProductAttributeValue {
-  id: string;
-  product_id: string;
-  attribute_id: string;
-  value: string;
-  created_at: string;
-  attribute?: LensProductAttribute;
-}
-
-export interface LensProductVariant {
-  id: string;
-  product_id: string;
-  sku: string;
-  variant_name: string;
-  attributes: Record<string, string>; // { "chiet_suat": "1.56", "mau_sac": "Clear" }
-  price: number;
-  stock_quantity: number;
-  image_urls: string[];
-  is_active: boolean;
-  display_order: number;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface LensProduct {
   id: string;
   brand_id: string;
   name: string;
-  product_type: 'simple' | 'variable';
-  base_sku: string | null;
-  sku: string | null; // For simple products only
+  sku: string | null;
   description: string | null;
-  price: number; // Base price for simple, min price for variable
+  price: number;
   image_urls: string[];
   material: string | null;
   refractive_index: string | null;
@@ -82,8 +42,6 @@ export interface LensProduct {
   created_by: string | null;
   brand?: LensBrand;
   features?: LensFeature[];
-  variants?: LensProductVariant[];
-  attribute_values?: LensProductAttributeValue[];
 }
 
 export interface LensBanner {
@@ -114,15 +72,4 @@ export interface LensFilters {
 export interface LensProductWithDetails extends LensProduct {
   brand: LensBrand;
   features: LensFeature[];
-  variants?: LensProductVariant[];
-}
-
-export interface CreateVariantInput {
-  sku: string;
-  variant_name: string;
-  attributes: Record<string, string>;
-  price: number;
-  stock_quantity: number;
-  image_urls?: string[];
-  display_order?: number;
 }

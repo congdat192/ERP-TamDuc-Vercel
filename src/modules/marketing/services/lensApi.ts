@@ -1,15 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  LensBrand, 
-  LensFeature, 
-  LensProduct, 
-  LensBanner, 
-  LensFilters, 
-  LensProductWithDetails,
-  LensProductAttribute,
-  LensProductVariant,
-  CreateVariantInput
-} from '../types/lens';
+import { LensBrand, LensFeature, LensProduct, LensBanner, LensFilters, LensProductWithDetails } from '../types/lens';
 
 export const lensApi = {
   // Brands
@@ -45,8 +35,7 @@ export const lensApi = {
         brand:lens_brands(*),
         features:lens_product_features(
           feature:lens_features(*)
-        ),
-        variants:lens_product_variants(*)
+        )
       `, { count: 'exact' })
       .eq('is_active', true);
 
@@ -123,23 +112,11 @@ export const lensApi = {
     // Transform features array and cast image_urls
     const products = (data || []).map(product => ({
       ...product,
-      product_type: product.product_type as 'simple' | 'variable',
       image_urls: Array.isArray(product.image_urls) ? product.image_urls as string[] : [],
       features: product.features?.map((f: any) => f.feature).filter(Boolean) || []
-    })) as LensProductWithDetails[];
+    }));
 
-    // Load attribute_values separately for simple products
-    const productsWithAttrs = await Promise.all(
-      products.map(async (product) => {
-        if (product.product_type === 'simple') {
-          const attrValues = await this.getAttributeValues(product.id);
-          return { ...product, attribute_values: attrValues };
-        }
-        return product;
-      })
-    );
-
-    return { products: productsWithAttrs, total: count || 0 };
+    return { products, total: count || 0 };
   },
 
   async getProductById(id: string): Promise<LensProductWithDetails | null> {
@@ -150,8 +127,7 @@ export const lensApi = {
         brand:lens_brands(*),
         features:lens_product_features(
           feature:lens_features(*)
-        ),
-        variants:lens_product_variants(*)
+        )
       `)
       .eq('id', id)
       .eq('is_active', true)
@@ -166,19 +142,11 @@ export const lensApi = {
       .update({ view_count: (data.view_count || 0) + 1 })
       .eq('id', id);
 
-    // Load attribute_values if simple product
-    let attribute_values: any[] = [];
-    if (data.product_type === 'simple') {
-      attribute_values = await this.getAttributeValues(id);
-    }
-
     return {
       ...data,
-      product_type: data.product_type as 'simple' | 'variable',
       image_urls: Array.isArray(data.image_urls) ? data.image_urls as string[] : [],
-      features: data.features?.map((f: any) => f.feature).filter(Boolean) || [],
-      attribute_values
-    } as LensProductWithDetails;
+      features: data.features?.map((f: any) => f.feature).filter(Boolean) || []
+    };
   },
 
   async createProduct(product: Omit<LensProduct, 'id' | 'created_at' | 'updated_at' | 'view_count'>): Promise<LensProduct> {
@@ -191,9 +159,8 @@ export const lensApi = {
     if (error) throw error;
     return {
       ...data,
-      product_type: data.product_type as 'simple' | 'variable',
       image_urls: Array.isArray(data.image_urls) ? data.image_urls as string[] : []
-    } as LensProduct;
+    };
   },
 
   async updateProduct(id: string, product: Partial<LensProduct>): Promise<LensProduct> {
@@ -207,9 +174,8 @@ export const lensApi = {
     if (error) throw error;
     return {
       ...data,
-      product_type: data.product_type as 'simple' | 'variable',
       image_urls: Array.isArray(data.image_urls) ? data.image_urls as string[] : []
-    } as LensProduct;
+    };
   },
 
   async deleteProduct(id: string): Promise<void> {
@@ -320,172 +286,5 @@ export const lensApi = {
     }
     
     return results;
-  },
-
-  // ==================== ATTRIBUTES ====================
-  
-  async getAttributes(): Promise<LensProductAttribute[]> {
-    const { data, error } = await supabase
-      .from('lens_product_attributes')
-      .select('*')
-      .eq('is_active', true)
-      .order('display_order');
-    
-    if (error) throw error;
-    return (data || []).map(attr => ({
-      ...attr,
-      options: Array.isArray(attr.options) ? attr.options as string[] : []
-    })) as LensProductAttribute[];
-  },
-
-  async createAttribute(attribute: Omit<LensProductAttribute, 'id' | 'created_at' | 'updated_at'>): Promise<LensProductAttribute> {
-    const { data, error } = await supabase
-      .from('lens_product_attributes')
-      .insert(attribute)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return {
-      ...data,
-      options: Array.isArray(data.options) ? data.options as string[] : []
-    } as LensProductAttribute;
-  },
-
-  async updateAttribute(id: string, attribute: Partial<LensProductAttribute>): Promise<LensProductAttribute> {
-    const { data, error } = await supabase
-      .from('lens_product_attributes')
-      .update(attribute)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return {
-      ...data,
-      options: Array.isArray(data.options) ? data.options as string[] : []
-    } as LensProductAttribute;
-  },
-
-  async deleteAttribute(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('lens_product_attributes')
-      .delete()
-      .eq('id', id);
-
-    if (error) throw error;
-  },
-
-  // ==================== VARIANTS ====================
-  
-  async getVariantsByProductId(productId: string): Promise<LensProductVariant[]> {
-    const { data, error } = await supabase
-      .from('lens_product_variants')
-      .select('*')
-      .eq('product_id', productId)
-      .order('display_order');
-    
-    if (error) throw error;
-    return (data || []).map(variant => ({
-      ...variant,
-      image_urls: Array.isArray(variant.image_urls) ? variant.image_urls as string[] : [],
-      attributes: variant.attributes as Record<string, string>
-    })) as LensProductVariant[];
-  },
-
-  async createVariant(productId: string, variant: CreateVariantInput): Promise<LensProductVariant> {
-    const { data, error } = await supabase
-      .from('lens_product_variants')
-      .insert({
-        product_id: productId,
-        ...variant
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-    return {
-      ...data,
-      image_urls: Array.isArray(data.image_urls) ? data.image_urls as string[] : [],
-      attributes: data.attributes as Record<string, string>
-    } as LensProductVariant;
-  },
-
-  async createVariantsBulk(productId: string, variants: CreateVariantInput[]): Promise<LensProductVariant[]> {
-    const { data, error } = await supabase
-      .from('lens_product_variants')
-      .insert(variants.map(v => ({ product_id: productId, ...v })))
-      .select();
-
-    if (error) throw error;
-    return (data || []).map(variant => ({
-      ...variant,
-      image_urls: Array.isArray(variant.image_urls) ? variant.image_urls as string[] : [],
-      attributes: variant.attributes as Record<string, string>
-    })) as LensProductVariant[];
-  },
-
-  async updateVariant(id: string, variant: Partial<CreateVariantInput>): Promise<LensProductVariant> {
-    const { data, error } = await supabase
-      .from('lens_product_variants')
-      .update(variant)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return {
-      ...data,
-      image_urls: Array.isArray(data.image_urls) ? data.image_urls as string[] : [],
-      attributes: data.attributes as Record<string, string>
-    } as LensProductVariant;
-  },
-
-  async deleteVariant(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('lens_product_variants')
-      .delete()
-      .eq('id', id);
-
-    if (error) throw error;
-  },
-
-  async deleteVariantsByProductId(productId: string): Promise<void> {
-    const { error } = await supabase
-      .from('lens_product_variants')
-      .delete()
-      .eq('product_id', productId);
-
-    if (error) throw error;
-  },
-
-  // ==================== ATTRIBUTE VALUES ====================
-  
-  async getAttributeValues(productId: string): Promise<any[]> {
-    const { data, error } = await (supabase as any)
-      .from('lens_product_attribute_values')
-      .select('*, attribute:lens_product_attributes(*)')
-      .eq('product_id', productId);
-    
-    if (error) throw error;
-    return data || [];
-  },
-
-  async upsertAttributeValues(productId: string, values: { attribute_id: string; value: string }[]): Promise<void> {
-    // Delete all old values first
-    await (supabase as any)
-      .from('lens_product_attribute_values')
-      .delete()
-      .eq('product_id', productId);
-
-    // Insert new values
-    if (values.length > 0) {
-      const rows = values.map(v => ({ product_id: productId, ...v }));
-      const { error } = await (supabase as any)
-        .from('lens_product_attribute_values')
-        .insert(rows);
-      
-      if (error) throw error;
-    }
-  },
+  }
 };
