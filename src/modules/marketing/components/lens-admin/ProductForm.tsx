@@ -15,7 +15,9 @@ import { Badge } from '@/components/ui/badge';
 import { LensProduct, LensBrand } from '../../types/lens';
 import { lensApi } from '../../services/lensApi';
 import { toast } from 'sonner';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, Check } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { supabase } from '@/integrations/supabase/client';
 
 const schema = z.object({
   brand_id: z.string().min(1, 'Vui lòng chọn thương hiệu'),
@@ -48,11 +50,36 @@ export function ProductForm({ open, product, brands, onClose }: ProductFormProps
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedRelatedIds, setSelectedRelatedIds] = useState<string[]>([]);
+  const [relatedProductsSearch, setRelatedProductsSearch] = useState('');
 
   const { data: attributes = [] } = useQuery({
     queryKey: ['lens-attributes'],
     queryFn: () => lensApi.getAttributes(),
   });
+
+  const { data: allProducts = [] } = useQuery({
+    queryKey: ['all-lens-products'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('lens_products')
+        .select('id, name, image_urls, price, sale_price, brand_id')
+        .eq('is_active', true)
+        .order('name');
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const availableProducts = useMemo(() => {
+    return allProducts.filter(p => {
+      if (product && p.id === product.id) return false;
+      if (relatedProductsSearch) {
+        return p.name.toLowerCase().includes(relatedProductsSearch.toLowerCase());
+      }
+      return true;
+    });
+  }, [allProducts, product, relatedProductsSearch]);
 
   const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -93,6 +120,7 @@ export function ProductForm({ open, product, brands, onClose }: ProductFormProps
       setImageFiles([]);
       setImagePreviews([]);
       setAttributeValues(product.attributes || {});
+      setSelectedRelatedIds(product.related_product_ids || []);
     } else {
       reset({
         is_promotion: false,
@@ -103,7 +131,9 @@ export function ProductForm({ open, product, brands, onClose }: ProductFormProps
       setImageFiles([]);
       setImagePreviews([]);
       setAttributeValues({});
+      setSelectedRelatedIds([]);
     }
+    setRelatedProductsSearch('');
   }, [product, reset]);
 
   const handleImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -168,6 +198,7 @@ export function ProductForm({ open, product, brands, onClose }: ProductFormProps
         discount_percent: discountPercent,
         attributes: attributeValues,
         created_by: product?.created_by || undefined,
+        related_product_ids: selectedRelatedIds,
       };
 
       if (product) {
@@ -437,6 +468,124 @@ export function ProductForm({ open, product, brands, onClose }: ProductFormProps
               onCheckedChange={(checked) => setValue('is_active', checked)}
             />
             <Label>Hiển thị</Label>
+          </div>
+
+          {/* Related Products Section */}
+          <div className="border-t pt-4 space-y-3">
+            <Label className="text-base font-semibold">Sản phẩm liên quan (tối đa 4)</Label>
+            <p className="text-xs text-muted-foreground">
+              Chọn các sản phẩm có liên quan để hiển thị trong trang chi tiết
+            </p>
+            
+            {/* Search Box */}
+            <Input
+              placeholder="Tìm kiếm sản phẩm..."
+              value={relatedProductsSearch}
+              onChange={(e) => setRelatedProductsSearch(e.target.value)}
+              className="max-w-md"
+            />
+            
+            {/* Selected Products */}
+            {selectedRelatedIds.length > 0 && (
+              <div>
+                <Label className="text-sm text-muted-foreground mb-2">
+                  Đã chọn ({selectedRelatedIds.length}/4)
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  {selectedRelatedIds.map(id => {
+                    const selectedProduct = allProducts.find(p => p.id === id);
+                    if (!selectedProduct) return null;
+                    
+                    return (
+                      <Badge
+                        key={id}
+                        variant="secondary"
+                        className="flex items-center gap-1 px-2 py-1"
+                      >
+                        {selectedProduct.name}
+                        <button
+                          type="button"
+                          onClick={() => setSelectedRelatedIds(prev => prev.filter(pid => pid !== id))}
+                          className="ml-1 hover:text-destructive"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </Badge>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            
+            {/* Product Grid */}
+            <ScrollArea className="h-64 border rounded-lg p-2">
+              <div className="grid grid-cols-2 gap-2">
+                {availableProducts.map(p => {
+                  const isSelected = selectedRelatedIds.includes(p.id);
+                  const canSelect = selectedRelatedIds.length < 4 || isSelected;
+                  
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      disabled={!canSelect && !isSelected}
+                      onClick={() => {
+                        if (isSelected) {
+                          setSelectedRelatedIds(prev => prev.filter(id => id !== p.id));
+                        } else if (selectedRelatedIds.length < 4) {
+                          setSelectedRelatedIds(prev => [...prev, p.id]);
+                        }
+                      }}
+                      className={`
+                        flex items-center gap-2 p-2 border rounded-lg text-left transition-all
+                        ${isSelected 
+                          ? 'border-green-600 bg-green-50 dark:bg-green-950' 
+                          : 'border-border hover:border-green-400 hover:bg-accent'
+                        }
+                        ${!canSelect && !isSelected ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                      `}
+                    >
+                      <div className="w-12 h-12 rounded overflow-hidden flex-shrink-0 bg-muted">
+                        {p.image_urls && p.image_urls[0] ? (
+                          <img 
+                            src={p.image_urls[0]} 
+                            alt={p.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
+                            No img
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{p.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {p.sale_price 
+                            ? `${p.sale_price.toLocaleString('vi-VN')}₫`
+                            : `${p.price.toLocaleString('vi-VN')}₫`
+                          }
+                        </p>
+                      </div>
+                      {isSelected && (
+                        <div className="flex-shrink-0 w-5 h-5 rounded-full bg-green-600 text-white flex items-center justify-center">
+                          <Check className="w-3 h-3" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+                
+                {availableProducts.length === 0 && (
+                  <div className="col-span-2 text-center py-8 text-muted-foreground text-sm">
+                    {relatedProductsSearch 
+                      ? `Không tìm thấy sản phẩm "${relatedProductsSearch}"`
+                      : 'Không có sản phẩm nào'
+                    }
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
           </div>
 
           <div className="flex justify-end gap-2 pt-4">

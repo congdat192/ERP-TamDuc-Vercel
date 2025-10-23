@@ -41,6 +41,7 @@ export interface LensProduct {
   promotion_text: string | null;
   view_count: number;
   is_active: boolean;
+  related_product_ids: string[];
   created_at: string;
   updated_at: string;
   created_by: string | null;

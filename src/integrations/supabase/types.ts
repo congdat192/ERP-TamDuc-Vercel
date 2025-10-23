@@ -1377,6 +1377,7 @@ export type Database = {
           price: number
           promotion_text: string | null
           refractive_index: string | null
+          related_product_ids: Json | null
           sale_price: number | null
           sku: string | null
           updated_at: string | null
@@ -1400,6 +1401,7 @@ export type Database = {
           price?: number
           promotion_text?: string | null
           refractive_index?: string | null
+          related_product_ids?: Json | null
           sale_price?: number | null
           sku?: string | null
           updated_at?: string | null
@@ -1423,6 +1425,7 @@ export type Database = {
           price?: number
           promotion_text?: string | null
           refractive_index?: string | null
+          related_product_ids?: Json | null
           sale_price?: number | null
           sku?: string | null
           updated_at?: string | null

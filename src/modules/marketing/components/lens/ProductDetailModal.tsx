@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { LensProductWithDetails } from '../../types/lens';
 import { Plus, Check } from 'lucide-react';
+import { lensApi } from '../../services/lensApi';
 
 interface ProductDetailModalProps {
   product: LensProductWithDetails;
@@ -26,6 +28,17 @@ export function ProductDetailModal({
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const images = product.image_urls || [];
   const hasImages = images.length > 0;
+
+  const { data: relatedProducts = [] } = useQuery({
+    queryKey: ['related-products', product.id],
+    queryFn: async () => {
+      if (!product.related_product_ids || product.related_product_ids.length === 0) {
+        return [];
+      }
+      return lensApi.getRelatedProducts(product.related_product_ids);
+    },
+    enabled: open && !!product.related_product_ids && product.related_product_ids.length > 0,
+  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -217,6 +230,84 @@ export function ProductDetailModal({
               </Button>
             </div>
           </div>
+
+          {/* Related Products Section */}
+          {relatedProducts.length > 0 && (
+            <div className="mt-8 p-4 border-t">
+              <h3 className="text-lg font-semibold theme-text mb-4">
+                Sản phẩm liên quan
+              </h3>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {relatedProducts.slice(0, 4).map((relatedProduct) => (
+                  <button
+                    key={relatedProduct.id}
+                    onClick={() => {
+                      onOpenChange(false);
+                      setTimeout(() => {
+                        console.log('View product:', relatedProduct.id);
+                      }, 300);
+                    }}
+                    className="flex flex-col border rounded-lg overflow-hidden hover:shadow-lg transition-all group bg-card"
+                  >
+                    {/* Product Image */}
+                    <div className="aspect-square bg-muted relative overflow-hidden">
+                      {relatedProduct.image_urls?.[0] ? (
+                        <>
+                          <img
+                            src={relatedProduct.image_urls[0]}
+                            alt={relatedProduct.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                          
+                          {/* Discount Badge */}
+                          {relatedProduct.discount_percent && (
+                            <div className="absolute top-1 left-1 bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded">
+                              -{relatedProduct.discount_percent}%
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
+                          Chưa có ảnh
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Product Info */}
+                    <div className="p-3 text-left space-y-1">
+                      <p className="text-sm font-medium theme-text line-clamp-2 group-hover:text-green-600 transition-colors">
+                        {relatedProduct.name}
+                      </p>
+                      
+                      <div className="flex items-baseline gap-2 flex-wrap">
+                        {relatedProduct.sale_price ? (
+                          <>
+                            <p className="text-base font-bold text-red-600">
+                              {relatedProduct.sale_price.toLocaleString('vi-VN')}₫
+                            </p>
+                            <p className="text-xs line-through text-muted-foreground">
+                              {relatedProduct.price.toLocaleString('vi-VN')}₫
+                            </p>
+                          </>
+                        ) : (
+                          <p className="text-base font-bold text-green-700">
+                            {relatedProduct.price.toLocaleString('vi-VN')}₫
+                          </p>
+                        )}
+                      </div>
+                      
+                      {relatedProduct.brand && (
+                        <p className="text-xs text-muted-foreground">
+                          {relatedProduct.brand.name}
+                        </p>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </ScrollArea>
       </DialogContent>
     </Dialog>

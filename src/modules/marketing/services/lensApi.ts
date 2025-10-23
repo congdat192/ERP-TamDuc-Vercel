@@ -95,7 +95,10 @@ export const lensApi = {
     const products = (data || []).map(product => ({
       ...product,
       image_urls: Array.isArray(product.image_urls) ? product.image_urls as string[] : [],
-      attributes: product.attributes || {}
+      attributes: product.attributes || {},
+      related_product_ids: Array.isArray(product.related_product_ids) 
+        ? product.related_product_ids as string[] 
+        : []
     })) as LensProductWithDetails[];
 
     return { products, total: count || 0 };
@@ -121,12 +124,40 @@ export const lensApi = {
       .update({ view_count: (data.view_count || 0) + 1 })
       .eq('id', id);
 
-    return {
-      ...data,
-      image_urls: Array.isArray(data.image_urls) ? data.image_urls as string[] : [],
-      attributes: data.attributes || {}
-    } as LensProductWithDetails;
-  },
+  return {
+    ...data,
+    image_urls: Array.isArray(data.image_urls) ? data.image_urls as string[] : [],
+    attributes: data.attributes || {},
+    related_product_ids: Array.isArray(data.related_product_ids) 
+      ? data.related_product_ids as string[] 
+      : []
+  } as LensProductWithDetails;
+},
+
+async getRelatedProducts(productIds: string[]): Promise<LensProductWithDetails[]> {
+  if (!productIds || productIds.length === 0) return [];
+  
+  const { data, error } = await supabase
+    .from('lens_products')
+    .select(`
+      *,
+      brand:lens_brands(*)
+    `)
+    .in('id', productIds)
+    .eq('is_active', true)
+    .limit(4);
+  
+  if (error) throw error;
+  
+  return (data || []).map(product => ({
+    ...product,
+    image_urls: Array.isArray(product.image_urls) ? product.image_urls as string[] : [],
+    attributes: product.attributes || {},
+    related_product_ids: Array.isArray(product.related_product_ids) 
+      ? product.related_product_ids as string[] 
+      : []
+  })) as LensProductWithDetails[];
+},
 
   async createProduct(product: Omit<LensProduct, 'id' | 'created_at' | 'updated_at' | 'view_count'>): Promise<LensProduct> {
     const { data, error } = await supabase
@@ -135,13 +166,16 @@ export const lensApi = {
       .select()
       .single();
 
-    if (error) throw error;
-    return {
-      ...data,
-      image_urls: Array.isArray(data.image_urls) ? data.image_urls as string[] : [],
-      attributes: data.attributes || {}
-    } as LensProduct;
-  },
+  if (error) throw error;
+  return {
+    ...data,
+    image_urls: Array.isArray(data.image_urls) ? data.image_urls as string[] : [],
+    attributes: data.attributes || {},
+    related_product_ids: Array.isArray(data.related_product_ids) 
+      ? data.related_product_ids as string[] 
+      : []
+  } as LensProduct;
+},
 
   async updateProduct(id: string, product: Partial<LensProduct>): Promise<LensProduct> {
     const { data, error } = await supabase
@@ -151,13 +185,16 @@ export const lensApi = {
       .select()
       .single();
 
-    if (error) throw error;
-    return {
-      ...data,
-      image_urls: Array.isArray(data.image_urls) ? data.image_urls as string[] : [],
-      attributes: data.attributes || {}
-    } as LensProduct;
-  },
+  if (error) throw error;
+  return {
+    ...data,
+    image_urls: Array.isArray(data.image_urls) ? data.image_urls as string[] : [],
+    attributes: data.attributes || {},
+    related_product_ids: Array.isArray(data.related_product_ids) 
+      ? data.related_product_ids as string[] 
+      : []
+  } as LensProduct;
+},
 
   async deleteProduct(id: string): Promise<void> {
     const { error } = await supabase
