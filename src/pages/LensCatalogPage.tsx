@@ -146,6 +146,7 @@ export function LensCatalogPage() {
           onAddCompare={() => compareState.addToCompare(selectedProduct.id)}
           isInCompare={compareState.isInCompare(selectedProduct.id)}
           canAddMore={compareState.canAddMore}
+          onProductSelect={setSelectedProduct}
         />
       )}
 

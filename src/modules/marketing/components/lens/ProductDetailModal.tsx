@@ -15,6 +15,7 @@ interface ProductDetailModalProps {
   onAddCompare: () => void;
   isInCompare: boolean;
   canAddMore: boolean;
+  onProductSelect?: (product: LensProductWithDetails) => void;
 }
 
 export function ProductDetailModal({
@@ -24,6 +25,7 @@ export function ProductDetailModal({
   onAddCompare,
   isInCompare,
   canAddMore,
+  onProductSelect,
 }: ProductDetailModalProps) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const images = product.image_urls || [];
@@ -243,10 +245,7 @@ export function ProductDetailModal({
                   <button
                     key={relatedProduct.id}
                     onClick={() => {
-                      onOpenChange(false);
-                      setTimeout(() => {
-                        console.log('View product:', relatedProduct.id);
-                      }, 300);
+                      onProductSelect?.(relatedProduct);
                     }}
                     className="flex flex-col border rounded-lg overflow-hidden hover:shadow-lg transition-all group bg-card"
                   >
