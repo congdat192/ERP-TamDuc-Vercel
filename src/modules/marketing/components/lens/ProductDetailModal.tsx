@@ -30,11 +30,7 @@ export function ProductDetailModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
-        <DialogHeader>
-          <DialogTitle className="text-2xl">{product.name}</DialogTitle>
-        </DialogHeader>
-
-        <ScrollArea className="h-full max-h-[calc(90vh-120px)]">
+        <ScrollArea className="h-full max-h-[calc(90vh-80px)]">
           <div className="grid md:grid-cols-2 gap-6 p-1">
             {/* Left: Image Gallery */}
             <div className="space-y-4">
@@ -47,6 +43,15 @@ export function ProductDetailModal({
                       alt={`${product.name} - Ảnh ${selectedImageIndex + 1}`}
                       className="w-full h-full object-cover"
                     />
+                    
+                    {/* Badge giảm giá - góc trái trên */}
+                    {product.discount_percent && (
+                      <div className="absolute top-2 left-2 bg-red-600 text-white text-base font-bold px-3 py-1.5 rounded-md shadow-lg">
+                        -{product.discount_percent}%
+                      </div>
+                    )}
+                    
+                    {/* Image counter - góc phải trên */}
                     {images.length > 1 && (
                       <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
                         {selectedImageIndex + 1} / {images.length}
@@ -95,19 +100,18 @@ export function ProductDetailModal({
 
             {/* Right: Product Info */}
             <div className="space-y-4">
+              {/* Tên sản phẩm */}
+              <div>
+                <h2 className="text-2xl font-bold theme-text">{product.name}</h2>
+              </div>
+
+              {/* Giá */}
               <div>
                 {product.sale_price ? (
-                  <div className="space-y-2">
-                    <div className="flex items-baseline gap-3">
-                      <p className="text-3xl font-bold text-red-600">
-                        {product.sale_price.toLocaleString('vi-VN')}₫
-                      </p>
-                      {product.discount_percent && (
-                        <Badge variant="destructive" className="text-base">
-                          -{product.discount_percent}%
-                        </Badge>
-                      )}
-                    </div>
+                  <div className="flex items-baseline gap-3 flex-wrap">
+                    <p className="text-3xl font-bold text-red-600">
+                      {product.sale_price.toLocaleString('vi-VN')}₫
+                    </p>
                     <p className="text-lg line-through text-muted-foreground">
                       Giá gốc: {product.price.toLocaleString('vi-VN')}₫
                     </p>
