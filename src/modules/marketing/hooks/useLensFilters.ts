@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { LensFilters } from '../types/lens';
 
 export function useLensFilters() {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [filters, setFilters] = useState<LensFilters>(() => {
-    // Parse attributeFilters from URL: ?attr_lens_brand=CHEMI,ESSILOR&attr_tinh_nang_trong=UV400
+  // Parse filters from URL (URL is single source of truth)
+  const filters = useMemo<LensFilters>(() => {
     const attributeFilters: Record<string, string[]> = {};
     searchParams.forEach((value, key) => {
       if (key.startsWith('attr_')) {
@@ -22,68 +22,65 @@ export function useLensFilters() {
       search: searchParams.get('search') || '',
       sort: (searchParams.get('sort') as LensFilters['sort']) || 'newest',
     };
-  });
-
-  // Sync filters to URL
-  useEffect(() => {
-    const params = new URLSearchParams();
-    
-    // Sync attributeFilters to URL as attr_slug=value1,value2
-    Object.entries(filters.attributeFilters).forEach(([slug, values]) => {
-      if (values.length > 0) {
-        params.set(`attr_${slug}`, values.join(','));
-      }
-    });
-    
-    if (filters.minPrice !== null) {
-      params.set('minPrice', filters.minPrice.toString());
-    }
-    
-    if (filters.maxPrice !== null) {
-      params.set('maxPrice', filters.maxPrice.toString());
-    }
-    
-    if (filters.search) {
-      params.set('search', filters.search);
-    }
-    
-    if (filters.sort !== 'newest') {
-      params.set('sort', filters.sort);
-    }
-
-    setSearchParams(params, { replace: true });
-  }, [filters, setSearchParams]);
+  }, [searchParams]);
 
   const updateFilter = <K extends keyof LensFilters>(key: K, value: LensFilters[K]) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    const params = new URLSearchParams(searchParams);
+    
+    if (key === 'attributeFilters') {
+      // Remove old attr_ params
+      Array.from(params.keys()).forEach(k => {
+        if (k.startsWith('attr_')) params.delete(k);
+      });
+      // Add new attr_ params
+      Object.entries(value as Record<string, string[]>).forEach(([slug, values]) => {
+        if (values.length > 0) {
+          params.set(`attr_${slug}`, values.join(','));
+        }
+      });
+    } else if (key === 'minPrice' || key === 'maxPrice') {
+      if (value === null || value === undefined) {
+        params.delete(key);
+      } else {
+        params.set(key, String(value));
+      }
+    } else if (key === 'search') {
+      if (value) {
+        params.set(key, String(value));
+      } else {
+        params.delete(key);
+      }
+    } else if (key === 'sort') {
+      if (value === 'newest') {
+        params.delete(key);
+      } else {
+        params.set(key, String(value));
+      }
+    }
+    
+    setSearchParams(params, { replace: true });
   };
 
   const toggleAttributeValue = (slug: string, value: string) => {
-    setFilters(prev => {
-      const currentValues = prev.attributeFilters[slug] || [];
-      const newValues = currentValues.includes(value)
-        ? currentValues.filter(v => v !== value)
-        : [...currentValues, value];
-      
-      const newAttributeFilters = { ...prev.attributeFilters };
-      if (newValues.length === 0) {
-        delete newAttributeFilters[slug];
-      } else {
-        newAttributeFilters[slug] = newValues;
-      }
-      
-      return { ...prev, attributeFilters: newAttributeFilters };
-    });
+    const params = new URLSearchParams(searchParams);
+    const currentParam = params.get(`attr_${slug}`);
+    const currentValues = currentParam ? currentParam.split(',').filter(Boolean) : [];
+    
+    const newValues = currentValues.includes(value)
+      ? currentValues.filter(v => v !== value)
+      : [...currentValues, value];
+    
+    if (newValues.length === 0) {
+      params.delete(`attr_${slug}`);
+    } else {
+      params.set(`attr_${slug}`, newValues.join(','));
+    }
+    
+    setSearchParams(params, { replace: true });
   };
 
   const clearFilters = () => {
-    setFilters({
-      attributeFilters: {},
-      minPrice: null,
-      maxPrice: null,
-      search: '',
-      sort: 'newest',
-    });
+    setSearchParams(new URLSearchParams(), { replace: true });
   };
 
   const hasActiveFilters = 
