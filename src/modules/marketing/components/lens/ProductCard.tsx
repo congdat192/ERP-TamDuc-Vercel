@@ -1,6 +1,7 @@
 import { LensProductWithDetails } from '../../types/lens';
+import { LensProductWithTiersAndScores } from '../../types/lens-extended';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Check } from 'lucide-react';
+import { Plus, Check, Store, Truck } from 'lucide-react';
 
 interface ProductCardProps {
   product: LensProductWithDetails;
@@ -17,6 +18,21 @@ export function ProductCard({
   isInCompare,
   canAddMore,
 }: ProductCardProps) {
+  const productWithExtras = product as LensProductWithTiersAndScores;
+  const supplyTiers = productWithExtras.supply_tiers || [];
+  const useCaseScores = productWithExtras.use_case_scores || [];
+  
+  // Find fastest tier
+  const fastestTier = supplyTiers.length > 0 
+    ? supplyTiers.filter(t => t.is_active).sort((a, b) => a.lead_time_days - b.lead_time_days)[0]
+    : null;
+  
+  // Get top 2 use case scores
+  const topUseCases = useCaseScores
+    .filter(score => score.use_case && score.score >= 70)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 2);
+
   return (
     <div
       className="group relative bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-all cursor-pointer"
@@ -38,6 +54,24 @@ export function ProductCard({
         ) : (
           <div className="w-full h-full flex items-center justify-center text-muted-foreground">
             Chưa có ảnh
+          </div>
+        )}
+        
+        {/* Supply Tier Badge */}
+        {fastestTier && (
+          <div className="absolute bottom-2 left-2 bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium flex items-center gap-1">
+            {fastestTier.tier_type === 'IN_STORE' && (
+              <>
+                <Store className="w-3 h-3" />
+                <span>Có sẵn</span>
+              </>
+            )}
+            {fastestTier.tier_type === 'NEXT_DAY' && (
+              <>
+                <Truck className="w-3 h-3" />
+                <span>Giao 1 ngày</span>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -71,6 +105,18 @@ export function ProductCard({
             return features;
           })()}
         </div>
+        
+        {/* Top Use Cases */}
+        {topUseCases.length > 0 && (
+          <div className="flex gap-1">
+            {topUseCases.map(score => (
+              <Badge key={score.id} variant="secondary" className="text-xs">
+                {score.use_case?.icon && <span className="mr-1">{score.use_case.icon}</span>}
+                {score.score}
+              </Badge>
+            ))}
+          </div>
+        )}
 
         <div className="flex items-center justify-between pt-2 border-t">
           <div>

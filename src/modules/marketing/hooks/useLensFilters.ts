@@ -21,6 +21,12 @@ export function useLensFilters() {
       maxPrice: searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : null,
       search: searchParams.get('search') || '',
       sort: (searchParams.get('sort') as LensFilters['sort']) || 'newest',
+      sph: searchParams.get('sph') ? Number(searchParams.get('sph')) : undefined,
+      cyl: searchParams.get('cyl') ? Number(searchParams.get('cyl')) : undefined,
+      useCases: searchParams.get('useCases') ? searchParams.get('useCases')!.split(',') : undefined,
+      availableTiers: searchParams.get('availableTiers') 
+        ? searchParams.get('availableTiers')!.split(',') as ('IN_STORE' | 'NEXT_DAY' | 'CUSTOM_ORDER' | 'FACTORY_ORDER')[]
+        : undefined,
     };
   }, [searchParams]);
 
@@ -38,8 +44,21 @@ export function useLensFilters() {
           params.set(`attr_${slug}`, values.join(','));
         }
       });
+    } else if (key === 'useCases' || key === 'availableTiers') {
+      // Handle array values
+      if (Array.isArray(value) && value.length > 0) {
+        params.set(key, value.join(','));
+      } else {
+        params.delete(key);
+      }
     } else if (key === 'minPrice' || key === 'maxPrice') {
       if (value === null || value === undefined) {
+        params.delete(key);
+      } else {
+        params.set(key, String(value));
+      }
+    } else if (key === 'sph' || key === 'cyl') {
+      if (value === undefined) {
         params.delete(key);
       } else {
         params.set(key, String(value));
@@ -87,7 +106,11 @@ export function useLensFilters() {
     Object.keys(filters.attributeFilters).length > 0 ||
     filters.minPrice !== null ||
     filters.maxPrice !== null ||
-    filters.search !== '';
+    filters.search !== '' ||
+    filters.sph !== undefined ||
+    filters.cyl !== undefined ||
+    (filters.useCases && filters.useCases.length > 0) ||
+    (filters.availableTiers && filters.availableTiers.length > 0);
 
   return {
     filters,

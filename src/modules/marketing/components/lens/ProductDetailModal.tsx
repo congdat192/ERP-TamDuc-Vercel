@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { LensProductWithDetails } from '../../types/lens';
-import { Plus, Check } from 'lucide-react';
+import { LensProductWithTiersAndScores } from '../../types/lens-extended';
+import { Plus, Check, Store, Truck, Clock } from 'lucide-react';
 import { lensApi } from '../../services/lensApi';
 
 interface ProductDetailModalProps {
@@ -30,6 +31,10 @@ export function ProductDetailModal({
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const images = product.image_urls || [];
   const hasImages = images.length > 0;
+  
+  const productWithExtras = product as LensProductWithTiersAndScores;
+  const supplyTiers = productWithExtras.supply_tiers || [];
+  const useCaseScores = productWithExtras.use_case_scores || [];
 
   const { data: relatedProducts = [] } = useQuery({
     queryKey: ['related-products', product.id],
@@ -203,6 +208,61 @@ export function ProductDetailModal({
                   </div>
                 ) : null;
               })()}
+              
+              {/* Supply Tiers Section */}
+              {supplyTiers.length > 0 && (
+                <div className="border-t pt-4 space-y-3">
+                  <h3 className="font-semibold">Tầng cung ứng</h3>
+                  <div className="space-y-2">
+                    {supplyTiers.filter(t => t.is_active).map(tier => (
+                      <div key={tier.id} className="flex items-center gap-3 p-2 border rounded-lg">
+                        {tier.tier_type === 'IN_STORE' && <Store className="w-4 h-4 text-blue-600" />}
+                        {tier.tier_type === 'NEXT_DAY' && <Truck className="w-4 h-4 text-blue-600" />}
+                        {(tier.tier_type === 'CUSTOM_ORDER' || tier.tier_type === 'FACTORY_ORDER') && <Clock className="w-4 h-4 text-orange-600" />}
+                        <div className="flex-1 text-sm">
+                          <p className="font-medium">{tier.tier_name || tier.tier_type}</p>
+                          <p className="text-xs text-muted-foreground">
+                            SPH: {tier.sph_min} ~ {tier.sph_max} | CYL: {tier.cyl_min} ~ {tier.cyl_max} | {tier.lead_time_days} ngày
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Use Case Scores Section */}
+              {useCaseScores.length > 0 && (
+                <div className="border-t pt-4 space-y-3">
+                  <h3 className="font-semibold">Phù hợp với nhu cầu</h3>
+                  <div className="space-y-2">
+                    {useCaseScores
+                      .filter(score => score.use_case && score.score >= 50)
+                      .sort((a, b) => b.score - a.score)
+                      .map(score => (
+                        <div key={score.id} className="space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium">
+                              {score.use_case?.icon} {score.use_case?.name}
+                            </span>
+                            <Badge variant={score.score >= 80 ? 'default' : 'secondary'}>
+                              {score.score}/100
+                            </Badge>
+                          </div>
+                          <div className="w-full bg-muted rounded-full h-2">
+                            <div 
+                              className={`h-2 rounded-full ${score.score >= 80 ? 'bg-green-600' : 'bg-blue-600'}`}
+                              style={{ width: `${score.score}%` }}
+                            />
+                          </div>
+                          {score.reasoning && (
+                            <p className="text-xs text-muted-foreground">{score.reasoning}</p>
+                          )}
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
 
               <Button
                 className="w-full bg-green-600 hover:bg-green-700"

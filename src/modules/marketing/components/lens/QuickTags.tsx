@@ -31,6 +31,49 @@ export function QuickTags() {
       },
     });
   }
+  
+  // SPH filter
+  if (filters.sph !== undefined) {
+    tags.push({
+      label: `SPH: ${filters.sph.toFixed(2)}`,
+      onRemove: () => updateFilter('sph', undefined),
+    });
+  }
+  
+  // CYL filter
+  if (filters.cyl !== undefined) {
+    tags.push({
+      label: `CYL: ${filters.cyl.toFixed(2)}`,
+      onRemove: () => updateFilter('cyl', undefined),
+    });
+  }
+  
+  // Use Cases filter
+  if (filters.useCases && filters.useCases.length > 0) {
+    filters.useCases.forEach(useCase => {
+      tags.push({
+        label: `Nhu cầu: ${useCase}`,
+        onRemove: () => {
+          const newUseCases = filters.useCases?.filter(uc => uc !== useCase);
+          updateFilter('useCases', newUseCases?.length ? newUseCases : undefined);
+        },
+      });
+    });
+  }
+  
+  // Tier filter
+  if (filters.availableTiers && filters.availableTiers.length > 0) {
+    filters.availableTiers.forEach(tier => {
+      const tierLabel = tier === 'IN_STORE' ? 'Có sẵn' : tier === 'NEXT_DAY' ? 'Giao 1 ngày' : tier;
+      tags.push({
+        label: `Tầng: ${tierLabel}`,
+        onRemove: () => {
+          const newTiers = filters.availableTiers?.filter(t => t !== tier);
+          updateFilter('availableTiers', newTiers?.length ? newTiers as any : undefined);
+        },
+      });
+    });
+  }
 
   return (
     <div className="flex gap-2 flex-wrap">
