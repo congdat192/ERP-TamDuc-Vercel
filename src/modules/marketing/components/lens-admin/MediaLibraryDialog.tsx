@@ -231,9 +231,21 @@ export function MediaLibraryDialog({
                   </div>
                 ))}
               </div>
-              {mediaItems.length === 0 && (
+              
+              {mediaItems.length === 0 && !searchTerm && !folderFilter && (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground mb-4">
+                    Chưa có ảnh nào trong thư viện
+                  </p>
+                  <Button onClick={() => setActiveTab('upload')}>
+                    Upload ảnh đầu tiên
+                  </Button>
+                </div>
+              )}
+
+              {mediaItems.length === 0 && (searchTerm || folderFilter) && (
                 <div className="text-center py-12 text-muted-foreground">
-                  Không tìm thấy ảnh nào
+                  Không tìm thấy ảnh phù hợp với bộ lọc
                 </div>
               )}
             </ScrollArea>

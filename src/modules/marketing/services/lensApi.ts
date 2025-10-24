@@ -342,29 +342,34 @@ export const lensApi = {
       // Skip if filtering by specific folder and this isn't it
       if (filters?.folder && filters.folder !== folder) continue;
 
-      const { data: files, error } = await supabase.storage
-        .from('lens-images')
-        .list(folder, {
-          limit: 1000,
-          sortBy: { column: 'created_at', order: 'desc' }
-        });
-
-      if (error) {
-        console.error(`Error listing files from ${folder}:`, error);
-        continue;
-      }
-
-      // Add files with folder info
-      (files || []).forEach(file => {
-        // Only include actual files (id !== null), skip subdirectories
-        if (file.id !== null) {
-          allFiles.push({
-            file,
-            folder,
-            file_path: `${folder}/${file.name}`
+      try {
+        const { data: files, error } = await supabase.storage
+          .from('lens-images')
+          .list(folder, {
+            limit: 1000,
+            sortBy: { column: 'created_at', order: 'desc' }
           });
+
+        if (error) {
+          console.warn(`Folder ${folder} not found or empty:`, error);
+          continue; // Skip missing folder
         }
-      });
+
+        // Add files with folder info
+        (files || []).forEach(file => {
+          // Only include actual files (id !== null), skip subdirectories
+          if (file.id !== null) {
+            allFiles.push({
+              file,
+              folder,
+              file_path: `${folder}/${file.name}`
+            });
+          }
+        });
+      } catch (err) {
+        console.warn(`Error listing ${folder}:`, err);
+        continue; // Skip folder with errors
+      }
     }
 
     // Filter by search term (client-side)
