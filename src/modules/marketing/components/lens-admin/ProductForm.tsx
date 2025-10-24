@@ -94,7 +94,25 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
   }, [price, salePrice]);
 
   useEffect(() => {
-    if (product) {
+    if (product && product.id) {
+      // Edit mode: Load existing product data
+      reset({
+        name: product.name,
+        sku: product.sku || '',
+        description: product.description || '',
+        price: product.price,
+        sale_price: product.sale_price || undefined,
+        is_promotion: product.is_promotion,
+        promotion_text: product.promotion_text || '',
+        is_active: product.is_active,
+      });
+      setExistingImages(product.image_urls || []);
+      setImageFiles([]);
+      setImagePreviews([]);
+      setAttributeValues(product.attributes || {});
+      setSelectedRelatedIds(product.related_product_ids || []);
+    } else if (product && !product.id) {
+      // Clone mode: Load data from cloned product
       reset({
         name: product.name,
         sku: product.sku || '',
@@ -111,6 +129,7 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
       setAttributeValues(product.attributes || {});
       setSelectedRelatedIds(product.related_product_ids || []);
     } else if (open) {
+      // Create mode: Reset form
       reset({
         name: '',
         sku: '',
@@ -198,7 +217,7 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
         created_by: product?.created_by || undefined,
       };
 
-      if (product) {
+      if (product?.id) {
         const removedImages = (product.image_urls || []).filter(url => !existingImages.includes(url));
         await Promise.all(removedImages.map(url => lensApi.deleteImage(url).catch(() => {})));
         
@@ -221,7 +240,7 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
     <Dialog open={open} onOpenChange={() => onClose()}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{product ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'}</DialogTitle>
+          <DialogTitle>{product?.id ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

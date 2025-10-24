@@ -12,6 +12,7 @@ import { ImportExcelDialog } from '@/modules/marketing/components/lens-admin/Imp
 import { ExportExcelButton } from '@/modules/marketing/components/lens-admin/ExportExcelButton';
 import { AttributeManager } from '@/modules/marketing/components/lens-admin/AttributeManager';
 import { LensProduct } from '@/modules/marketing/types/lens';
+import { toast } from 'sonner';
 
 export function LensAdminPage() {
   const { hasFeatureAccess } = usePermissions();
@@ -57,6 +58,25 @@ export function LensAdminPage() {
     setIsFormOpen(true);
   };
 
+  const handleClone = (product: LensProduct) => {
+    const clonedProduct: LensProduct = {
+      ...product,
+      id: '',
+      name: `[Copy] ${product.name}`,
+      sku: null,
+      created_at: '',
+      updated_at: '',
+      view_count: 0,
+    };
+    
+    setEditingProduct(clonedProduct);
+    setIsFormOpen(true);
+    
+    toast.info('Đang sao chép sản phẩm. Vui lòng kiểm tra và lưu lại.', {
+      duration: 3000,
+    });
+  };
+
   const handleFormClose = (success?: boolean) => {
     setIsFormOpen(false);
     setEditingProduct(null);
@@ -95,6 +115,7 @@ export function LensAdminPage() {
           <ProductTable
             products={products}
             onEdit={handleEdit}
+            onClone={handleClone}
             onRefetch={refetch}
           />
         </TabsContent>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -20,10 +20,11 @@ import {
 interface ProductTableProps {
   products: LensProduct[];
   onEdit: (product: LensProduct) => void;
+  onClone: (product: LensProduct) => void;
   onRefetch: () => void;
 }
 
-export function ProductTable({ products, onEdit, onRefetch }: ProductTableProps) {
+export function ProductTable({ products, onEdit, onClone, onRefetch }: ProductTableProps) {
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const handleDelete = async () => {
@@ -81,13 +82,24 @@ export function ProductTable({ products, onEdit, onRefetch }: ProductTableProps)
                         size="sm"
                         variant="ghost"
                         onClick={() => onEdit(product)}
+                        title="Chỉnh sửa"
                       >
                         <Pencil className="w-4 h-4" />
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
+                        onClick={() => onClone(product)}
+                        title="Sao chép sản phẩm"
+                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                      >
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
                         onClick={() => setDeleteId(product.id)}
+                        title="Xóa"
                       >
                         <Trash2 className="w-4 h-4 text-destructive" />
                       </Button>
