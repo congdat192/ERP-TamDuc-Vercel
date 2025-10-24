@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Filter, Sliders, LayoutGrid, Table as TableIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { toast } from '@/hooks/use-toast';
 import { lensApi } from '@/modules/marketing/services/lensApi';
 import { useLensFilters } from '@/modules/marketing/hooks/useLensFilters';
 import { useCompare } from '@/modules/marketing/hooks/useCompare';
@@ -76,6 +77,17 @@ export function LensCatalogPage() {
   useEffect(() => {
     setPage(1);
   }, [filters]);
+
+  // Auto clear recommendation when user applies filters
+  useEffect(() => {
+    if (hasActiveFilters && selectedRecommendation) {
+      setSelectedRecommendation(null);
+      toast({
+        title: "Đã tắt tư vấn nhanh",
+        description: "Bộ lọc thủ công đã được áp dụng",
+      });
+    }
+  }, [hasActiveFilters, selectedRecommendation]);
 
   const handleRecommendationSelect = (group: LensRecommendationGroup | null) => {
     setSelectedRecommendation(group);
