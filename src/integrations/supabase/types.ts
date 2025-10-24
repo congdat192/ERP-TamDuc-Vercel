@@ -1326,6 +1326,51 @@ export type Database = {
         }
         Relationships: []
       }
+      lens_product_use_case_scores: {
+        Row: {
+          created_at: string | null
+          id: string
+          product_id: string
+          reasoning: string | null
+          score: number
+          updated_at: string | null
+          use_case_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          product_id: string
+          reasoning?: string | null
+          score: number
+          updated_at?: string | null
+          use_case_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          product_id?: string
+          reasoning?: string | null
+          score?: number
+          updated_at?: string | null
+          use_case_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lens_product_use_case_scores_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "lens_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lens_product_use_case_scores_use_case_id_fkey"
+            columns: ["use_case_id"]
+            isOneToOne: false
+            referencedRelation: "lens_use_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lens_products: {
         Row: {
           attributes: Json | null
@@ -1383,6 +1428,104 @@ export type Database = {
           sku?: string | null
           updated_at?: string | null
           view_count?: number | null
+        }
+        Relationships: []
+      }
+      lens_supply_tiers: {
+        Row: {
+          created_at: string | null
+          cyl_max: number
+          cyl_min: number
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          lead_time_days: number
+          price_adjustment: number | null
+          product_id: string
+          sph_max: number
+          sph_min: number
+          stock_quantity: number | null
+          tier_name: string | null
+          tier_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          cyl_max: number
+          cyl_min: number
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          lead_time_days?: number
+          price_adjustment?: number | null
+          product_id: string
+          sph_max: number
+          sph_min: number
+          stock_quantity?: number | null
+          tier_name?: string | null
+          tier_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          cyl_max?: number
+          cyl_min?: number
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          lead_time_days?: number
+          price_adjustment?: number | null
+          product_id?: string
+          sph_max?: number
+          sph_min?: number
+          stock_quantity?: number | null
+          tier_name?: string | null
+          tier_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lens_supply_tiers_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "lens_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lens_use_cases: {
+        Row: {
+          code: string
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string | null
         }
         Relationships: []
       }

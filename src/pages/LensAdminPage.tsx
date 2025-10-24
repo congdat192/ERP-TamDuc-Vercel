@@ -31,7 +31,7 @@ export function LensAdminPage() {
     );
   }
 
-  const [activeTab, setActiveTab] = useState<'products' | 'attributes'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'attributes' | 'tiers' | 'usecases'>('products');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<LensProduct | null>(null);
@@ -94,10 +94,12 @@ export function LensAdminPage() {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'products' | 'attributes')}>
-        <TabsList>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="products">Danh sách sản phẩm</TabsTrigger>
           <TabsTrigger value="attributes">Thuộc tính sản phẩm</TabsTrigger>
+          <TabsTrigger value="tiers">Tầng cung ứng</TabsTrigger>
+          <TabsTrigger value="usecases">Use Cases</TabsTrigger>
         </TabsList>
 
         <TabsContent value="products" className="space-y-4">
@@ -122,6 +124,22 @@ export function LensAdminPage() {
 
         <TabsContent value="attributes">
           <AttributeManager />
+        </TabsContent>
+
+        <TabsContent value="tiers" className="space-y-4">
+          <div className="text-center py-12 border-2 border-dashed rounded-lg">
+            <p className="text-muted-foreground">
+              Chọn một sản phẩm để quản lý tầng cung ứng
+            </p>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="usecases" className="space-y-4">
+          <div className="text-center py-12 border-2 border-dashed rounded-lg">
+            <p className="text-muted-foreground">
+              Chọn một sản phẩm để chấm điểm use cases
+            </p>
+          </div>
         </TabsContent>
       </Tabs>
 
