@@ -29,6 +29,8 @@ export function FeatureFilterChips({ features }: FeatureFilterChipsProps) {
       <div className="flex gap-2 min-w-max">
         {chips.map((chip, index) => {
           const isActive = filters.attributeFilters[chip.slug]?.includes(chip.value) || false;
+          const activeCount = filters.attributeFilters[chip.slug]?.length || 0;
+          
           return (
             <button
               key={`${chip.slug}-${chip.value}-${index}`}
@@ -42,6 +44,12 @@ export function FeatureFilterChips({ features }: FeatureFilterChipsProps) {
             >
               {chip.icon && <span className="mr-1">{chip.icon}</span>}
               {chip.label}
+              
+              {isActive && activeCount > 1 && (
+                <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 shadow-sm pointer-events-none">
+                  {activeCount}
+                </span>
+              )}
               
               {isActive && (
                 <span
