@@ -25,7 +25,15 @@ const schema = z.object({
   sku: z.string().optional(),
   description: z.string().optional(),
   price: z.number().min(0, 'Giá niêm yết phải lớn hơn 0'),
-  sale_price: z.number().optional(),
+  sale_price: z.preprocess(
+    (val) => {
+      if (val === null || val === undefined || val === '' || isNaN(Number(val))) {
+        return undefined;
+      }
+      return Number(val);
+    },
+    z.number().optional()
+  ),
   material: z.string().optional(),
   refractive_index: z.string().optional(),
   origin: z.string().optional(),
@@ -383,10 +391,10 @@ export function ProductForm({ open, product, brands, onClose }: ProductFormProps
                     onValueChange={(v) => {
                       setAttributeValues(prev => ({
                         ...prev,
-                        [attr.slug]: v
+                        [attr.slug]: [v]
                       }));
                     }}
-                    value={attributeValues[attr.slug] || ''}
+                    value={Array.isArray(attributeValues[attr.slug]) ? attributeValues[attr.slug][0] : attributeValues[attr.slug] || ''}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder={`Chọn ${attr.name.toLowerCase()}`} />
@@ -414,8 +422,7 @@ export function ProductForm({ open, product, brands, onClose }: ProductFormProps
                       </Label>
                       <div className="grid grid-cols-2 gap-2 pl-6">
                         {attr.options.map(option => {
-                          const valueKey = `${attr.slug}_values`;
-                          const isChecked = (attributeValues[valueKey] || []).includes(option);
+                          const isChecked = (attributeValues[attr.slug] || []).includes(option);
                           
                           return (
                             <div key={option} className="flex items-center space-x-2">
@@ -424,10 +431,10 @@ export function ProductForm({ open, product, brands, onClose }: ProductFormProps
                                 checked={isChecked}
                                 onCheckedChange={(checked) => {
                                   setAttributeValues(prev => {
-                                    const currentValues = prev[valueKey] || [];
+                                    const currentValues = prev[attr.slug] || [];
                                     return {
                                       ...prev,
-                                      [valueKey]: checked
+                                      [attr.slug]: checked
                                         ? [...currentValues, option]
                                         : currentValues.filter((v: string) => v !== option)
                                     };
