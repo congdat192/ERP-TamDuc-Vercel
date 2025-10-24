@@ -19,15 +19,18 @@ export const lensApi = {
       if (filters?.attributeFilters) {
         const allOrConditions: string[] = [];
         
-        Object.entries(filters.attributeFilters).forEach(([slug, values]) => {
+          Object.entries(filters.attributeFilters).forEach(([slug, values]) => {
           if (values.length > 0) {
             // Each value becomes an OR condition
             values.forEach(value => {
-              // ✅ Support both formats to handle any legacy data:
+              // ✅ Support all formats for maximum compatibility:
               // Format 1 (correct): ["CHEMI"]
               allOrConditions.push(`attributes@>{"${slug}":["${value}"]}`);
               
-              // Format 2 (legacy - double nested): [["CHEMI"]]
+              // Format 2 (scalar - legacy): "CHEMI"
+              allOrConditions.push(`attributes@>{"${slug}":"${value}"}`);
+              
+              // Format 3 (double nested - legacy): [["CHEMI"]]
               allOrConditions.push(`attributes@>{"${slug}":[["${value}"]]}`);
             });
           }
