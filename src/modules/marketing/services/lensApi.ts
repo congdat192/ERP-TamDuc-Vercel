@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { LensBrand, LensProduct, LensBanner, LensFilters, LensProductWithDetails, LensProductAttribute } from '../types/lens';
+import { LensBrand, LensProduct, LensBanner, LensFilters, LensProductWithDetails, LensProductAttribute, LensMediaItem, MediaLibraryFilters, MediaUploadResult } from '../types/lens';
 
 export const lensApi = {
   // Brands - Get unique brands from products' attributes
@@ -328,5 +328,172 @@ export const lensApi = {
     }
     
     return results;
-  }
+  },
+
+  // ============= MEDIA LIBRARY =============
+
+  async getMediaLibrary(filters?: MediaLibraryFilters): Promise<LensMediaItem[]> {
+    let query = supabase
+      .from('lens_media_library')
+      .select('*')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
+
+    if (filters?.folder) {
+      query = query.eq('folder', filters.folder);
+    }
+
+    if (filters?.tags && filters.tags.length > 0) {
+      query = query.contains('tags', filters.tags);
+    }
+
+    if (filters?.search) {
+      query = query.or(`file_name.ilike.%${filters.search}%,alt_text.ilike.%${filters.search}%,caption.ilike.%${filters.search}%`);
+    }
+
+    if (filters?.unused) {
+      query = query.eq('usage_count', 0);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data as LensMediaItem[];
+  },
+
+  async uploadToMediaLibrary(
+    file: File,
+    metadata: {
+      folder?: string;
+      tags?: string[];
+      alt_text?: string;
+      caption?: string;
+    } = {}
+  ): Promise<MediaUploadResult> {
+    // 1. Upload to storage
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${metadata.folder || 'uncategorized'}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('lens-images')
+      .upload(fileName, file);
+
+    if (uploadError) throw uploadError;
+
+    // 2. Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('lens-images')
+      .getPublicUrl(fileName);
+
+    // 3. Get image dimensions
+    const dimensions = await this.getImageDimensions(file);
+
+    // 4. Save metadata to database
+    const { data: media, error: dbError } = await supabase
+      .from('lens_media_library')
+      .insert({
+        file_name: file.name,
+        file_path: fileName,
+        file_size: file.size,
+        mime_type: file.type,
+        width: dimensions.width,
+        height: dimensions.height,
+        folder: metadata.folder || 'uncategorized',
+        tags: metadata.tags || [],
+        alt_text: metadata.alt_text || null,
+        caption: metadata.caption || null,
+      })
+      .select()
+      .single();
+
+    if (dbError) throw dbError;
+
+    return { media: media as LensMediaItem, url: publicUrl };
+  },
+
+  async getImageDimensions(file: File): Promise<{ width: number; height: number }> {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        resolve({ width: img.width, height: img.height });
+        URL.revokeObjectURL(img.src);
+      };
+      img.src = URL.createObjectURL(file);
+    });
+  },
+
+  async updateMediaMetadata(
+    id: string,
+    updates: Partial<Pick<LensMediaItem, 'tags' | 'alt_text' | 'caption' | 'folder'>>
+  ): Promise<LensMediaItem> {
+    const { data, error } = await supabase
+      .from('lens_media_library')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data as LensMediaItem;
+  },
+
+  async deleteMediaFromLibrary(id: string): Promise<void> {
+    const { data: media } = await supabase
+      .from('lens_media_library')
+      .select('used_in_products, file_path')
+      .eq('id', id)
+      .single();
+
+    if (media && media.used_in_products.length > 0) {
+      throw new Error('Không thể xóa ảnh đang được sử dụng trong sản phẩm');
+    }
+
+    const { error: dbError } = await supabase
+      .from('lens_media_library')
+      .update({ is_active: false })
+      .eq('id', id);
+
+    if (dbError) throw dbError;
+
+    if (media) {
+      const { error: storageError } = await supabase.storage
+        .from('lens-images')
+        .remove([media.file_path]);
+
+      if (storageError) console.error('Storage delete error:', storageError);
+    }
+  },
+
+  async getUnusedMedia(olderThanDays: number = 30): Promise<LensMediaItem[]> {
+    const { data, error } = await supabase.rpc('get_unused_media', {
+      older_than_days: olderThanDays,
+    });
+
+    if (error) throw error;
+    return data as LensMediaItem[];
+  },
+
+  async getMediaFolders(): Promise<string[]> {
+    const { data, error } = await supabase
+      .from('lens_media_library')
+      .select('folder')
+      .eq('is_active', true);
+
+    if (error) throw error;
+    
+    const uniqueFolders = [...new Set(data.map(item => item.folder))];
+    return uniqueFolders.sort();
+  },
+
+  async getMediaTags(): Promise<string[]> {
+    const { data, error } = await supabase
+      .from('lens_media_library')
+      .select('tags')
+      .eq('is_active', true);
+
+    if (error) throw error;
+    
+    const allTags = data.flatMap(item => item.tags);
+    const uniqueTags = [...new Set(allTags)];
+    return uniqueTags.sort();
+  },
 };

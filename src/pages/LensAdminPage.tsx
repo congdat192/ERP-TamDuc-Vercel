@@ -11,6 +11,7 @@ import { ProductForm } from '@/modules/marketing/components/lens-admin/ProductFo
 import { ImportExcelDialog } from '@/modules/marketing/components/lens-admin/ImportExcelDialog';
 import { ExportExcelButton } from '@/modules/marketing/components/lens-admin/ExportExcelButton';
 import { AttributeManager } from '@/modules/marketing/components/lens-admin/AttributeManager';
+import { MediaLibraryManager } from '@/modules/marketing/components/lens-admin/MediaLibraryManager';
 import { LensProduct } from '@/modules/marketing/types/lens';
 import { toast } from 'sonner';
 
@@ -31,7 +32,7 @@ export function LensAdminPage() {
     );
   }
 
-  const [activeTab, setActiveTab] = useState<'products' | 'attributes'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'attributes' | 'media'>('products');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<LensProduct | null>(null);
@@ -94,10 +95,11 @@ export function LensAdminPage() {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'products' | 'attributes')}>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'products' | 'attributes' | 'media')}>
         <TabsList>
           <TabsTrigger value="products">Danh sách sản phẩm</TabsTrigger>
           <TabsTrigger value="attributes">Thuộc tính sản phẩm</TabsTrigger>
+          <TabsTrigger value="media">Thư viện ảnh</TabsTrigger>
         </TabsList>
 
         <TabsContent value="products" className="space-y-4">
@@ -122,6 +124,10 @@ export function LensAdminPage() {
 
         <TabsContent value="attributes">
           <AttributeManager />
+        </TabsContent>
+
+        <TabsContent value="media">
+          <MediaLibraryManager />
         </TabsContent>
       </Tabs>
 

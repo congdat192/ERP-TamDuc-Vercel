@@ -66,3 +66,35 @@ export interface LensFilters {
 export interface LensProductWithDetails extends LensProduct {
   // No additional fields needed - brand info is in attributes
 }
+
+export interface LensMediaItem {
+  id: string;
+  file_name: string;
+  file_path: string;
+  file_size: number;
+  mime_type: string;
+  width: number | null;
+  height: number | null;
+  folder: string;
+  tags: string[];
+  alt_text: string | null;
+  caption: string | null;
+  used_in_products: string[];
+  usage_count: number;
+  is_active: boolean;
+  uploaded_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MediaLibraryFilters {
+  folder?: string;
+  tags?: string[];
+  search?: string;
+  unused?: boolean;
+}
+
+export interface MediaUploadResult {
+  media: LensMediaItem;
+  url: string;
+}

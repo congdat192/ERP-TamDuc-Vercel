@@ -15,9 +15,10 @@ import { Badge } from '@/components/ui/badge';
 import { LensProduct } from '../../types/lens';
 import { lensApi } from '../../services/lensApi';
 import { toast } from 'sonner';
-import { Upload, X, Check } from 'lucide-react';
+import { Upload, X, Check, Search } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
+import { MediaLibraryDialog } from './MediaLibraryDialog';
 
 const schema = z.object({
   name: z.string().min(1, 'Vui lòng nhập tên sản phẩm'),
@@ -46,6 +47,7 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedRelatedIds, setSelectedRelatedIds] = useState<string[]>([]);
   const [relatedProductsSearch, setRelatedProductsSearch] = useState('');
+  const [showMediaLibrary, setShowMediaLibrary] = useState(false);
 
   const { data: attributes = [] } = useQuery({
     queryKey: ['lens-attributes'],
@@ -245,62 +247,91 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Multi-Image Upload */}
-          <div>
-            <Label>Hình ảnh (tối đa 10 ảnh)</Label>
-            <div className="mt-2 space-y-4">
-              {existingImages.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {existingImages.map((url, index) => (
-                    <div key={url} className="relative w-24 h-24 border rounded-lg overflow-hidden group">
-                      <img src={url} alt={`Ảnh ${index + 1}`} className="w-full h-full object-cover" />
-                      {index === 0 && <Badge className="absolute top-1 left-1 text-xs">Chính</Badge>}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveExistingImage(url)}
-                        className="absolute inset-0 bg-black/50 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-              
-              {imagePreviews.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {imagePreviews.map((preview, index) => (
-                    <div key={preview} className="relative w-24 h-24 border rounded-lg overflow-hidden group">
-                      <img src={preview} alt={`Ảnh mới ${index + 1}`} className="w-full h-full object-cover" />
-                      <Badge className="absolute top-1 left-1 text-xs bg-blue-600">Mới</Badge>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveNewImage(index)}
-                        className="absolute inset-0 bg-black/50 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-              
-              {(existingImages.length + imagePreviews.length) < 10 && (
-                <label className="flex items-center justify-center w-24 h-24 border-2 border-dashed rounded-lg cursor-pointer hover:bg-accent">
-                  <div className="text-center">
-                    <Upload className="w-6 h-6 mx-auto mb-1 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">Thêm ảnh</span>
+          <div className="space-y-2">
+            <Label>Hình ảnh sản phẩm</Label>
+            
+            {existingImages.length > 0 && (
+              <div className="grid grid-cols-5 gap-2">
+                {existingImages.map((url, index) => (
+                  <div key={url} className="relative group">
+                    <img
+                      src={url}
+                      alt={`Product ${index + 1}`}
+                      className="w-full h-24 object-cover rounded border"
+                    />
+                    {index === 0 && <Badge className="absolute top-1 left-1 text-xs">Chính</Badge>}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="destructive"
+                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 h-6 w-6 p-0"
+                      onClick={() => handleRemoveExistingImage(url)}
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
                   </div>
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    multiple
-                    onChange={handleImagesChange} 
-                    className="hidden" 
-                  />
-                </label>
-              )}
+                ))}
+              </div>
+            )}
+
+            {imagePreviews.length > 0 && (
+              <div className="grid grid-cols-5 gap-2">
+                {imagePreviews.map((preview, index) => (
+                  <div key={preview} className="relative group">
+                    <img
+                      src={preview}
+                      alt={`New ${index + 1}`}
+                      className="w-full h-24 object-cover rounded border border-primary"
+                    />
+                    <Badge className="absolute top-1 left-1 text-xs">Mới</Badge>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="destructive"
+                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 h-6 w-6 p-0"
+                      onClick={() => handleRemoveNewImage(index)}
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowMediaLibrary(true)}
+                className="flex-1"
+              >
+                <Search className="w-4 h-4 mr-2" />
+                Chọn từ thư viện
+              </Button>
+              
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => document.getElementById('file-upload')?.click()}
+                className="flex-1"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Upload ảnh mới
+              </Button>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">Ảnh đầu tiên sẽ là ảnh đại diện</p>
+
+            <input
+              id="file-upload"
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={handleImagesChange}
+            />
+
+            <p className="text-xs text-muted-foreground">
+              Tối đa 10 ảnh. Ảnh đầu tiên sẽ là ảnh đại diện.
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -514,6 +545,17 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
             </Button>
           </div>
         </form>
+
+        <MediaLibraryDialog
+          open={showMediaLibrary}
+          onClose={() => setShowMediaLibrary(false)}
+          onSelect={(urls) => {
+            setExistingImages(prev => [...prev, ...urls]);
+            setShowMediaLibrary(false);
+          }}
+          maxSelection={10 - existingImages.length - imageFiles.length}
+          currentImages={existingImages}
+        />
       </DialogContent>
     </Dialog>
   );
