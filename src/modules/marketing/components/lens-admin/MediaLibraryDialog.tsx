@@ -19,7 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, Upload, Trash2, Check } from 'lucide-react';
+import { Search, Upload, Trash2, Check, Loader2 } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { lensApi } from '../../services/lensApi';
 import { LensMediaItem } from '../../types/lens';
 import { toast } from 'sonner';
