@@ -6,7 +6,7 @@ import { useLensFilters } from '@/modules/marketing/hooks/useLensFilters';
 import { useCompare } from '@/modules/marketing/hooks/useCompare';
 import { LensAppBar } from '@/modules/marketing/components/lens/LensAppBar';
 import { FeatureFilterChips } from '@/modules/marketing/components/lens/FeatureFilterChips';
-import { BrandFilterChips } from '@/modules/marketing/components/lens/BrandFilterChips';
+import { AttributeDropdownFilters } from '@/modules/marketing/components/lens/AttributeDropdownFilters';
 import { AdvancedFilterDrawer } from '@/modules/marketing/components/lens/AdvancedFilterDrawer';
 import { SortDropdown } from '@/modules/marketing/components/lens/SortDropdown';
 import { ProductGrid } from '@/modules/marketing/components/lens/ProductGrid';
@@ -72,8 +72,8 @@ export function LensCatalogPage() {
       {/* Sticky Filter Section */}
       <div className="sticky top-16 z-40 bg-background border-b">
         <FeatureFilterChips features={features} />
-        <BrandFilterChips 
-          brands={brands}
+        <AttributeDropdownFilters 
+          attributes={attributes || []}
           actionButtons={
             <>
               <button
