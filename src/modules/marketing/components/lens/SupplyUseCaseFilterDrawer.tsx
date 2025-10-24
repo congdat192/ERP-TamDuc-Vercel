@@ -1,4 +1,4 @@
-import { useState } from 'react';
+
 import { useQuery } from '@tanstack/react-query';
 import { 
   Dialog, 
@@ -23,10 +23,11 @@ interface SupplyUseCaseFilterDrawerProps {
 export function SupplyUseCaseFilterDrawer({ open, onOpenChange }: SupplyUseCaseFilterDrawerProps) {
   const { filters, updateFilter } = useLensFilters();
   
-  const [localSph, setLocalSph] = useState(filters.sph ?? 0);
-  const [localCyl, setLocalCyl] = useState(filters.cyl ?? 0);
-  const [localUseCases, setLocalUseCases] = useState<string[]>(filters.useCases || []);
-  const [localTiers, setLocalTiers] = useState<string[]>(filters.availableTiers || []);
+  // Use filters directly - no local state
+  const currentSph = filters.sph ?? 0;
+  const currentCyl = filters.cyl ?? 0;
+  const currentUseCases = filters.useCases || [];
+  const currentTiers = filters.availableTiers || [];
 
   // Fetch use cases
   const { data: useCases = [] } = useQuery({
@@ -42,39 +43,12 @@ export function SupplyUseCaseFilterDrawer({ open, onOpenChange }: SupplyUseCaseF
   });
 
   const activeFilterCount = 
-    (localSph !== 0 ? 1 : 0) + 
-    (localCyl !== 0 ? 1 : 0) + 
-    localUseCases.length + 
-    localTiers.length;
+    (currentSph !== 0 ? 1 : 0) + 
+    (currentCyl !== 0 ? 1 : 0) + 
+    currentUseCases.length + 
+    currentTiers.length;
 
-  const applyFilters = () => {
-    if (localSph !== 0) updateFilter('sph', localSph);
-    else updateFilter('sph', undefined);
-    
-    if (localCyl !== 0) updateFilter('cyl', localCyl);
-    else updateFilter('cyl', undefined);
-    
-    if (localUseCases.length > 0) updateFilter('useCases', localUseCases);
-    else updateFilter('useCases', undefined);
-    
-    if (localTiers.length > 0) updateFilter('availableTiers', localTiers as any);
-    else updateFilter('availableTiers', undefined);
-    
-    onOpenChange(false);
-  };
-
-  const clearLocalFilters = () => {
-    setLocalSph(0);
-    setLocalCyl(0);
-    setLocalUseCases([]);
-    setLocalTiers([]);
-    updateFilter('sph', undefined);
-    updateFilter('cyl', undefined);
-    updateFilter('useCases', undefined);
-    updateFilter('availableTiers', undefined);
-  };
-
-  const tierOptions = [
+  const tierOptions: Array<{ value: 'IN_STORE' | 'NEXT_DAY' | 'CUSTOM_ORDER' | 'FACTORY_ORDER', label: string }> = [
     { value: 'IN_STORE', label: 'Có sẵn tại cửa hàng' },
     { value: 'NEXT_DAY', label: 'Giao trong 1 ngày' },
     { value: 'CUSTOM_ORDER', label: 'Đặt hàng theo yêu cầu' },
@@ -100,11 +74,14 @@ export function SupplyUseCaseFilterDrawer({ open, onOpenChange }: SupplyUseCaseF
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <Label>SPH (Cầu)</Label>
-                    <span className="text-sm font-medium">{localSph.toFixed(2)}</span>
+                    <span className="text-sm font-medium">{currentSph.toFixed(2)}</span>
                   </div>
                   <Slider
-                    value={[localSph]}
-                    onValueChange={(val) => setLocalSph(val[0])}
+                    value={[currentSph]}
+                    onValueChange={(val) => {
+                      if (val[0] === 0) updateFilter('sph', undefined);
+                      else updateFilter('sph', val[0]);
+                    }}
                     min={-20}
                     max={10}
                     step={0.25}
@@ -119,11 +96,14 @@ export function SupplyUseCaseFilterDrawer({ open, onOpenChange }: SupplyUseCaseF
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <Label>CYL (Trụ)</Label>
-                    <span className="text-sm font-medium">{localCyl.toFixed(2)}</span>
+                    <span className="text-sm font-medium">{currentCyl.toFixed(2)}</span>
                   </div>
                   <Slider
-                    value={[localCyl]}
-                    onValueChange={(val) => setLocalCyl(val[0])}
+                    value={[currentCyl]}
+                    onValueChange={(val) => {
+                      if (val[0] === 0) updateFilter('cyl', undefined);
+                      else updateFilter('cyl', val[0]);
+                    }}
                     min={-6}
                     max={0}
                     step={0.25}
@@ -145,18 +125,17 @@ export function SupplyUseCaseFilterDrawer({ open, onOpenChange }: SupplyUseCaseF
                 </Label>
                 <div className="grid grid-cols-3 gap-3">
                   {useCases.map(useCase => {
-                    const isChecked = localUseCases.includes(useCase.code);
+                    const isChecked = currentUseCases.includes(useCase.code);
                     return (
                       <div key={useCase.id} className="flex items-center space-x-2">
                         <Checkbox
                           id={`usecase-${useCase.code}`}
                           checked={isChecked}
                           onCheckedChange={(checked) => {
-                            if (checked) {
-                              setLocalUseCases([...localUseCases, useCase.code]);
-                            } else {
-                              setLocalUseCases(localUseCases.filter(c => c !== useCase.code));
-                            }
+                            const newUseCases = checked
+                              ? [...currentUseCases, useCase.code]
+                              : currentUseCases.filter(c => c !== useCase.code);
+                            updateFilter('useCases', newUseCases.length > 0 ? newUseCases : undefined);
                           }}
                         />
                         <label
@@ -179,18 +158,17 @@ export function SupplyUseCaseFilterDrawer({ open, onOpenChange }: SupplyUseCaseF
               </Label>
               <div className="grid grid-cols-2 gap-3">
                 {tierOptions.map(tier => {
-                  const isChecked = localTiers.includes(tier.value);
+                  const isChecked = currentTiers.includes(tier.value);
                   return (
                     <div key={tier.value} className="flex items-center space-x-2">
                       <Checkbox
                         id={`tier-${tier.value}`}
                         checked={isChecked}
                         onCheckedChange={(checked) => {
-                          if (checked) {
-                            setLocalTiers([...localTiers, tier.value]);
-                          } else {
-                            setLocalTiers(localTiers.filter(t => t !== tier.value));
-                          }
+                          const newTiers = checked
+                            ? [...currentTiers, tier.value]
+                            : currentTiers.filter(t => t !== tier.value);
+                          updateFilter('availableTiers', newTiers.length > 0 ? newTiers as any : undefined);
                         }}
                       />
                       <label
@@ -213,7 +191,12 @@ export function SupplyUseCaseFilterDrawer({ open, onOpenChange }: SupplyUseCaseF
               variant="outline" 
               size="lg"
               className="flex-1 text-base" 
-              onClick={clearLocalFilters}
+              onClick={() => {
+                updateFilter('sph', undefined);
+                updateFilter('cyl', undefined);
+                updateFilter('useCases', undefined);
+                updateFilter('availableTiers', undefined);
+              }}
             >
               <X className="w-4 h-4 mr-2" />
               Xóa bộ lọc
@@ -221,10 +204,10 @@ export function SupplyUseCaseFilterDrawer({ open, onOpenChange }: SupplyUseCaseF
             <Button 
               size="lg"
               className="flex-1 bg-purple-600 hover:bg-purple-700 text-base font-semibold" 
-              onClick={applyFilters}
+              onClick={() => onOpenChange(false)}
             >
               <Check className="w-4 h-4 mr-2" />
-              Áp dụng {activeFilterCount > 0 && `(${activeFilterCount} bộ lọc)`}
+              Đóng {activeFilterCount > 0 && `(${activeFilterCount} bộ lọc)`}
             </Button>
           </div>
         </DialogFooter>
