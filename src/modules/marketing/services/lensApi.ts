@@ -19,19 +19,17 @@ export const lensApi = {
       if (filters?.attributeFilters) {
         const allOrConditions: string[] = [];
         
-          Object.entries(filters.attributeFilters).forEach(([slug, values]) => {
+        Object.entries(filters.attributeFilters).forEach(([slug, values]) => {
           if (values.length > 0) {
-            // Each value becomes an OR condition
             values.forEach(value => {
-              // ✅ Support all formats for maximum compatibility:
-              // Format 1 (correct): ["CHEMI"]
-              allOrConditions.push(`attributes@>{"${slug}":["${value}"]}`);
-              
-              // Format 2 (scalar - legacy): "CHEMI"
-              allOrConditions.push(`attributes@>{"${slug}":"${value}"}`);
-              
-              // Format 3 (double nested - legacy): [["CHEMI"]]
-              allOrConditions.push(`attributes@>{"${slug}":[["${value}"]]}`);
+              // Single-value attributes: lens_brand, material, etc.
+              if (slug !== 'tinh_nang_trong') {
+                allOrConditions.push(`attributes@>{"${slug}":["${value}"]}`);
+              } 
+              // Multi-value attributes: tinh_nang_trong (check if array contains value)
+              else {
+                allOrConditions.push(`attributes->'${slug}'?${value}`);
+              }
             });
           }
         });
