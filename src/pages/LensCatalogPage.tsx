@@ -136,6 +136,7 @@ export function LensCatalogPage() {
       <AdvancedFilterDrawer
         open={showAdvancedFilters}
         onOpenChange={setShowAdvancedFilters}
+        attributes={attributes || []}
       />
 
       {selectedProduct && (
