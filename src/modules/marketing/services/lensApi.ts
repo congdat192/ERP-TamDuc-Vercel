@@ -258,10 +258,55 @@ export const lensApi = {
     return data || [];
   },
 
+  // Helper: Generate unique filename preserving original name
+  async generateUniqueFileName(
+    originalName: string, 
+    folder: 'products' | 'banners' | 'brands'
+  ): Promise<string> {
+    // Step 1: Sanitize filename
+    const sanitized = originalName
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Remove diacritics (á → a)
+      .replace(/đ/g, 'd')
+      .replace(/[^a-z0-9.]/g, '-')     // Replace special chars with -
+      .replace(/-+/g, '-')              // Collapse multiple - into one
+      .replace(/^-|-$/g, '');           // Remove leading/trailing -
+
+    // Step 2: Split name and extension
+    const lastDotIndex = sanitized.lastIndexOf('.');
+    const nameWithoutExt = sanitized.substring(0, lastDotIndex);
+    const ext = sanitized.substring(lastDotIndex);
+
+    // Step 3: Check if base name exists and find next available suffix
+    let finalPath = `${folder}/${sanitized}`;
+    let suffix = 0;
+
+    while (true) {
+      const fileName = finalPath.split('/')[1];
+      
+      const { data: existing } = await supabase.storage
+        .from('lens-images')
+        .list(folder, {
+          search: fileName
+        });
+
+      // If no exact match found, use this name
+      const exactMatch = existing?.find(f => f.name === fileName);
+      if (!exactMatch) break;
+
+      // If found, increment suffix and try again
+      suffix++;
+      finalPath = `${folder}/${nameWithoutExt}-${suffix}${ext}`;
+    }
+
+    return finalPath;
+  },
+
   // Image upload
   async uploadImage(file: File, folder: 'products' | 'banners' | 'brands'): Promise<string> {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+    // Generate unique filename preserving original name
+    const fileName = await this.generateUniqueFileName(file.name, folder);
 
     const { error: uploadError } = await supabase.storage
       .from('lens-images')
