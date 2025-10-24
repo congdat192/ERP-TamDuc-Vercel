@@ -330,85 +330,58 @@ export const lensApi = {
     return results;
   },
 
-  // ============= MEDIA LIBRARY =============
+  // ============= MEDIA LIBRARY (Storage Only) =============
 
   async getMediaLibrary(filters?: MediaLibraryFilters): Promise<LensMediaItem[]> {
-    let query = supabase
-      .from('lens_media_library')
-      .select('*')
-      .eq('is_active', true)
-      .order('created_at', { ascending: false });
+    // List files directly from Storage bucket
+    const folderPath = filters?.folder || '';
+    const { data: files, error } = await supabase.storage
+      .from('lens-images')
+      .list(folderPath, {
+        limit: 1000,
+        sortBy: { column: 'created_at', order: 'desc' }
+      });
 
-    if (filters?.folder) {
-      query = query.eq('folder', filters.folder);
-    }
-
-    if (filters?.tags && filters.tags.length > 0) {
-      query = query.contains('tags', filters.tags);
-    }
-
-    if (filters?.search) {
-      query = query.or(`file_name.ilike.%${filters.search}%,alt_text.ilike.%${filters.search}%,caption.ilike.%${filters.search}%`);
-    }
-
-    if (filters?.unused) {
-      query = query.eq('usage_count', 0);
-    }
-
-    const { data, error } = await query;
     if (error) throw error;
-    return data as LensMediaItem[];
+
+    let filteredFiles = files || [];
+
+    // Filter by search term (client-side)
+    if (filters?.search) {
+      const searchLower = filters.search.toLowerCase();
+      filteredFiles = filteredFiles.filter(file => 
+        file.name.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Filter out folders (only show files)
+    filteredFiles = filteredFiles.filter(file => file.id !== null);
+
+    // Convert to LensMediaItem format
+    const mediaItems: LensMediaItem[] = filteredFiles.map(file => ({
+      id: file.id || crypto.randomUUID(),
+      file_name: file.name,
+      file_path: folderPath ? `${folderPath}/${file.name}` : file.name,
+      file_size: file.metadata?.size || 0,
+      mime_type: file.metadata?.mimetype || 'image/jpeg',
+      width: null,
+      height: null,
+      folder: folderPath || 'root',
+      tags: [],
+      alt_text: null,
+      caption: null,
+      used_in_products: [],
+      usage_count: 0,
+      is_active: true,
+      uploaded_by: null,
+      created_at: file.created_at || new Date().toISOString(),
+      updated_at: file.updated_at || new Date().toISOString(),
+    }));
+
+    return mediaItems;
   },
 
-  async uploadToMediaLibrary(
-    file: File,
-    metadata: {
-      folder?: string;
-      tags?: string[];
-      alt_text?: string;
-      caption?: string;
-    } = {}
-  ): Promise<MediaUploadResult> {
-    // 1. Upload to storage
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${metadata.folder || 'uncategorized'}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from('lens-images')
-      .upload(fileName, file);
-
-    if (uploadError) throw uploadError;
-
-    // 2. Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from('lens-images')
-      .getPublicUrl(fileName);
-
-    // 3. Get image dimensions
-    const dimensions = await this.getImageDimensions(file);
-
-    // 4. Save metadata to database
-    const { data: media, error: dbError } = await supabase
-      .from('lens_media_library')
-      .insert({
-        file_name: file.name,
-        file_path: fileName,
-        file_size: file.size,
-        mime_type: file.type,
-        width: dimensions.width,
-        height: dimensions.height,
-        folder: metadata.folder || 'uncategorized',
-        tags: metadata.tags || [],
-        alt_text: metadata.alt_text || null,
-        caption: metadata.caption || null,
-      })
-      .select()
-      .single();
-
-    if (dbError) throw dbError;
-
-    return { media: media as LensMediaItem, url: publicUrl };
-  },
+  // uploadToMediaLibrary removed - use uploadImage() instead for Storage-only approach
 
   async getImageDimensions(file: File): Promise<{ width: number; height: number }> {
     return new Promise((resolve) => {
@@ -421,79 +394,37 @@ export const lensApi = {
     });
   },
 
-  async updateMediaMetadata(
-    id: string,
-    updates: Partial<Pick<LensMediaItem, 'tags' | 'alt_text' | 'caption' | 'folder'>>
-  ): Promise<LensMediaItem> {
-    const { data, error } = await supabase
-      .from('lens_media_library')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
+  // updateMediaMetadata removed - metadata not stored in Storage-only approach
+
+  async deleteMediaFromLibrary(filePath: string): Promise<void> {
+    // Delete directly from Storage (no DB check needed)
+    const { error } = await supabase.storage
+      .from('lens-images')
+      .remove([filePath]);
 
     if (error) throw error;
-    return data as LensMediaItem;
   },
 
-  async deleteMediaFromLibrary(id: string): Promise<void> {
-    const { data: media } = await supabase
-      .from('lens_media_library')
-      .select('used_in_products, file_path')
-      .eq('id', id)
-      .single();
-
-    if (media && media.used_in_products.length > 0) {
-      throw new Error('Không thể xóa ảnh đang được sử dụng trong sản phẩm');
-    }
-
-    const { error: dbError } = await supabase
-      .from('lens_media_library')
-      .update({ is_active: false })
-      .eq('id', id);
-
-    if (dbError) throw dbError;
-
-    if (media) {
-      const { error: storageError } = await supabase.storage
-        .from('lens-images')
-        .remove([media.file_path]);
-
-      if (storageError) console.error('Storage delete error:', storageError);
-    }
-  },
-
-  async getUnusedMedia(olderThanDays: number = 30): Promise<LensMediaItem[]> {
-    const { data, error } = await supabase.rpc('get_unused_media', {
-      older_than_days: olderThanDays,
-    });
-
-    if (error) throw error;
-    return data as LensMediaItem[];
-  },
+  // getUnusedMedia removed - usage tracking not available in Storage-only approach
 
   async getMediaFolders(): Promise<string[]> {
-    const { data, error } = await supabase
-      .from('lens_media_library')
-      .select('folder')
-      .eq('is_active', true);
+    // List top-level folders in lens-images bucket
+    const { data: items, error } = await supabase.storage
+      .from('lens-images')
+      .list('', {
+        limit: 100,
+        sortBy: { column: 'name', order: 'asc' }
+      });
 
     if (error) throw error;
-    
-    const uniqueFolders = [...new Set(data.map(item => item.folder))];
-    return uniqueFolders.sort();
+
+    // Filter only folders (folders have id = null)
+    const folderNames = items
+      ?.filter(item => item.id === null)
+      .map(item => item.name) || [];
+
+    return folderNames.sort();
   },
 
-  async getMediaTags(): Promise<string[]> {
-    const { data, error } = await supabase
-      .from('lens_media_library')
-      .select('tags')
-      .eq('is_active', true);
-
-    if (error) throw error;
-    
-    const allTags = data.flatMap(item => item.tags);
-    const uniqueTags = [...new Set(allTags)];
-    return uniqueTags.sort();
-  },
+  // getMediaTags removed - tags not stored in Storage-only approach
 };

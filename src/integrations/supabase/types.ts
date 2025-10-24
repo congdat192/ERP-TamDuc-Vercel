@@ -1287,66 +1287,6 @@ export type Database = {
         }
         Relationships: []
       }
-      lens_media_library: {
-        Row: {
-          alt_text: string | null
-          caption: string | null
-          created_at: string | null
-          file_name: string
-          file_path: string
-          file_size: number
-          folder: string
-          height: number | null
-          id: string
-          is_active: boolean | null
-          mime_type: string
-          tags: string[] | null
-          updated_at: string | null
-          uploaded_by: string | null
-          usage_count: number | null
-          used_in_products: string[] | null
-          width: number | null
-        }
-        Insert: {
-          alt_text?: string | null
-          caption?: string | null
-          created_at?: string | null
-          file_name: string
-          file_path: string
-          file_size: number
-          folder?: string
-          height?: number | null
-          id?: string
-          is_active?: boolean | null
-          mime_type: string
-          tags?: string[] | null
-          updated_at?: string | null
-          uploaded_by?: string | null
-          usage_count?: number | null
-          used_in_products?: string[] | null
-          width?: number | null
-        }
-        Update: {
-          alt_text?: string | null
-          caption?: string | null
-          created_at?: string | null
-          file_name?: string
-          file_path?: string
-          file_size?: number
-          folder?: string
-          height?: number | null
-          id?: string
-          is_active?: boolean | null
-          mime_type?: string
-          tags?: string[] | null
-          updated_at?: string | null
-          uploaded_by?: string | null
-          usage_count?: number | null
-          used_in_products?: string[] | null
-          width?: number | null
-        }
-        Relationships: []
-      }
       lens_product_attributes: {
         Row: {
           created_at: string | null
@@ -2411,21 +2351,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      can_manage_lens_media: { Args: { _user_id: string }; Returns: boolean }
       cleanup_expired_otp: { Args: never; Returns: undefined }
       generate_doc_number: {
         Args: { _doc_type: string; _year: number }
         Returns: string
-      }
-      get_unused_media: {
-        Args: { older_than_days?: number }
-        Returns: {
-          created_at: string
-          file_name: string
-          file_path: string
-          file_size: number
-          id: string
-        }[]
       }
       get_user_profile_simple: { Args: { _user_id: string }; Returns: Json }
       get_user_role_level: { Args: { _user_id: string }; Returns: number }

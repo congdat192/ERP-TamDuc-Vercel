@@ -100,13 +100,9 @@ export function MediaLibraryDialog({
 
     setIsUploading(true);
     try {
-      const tags = uploadTags.split(',').map(t => t.trim()).filter(Boolean);
-      
+      // Upload files directly to Storage (no metadata)
       const uploadPromises = uploadFiles.map(file =>
-        lensApi.uploadToMediaLibrary(file, {
-          folder: uploadFolder,
-          tags,
-        })
+        lensApi.uploadImage(file, uploadFolder as 'products' | 'banners' | 'brands')
       );
 
       await Promise.all(uploadPromises);
@@ -127,7 +123,11 @@ export function MediaLibraryDialog({
     if (!confirm('Bạn có chắc muốn xóa ảnh này?')) return;
 
     try {
-      await lensApi.deleteMediaFromLibrary(mediaId);
+      // Find the media item to get file_path
+      const media = mediaItems.find(m => m.id === mediaId);
+      if (!media) return;
+      
+      await lensApi.deleteMediaFromLibrary(media.file_path);
       toast.success('Đã xóa ảnh');
       refetch();
     } catch (error: any) {
@@ -268,18 +268,8 @@ export function MediaLibraryDialog({
                     <SelectItem value="products">Products</SelectItem>
                     <SelectItem value="banners">Banners</SelectItem>
                     <SelectItem value="brands">Brands</SelectItem>
-                    <SelectItem value="uncategorized">Uncategorized</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium">Tags (phân cách bằng dấu phẩy)</label>
-                <Input
-                  placeholder="VD: UV400, CHEMI, Polarized"
-                  value={uploadTags}
-                  onChange={(e) => setUploadTags(e.target.value)}
-                />
               </div>
 
               <div>
