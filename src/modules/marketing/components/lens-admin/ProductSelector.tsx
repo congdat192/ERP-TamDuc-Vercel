@@ -20,12 +20,15 @@ interface ProductSelectorProps {
   products: LensProduct[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  isLoading?: boolean;
 }
 
-export function ProductSelector({ products, selectedId, onSelect }: ProductSelectorProps) {
+export function ProductSelector({ products, selectedId, onSelect, isLoading = false }: ProductSelectorProps) {
   const [open, setOpen] = useState(false);
 
-  const selectedProduct = products.find(p => p.id === selectedId);
+  // Defensive check: ensure products is always an array
+  const safeProducts = products || [];
+  const selectedProduct = safeProducts.find(p => p.id === selectedId);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -35,10 +38,13 @@ export function ProductSelector({ products, selectedId, onSelect }: ProductSelec
           role="combobox"
           aria-expanded={open}
           className="w-full justify-between"
+          disabled={isLoading}
         >
           <div className="flex items-center gap-2">
             <Package className="w-4 h-4 text-muted-foreground" />
-            {selectedProduct ? (
+            {isLoading ? (
+              <span className="text-muted-foreground">Đang tải...</span>
+            ) : selectedProduct ? (
               <span className="truncate">{selectedProduct.name}</span>
             ) : (
               <span className="text-muted-foreground">Chọn sản phẩm...</span>
@@ -52,7 +58,7 @@ export function ProductSelector({ products, selectedId, onSelect }: ProductSelec
           <CommandInput placeholder="Tìm sản phẩm..." />
           <CommandEmpty>Không tìm thấy sản phẩm.</CommandEmpty>
           <CommandGroup className="max-h-64 overflow-auto">
-            {products.map((product) => (
+            {safeProducts.map((product) => (
               <CommandItem
                 key={product.id}
                 value={product.name}

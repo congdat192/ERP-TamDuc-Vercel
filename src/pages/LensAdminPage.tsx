@@ -40,7 +40,7 @@ export function LensAdminPage() {
   const [editingProduct, setEditingProduct] = useState<LensProduct | null>(null);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
 
-  const { data: productsData, refetch } = useQuery({
+  const { data: productsData, refetch, isLoading: isLoadingProducts } = useQuery({
     queryKey: ['admin-lens-products'],
     queryFn: () => lensApi.getProducts({}, 1, 100),
   });
@@ -137,11 +137,12 @@ export function LensAdminPage() {
         <TabsContent value="tiers" className="space-y-4">
           <div className="mb-4">
             <label className="text-sm font-medium mb-2 block">Chọn sản phẩm</label>
-            <ProductSelector
-              products={products}
-              selectedId={selectedProductId}
-              onSelect={setSelectedProductId}
-            />
+              <ProductSelector
+                products={products}
+                selectedId={selectedProductId}
+                onSelect={setSelectedProductId}
+                isLoading={isLoadingProducts}
+              />
           </div>
           {selectedProductId ? (
             <SupplyTiersManager productId={selectedProductId} />
@@ -157,11 +158,12 @@ export function LensAdminPage() {
         <TabsContent value="usecases" className="space-y-4">
           <div className="mb-4">
             <label className="text-sm font-medium mb-2 block">Chọn sản phẩm</label>
-            <ProductSelector
-              products={products}
-              selectedId={selectedProductId}
-              onSelect={setSelectedProductId}
-            />
+              <ProductSelector
+                products={products}
+                selectedId={selectedProductId}
+                onSelect={setSelectedProductId}
+                isLoading={isLoadingProducts}
+              />
           </div>
           {selectedProductId ? (
             <UseCaseScoringManager productId={selectedProductId} />
