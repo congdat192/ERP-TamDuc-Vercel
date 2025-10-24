@@ -9,8 +9,8 @@ interface FeatureFilterChipsProps {
 export function FeatureFilterChips({ features }: FeatureFilterChipsProps) {
   const { filters, toggleAttributeValue } = useLensFilters();
   
-  // Get multiselect attributes and flatten their options
-  const multiselectAttrs = features.filter(f => f.type === 'multiselect');
+  // Get multiselect attributes and flatten their options (sorted by display_order)
+  const multiselectAttrs = features.filter(f => f.type === 'multiselect').sort((a, b) => a.display_order - b.display_order);
   
   const chips: { slug: string; value: string; label: string; icon: string | null }[] = [];
   multiselectAttrs.forEach(attr => {
