@@ -110,11 +110,16 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
       setImagePreviews([]);
       setAttributeValues(product.attributes || {});
       setSelectedRelatedIds(product.related_product_ids || []);
-    } else {
+    } else if (open) {
       reset({
+        name: '',
+        sku: '',
+        description: '',
         is_promotion: false,
         is_active: true,
         price: 0,
+        sale_price: undefined,
+        promotion_text: '',
       });
       setExistingImages([]);
       setImageFiles([]);
@@ -123,7 +128,7 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
       setSelectedRelatedIds([]);
     }
     setRelatedProductsSearch('');
-  }, [product, reset]);
+  }, [product, open, reset]);
 
   const handleImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
