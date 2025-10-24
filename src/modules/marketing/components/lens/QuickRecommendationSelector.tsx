@@ -15,9 +15,10 @@ import { LensRecommendationGroup } from '../../types/lens';
 interface QuickRecommendationSelectorProps {
   selectedGroup: LensRecommendationGroup | null;
   onSelect: (group: LensRecommendationGroup | null) => void;
+  compact?: boolean;
 }
 
-export function QuickRecommendationSelector({ selectedGroup, onSelect }: QuickRecommendationSelectorProps) {
+export function QuickRecommendationSelector({ selectedGroup, onSelect, compact = false }: QuickRecommendationSelectorProps) {
   const { data: groups, isLoading } = useQuery({
     queryKey: ['recommendation-groups'],
     queryFn: () => lensApi.getRecommendationGroups(),
@@ -27,9 +28,8 @@ export function QuickRecommendationSelector({ selectedGroup, onSelect }: QuickRe
     return null;
   }
 
-  return (
-    <div className="container mx-auto px-4 py-3 flex items-center gap-2">
-      <DropdownMenu>
+  const dropdownMenu = (
+    <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" className="gap-2">
             <Zap className="w-4 h-4" />
@@ -70,6 +70,17 @@ export function QuickRecommendationSelector({ selectedGroup, onSelect }: QuickRe
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
+  );
+
+  // If compact mode (for navbar), return just the dropdown
+  if (compact) {
+    return dropdownMenu;
+  }
+
+  // Otherwise, return full layout with badge
+  return (
+    <div className="container mx-auto px-4 py-3 flex items-center gap-2">
+      {dropdownMenu}
 
       {selectedGroup && (
         <Badge

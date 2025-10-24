@@ -6,7 +6,6 @@ import { lensApi } from '@/modules/marketing/services/lensApi';
 import { useLensFilters } from '@/modules/marketing/hooks/useLensFilters';
 import { useCompare } from '@/modules/marketing/hooks/useCompare';
 import { LensAppBar } from '@/modules/marketing/components/lens/LensAppBar';
-import { QuickRecommendationSelector } from '@/modules/marketing/components/lens/QuickRecommendationSelector';
 import { FeatureFilterChips } from '@/modules/marketing/components/lens/FeatureFilterChips';
 import { AttributeDropdownFilters } from '@/modules/marketing/components/lens/AttributeDropdownFilters';
 import { AdvancedFilterDrawer } from '@/modules/marketing/components/lens/AdvancedFilterDrawer';
@@ -92,12 +91,8 @@ export function LensCatalogPage() {
         onSearchChange={(q) => updateFilter('search', q)}
         compareCount={compareState.count}
         onCompareClick={() => setShowCompareModal(true)}
-      />
-
-      {/* Quick Recommendation Selector */}
-      <QuickRecommendationSelector
-        selectedGroup={selectedRecommendation}
-        onSelect={handleRecommendationSelect}
+        selectedRecommendation={selectedRecommendation}
+        onRecommendationSelect={handleRecommendationSelect}
       />
 
       {/* Sticky Filter Section */}
