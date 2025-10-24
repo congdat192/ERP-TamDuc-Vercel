@@ -4,8 +4,7 @@ import { lensApi } from '@/modules/marketing/services/lensApi';
 import { useLensFilters } from '@/modules/marketing/hooks/useLensFilters';
 import { useCompare } from '@/modules/marketing/hooks/useCompare';
 import { LensAppBar } from '@/modules/marketing/components/lens/LensAppBar';
-import { FeatureFilterChips } from '@/modules/marketing/components/lens/FeatureFilterChips';
-import { BrandFilterChips } from '@/modules/marketing/components/lens/BrandFilterChips';
+import { AttributeFilterChips } from '@/modules/marketing/components/lens/AttributeFilterChips';
 import { AdvancedFilterDrawer } from '@/modules/marketing/components/lens/AdvancedFilterDrawer';
 import { QuickTags } from '@/modules/marketing/components/lens/QuickTags';
 import { SortDropdown } from '@/modules/marketing/components/lens/SortDropdown';
@@ -24,12 +23,8 @@ export function LensCatalogPage() {
   const [showCompareModal, setShowCompareModal] = useState(false);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
-  const { data: brandsData } = useQuery({
-    queryKey: ['lens-brands'],
-    queryFn: () => lensApi.getBrands(),
-  });
-
-  const { data: attributes } = useQuery({
+  // Fetch attributes for filters
+  const { data: attributes = [] } = useQuery({
     queryKey: ['lens-attributes'],
     queryFn: () => lensApi.getAttributes(),
   });
@@ -44,8 +39,6 @@ export function LensCatalogPage() {
     queryFn: () => lensApi.getBanners(),
   });
 
-  const brands = brandsData || [];
-  const features = attributes || [];
   const products = productsData?.products || [];
   const total = productsData?.total || 0;
   const banners = bannersData || [];
@@ -71,8 +64,8 @@ export function LensCatalogPage() {
 
       {/* Sticky Filter Section */}
       <div className="sticky top-16 z-40 bg-background border-b">
-        <FeatureFilterChips features={features} />
-        <BrandFilterChips brands={brands} />
+        {/* Filter Chips - All attributes */}
+        <AttributeFilterChips attributes={attributes} />
         
         <div className="flex items-center gap-2 px-4 py-3 border-t">
           <button

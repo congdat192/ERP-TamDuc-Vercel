@@ -61,8 +61,7 @@ export interface LensBanner {
 }
 
 export interface LensFilters {
-  brandIds: string[];
-  featureIds: string[];
+  attributeFilters: Record<string, string[]>; // { "hang_trong": ["Essilor", "Hoya"], "tinh_nang": ["UV400"] }
   material: string | null;
   refractiveIndex: string | null;
   minPrice: number | null;
