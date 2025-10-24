@@ -21,6 +21,8 @@ import { CompareModal } from '@/modules/marketing/components/lens/CompareModal';
 import { LensProductWithDetails, LensRecommendationGroup } from '@/modules/marketing/types/lens';
 import { getAdvancedFilterCount, getSupplyUseCaseFilterCount } from '@/modules/marketing/utils/filterCount';
 
+const PAGE_SIZE = 8;
+
 export function LensCatalogPage() {
   const { filters, updateFilter, clearFilters, hasActiveFilters } = useLensFilters();
   const compareState = useCompare();
@@ -54,7 +56,7 @@ export function LensCatalogPage() {
       if (selectedRecommendation) {
         return lensApi.getProductsByRecommendation(selectedRecommendation.id);
       }
-      return lensApi.getProducts(filters, page, 8);
+      return lensApi.getProducts(filters, page, PAGE_SIZE);
     },
   });
 
@@ -68,19 +70,12 @@ export function LensCatalogPage() {
   const products = productsData?.products || [];
   const total = productsData?.total || 0;
   const banners = bannersData || [];
-  
-  // Store attributes globally for product cards
-  useEffect(() => {
-    if (attributes) {
-      (window as any).__allAttributes = attributes;
-    }
-  }, [attributes]);
 
   useEffect(() => {
     setPage(1);
   }, [filters]);
 
-  // Infinite loop detector
+  // Infinite loop detector - runs once on mount
   const renderCountRef = useRef(0);
   const renderTimestampRef = useRef(Date.now());
 
@@ -96,13 +91,13 @@ export function LensCatalogPage() {
           description: "Trang đang bị lỗi vòng lặp. Vui lòng tải lại trang.",
           variant: "destructive",
         });
-        renderCountRef.current = 0; // Reset to prevent spam
+        renderCountRef.current = 0;
       }
     } else {
       renderCountRef.current = 0;
       renderTimestampRef.current = now;
     }
-  });
+  }, []);
 
   const handleRecommendationSelect = (group: LensRecommendationGroup | null) => {
     setSelectedRecommendation(group);
@@ -227,10 +222,10 @@ export function LensCatalogPage() {
               Trước
             </button>
             <span className="px-4 py-2 text-sm">
-              Trang {page} / {Math.ceil(total / 8)}
+              Trang {page} / {Math.ceil(total / PAGE_SIZE)}
             </span>
             <button
-              disabled={page >= Math.ceil(total / 8)}
+              disabled={page >= Math.ceil(total / PAGE_SIZE)}
               onClick={() => setPage(p => p + 1)}
               className="px-4 py-2 text-sm font-medium rounded-lg border border-border disabled:opacity-50 disabled:cursor-not-allowed hover:bg-accent"
             >

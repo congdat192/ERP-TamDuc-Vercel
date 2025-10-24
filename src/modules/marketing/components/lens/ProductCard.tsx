@@ -1,7 +1,9 @@
+import { useQuery } from '@tanstack/react-query';
 import { LensProductWithDetails } from '../../types/lens';
 import { LensProductWithTiersAndScores } from '../../types/lens-extended';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Check, Store, Truck } from 'lucide-react';
+import { lensApi } from '../../services/lensApi';
 
 interface ProductCardProps {
   product: LensProductWithDetails;
@@ -18,6 +20,12 @@ export function ProductCard({
   isInCompare,
   canAddMore,
 }: ProductCardProps) {
+  // Fetch attributes from React Query cache
+  const { data: attributes = [] } = useQuery({
+    queryKey: ['lens-attributes'],
+    queryFn: () => lensApi.getAttributes(),
+  });
+
   const productWithExtras = product as LensProductWithTiersAndScores;
   const supplyTiers = productWithExtras.supply_tiers || [];
   const useCaseScores = productWithExtras.use_case_scores || [];
@@ -85,8 +93,7 @@ export function ProductCard({
 
         <div className="flex gap-1 flex-wrap min-h-[24px]">
           {(() => {
-            const allAttributes = (window as any).__allAttributes || [];
-            const multiselectAttrs = allAttributes.filter((a: any) => a.type === 'multiselect');
+            const multiselectAttrs = attributes.filter((a: any) => a.type === 'multiselect');
             const features: JSX.Element[] = [];
             
             multiselectAttrs.forEach((attr: any) => {
