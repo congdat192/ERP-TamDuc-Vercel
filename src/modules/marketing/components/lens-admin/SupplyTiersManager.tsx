@@ -60,6 +60,13 @@ export function SupplyTiersManager({ productId }: SupplyTiersManagerProps) {
     return names[type] || type;
   };
 
+  const getLeadTimeBadge = (days: number) => {
+    if (days === 0) return { color: 'bg-green-100 text-green-700 border-green-200', label: '🟢 Lấy ngay', icon: '⚡' };
+    if (days <= 2) return { color: 'bg-yellow-100 text-yellow-700 border-yellow-200', label: '🟡 1-2 ngày', icon: '🚚' };
+    if (days <= 7) return { color: 'bg-orange-100 text-orange-700 border-orange-200', label: '🟠 3-7 ngày', icon: '📦' };
+    return { color: 'bg-red-100 text-red-700 border-red-200', label: `🔴 ${days} ngày`, icon: '🏭' };
+  };
+
   if (isLoading) {
     return <div className="text-center py-8 text-muted-foreground">Đang tải...</div>;
   }
@@ -78,60 +85,84 @@ export function SupplyTiersManager({ productId }: SupplyTiersManagerProps) {
       </div>
 
       <div className="space-y-3">
-        {tiers?.map((tier) => (
-          <div key={tier.id} className="border rounded-lg p-4 space-y-2 hover:border-primary transition-colors">
-            <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="font-semibold text-lg">
-                    {tier.tier_name || getTierTypeName(tier.tier_type)}
-                  </span>
-                  <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700">
-                    {tier.lead_time_days === 0 ? 'Lấy ngay' : `${tier.lead_time_days} ngày`}
-                  </span>
+        {tiers?.map((tier) => {
+          const badge = getLeadTimeBadge(tier.lead_time_days);
+          const sphRange = Math.abs(tier.sph_max - tier.sph_min);
+          const cylRange = Math.abs(tier.cyl_max - tier.cyl_min);
+          
+          return (
+            <div key={tier.id} className="border rounded-lg p-4 hover:border-primary transition-colors hover:shadow-sm">
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div className="flex items-center gap-3 flex-1">
+                  <div className="text-2xl">{badge.icon}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold truncate">
+                      {tier.tier_name || getTierTypeName(tier.tier_type)}
+                    </div>
+                    <span className={`inline-block px-2 py-0.5 text-xs rounded-full border mt-1 ${badge.color}`}>
+                      {badge.label}
+                    </span>
+                  </div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">SPH: </span>
-                    <span className="font-medium">{tier.sph_min} → {tier.sph_max}</span>
+                <div className="flex gap-1">
+                  <Button variant="ghost" size="sm" onClick={() => handleEdit(tier)}>
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => deleteMutation.mutate(tier.id)}
+                  >
+                    <Trash2 className="w-4 h-4 text-destructive" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>SPH: {tier.sph_min} → {tier.sph_max}</span>
+                    <span>Phạm vi: {sphRange.toFixed(2)}</span>
                   </div>
-                  <div>
-                    <span className="text-muted-foreground">CYL: </span>
-                    <span className="font-medium">{tier.cyl_min} → {tier.cyl_max}</span>
+                  <div className="w-full bg-secondary rounded-full h-1.5">
+                    <div className="bg-primary h-1.5 rounded-full" style={{ width: `${Math.min((sphRange / 35) * 100, 100)}%` }}></div>
                   </div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>CYL: {tier.cyl_min} → {tier.cyl_max}</span>
+                    <span>Phạm vi: {cylRange.toFixed(2)}</span>
+                  </div>
+                  <div className="w-full bg-secondary rounded-full h-1.5">
+                    <div className="bg-primary h-1.5 rounded-full" style={{ width: `${Math.min((cylRange / 10) * 100, 100)}%` }}></div>
+                  </div>
+                </div>
+              </div>
+
+              {(tier.stock_quantity !== null || tier.price_adjustment !== 0) && (
+                <div className="flex gap-4 mt-3 pt-3 border-t text-sm">
                   {tier.stock_quantity !== null && (
-                    <div>
-                      <span className="text-muted-foreground">Tồn kho: </span>
+                    <div className="flex items-center gap-1">
+                      <Package className="w-3.5 h-3.5 text-muted-foreground" />
+                      <span className="text-muted-foreground">Tồn:</span>
                       <span className="font-medium">{tier.stock_quantity}</span>
                     </div>
                   )}
                   {tier.price_adjustment !== 0 && (
-                    <div>
-                      <span className="text-muted-foreground">Chênh lệch giá: </span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-muted-foreground">Giá:</span>
                       <span className="font-medium">
                         {tier.price_adjustment > 0 ? '+' : ''}{tier.price_adjustment.toLocaleString('vi-VN')}₫
                       </span>
                     </div>
                   )}
                 </div>
-              </div>
-              
-              <div className="flex gap-2">
-                <Button variant="ghost" size="sm" onClick={() => handleEdit(tier)}>
-                  <Pencil className="w-4 h-4" />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => deleteMutation.mutate(tier.id)}
-                >
-                  <Trash2 className="w-4 h-4 text-destructive" />
-                </Button>
-              </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {(!tiers || tiers.length === 0) && (
           <div className="text-center py-12 border-2 border-dashed rounded-lg">

@@ -13,6 +13,7 @@ import { ExportExcelButton } from '@/modules/marketing/components/lens-admin/Exp
 import { AttributeManager } from '@/modules/marketing/components/lens-admin/AttributeManager';
 import { SupplyTiersManager } from '@/modules/marketing/components/lens-admin/SupplyTiersManager';
 import { UseCaseScoringManager } from '@/modules/marketing/components/lens-admin/UseCaseScoringManager';
+import { ProductSelector } from '@/modules/marketing/components/lens-admin/ProductSelector';
 import { LensProduct } from '@/modules/marketing/types/lens';
 import { toast } from 'sonner';
 
@@ -134,44 +135,40 @@ export function LensAdminPage() {
         </TabsContent>
 
         <TabsContent value="tiers" className="space-y-4">
+          <div className="mb-4">
+            <label className="text-sm font-medium mb-2 block">Chọn sản phẩm</label>
+            <ProductSelector
+              products={products}
+              selectedId={selectedProductId}
+              onSelect={setSelectedProductId}
+            />
+          </div>
           {selectedProductId ? (
-            <>
-              <div className="flex justify-between items-center mb-4 p-4 border rounded-lg bg-accent/20">
-                <h3 className="font-semibold">
-                  Quản lý tầng cung ứng: {products.find(p => p.id === selectedProductId)?.name}
-                </h3>
-                <Button variant="outline" onClick={() => setSelectedProductId(null)}>
-                  Đóng
-                </Button>
-              </div>
-              <SupplyTiersManager productId={selectedProductId} />
-            </>
+            <SupplyTiersManager productId={selectedProductId} />
           ) : (
             <div className="text-center py-12 border-2 border-dashed rounded-lg">
               <p className="text-muted-foreground">
-                Chọn một sản phẩm từ tab "Danh sách sản phẩm" để quản lý tầng cung ứng
+                Chọn một sản phẩm để quản lý tầng cung ứng
               </p>
             </div>
           )}
         </TabsContent>
 
         <TabsContent value="usecases" className="space-y-4">
+          <div className="mb-4">
+            <label className="text-sm font-medium mb-2 block">Chọn sản phẩm</label>
+            <ProductSelector
+              products={products}
+              selectedId={selectedProductId}
+              onSelect={setSelectedProductId}
+            />
+          </div>
           {selectedProductId ? (
-            <>
-              <div className="flex justify-between items-center mb-4 p-4 border rounded-lg bg-accent/20">
-                <h3 className="font-semibold">
-                  Chấm điểm use cases: {products.find(p => p.id === selectedProductId)?.name}
-                </h3>
-                <Button variant="outline" onClick={() => setSelectedProductId(null)}>
-                  Đóng
-                </Button>
-              </div>
-              <UseCaseScoringManager productId={selectedProductId} />
-            </>
+            <UseCaseScoringManager productId={selectedProductId} />
           ) : (
             <div className="text-center py-12 border-2 border-dashed rounded-lg">
               <p className="text-muted-foreground">
-                Chọn một sản phẩm từ tab "Danh sách sản phẩm" để chấm điểm use cases
+                Chọn một sản phẩm để chấm điểm use cases
               </p>
             </div>
           )}

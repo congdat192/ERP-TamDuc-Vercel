@@ -8,6 +8,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { lensSupplyTiersApi } from '../../services/lensSupplyTiersApi';
 import { LensSupplyTier } from '../../types/lens-extended';
 import { toast } from 'sonner';
@@ -99,13 +100,13 @@ export function SupplyTierFormDialog({ productId, tier, open, onClose }: SupplyT
 
   return (
     <Dialog open={open} onOpenChange={() => onClose()}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{tier ? 'Cập nhật' : 'Thêm'} Tầng cung ứng</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -146,144 +147,174 @@ export function SupplyTierFormDialog({ productId, tier, open, onClose }: SupplyT
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-4">
-                <h4 className="font-semibold">Phạm vi SPH (Độ cầu)</h4>
+            <Tabs defaultValue="optical" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="optical">Thông số SPH/CYL</TabsTrigger>
+                <TabsTrigger value="logistics">Thời gian & Giá</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="optical" className="space-y-4 mt-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-sm">Phạm vi SPH (Độ cầu)</h4>
+                    <FormField
+                      control={form.control}
+                      name="sph_min"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>SPH Min</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="0.25"
+                              {...field} 
+                              onChange={e => field.onChange(parseFloat(e.target.value))}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="sph_max"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>SPH Max</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="0.25"
+                              {...field} 
+                              onChange={e => field.onChange(parseFloat(e.target.value))}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-sm">Phạm vi CYL (Độ loạn)</h4>
+                    <FormField
+                      control={form.control}
+                      name="cyl_min"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>CYL Min</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="0.25"
+                              {...field} 
+                              onChange={e => field.onChange(parseFloat(e.target.value))}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="cyl_max"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>CYL Max</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              step="0.25"
+                              {...field} 
+                              onChange={e => field.onChange(parseFloat(e.target.value))}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="logistics" className="space-y-4 mt-4">
+                <div className="grid grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="lead_time_days"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Thời gian giao (ngày)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            {...field} 
+                            onChange={e => field.onChange(parseInt(e.target.value))}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="stock_quantity"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tồn kho</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            {...field} 
+                            value={field.value ?? ''}
+                            onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
+                            placeholder="Không bắt buộc"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="price_adjustment"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Chênh lệch giá (₫)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            {...field} 
+                            onChange={e => field.onChange(parseFloat(e.target.value))}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
                 <FormField
                   control={form.control}
-                  name="sph_min"
+                  name="display_order"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>SPH Min</FormLabel>
+                      <FormLabel>Thứ tự hiển thị</FormLabel>
                       <FormControl>
                         <Input 
                           type="number" 
-                          step="0.25"
                           {...field} 
-                          onChange={e => field.onChange(parseFloat(e.target.value))}
+                          onChange={e => field.onChange(parseInt(e.target.value))}
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="sph_max"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>SPH Max</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          step="0.25"
-                          {...field} 
-                          onChange={e => field.onChange(parseFloat(e.target.value))}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="space-y-4">
-                <h4 className="font-semibold">Phạm vi CYL (Độ loạn)</h4>
-                <FormField
-                  control={form.control}
-                  name="cyl_min"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>CYL Min</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          step="0.25"
-                          {...field} 
-                          onChange={e => field.onChange(parseFloat(e.target.value))}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="cyl_max"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>CYL Max</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          step="0.25"
-                          {...field} 
-                          onChange={e => field.onChange(parseFloat(e.target.value))}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name="lead_time_days"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Thời gian giao (ngày)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        {...field} 
-                        onChange={e => field.onChange(parseInt(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="stock_quantity"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tồn kho (tuỳ chọn)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        {...field} 
-                        value={field.value ?? ''}
-                        onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="price_adjustment"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Chênh lệch giá (₫)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        {...field} 
-                        onChange={e => field.onChange(parseFloat(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+              </TabsContent>
+            </Tabs>
 
             <div className="flex justify-end gap-2 pt-4 border-t">
               <Button type="button" variant="outline" onClick={() => onClose()}>
