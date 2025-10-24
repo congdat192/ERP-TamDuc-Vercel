@@ -1,21 +1,24 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Filter, Sliders } from 'lucide-react';
+import { Filter, Sliders, LayoutGrid, Table as TableIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { lensApi } from '@/modules/marketing/services/lensApi';
 import { useLensFilters } from '@/modules/marketing/hooks/useLensFilters';
 import { useCompare } from '@/modules/marketing/hooks/useCompare';
 import { LensAppBar } from '@/modules/marketing/components/lens/LensAppBar';
+import { QuickRecommendationSelector } from '@/modules/marketing/components/lens/QuickRecommendationSelector';
 import { FeatureFilterChips } from '@/modules/marketing/components/lens/FeatureFilterChips';
 import { AttributeDropdownFilters } from '@/modules/marketing/components/lens/AttributeDropdownFilters';
 import { AdvancedFilterDrawer } from '@/modules/marketing/components/lens/AdvancedFilterDrawer';
 import { SupplyUseCaseFilterDrawer } from '@/modules/marketing/components/lens/SupplyUseCaseFilterDrawer';
 import { SortDropdown } from '@/modules/marketing/components/lens/SortDropdown';
 import { ProductGrid } from '@/modules/marketing/components/lens/ProductGrid';
+import { ProductComparisonTable } from '@/modules/marketing/components/lens/ProductComparisonTable';
 import { BannerGrid } from '@/modules/marketing/components/lens/BannerGrid';
 import { FooterBar } from '@/modules/marketing/components/lens/FooterBar';
 import { ProductDetailModal } from '@/modules/marketing/components/lens/ProductDetailModal';
 import { CompareModal } from '@/modules/marketing/components/lens/CompareModal';
-import { LensProductWithDetails } from '@/modules/marketing/types/lens';
+import { LensProductWithDetails, LensRecommendationGroup } from '@/modules/marketing/types/lens';
 import { getAdvancedFilterCount, getSupplyUseCaseFilterCount } from '@/modules/marketing/utils/filterCount';
 
 export function LensCatalogPage() {
@@ -26,6 +29,8 @@ export function LensCatalogPage() {
   const [showCompareModal, setShowCompareModal] = useState(false);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [showSupplyUseCaseFilters, setShowSupplyUseCaseFilters] = useState(false);
+  const [selectedRecommendation, setSelectedRecommendation] = useState<LensRecommendationGroup | null>(null);
+  const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
 
   const advancedFilterCount = getAdvancedFilterCount(filters);
   const supplyUseCaseFilterCount = getSupplyUseCaseFilterCount(filters);
@@ -40,9 +45,15 @@ export function LensCatalogPage() {
     queryFn: () => lensApi.getAttributes(),
   });
 
+  // Fetch products based on recommendation or regular filters
   const { data: productsData, isLoading } = useQuery({
-    queryKey: ['lens-products', filters, page],
-    queryFn: () => lensApi.getProducts(filters, page, 8),
+    queryKey: ['lens-products', filters, page, selectedRecommendation?.id],
+    queryFn: () => {
+      if (selectedRecommendation) {
+        return lensApi.getProductsByRecommendation(selectedRecommendation.id);
+      }
+      return lensApi.getProducts(filters, page, 8);
+    },
   });
 
   const { data: bannersData } = useQuery({
@@ -67,12 +78,26 @@ export function LensCatalogPage() {
     setPage(1);
   }, [filters]);
 
+  const handleRecommendationSelect = (group: LensRecommendationGroup | null) => {
+    setSelectedRecommendation(group);
+    if (group) {
+      clearFilters(); // Clear existing filters when selecting recommendation
+    }
+    setPage(1);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <LensAppBar 
         onSearchChange={(q) => updateFilter('search', q)}
         compareCount={compareState.count}
         onCompareClick={() => setShowCompareModal(true)}
+      />
+
+      {/* Quick Recommendation Selector */}
+      <QuickRecommendationSelector
+        selectedGroup={selectedRecommendation}
+        onSelect={handleRecommendationSelect}
       />
 
       {/* Sticky Filter Section */}
@@ -113,20 +138,47 @@ export function LensCatalogPage() {
               </div>
               
               <SortDropdown />
+              
+              <div className="flex border border-border rounded-lg overflow-hidden">
+                <Button
+                  variant={viewMode === 'card' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('card')}
+                  className="rounded-none"
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'table' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('table')}
+                  className="rounded-none"
+                >
+                  <TableIcon className="w-4 h-4" />
+                </Button>
+              </div>
             </>
           }
         />
       </div>
 
       <main className="container mx-auto px-4 py-6 space-y-8">
-        <ProductGrid
-          products={products}
-          isLoading={isLoading}
-          onProductClick={(product) => setSelectedProduct(product)}
-          onAddCompare={compareState.addToCompare}
-          isInCompare={compareState.isInCompare}
-          canAddMore={compareState.canAddMore}
-        />
+        {viewMode === 'card' ? (
+          <ProductGrid
+            products={products}
+            isLoading={isLoading}
+            onProductClick={(product) => setSelectedProduct(product)}
+            onAddCompare={compareState.addToCompare}
+            isInCompare={compareState.isInCompare}
+            canAddMore={compareState.canAddMore}
+          />
+        ) : (
+          <ProductComparisonTable
+            products={products}
+            isLoading={isLoading}
+            onProductClick={(product) => setSelectedProduct(product)}
+          />
+        )}
 
         {products.length > 0 && (
           <div className="flex justify-center gap-2">
