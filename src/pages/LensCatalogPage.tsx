@@ -16,6 +16,7 @@ import { FooterBar } from '@/modules/marketing/components/lens/FooterBar';
 import { ProductDetailModal } from '@/modules/marketing/components/lens/ProductDetailModal';
 import { CompareModal } from '@/modules/marketing/components/lens/CompareModal';
 import { LensProductWithDetails } from '@/modules/marketing/types/lens';
+import { getAdvancedFilterCount, getSupplyUseCaseFilterCount } from '@/modules/marketing/utils/filterCount';
 
 export function LensCatalogPage() {
   const { filters, updateFilter, clearFilters, hasActiveFilters } = useLensFilters();
@@ -25,6 +26,9 @@ export function LensCatalogPage() {
   const [showCompareModal, setShowCompareModal] = useState(false);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [showSupplyUseCaseFilters, setShowSupplyUseCaseFilters] = useState(false);
+
+  const advancedFilterCount = getAdvancedFilterCount(filters);
+  const supplyUseCaseFilterCount = getSupplyUseCaseFilterCount(filters);
 
   const { data: brandsData } = useQuery({
     queryKey: ['lens-brands'],
@@ -78,20 +82,36 @@ export function LensCatalogPage() {
           attributes={attributes || []}
           actionButtons={
             <>
-              <button
-                onClick={() => setShowAdvancedFilters(true)}
-                className="p-2 rounded-lg border border-border hover:bg-accent transition-colors"
-                title="Lọc theo thương hiệu & tính năng"
-              >
-                <Filter className="w-5 h-5 text-blue-600" />
-              </button>
-              <button
-                onClick={() => setShowSupplyUseCaseFilters(true)}
-                className="p-2 rounded-lg border border-border hover:bg-accent transition-colors"
-                title="Lọc theo thông số, nhu cầu & tầng cung ứng"
-              >
-                <Sliders className="w-5 h-5 text-purple-600" />
-              </button>
+              <div className="relative">
+                <button
+                  onClick={() => setShowAdvancedFilters(true)}
+                  className="p-2 rounded-lg border border-border hover:bg-accent transition-colors"
+                  title="Lọc theo thương hiệu & tính năng"
+                >
+                  <Filter className="w-5 h-5 text-blue-600" />
+                </button>
+                {advancedFilterCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 shadow-sm">
+                    {advancedFilterCount}
+                  </span>
+                )}
+              </div>
+              
+              <div className="relative">
+                <button
+                  onClick={() => setShowSupplyUseCaseFilters(true)}
+                  className="p-2 rounded-lg border border-border hover:bg-accent transition-colors"
+                  title="Lọc theo thông số, nhu cầu & tầng cung ứng"
+                >
+                  <Sliders className="w-5 h-5 text-purple-600" />
+                </button>
+                {supplyUseCaseFilterCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-purple-600 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 shadow-sm">
+                    {supplyUseCaseFilterCount}
+                  </span>
+                )}
+              </div>
+              
               <SortDropdown />
             </>
           }
