@@ -28,17 +28,23 @@ export const lensApi = {
         .eq('is_active', true);
 
       // Apply attribute filters using JSONB operators
+      // Collect all OR conditions first, then apply .or() once
       if (filters?.attributeFilters) {
+        const allOrConditions: string[] = [];
+        
         Object.entries(filters.attributeFilters).forEach(([slug, values]) => {
           if (values.length > 0) {
-            // Use @> operator to check if array contains any of the values
-            // Format: {"slug": ["value1", "value2"]}
-            const orConditions = values.map(value => {
-              return `attributes@>{"${slug}":["${value}"]}`;
-            }).join(',');
-            query = query.or(orConditions);
+            // Each value becomes an OR condition
+            values.forEach(value => {
+              allOrConditions.push(`attributes@>{"${slug}":["${value}"]}`);
+            });
           }
         });
+        
+        // Apply all OR conditions at once
+        if (allOrConditions.length > 0) {
+          query = query.or(allOrConditions.join(','));
+        }
       }
 
       if (filters?.material) {
