@@ -36,7 +36,12 @@ export const lensApi = {
           if (values.length > 0) {
             // Each value becomes an OR condition
             values.forEach(value => {
+              // ✅ Support both formats to handle any legacy data:
+              // Format 1 (correct): ["CHEMI"]
               allOrConditions.push(`attributes@>{"${slug}":["${value}"]}`);
+              
+              // Format 2 (legacy - double nested): [["CHEMI"]]
+              allOrConditions.push(`attributes@>{"${slug}":[["${value}"]]}`);
             });
           }
         });
