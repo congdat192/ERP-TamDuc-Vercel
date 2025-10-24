@@ -29,41 +29,32 @@ export function FeatureFilterChips({ features }: FeatureFilterChipsProps) {
       <div className="flex gap-2 min-w-max">
         {chips.map((chip, index) => {
           const isActive = filters.attributeFilters[chip.slug]?.includes(chip.value) || false;
-          const activeCount = filters.attributeFilters[chip.slug]?.length || 0;
-          
           return (
-            <div key={`${chip.slug}-${chip.value}-${index}`} className="relative inline-block">
-              <button
-                onClick={() => toggleAttributeValue(chip.slug, chip.value)}
-                className={cn(
-                  'px-4 py-2 rounded-lg border text-sm font-medium transition-all whitespace-nowrap',
-                  isActive
-                    ? 'bg-green-600 border-green-600 text-white shadow-sm pr-8'
-                    : 'bg-background border-border hover:bg-accent'
-                )}
-              >
-                {chip.icon && <span className="mr-1">{chip.icon}</span>}
-                {chip.label}
-                
-                {isActive && (
-                  <span
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleAttributeValue(chip.slug, chip.value);
-                    }}
-                    className="absolute right-1.5 top-1/2 -translate-y-1/2 hover:bg-red-500 rounded-full p-0.5 transition-colors cursor-pointer"
-                  >
-                    <X className="w-3.5 h-3.5 text-red-400 hover:text-white" />
-                  </span>
-                )}
-              </button>
+            <button
+              key={`${chip.slug}-${chip.value}-${index}`}
+              onClick={() => toggleAttributeValue(chip.slug, chip.value)}
+              className={cn(
+                'relative px-4 py-2 rounded-lg border text-sm font-medium transition-all whitespace-nowrap',
+                isActive
+                  ? 'bg-green-600 border-green-600 text-white shadow-sm pr-8'
+                  : 'bg-background border-border hover:bg-accent'
+              )}
+            >
+              {chip.icon && <span className="mr-1">{chip.icon}</span>}
+              {chip.label}
               
-              {isActive && activeCount > 1 && (
-                <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 shadow-sm pointer-events-none z-20">
-                  {activeCount}
+              {isActive && (
+                <span
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleAttributeValue(chip.slug, chip.value);
+                  }}
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 hover:bg-red-500 rounded-full p-0.5 transition-colors cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5 text-red-400 hover:text-white" />
                 </span>
               )}
-            </div>
+            </button>
           );
         })}
       </div>
