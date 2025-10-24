@@ -30,25 +30,13 @@ export const lensApi = {
 
   // Products
   async getProducts(filters?: Partial<LensFilters>, page = 1, perPage = 8): Promise<{ products: LensProductWithDetails[]; total: number }> {
+    // Build query without pagination first
     let query = supabase
       .from('lens_products')
-      .select('*', { count: 'exact' })
+      .select('*')
       .eq('is_active', true);
 
-    // Apply attribute filters using JSONB contains operator
-    if (filters?.attributeFilters) {
-      Object.entries(filters.attributeFilters).forEach(([slug, values]) => {
-        if (values.length > 0) {
-          // Build OR conditions for multiple values of the same attribute
-          const orConditions = values.map(value => 
-            `attributes@>{"${slug}":["${value}"]}`
-          ).join(',');
-          query = query.or(orConditions);
-        }
-      });
-    }
-
-    // Apply price filters
+    // Apply price filters (can be done in SQL)
     if (filters?.minPrice !== null && filters?.minPrice !== undefined) {
       query = query.gte('price', filters.minPrice);
     }
@@ -57,12 +45,12 @@ export const lensApi = {
       query = query.lte('price', filters.maxPrice);
     }
 
-    // Apply search filter
+    // Apply search filter (can be done in SQL)
     if (filters?.search) {
       query = query.or(`name.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
     }
 
-    // Apply sorting
+    // Apply sorting (can be done in SQL)
     switch (filters?.sort) {
       case 'price-asc':
         query = query.order('price', { ascending: true });
@@ -79,21 +67,40 @@ export const lensApi = {
         break;
     }
 
-    // Apply pagination
-    const from = (page - 1) * perPage;
-    const to = from + perPage - 1;
-    query = query.range(from, to);
-
-    const { data, error, count } = await query;
+    // Fetch ALL matching products (no pagination yet)
+    const { data, error } = await query;
 
     if (error) {
       console.error('Error fetching products:', error);
       throw error;
     }
 
+    // Apply attribute filters in JavaScript (more reliable for JSONB)
+    let filteredProducts = data || [];
+
+    if (filters?.attributeFilters && Object.keys(filters.attributeFilters).length > 0) {
+      filteredProducts = filteredProducts.filter(product => {
+        const attrs = product.attributes as Record<string, string[]> | null;
+        if (!attrs) return false;
+        
+        // ALL attribute filters must match (AND logic between different attributes)
+        return Object.entries(filters.attributeFilters).every(([slug, filterValues]) => {
+          const productValues = attrs[slug] || [];
+          // ANY filter value must exist in product values (OR logic within same attribute)
+          return filterValues.some(fv => productValues.includes(fv));
+        });
+      });
+    }
+
+    // Apply pagination AFTER filtering
+    const total = filteredProducts.length;
+    const from = (page - 1) * perPage;
+    const to = from + perPage;
+    const paginatedProducts = filteredProducts.slice(from, to);
+
     return {
-      products: (data || []) as LensProductWithDetails[],
-      total: count || 0,
+      products: paginatedProducts as LensProductWithDetails[],
+      total,
     };
   },
 
