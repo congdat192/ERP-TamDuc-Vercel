@@ -1,25 +1,25 @@
-import { useState, useEffect, useRef } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Filter, Sliders, LayoutGrid, Table as TableIcon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { toast } from '@/hooks/use-toast';
-import { lensApi } from '@/modules/marketing/services/lensApi';
-import { useLensFilters } from '@/modules/marketing/hooks/useLensFilters';
-import { useCompare } from '@/modules/marketing/hooks/useCompare';
-import { LensAppBar } from '@/modules/marketing/components/lens/LensAppBar';
-import { FeatureFilterChips } from '@/modules/marketing/components/lens/FeatureFilterChips';
-import { AttributeDropdownFilters } from '@/modules/marketing/components/lens/AttributeDropdownFilters';
-import { AdvancedFilterDrawer } from '@/modules/marketing/components/lens/AdvancedFilterDrawer';
-import { SupplyUseCaseFilterDrawer } from '@/modules/marketing/components/lens/SupplyUseCaseFilterDrawer';
-import { SortDropdown } from '@/modules/marketing/components/lens/SortDropdown';
-import { ProductGrid } from '@/modules/marketing/components/lens/ProductGrid';
-import { ProductComparisonTable } from '@/modules/marketing/components/lens/ProductComparisonTable';
-import { BannerGrid } from '@/modules/marketing/components/lens/BannerGrid';
-import { FooterBar } from '@/modules/marketing/components/lens/FooterBar';
-import { ProductDetailModal } from '@/modules/marketing/components/lens/ProductDetailModal';
-import { CompareModal } from '@/modules/marketing/components/lens/CompareModal';
-import { LensProductWithDetails, LensRecommendationGroup } from '@/modules/marketing/types/lens';
-import { getAdvancedFilterCount, getSupplyUseCaseFilterCount } from '@/modules/marketing/utils/filterCount';
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Filter, Sliders, LayoutGrid, Table as TableIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "@/hooks/use-toast";
+import { lensApi } from "@/modules/marketing/services/lensApi";
+import { useLensFilters } from "@/modules/marketing/hooks/useLensFilters";
+import { useCompare } from "@/modules/marketing/hooks/useCompare";
+import { LensAppBar } from "@/modules/marketing/components/lens/LensAppBar";
+import { FeatureFilterChips } from "@/modules/marketing/components/lens/FeatureFilterChips";
+import { AttributeDropdownFilters } from "@/modules/marketing/components/lens/AttributeDropdownFilters";
+import { AdvancedFilterDrawer } from "@/modules/marketing/components/lens/AdvancedFilterDrawer";
+import { SupplyUseCaseFilterDrawer } from "@/modules/marketing/components/lens/SupplyUseCaseFilterDrawer";
+import { SortDropdown } from "@/modules/marketing/components/lens/SortDropdown";
+import { ProductGrid } from "@/modules/marketing/components/lens/ProductGrid";
+import { ProductComparisonTable } from "@/modules/marketing/components/lens/ProductComparisonTable";
+import { BannerGrid } from "@/modules/marketing/components/lens/BannerGrid";
+import { FooterBar } from "@/modules/marketing/components/lens/FooterBar";
+import { ProductDetailModal } from "@/modules/marketing/components/lens/ProductDetailModal";
+import { CompareModal } from "@/modules/marketing/components/lens/CompareModal";
+import { LensProductWithDetails, LensRecommendationGroup } from "@/modules/marketing/types/lens";
+import { getAdvancedFilterCount, getSupplyUseCaseFilterCount } from "@/modules/marketing/utils/filterCount";
 
 export function LensCatalogPage() {
   const { filters, updateFilter, clearFilters, hasActiveFilters } = useLensFilters();
@@ -30,24 +30,34 @@ export function LensCatalogPage() {
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [showSupplyUseCaseFilters, setShowSupplyUseCaseFilters] = useState(false);
   const [selectedRecommendation, setSelectedRecommendation] = useState<LensRecommendationGroup | null>(null);
-  const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
+  const [viewMode, setViewMode] = useState<"card" | "table">("card");
 
   const advancedFilterCount = getAdvancedFilterCount(filters);
   const supplyUseCaseFilterCount = getSupplyUseCaseFilterCount(filters);
 
+  // Track toast shown state properly
+  const toastShownForRecommendation = useRef<string | null>(null);
+
   const { data: brandsData } = useQuery({
-    queryKey: ['lens-brands'],
+    queryKey: ["lens-brands"],
     queryFn: () => lensApi.getBrands(),
   });
 
-  const { data: attributes } = useQuery({
-    queryKey: ['lens-attributes'],
+  const { data: attributes, error: attributesError } = useQuery({
+    queryKey: ["lens-attributes"],
     queryFn: () => lensApi.getAttributes(),
   });
 
+  // Serialize filters for stable query key
+  const filtersKey = useMemo(() => JSON.stringify(filters), [filters]);
+
   // Fetch products based on recommendation or regular filters
-  const { data: productsData, isLoading } = useQuery({
-    queryKey: ['lens-products', filters, page, selectedRecommendation?.id],
+  const {
+    data: productsData,
+    isLoading,
+    error: productsError,
+  } = useQuery({
+    queryKey: ["lens-products", filtersKey, page, selectedRecommendation?.id],
     queryFn: () => {
       if (selectedRecommendation) {
         return lensApi.getProductsByRecommendation(selectedRecommendation.id);
@@ -57,7 +67,7 @@ export function LensCatalogPage() {
   });
 
   const { data: bannersData } = useQuery({
-    queryKey: ['lens-banners'],
+    queryKey: ["lens-banners"],
     queryFn: () => lensApi.getBanners(),
   });
 
@@ -66,46 +76,70 @@ export function LensCatalogPage() {
   const products = productsData?.products || [];
   const total = productsData?.total || 0;
   const banners = bannersData || [];
-  
-  // Store attributes globally for product cards
-  useEffect(() => {
-    if (attributes) {
-      (window as any).__allAttributes = attributes;
-    }
-  }, [attributes]);
 
+  // Reset page when filters change (with proper dependencies)
   useEffect(() => {
     setPage(1);
-  }, [filters]);
+  }, [filtersKey]);
 
-  // Auto clear recommendation when user applies filters
-  const hasShownToast = useRef(false);
-  
+  // Auto clear recommendation when user applies filters (fixed logic)
   useEffect(() => {
-    if (hasActiveFilters && selectedRecommendation && !hasShownToast.current) {
-      setSelectedRecommendation(null);
-      hasShownToast.current = true;
+    const recommendationId = selectedRecommendation?.id;
+
+    if (hasActiveFilters && recommendationId) {
+      // Only show toast once per recommendation
+      if (toastShownForRecommendation.current !== recommendationId) {
+        setSelectedRecommendation(null);
+        toastShownForRecommendation.current = recommendationId;
+
+        toast({
+          title: "Đã tắt tư vấn nhanh",
+          description: "Bộ lọc thủ công đã được áp dụng",
+        });
+      }
+    } else if (!hasActiveFilters && !recommendationId) {
+      // Reset toast flag when both filters and recommendation are cleared
+      toastShownForRecommendation.current = null;
+    }
+  }, [hasActiveFilters, selectedRecommendation]);
+
+  const handleRecommendationSelect = useCallback(
+    (group: LensRecommendationGroup | null) => {
+      setSelectedRecommendation(group);
+      if (group) {
+        clearFilters(); // Clear existing filters when selecting recommendation
+        toastShownForRecommendation.current = null; // Reset toast flag for new recommendation
+      }
+      setPage(1);
+    },
+    [clearFilters],
+  );
+
+  // Handle errors
+  useEffect(() => {
+    if (attributesError) {
       toast({
-        title: "Đã tắt tư vấn nhanh",
-        description: "Bộ lọc thủ công đã được áp dụng",
+        variant: "destructive",
+        title: "Lỗi tải thuộc tính",
+        description: "Không thể tải danh sách thuộc tính sản phẩm",
       });
-    } else if (!hasActiveFilters) {
-      hasShownToast.current = false;
     }
-  }, [hasActiveFilters]);
+  }, [attributesError]);
 
-  const handleRecommendationSelect = (group: LensRecommendationGroup | null) => {
-    setSelectedRecommendation(group);
-    if (group) {
-      clearFilters(); // Clear existing filters when selecting recommendation
+  useEffect(() => {
+    if (productsError) {
+      toast({
+        variant: "destructive",
+        title: "Lỗi tải sản phẩm",
+        description: "Không thể tải danh sách sản phẩm",
+      });
     }
-    setPage(1);
-  };
+  }, [productsError]);
 
   return (
     <div className="min-h-screen bg-background">
-      <LensAppBar 
-        onSearchChange={(q) => updateFilter('search', q)}
+      <LensAppBar
+        onSearchChange={(q) => updateFilter("search", q)}
         compareCount={compareState.count}
         onCompareClick={() => setShowCompareModal(true)}
         selectedRecommendation={selectedRecommendation}
@@ -115,7 +149,7 @@ export function LensCatalogPage() {
       {/* Sticky Filter Section */}
       <div className="sticky top-16 z-40 bg-background border-b">
         <FeatureFilterChips features={features} />
-        <AttributeDropdownFilters 
+        <AttributeDropdownFilters
           attributes={attributes || []}
           actionButtons={
             <>
@@ -133,7 +167,7 @@ export function LensCatalogPage() {
                   </span>
                 )}
               </div>
-              
+
               <div className="relative">
                 <button
                   onClick={() => setShowSupplyUseCaseFilters(true)}
@@ -148,22 +182,22 @@ export function LensCatalogPage() {
                   </span>
                 )}
               </div>
-              
+
               <SortDropdown />
-              
+
               <div className="flex border border-border rounded-lg overflow-hidden">
                 <Button
-                  variant={viewMode === 'card' ? 'default' : 'ghost'}
+                  variant={viewMode === "card" ? "default" : "ghost"}
                   size="sm"
-                  onClick={() => setViewMode('card')}
+                  onClick={() => setViewMode("card")}
                   className="rounded-none"
                 >
                   <LayoutGrid className="w-4 h-4" />
                 </Button>
                 <Button
-                  variant={viewMode === 'table' ? 'default' : 'ghost'}
+                  variant={viewMode === "table" ? "default" : "ghost"}
                   size="sm"
-                  onClick={() => setViewMode('table')}
+                  onClick={() => setViewMode("table")}
                   className="rounded-none"
                 >
                   <TableIcon className="w-4 h-4" />
@@ -175,7 +209,7 @@ export function LensCatalogPage() {
       </div>
 
       <main className="container mx-auto px-4 py-6 space-y-8">
-        {viewMode === 'card' ? (
+        {viewMode === "card" ? (
           <ProductGrid
             products={products}
             isLoading={isLoading}
@@ -196,7 +230,7 @@ export function LensCatalogPage() {
           <div className="flex justify-center gap-2">
             <button
               disabled={page === 1}
-              onClick={() => setPage(p => p - 1)}
+              onClick={() => setPage((p) => p - 1)}
               className="px-4 py-2 text-sm font-medium rounded-lg border border-border disabled:opacity-50 disabled:cursor-not-allowed hover:bg-accent"
             >
               Trước
@@ -206,7 +240,7 @@ export function LensCatalogPage() {
             </span>
             <button
               disabled={page >= Math.ceil(total / 8)}
-              onClick={() => setPage(p => p + 1)}
+              onClick={() => setPage((p) => p + 1)}
               className="px-4 py-2 text-sm font-medium rounded-lg border border-border disabled:opacity-50 disabled:cursor-not-allowed hover:bg-accent"
             >
               Sau
@@ -231,10 +265,7 @@ export function LensCatalogPage() {
         attributes={attributes || []}
       />
 
-      <SupplyUseCaseFilterDrawer
-        open={showSupplyUseCaseFilters}
-        onOpenChange={setShowSupplyUseCaseFilters}
-      />
+      <SupplyUseCaseFilterDrawer open={showSupplyUseCaseFilters} onOpenChange={setShowSupplyUseCaseFilters} />
 
       {selectedProduct && (
         <ProductDetailModal
