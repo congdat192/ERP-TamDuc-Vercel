@@ -2411,6 +2411,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_manage_lens_media: { Args: { _user_id: string }; Returns: boolean }
       cleanup_expired_otp: { Args: never; Returns: undefined }
       generate_doc_number: {
         Args: { _doc_type: string; _year: number }
