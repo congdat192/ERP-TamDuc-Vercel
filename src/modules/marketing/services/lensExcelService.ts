@@ -174,7 +174,7 @@ export class LensExcelService {
     // Validate each row
     const validatedProducts = await Promise.all(
       rows.map((row, index) => 
-        this.validateRow(row, index, brands, allAttributes || [], existingSKUs)
+        this.validateRow(row, index, allAttributes || [], existingSKUs)
       )
     );
 

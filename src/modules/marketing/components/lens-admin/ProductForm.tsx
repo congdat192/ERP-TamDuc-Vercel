@@ -69,7 +69,7 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('lens_products')
-        .select('id, name, image_urls, price, sale_price, brand_id')
+        .select('id, name, image_urls, price, sale_price, attributes')
         .eq('is_active', true)
         .order('name');
       if (error) throw error;

@@ -16,7 +16,6 @@ interface ImportExcelDialogProps {
 export function ImportExcelDialog({
   open,
   onClose,
-  brands,
   onImportSuccess
 }: ImportExcelDialogProps) {
   const { toast } = useToast();
