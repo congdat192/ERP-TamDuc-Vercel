@@ -47,11 +47,7 @@ export function ProductCard({
           {product.name}
         </h3>
 
-        <p className="text-sm text-muted-foreground">
-          {Array.isArray(product.attributes?.lens_brand) 
-            ? product.attributes.lens_brand[0] 
-            : product.attributes?.lens_brand || '-'}
-        </p>
+        <p className="text-sm text-muted-foreground">{product.brand?.name}</p>
 
         <div className="flex gap-1 flex-wrap min-h-[24px]">
           {(() => {

@@ -100,11 +100,7 @@ export function CompareModal({ productIds, open, onOpenChange, onRemove }: Compa
                 <tr>
                   <td className="border p-2 font-medium">Thương hiệu</td>
                   {products.map((product) => (
-                    <td key={product!.id} className="border p-2">
-                      {Array.isArray(product!.attributes?.lens_brand) 
-                        ? product!.attributes.lens_brand[0] 
-                        : product!.attributes?.lens_brand || '-'}
-                    </td>
+                    <td key={product!.id} className="border p-2">{product!.brand?.name}</td>
                   ))}
                 </tr>
                 <tr>

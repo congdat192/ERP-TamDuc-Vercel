@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx';
-import { LensProduct } from '../types/lens';
+import { LensProduct, LensBrand } from '../types/lens';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface ExcelRow {
@@ -22,6 +22,7 @@ export interface ValidationResult {
   valid: boolean;
   errors: string[];
   action: 'INSERT' | 'UPDATE';
+  brandId?: string;
   featureIds?: string[];
 }
 
@@ -57,6 +58,7 @@ export class LensExcelService {
   static async validateRow(
     row: ExcelRow,
     rowIndex: number,
+    brands: LensBrand[],
     allAttributes: any[],
     existingSKUs: Set<string>
   ): Promise<ParsedProduct> {
@@ -87,7 +89,11 @@ export class LensExcelService {
       errors.push('SKU chỉ chứa chữ, số, dấu gạch ngang và gạch dưới');
     }
 
-    // Brand will be stored in attributes.lens_brand
+    // Brand exists
+    const brand = brands.find(b => b.name.toLowerCase() === brandName?.toLowerCase());
+    if (!brand && brandName) {
+      errors.push(`Thương hiệu "${brandName}" không tồn tại trong hệ thống`);
+    }
 
     // Parse multiselect attributes from columns
     const multiselectAttrs = allAttributes.filter(a => a.type === 'multiselect');
@@ -125,14 +131,10 @@ export class LensExcelService {
       ? Number(warrantyValue) 
       : null;
 
-    // Add brand to attributes
-    if (brandName) {
-      attributesData.lens_brand = [brandName];
-    }
-
     const parsedProduct: ParsedProduct = {
       sku,
       name,
+      brand_id: brand?.id,
       price,
       sale_price: salePrice,
       discount_percent: discountPercent,
@@ -148,6 +150,7 @@ export class LensExcelService {
         valid: errors.length === 0,
         errors,
         action,
+        brandId: brand?.id,
       },
       _originalRow: rowIndex + 2 // +2 because Excel is 1-indexed and has header row
     };
@@ -157,7 +160,8 @@ export class LensExcelService {
 
   // Validate all rows
   static async validateData(
-    rows: ExcelRow[]
+    rows: ExcelRow[],
+    brands: LensBrand[]
   ): Promise<ParsedProduct[]> {
     // Get existing SKUs from database
     const { data: existingProducts } = await supabase
@@ -174,7 +178,7 @@ export class LensExcelService {
     // Validate each row
     const validatedProducts = await Promise.all(
       rows.map((row, index) => 
-        this.validateRow(row, index, allAttributes || [], existingSKUs)
+        this.validateRow(row, index, brands, allAttributes || [], existingSKUs)
       )
     );
 
@@ -204,6 +208,7 @@ export class LensExcelService {
         const productsToUpsert = batch.map(p => ({
           sku: p.sku,
           name: p.name,
+          brand_id: p.brand_id,
           price: p.price,
           sale_price: p.sale_price,
           discount_percent: p.discount_percent,

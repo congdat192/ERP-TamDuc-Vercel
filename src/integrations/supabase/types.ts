@@ -1287,6 +1287,39 @@ export type Database = {
         }
         Relationships: []
       }
+      lens_brands: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          logo_url: string | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       lens_product_attributes: {
         Row: {
           created_at: string | null
@@ -1329,6 +1362,7 @@ export type Database = {
       lens_products: {
         Row: {
           attributes: Json | null
+          brand_id: string
           created_at: string | null
           created_by: string | null
           description: string | null
@@ -1352,6 +1386,7 @@ export type Database = {
         }
         Insert: {
           attributes?: Json | null
+          brand_id: string
           created_at?: string | null
           created_by?: string | null
           description?: string | null
@@ -1375,6 +1410,7 @@ export type Database = {
         }
         Update: {
           attributes?: Json | null
+          brand_id?: string
           created_at?: string | null
           created_by?: string | null
           description?: string | null
@@ -1396,7 +1432,15 @@ export type Database = {
           view_count?: number | null
           warranty_months?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "lens_products_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "lens_brands"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       modules: {
         Row: {

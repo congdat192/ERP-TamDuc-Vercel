@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { LensProduct } from '../../types/lens';
+import { LensProduct, LensBrand } from '../../types/lens';
 import { lensApi } from '../../services/lensApi';
 import { toast } from 'sonner';
 import { Upload, X, Check } from 'lucide-react';
@@ -20,19 +20,12 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 
 const schema = z.object({
+  brand_id: z.string().min(1, 'Vui lòng chọn thương hiệu'),
   name: z.string().min(1, 'Vui lòng nhập tên sản phẩm'),
   sku: z.string().optional(),
   description: z.string().optional(),
   price: z.number().min(0, 'Giá niêm yết phải lớn hơn 0'),
-  sale_price: z.preprocess(
-    (val) => {
-      if (val === null || val === undefined || val === '' || isNaN(Number(val))) {
-        return undefined;
-      }
-      return Number(val);
-    },
-    z.number().optional()
-  ),
+  sale_price: z.number().optional(),
   material: z.string().optional(),
   refractive_index: z.string().optional(),
   origin: z.string().optional(),
@@ -47,10 +40,11 @@ type FormData = z.infer<typeof schema>;
 interface ProductFormProps {
   open: boolean;
   product: LensProduct | null;
+  brands: LensBrand[];
   onClose: (success?: boolean) => void;
 }
 
-export function ProductForm({ open, product, onClose }: ProductFormProps) {
+export function ProductForm({ open, product, brands, onClose }: ProductFormProps) {
   const [attributeValues, setAttributeValues] = useState<Record<string, any>>({});
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
@@ -69,7 +63,7 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('lens_products')
-        .select('id, name, image_urls, price, sale_price, attributes')
+        .select('id, name, image_urls, price, sale_price, brand_id')
         .eq('is_active', true)
         .order('name');
       if (error) throw error;
@@ -108,6 +102,7 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
   useEffect(() => {
     if (product) {
       reset({
+        brand_id: product.brand_id,
         name: product.name,
         sku: product.sku || '',
         description: product.description || '',
@@ -301,6 +296,21 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
+              <Label>Thương hiệu *</Label>
+              <Select onValueChange={(v) => setValue('brand_id', v)} defaultValue={product?.brand_id}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Chọn thương hiệu" />
+                </SelectTrigger>
+                <SelectContent>
+                  {brands.map(brand => (
+                    <SelectItem key={brand.id} value={brand.id}>{brand.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.brand_id && <p className="text-sm text-destructive mt-1">{errors.brand_id.message}</p>}
+            </div>
+
+            <div>
               <Label>Tên sản phẩm *</Label>
               <Input {...register('name')} />
               {errors.name && <p className="text-sm text-destructive mt-1">{errors.name.message}</p>}
@@ -373,10 +383,10 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
                     onValueChange={(v) => {
                       setAttributeValues(prev => ({
                         ...prev,
-                        [attr.slug]: [v]
+                        [attr.slug]: v
                       }));
                     }}
-                    value={Array.isArray(attributeValues[attr.slug]) ? attributeValues[attr.slug][0] : attributeValues[attr.slug] || ''}
+                    value={attributeValues[attr.slug] || ''}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder={`Chọn ${attr.name.toLowerCase()}`} />
@@ -404,7 +414,8 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
                       </Label>
                       <div className="grid grid-cols-2 gap-2 pl-6">
                         {attr.options.map(option => {
-                          const isChecked = (attributeValues[attr.slug] || []).includes(option);
+                          const valueKey = `${attr.slug}_values`;
+                          const isChecked = (attributeValues[valueKey] || []).includes(option);
                           
                           return (
                             <div key={option} className="flex items-center space-x-2">
@@ -413,10 +424,10 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
                                 checked={isChecked}
                                 onCheckedChange={(checked) => {
                                   setAttributeValues(prev => {
-                                    const currentValues = prev[attr.slug] || [];
+                                    const currentValues = prev[valueKey] || [];
                                     return {
                                       ...prev,
-                                      [attr.slug]: checked
+                                      [valueKey]: checked
                                         ? [...currentValues, option]
                                         : currentValues.filter((v: string) => v !== option)
                                     };

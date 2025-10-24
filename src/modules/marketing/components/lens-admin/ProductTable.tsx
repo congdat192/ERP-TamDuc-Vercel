@@ -3,7 +3,7 @@ import { Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { LensProduct } from '../../types/lens';
+import { LensProduct, LensBrand } from '../../types/lens';
 import { lensApi } from '../../services/lensApi';
 import { toast } from 'sonner';
 import {
@@ -19,12 +19,17 @@ import {
 
 interface ProductTableProps {
   products: LensProduct[];
+  brands: LensBrand[];
   onEdit: (product: LensProduct) => void;
   onRefetch: () => void;
 }
 
-export function ProductTable({ products, onEdit, onRefetch }: ProductTableProps) {
+export function ProductTable({ products, brands, onEdit, onRefetch }: ProductTableProps) {
   const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  const getBrandName = (brandId: string) => {
+    return brands.find(b => b.id === brandId)?.name || '-';
+  };
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -66,22 +71,10 @@ export function ProductTable({ products, onEdit, onRefetch }: ProductTableProps)
               products.map((product) => (
                 <TableRow key={product.id}>
                   <TableCell className="font-medium">{product.name}</TableCell>
-                  <TableCell>
-                    {Array.isArray(product.attributes?.lens_brand) 
-                      ? product.attributes.lens_brand[0] 
-                      : product.attributes?.lens_brand || '-'}
-                  </TableCell>
+                  <TableCell>{getBrandName(product.brand_id)}</TableCell>
                   <TableCell>{product.price.toLocaleString('vi-VN')}₫</TableCell>
-                  <TableCell>
-                    {Array.isArray(product.attributes?.material) 
-                      ? product.attributes.material[0] 
-                      : product.attributes?.material || '-'}
-                  </TableCell>
-                  <TableCell>
-                    {Array.isArray(product.attributes?.refractive_index) 
-                      ? product.attributes.refractive_index[0] 
-                      : product.attributes?.refractive_index || '-'}
-                  </TableCell>
+                  <TableCell>{product.material || '-'}</TableCell>
+                  <TableCell>{product.refractive_index || '-'}</TableCell>
                   <TableCell>
                     <Badge variant={product.is_active ? 'default' : 'secondary'}>
                       {product.is_active ? 'Hoạt động' : 'Tạm ẩn'}

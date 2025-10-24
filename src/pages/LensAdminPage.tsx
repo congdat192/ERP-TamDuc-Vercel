@@ -40,6 +40,11 @@ export function LensAdminPage() {
     queryFn: () => lensApi.getProducts({}, 1, 100),
   });
 
+  const { data: brands } = useQuery({
+    queryKey: ['lens-brands'],
+    queryFn: () => lensApi.getBrands(),
+  });
+
   const products = productsData?.products || [];
 
   const handleCreate = () => {
@@ -89,6 +94,7 @@ export function LensAdminPage() {
 
           <ProductTable
             products={products}
+            brands={brands || []}
             onEdit={handleEdit}
             onRefetch={refetch}
           />
@@ -102,12 +108,14 @@ export function LensAdminPage() {
       <ProductForm
         open={isFormOpen}
         product={editingProduct}
+        brands={brands || []}
         onClose={handleFormClose}
       />
 
       <ImportExcelDialog
         open={isImportOpen}
         onClose={() => setIsImportOpen(false)}
+        brands={brands || []}
         onImportSuccess={refetch}
       />
     </div>

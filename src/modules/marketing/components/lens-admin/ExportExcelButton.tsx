@@ -38,14 +38,10 @@ export function ExportExcelButton() {
 
       // Format data for Excel
       const excelData = products.map(p => {
-        const brandName = Array.isArray(p.attributes?.lens_brand) 
-          ? p.attributes.lens_brand[0] 
-          : p.attributes?.lens_brand || '';
-          
         const row: any = {
           'Mã SKU*': p.sku,
           'Tên sản phẩm*': p.name,
-          'Thương hiệu*': brandName,
+          'Thương hiệu*': p.brand?.name || '',
           'Giá niêm yết (VNĐ)*': p.price,
           'Giá giảm (VNĐ)': p.sale_price || '',
           'Chất liệu': p.material || '',
