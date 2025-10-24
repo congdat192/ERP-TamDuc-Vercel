@@ -49,13 +49,14 @@ export function MediaLibraryDialog({
   const [uploadTags, setUploadTags] = useState('');
   const [isUploading, setIsUploading] = useState(false);
 
-  const { data: mediaItems = [], refetch } = useQuery({
+  const { data: mediaItems = [], refetch, error, isError, isLoading } = useQuery({
     queryKey: ['mediaLibrary', searchTerm, folderFilter],
     queryFn: () => lensApi.getMediaLibrary({
       search: searchTerm,
       folder: folderFilter || undefined,
     }),
     enabled: open,
+    retry: 1,
   });
 
   const { data: folders = [] } = useQuery({
@@ -180,75 +181,97 @@ export function MediaLibraryDialog({
               </Select>
             </div>
 
-            <ScrollArea className="h-[450px]">
-              <div className="grid grid-cols-4 gap-4">
-                {mediaItems.map(media => (
-                  <div
-                    key={media.id}
-                    className={`relative group border-2 rounded-lg overflow-hidden cursor-pointer transition-all ${
-                      selectedIds.includes(media.id)
-                        ? 'border-primary ring-2 ring-primary/20'
-                        : 'border-border hover:border-primary/50'
-                    }`}
-                    onClick={() => handleSelect(media.id)}
-                  >
-                    <img
-                      src={supabase.storage.from('lens-images').getPublicUrl(media.file_path).data.publicUrl}
-                      alt={media.alt_text || media.file_name}
-                      className="w-full h-32 object-cover"
-                    />
-                    
-                    {selectedIds.includes(media.id) && (
-                      <div className="absolute top-2 right-2 bg-primary rounded-full p-1">
-                        <Check className="w-4 h-4 text-primary-foreground" />
-                      </div>
-                    )}
+            {isError && (
+              <Alert variant="destructive">
+                <AlertDescription>
+                  Lỗi tải thư viện: {error?.message || 'Không thể kết nối đến storage'}
+                </AlertDescription>
+              </Alert>
+            )}
 
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2">
-                      <p className="text-white text-xs truncate">{media.file_name}</p>
-                      <div className="flex gap-1 mt-1 flex-wrap">
-                        {media.tags.slice(0, 2).map(tag => (
-                          <Badge key={tag} variant="secondary" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                      <p className="text-white/80 text-xs mt-1">
-                        Sử dụng: {media.usage_count}
-                      </p>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        className="mt-2"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteMedia(media.id);
-                        }}
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+            {isLoading && (
+              <div className="text-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+                <p className="text-muted-foreground mt-4">Đang tải thư viện...</p>
               </div>
-              
-              {mediaItems.length === 0 && !searchTerm && !folderFilter && (
-                <div className="text-center py-12">
-                  <p className="text-muted-foreground mb-4">
-                    Chưa có ảnh nào trong thư viện
-                  </p>
-                  <Button onClick={() => setActiveTab('upload')}>
-                    Upload ảnh đầu tiên
-                  </Button>
-                </div>
-              )}
+            )}
 
-              {mediaItems.length === 0 && (searchTerm || folderFilter) && (
-                <div className="text-center py-12 text-muted-foreground">
-                  Không tìm thấy ảnh phù hợp với bộ lọc
+            {!isLoading && !isError && (
+              <ScrollArea className="h-[450px]">
+                <div className="grid grid-cols-4 gap-4">
+                  {mediaItems.map(media => (
+                    <div
+                      key={media.id}
+                      className={`relative group border-2 rounded-lg overflow-hidden cursor-pointer transition-all ${
+                        selectedIds.includes(media.id)
+                          ? 'border-primary ring-2 ring-primary/20'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                      onClick={() => handleSelect(media.id)}
+                    >
+                      <img
+                        src={supabase.storage.from('lens-images').getPublicUrl(media.file_path).data.publicUrl}
+                        alt={media.alt_text || media.file_name}
+                        className="w-full h-32 object-cover"
+                      />
+                      
+                      {selectedIds.includes(media.id) && (
+                        <div className="absolute top-2 right-2 bg-primary rounded-full p-1">
+                          <Check className="w-4 h-4 text-primary-foreground" />
+                        </div>
+                      )}
+
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2">
+                        <p className="text-white text-xs truncate">{media.file_name}</p>
+                        <div className="flex gap-1 mt-1 flex-wrap">
+                          {media.tags.slice(0, 2).map(tag => (
+                            <Badge key={tag} variant="secondary" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                        <p className="text-white/80 text-xs mt-1">
+                          Sử dụng: {media.usage_count}
+                        </p>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          className="mt-2"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteMedia(media.id);
+                          }}
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              )}
-            </ScrollArea>
+                
+                {mediaItems.length === 0 && !searchTerm && !folderFilter && (
+                  <div className="text-center py-12">
+                    <Upload className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground mb-4">
+                      Chưa có ảnh nào trong thư viện
+                    </p>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Upload ảnh vào bucket lens-images để bắt đầu
+                    </p>
+                    <Button onClick={() => setActiveTab('upload')}>
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload ảnh đầu tiên
+                    </Button>
+                  </div>
+                )}
+
+                {mediaItems.length === 0 && (searchTerm || folderFilter) && (
+                  <div className="text-center py-12 text-muted-foreground">
+                    Không tìm thấy ảnh phù hợp với bộ lọc
+                  </div>
+                )}
+              </ScrollArea>
+            )}
 
             <div className="flex justify-between items-center border-t pt-4">
               <p className="text-sm text-muted-foreground">

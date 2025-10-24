@@ -333,12 +333,26 @@ export const lensApi = {
   // ============= MEDIA LIBRARY (Storage Only) =============
 
   async getMediaLibrary(filters?: MediaLibraryFilters): Promise<LensMediaItem[]> {
-    // List files from all folders (products, banners, brands)
-    const folders = ['products', 'banners', 'brands'];
-    const allFiles: Array<{ file: any; folder: string; file_path: string }> = [];
+    try {
+      // Check if bucket exists first
+      const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
+      if (bucketError) {
+        console.error('Error listing buckets:', bucketError);
+        throw new Error('Không thể truy cập storage buckets');
+      }
 
-    // Fetch files from each folder
-    for (const folder of folders) {
+      const bucketExists = buckets?.some(b => b.name === 'lens-images');
+      if (!bucketExists) {
+        console.warn('Bucket lens-images does not exist');
+        return [];
+      }
+
+      // List files from all folders (products, banners, brands)
+      const folders = ['products', 'banners', 'brands'];
+      const allFiles: Array<{ file: any; folder: string; file_path: string }> = [];
+
+      // Fetch files from each folder
+      for (const folder of folders) {
       // Skip if filtering by specific folder and this isn't it
       if (filters?.folder && filters.folder !== folder) continue;
 
@@ -355,10 +369,15 @@ export const lensApi = {
           continue; // Skip missing folder
         }
 
+        if (!files || files.length === 0) {
+          console.warn(`Folder ${folder} is empty`);
+          continue;
+        }
+
         // Add files with folder info
-        (files || []).forEach(file => {
-          // Only include actual files (id !== null), skip subdirectories
-          if (file.id !== null) {
+        files.forEach(file => {
+          // Ensure file has required properties
+          if (file.id && file.name) {
             allFiles.push({
               file,
               folder,
@@ -381,28 +400,32 @@ export const lensApi = {
       );
     }
 
-    // Convert to LensMediaItem format
-    const mediaItems: LensMediaItem[] = filteredFiles.map(item => ({
-      id: item.file.id || crypto.randomUUID(),
-      file_name: item.file.name,
-      file_path: item.file_path,
-      file_size: item.file.metadata?.size || 0,
-      mime_type: item.file.metadata?.mimetype || 'image/jpeg',
-      width: null,
-      height: null,
-      folder: item.folder,
-      tags: [],
-      alt_text: null,
-      caption: null,
-      used_in_products: [],
-      usage_count: 0,
-      is_active: true,
-      uploaded_by: null,
-      created_at: item.file.created_at || new Date().toISOString(),
-      updated_at: item.file.updated_at || new Date().toISOString(),
-    }));
+      // Convert to LensMediaItem format
+      const mediaItems: LensMediaItem[] = filteredFiles.map(item => ({
+        id: item.file.id || crypto.randomUUID(),
+        file_name: item.file.name,
+        file_path: item.file_path,
+        file_size: item.file.metadata?.size || 0,
+        mime_type: item.file.metadata?.mimetype || 'image/jpeg',
+        width: null,
+        height: null,
+        folder: item.folder,
+        tags: [],
+        alt_text: null,
+        caption: null,
+        used_in_products: [],
+        usage_count: 0,
+        is_active: true,
+        uploaded_by: null,
+        created_at: item.file.created_at || new Date().toISOString(),
+        updated_at: item.file.updated_at || new Date().toISOString(),
+      }));
 
-    return mediaItems;
+      return mediaItems;
+    } catch (error) {
+      console.error('Unexpected error in getMediaLibrary:', error);
+      throw error;
+    }
   },
 
   async getImageDimensions(file: File): Promise<{ width: number; height: number }> {
