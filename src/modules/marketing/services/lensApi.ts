@@ -33,8 +33,22 @@ export const lensApi = {
     // Build query without pagination first
     let query = supabase
       .from('lens_products')
-      .select('*')
+      .select(`
+        *,
+        supply_tiers:lens_supply_tiers!inner(*),
+        use_case_scores:lens_product_use_case_scores(*, use_case:lens_use_cases(*))
+      `)
       .eq('is_active', true);
+
+    // Apply SPH/CYL filters at SQL level if provided
+    if (filters?.sph !== undefined && filters?.cyl !== undefined) {
+      query = query
+        .eq('supply_tiers.is_active', true)
+        .gte('supply_tiers.sph_max', filters.sph)
+        .lte('supply_tiers.sph_min', filters.sph)
+        .gte('supply_tiers.cyl_max', filters.cyl)
+        .lte('supply_tiers.cyl_min', filters.cyl);
+    }
 
     // Apply price filters (can be done in SQL)
     if (filters?.minPrice !== null && filters?.minPrice !== undefined) {
@@ -89,6 +103,26 @@ export const lensApi = {
           // ANY filter value must exist in product values (OR logic within same attribute)
           return filterValues.some(fv => productValues.includes(fv));
         });
+      });
+    }
+
+    // Apply use cases filter
+    if (filters?.useCases && filters.useCases.length > 0) {
+      filteredProducts = filteredProducts.filter(product => {
+        const scores = (product as any).use_case_scores || [];
+        return filters.useCases!.some(uc => 
+          scores.some((s: any) => s.use_case?.code === uc && s.score >= 50)
+        );
+      });
+    }
+
+    // Apply tier type filter
+    if (filters?.availableTiers && filters.availableTiers.length > 0) {
+      filteredProducts = filteredProducts.filter(product => {
+        const tiers = (product as any).supply_tiers || [];
+        return tiers.some((t: any) => 
+          filters.availableTiers!.includes(t.tier_type) && t.is_active
+        );
       });
     }
 

@@ -61,6 +61,11 @@ export interface LensFilters {
   maxPrice: number | null;
   search: string;
   sort: 'newest' | 'price-asc' | 'price-desc' | 'popular';
+  // Enhanced filters for quiz/advanced filtering
+  sph?: number;
+  cyl?: number;
+  useCases?: string[]; // ['computer_work', 'driving']
+  availableTiers?: ('IN_STORE' | 'NEXT_DAY' | 'CUSTOM_ORDER' | 'FACTORY_ORDER')[];
 }
 
 export interface LensProductWithDetails extends LensProduct {
