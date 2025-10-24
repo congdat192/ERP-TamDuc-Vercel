@@ -103,3 +103,46 @@ export interface MediaUploadResult {
   media: LensMediaItem;
   url: string;
 }
+
+export interface LensRecommendationGroup {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  icon: string | null;
+  color: string;
+  display_order: number;
+  is_active: boolean;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+  product_count?: number;
+}
+
+export interface LensRecommendationProduct {
+  id: string;
+  group_id: string;
+  product_id: string;
+  display_order: number;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface CreateRecommendationGroupInput {
+  name: string;
+  slug: string;
+  description?: string;
+  icon?: string;
+  color?: string;
+  display_order?: number;
+}
+
+export interface UpdateRecommendationGroupInput {
+  name?: string;
+  slug?: string;
+  description?: string;
+  icon?: string;
+  color?: string;
+  display_order?: number;
+  is_active?: boolean;
+}

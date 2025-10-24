@@ -1,5 +1,18 @@
 import { supabase } from '@/integrations/supabase/client';
-import { LensBrand, LensProduct, LensBanner, LensFilters, LensProductWithDetails, LensProductAttribute, LensMediaItem, MediaLibraryFilters, MediaUploadResult } from '../types/lens';
+import { 
+  LensBrand, 
+  LensProduct, 
+  LensBanner, 
+  LensFilters, 
+  LensProductWithDetails, 
+  LensProductAttribute, 
+  LensMediaItem, 
+  MediaLibraryFilters, 
+  MediaUploadResult,
+  LensRecommendationGroup,
+  CreateRecommendationGroupInput,
+  UpdateRecommendationGroupInput
+} from '../types/lens';
 
 export const lensApi = {
   // Brands - Get unique brands from products' attributes
@@ -517,5 +530,179 @@ export const lensApi = {
   async getMediaFolders(): Promise<string[]> {
     // Hardcoded folders to avoid issues with Storage API returning folders with id = null
     return ['products', 'banners', 'brands'];
+  },
+
+  // ============= RECOMMENDATION GROUPS =============
+  
+  // Get all recommendation groups with product count
+  async getRecommendationGroups(): Promise<LensRecommendationGroup[]> {
+    const { data: groups, error } = await supabase
+      .from('lens_recommendation_groups')
+      .select('*')
+      .eq('is_active', true)
+      .order('display_order');
+    
+    if (error) throw error;
+
+    // Get product counts for each group
+    const groupsWithCounts = await Promise.all(
+      (groups || []).map(async (group) => {
+        const { count } = await supabase
+          .from('lens_recommendation_products')
+          .select('*', { count: 'exact', head: true })
+          .eq('group_id', group.id);
+        
+        return {
+          ...group,
+          product_count: count || 0
+        };
+      })
+    );
+
+    return groupsWithCounts;
+  },
+
+  // Get products by recommendation group
+  async getProductsByRecommendation(groupId: string): Promise<{
+    products: LensProductWithDetails[];
+    total: number;
+  }> {
+    const { data: recommendationProducts, error } = await supabase
+      .from('lens_recommendation_products')
+      .select(`
+        product_id,
+        display_order,
+        product:lens_products(
+          *,
+          supply_tiers:lens_supply_tiers(*),
+          use_case_scores:lens_product_use_case_scores(*, use_case:lens_use_cases(*))
+        )
+      `)
+      .eq('group_id', groupId)
+      .order('display_order');
+    
+    if (error) throw error;
+    
+    const products = (recommendationProducts || [])
+      .map(rp => rp.product as any)
+      .filter(p => p && p.is_active);
+    
+    return {
+      products: products as LensProductWithDetails[],
+      total: products.length
+    };
+  },
+
+  // Admin: Create recommendation group
+  async createRecommendationGroup(data: CreateRecommendationGroupInput): Promise<LensRecommendationGroup> {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    const { data: group, error } = await supabase
+      .from('lens_recommendation_groups')
+      .insert({
+        ...data,
+        created_by: user?.id
+      })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return group;
+  },
+
+  // Admin: Update recommendation group
+  async updateRecommendationGroup(id: string, data: UpdateRecommendationGroupInput): Promise<LensRecommendationGroup> {
+    const { data: group, error } = await supabase
+      .from('lens_recommendation_groups')
+      .update(data)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return group;
+  },
+
+  // Admin: Delete recommendation group
+  async deleteRecommendationGroup(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('lens_recommendation_groups')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+  },
+
+  // Admin: Add product to recommendation group
+  async addProductToGroup(groupId: string, productId: string, displayOrder?: number): Promise<void> {
+    const { error } = await supabase
+      .from('lens_recommendation_products')
+      .insert({
+        group_id: groupId,
+        product_id: productId,
+        display_order: displayOrder ?? 0
+      });
+    
+    if (error) {
+      // Handle duplicate error gracefully
+      if (error.code === '23505') {
+        throw new Error('Sản phẩm đã có trong nhóm này');
+      }
+      throw error;
+    }
+  },
+
+  // Admin: Remove product from recommendation group
+  async removeProductFromGroup(groupId: string, productId: string): Promise<void> {
+    const { error } = await supabase
+      .from('lens_recommendation_products')
+      .delete()
+      .eq('group_id', groupId)
+      .eq('product_id', productId);
+    
+    if (error) throw error;
+  },
+
+  // Admin: Reorder products in a group
+  async reorderGroupProducts(groupId: string, productOrders: { productId: string; order: number }[]): Promise<void> {
+    const updates = productOrders.map(({ productId, order }) =>
+      supabase
+        .from('lens_recommendation_products')
+        .update({ display_order: order })
+        .eq('group_id', groupId)
+        .eq('product_id', productId)
+    );
+
+    const results = await Promise.all(updates);
+    const errors = results.filter(r => r.error);
+    
+    if (errors.length > 0) {
+      throw errors[0].error;
+    }
+  },
+
+  // Admin: Get products in a specific group (with full product details)
+  async getGroupProducts(groupId: string): Promise<Array<LensProductWithDetails & { display_order: number; notes: string | null }>> {
+    const { data, error } = await supabase
+      .from('lens_recommendation_products')
+      .select(`
+        display_order,
+        notes,
+        product:lens_products(
+          *,
+          supply_tiers:lens_supply_tiers(*),
+          use_case_scores:lens_product_use_case_scores(*, use_case:lens_use_cases(*))
+        )
+      `)
+      .eq('group_id', groupId)
+      .order('display_order');
+    
+    if (error) throw error;
+    
+    return (data || []).map(item => ({
+      ...(item.product as any),
+      display_order: item.display_order,
+      notes: item.notes
+    }));
   },
 };
