@@ -11,6 +11,8 @@ import { ProductForm } from '@/modules/marketing/components/lens-admin/ProductFo
 import { ImportExcelDialog } from '@/modules/marketing/components/lens-admin/ImportExcelDialog';
 import { ExportExcelButton } from '@/modules/marketing/components/lens-admin/ExportExcelButton';
 import { AttributeManager } from '@/modules/marketing/components/lens-admin/AttributeManager';
+import { SupplyTiersManager } from '@/modules/marketing/components/lens-admin/SupplyTiersManager';
+import { UseCaseScoringManager } from '@/modules/marketing/components/lens-admin/UseCaseScoringManager';
 import { LensProduct } from '@/modules/marketing/types/lens';
 import { toast } from 'sonner';
 
@@ -35,6 +37,7 @@ export function LensAdminPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<LensProduct | null>(null);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
 
   const { data: productsData, refetch } = useQuery({
     queryKey: ['admin-lens-products'],
@@ -119,6 +122,10 @@ export function LensAdminPage() {
             onEdit={handleEdit}
             onClone={handleClone}
             onRefetch={refetch}
+            onSelect={(id) => {
+              setSelectedProductId(id);
+              setActiveTab('tiers');
+            }}
           />
         </TabsContent>
 
@@ -127,19 +134,47 @@ export function LensAdminPage() {
         </TabsContent>
 
         <TabsContent value="tiers" className="space-y-4">
-          <div className="text-center py-12 border-2 border-dashed rounded-lg">
-            <p className="text-muted-foreground">
-              Chọn một sản phẩm để quản lý tầng cung ứng
-            </p>
-          </div>
+          {selectedProductId ? (
+            <>
+              <div className="flex justify-between items-center mb-4 p-4 border rounded-lg bg-accent/20">
+                <h3 className="font-semibold">
+                  Quản lý tầng cung ứng: {products.find(p => p.id === selectedProductId)?.name}
+                </h3>
+                <Button variant="outline" onClick={() => setSelectedProductId(null)}>
+                  Đóng
+                </Button>
+              </div>
+              <SupplyTiersManager productId={selectedProductId} />
+            </>
+          ) : (
+            <div className="text-center py-12 border-2 border-dashed rounded-lg">
+              <p className="text-muted-foreground">
+                Chọn một sản phẩm từ tab "Danh sách sản phẩm" để quản lý tầng cung ứng
+              </p>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="usecases" className="space-y-4">
-          <div className="text-center py-12 border-2 border-dashed rounded-lg">
-            <p className="text-muted-foreground">
-              Chọn một sản phẩm để chấm điểm use cases
-            </p>
-          </div>
+          {selectedProductId ? (
+            <>
+              <div className="flex justify-between items-center mb-4 p-4 border rounded-lg bg-accent/20">
+                <h3 className="font-semibold">
+                  Chấm điểm use cases: {products.find(p => p.id === selectedProductId)?.name}
+                </h3>
+                <Button variant="outline" onClick={() => setSelectedProductId(null)}>
+                  Đóng
+                </Button>
+              </div>
+              <UseCaseScoringManager productId={selectedProductId} />
+            </>
+          ) : (
+            <div className="text-center py-12 border-2 border-dashed rounded-lg">
+              <p className="text-muted-foreground">
+                Chọn một sản phẩm từ tab "Danh sách sản phẩm" để chấm điểm use cases
+              </p>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 

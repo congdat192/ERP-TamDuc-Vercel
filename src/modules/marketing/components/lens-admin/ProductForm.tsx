@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useQuery } from '@tanstack/react-query';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -253,6 +253,11 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{product?.id ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'}</DialogTitle>
+          <DialogDescription>
+            {product?.id 
+              ? 'Cập nhật thông tin sản phẩm, tầng cung ứng và use cases' 
+              : 'Tạo sản phẩm mới với thông tin chi tiết'}
+          </DialogDescription>
         </DialogHeader>
 
         {product?.id ? (
@@ -579,8 +584,342 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
           </Tabs>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* ... keep existing code for product info (images, name, etc.) ... */}
-            {/* Copy the entire form content from line 256-548 here */}
+          {/* Multi-Image Upload */}
+          <div className="space-y-2">
+            <Label>Hình ảnh sản phẩm</Label>
+            
+            {existingImages.length > 0 && (
+              <div className="grid grid-cols-5 gap-2">
+                {existingImages.map((url, index) => (
+                  <div key={url} className="relative group">
+                    <img
+                      src={url}
+                      alt={`Product ${index + 1}`}
+                      className="w-full h-24 object-cover rounded border"
+                    />
+                    {index === 0 && <Badge className="absolute top-1 left-1 text-xs">Chính</Badge>}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="destructive"
+                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 h-6 w-6 p-0"
+                      onClick={() => handleRemoveExistingImage(url)}
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {imagePreviews.length > 0 && (
+              <div className="grid grid-cols-5 gap-2">
+                {imagePreviews.map((preview, index) => (
+                  <div key={preview} className="relative group">
+                    <img
+                      src={preview}
+                      alt={`New ${index + 1}`}
+                      className="w-full h-24 object-cover rounded border border-primary"
+                    />
+                    <Badge className="absolute top-1 left-1 text-xs">Mới</Badge>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="destructive"
+                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 h-6 w-6 p-0"
+                      onClick={() => handleRemoveNewImage(index)}
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowMediaLibrary(true)}
+                className="flex-1"
+              >
+                <Search className="w-4 h-4 mr-2" />
+                Chọn từ thư viện
+              </Button>
+              
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => document.getElementById('file-upload')?.click()}
+                className="flex-1"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Upload ảnh mới
+              </Button>
+            </div>
+
+            <input
+              id="file-upload"
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={handleImagesChange}
+            />
+
+            <p className="text-xs text-muted-foreground">
+              Tối đa 10 ảnh. Ảnh đầu tiên sẽ là ảnh đại diện.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Tên sản phẩm *</Label>
+              <Input {...register('name')} />
+              {errors.name && <p className="text-sm text-destructive mt-1">{errors.name.message}</p>}
+            </div>
+
+            <div>
+              <Label>SKU</Label>
+              <Input {...register('sku')} placeholder="RODEN-CM-156" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Giá niêm yết * (VD: 1,000,000)</Label>
+              <Input type="number" {...register('price', { valueAsNumber: true })} />
+              {errors.price && <p className="text-sm text-destructive mt-1">{errors.price.message}</p>}
+            </div>
+
+            <div>
+              <Label>Giá giảm (để trống nếu không KM)</Label>
+              <Input 
+                type="number" 
+                {...register('sale_price', { valueAsNumber: true })} 
+                placeholder="VD: 800,000"
+              />
+              {errors.sale_price && (
+                <p className="text-sm text-destructive mt-1">{errors.sale_price.message}</p>
+              )}
+              {discountPercent && (
+                <p className="text-xs text-green-600 mt-1 font-semibold">
+                  ⚡ Giảm {discountPercent}%
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <Label>Mô tả</Label>
+            <Textarea {...register('description')} rows={3} />
+          </div>
+
+          {/* Select Attributes */}
+          <div className="grid grid-cols-2 gap-4">
+            {attributes
+              .filter(attr => attr.type === 'select')
+              .map(attr => (
+                <div key={attr.id}>
+                  <Label>
+                    {attr.icon && <span className="mr-2">{attr.icon}</span>}
+                    {attr.name}
+                  </Label>
+                  <Select 
+                    onValueChange={(v) => {
+                      setAttributeValues(prev => ({
+                        ...prev,
+                        [attr.slug]: [v]
+                      }));
+                    }}
+                    value={attributeValues[attr.slug]?.[0] || ''}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={`Chọn ${attr.name.toLowerCase()}`} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {attr.options.map(option => (
+                        <SelectItem key={option} value={option}>{option}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ))}
+          </div>
+
+          {/* Multiselect Attributes */}
+          {attributes.filter(attr => attr.type === 'multiselect').length > 0 && (
+            <div>
+              <Label>Tính năng (chọn nhiều)</Label>
+              <div className="mt-2 space-y-4">
+                {attributes
+                  .filter(attr => attr.type === 'multiselect')
+                  .map(attr => (
+                    <div key={attr.id}>
+                      <Label className="font-semibold mb-2 flex items-center">
+                        {attr.icon} {attr.name}
+                      </Label>
+                      <div className="grid grid-cols-2 gap-2 pl-6">
+                        {attr.options.map(option => {
+                          const isChecked = (attributeValues[attr.slug] || []).includes(option);
+                          
+                          return (
+                            <div key={option} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`${attr.id}-${option}`}
+                                checked={isChecked}
+                                onCheckedChange={(checked) => {
+                                  setAttributeValues(prev => {
+                                    const currentValues = prev[attr.slug] || [];
+                                    return {
+                                      ...prev,
+                                      [attr.slug]: checked
+                                        ? [...currentValues, option]
+                                        : currentValues.filter((v: string) => v !== option)
+                                    };
+                                  });
+                                }}
+                              />
+                              <Label htmlFor={`${attr.id}-${option}`} className="cursor-pointer text-sm">
+                                {option}
+                              </Label>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+
+          {/* Promotion Settings */}
+          <div className="space-y-4 p-4 border rounded-lg bg-accent/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-base font-semibold">Đánh dấu khuyến mãi</Label>
+                <p className="text-sm text-muted-foreground">Hiển thị badge HOT trên sản phẩm</p>
+              </div>
+              <Switch
+                checked={isPromotion}
+                onCheckedChange={(checked) => {
+                  const event = {
+                    target: { name: 'is_promotion', value: checked }
+                  } as any;
+                  register('is_promotion').onChange(event);
+                }}
+              />
+            </div>
+
+            {isPromotion && (
+              <div>
+                <Label>Text khuyến mãi (tùy chọn)</Label>
+                <Input
+                  {...register('promotion_text')}
+                  placeholder="VD: Giảm 20% cuối tuần"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Nếu để trống sẽ hiện badge HOT
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Related Products Section */}
+          <div className="space-y-3 p-4 border rounded-lg">
+            <Label className="text-base font-semibold">Sản phẩm liên quan (tùy chọn)</Label>
+            
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder="Tìm kiếm sản phẩm..."
+                value={relatedProductsSearch}
+                onChange={(e) => setRelatedProductsSearch(e.target.value)}
+              />
+            </div>
+
+            {selectedRelatedIds.length > 0 && (
+              <div className="flex flex-wrap gap-2 p-3 bg-accent/20 rounded">
+                {allProducts
+                  .filter(p => selectedRelatedIds.includes(p.id))
+                  .map(product => (
+                    <Badge key={product.id} variant="secondary" className="gap-2">
+                      {product.name}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedRelatedIds(prev => prev.filter(id => id !== product.id))}
+                        className="hover:text-destructive"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </Badge>
+                  ))}
+              </div>
+            )}
+
+            <ScrollArea className="h-48 border rounded">
+              <div className="p-2 space-y-1">
+                {availableProducts.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Không tìm thấy sản phẩm
+                  </p>
+                ) : (
+                  availableProducts.map(p => {
+                    const isSelected = selectedRelatedIds.includes(p.id);
+                    const brand = (p.attributes as any)?.lens_brand?.[0];
+                    
+                    return (
+                      <div
+                        key={p.id}
+                        className={`flex items-center gap-3 p-2 rounded cursor-pointer hover:bg-accent ${
+                          isSelected ? 'bg-accent' : ''
+                        }`}
+                        onClick={() => {
+                          setSelectedRelatedIds(prev =>
+                            isSelected
+                              ? prev.filter(id => id !== p.id)
+                              : [...prev, p.id]
+                          );
+                        }}
+                      >
+                        {p.image_urls?.[0] && (
+                          <img
+                            src={p.image_urls[0]}
+                            alt={p.name}
+                            className="w-10 h-10 object-cover rounded"
+                          />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{p.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {brand || 'Không có thương hiệu'} • {p.price.toLocaleString('vi-VN')}₫
+                          </p>
+                        </div>
+                        {isSelected && <Check className="w-4 h-4 text-primary flex-shrink-0" />}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </ScrollArea>
+          </div>
+
+          {/* Status Switch */}
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div>
+              <Label className="text-base font-semibold">Trạng thái hoạt động</Label>
+              <p className="text-sm text-muted-foreground">Cho phép hiển thị sản phẩm trên website</p>
+            </div>
+            <Switch
+              checked={watch('is_active')}
+              onCheckedChange={(checked) => {
+                const event = {
+                  target: { name: 'is_active', value: checked }
+                } as any;
+                register('is_active').onChange(event);
+              }}
+            />
+          </div>
+
             <div className="flex gap-2 pt-4">
               <Button type="button" variant="outline" onClick={() => onClose()} disabled={isSubmitting}>
                 Hủy

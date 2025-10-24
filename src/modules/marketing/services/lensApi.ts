@@ -35,7 +35,7 @@ export const lensApi = {
       .from('lens_products')
       .select(`
         *,
-        supply_tiers:lens_supply_tiers!inner(*),
+        supply_tiers:lens_supply_tiers(*),
         use_case_scores:lens_product_use_case_scores(*, use_case:lens_use_cases(*))
       `)
       .eq('is_active', true);

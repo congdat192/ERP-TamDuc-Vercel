@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pencil, Trash2, Copy } from 'lucide-react';
+import { Pencil, Trash2, Copy, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -22,9 +22,10 @@ interface ProductTableProps {
   onEdit: (product: LensProduct) => void;
   onClone: (product: LensProduct) => void;
   onRefetch: () => void;
+  onSelect?: (productId: string) => void;
 }
 
-export function ProductTable({ products, onEdit, onClone, onRefetch }: ProductTableProps) {
+export function ProductTable({ products, onEdit, onClone, onRefetch, onSelect }: ProductTableProps) {
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const handleDelete = async () => {
@@ -78,6 +79,17 @@ export function ProductTable({ products, onEdit, onClone, onRefetch }: ProductTa
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
+                      {onSelect && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => onSelect(product.id)}
+                          title="Quản lý Tiers & Use Cases"
+                          className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                        >
+                          <Settings className="w-4 h-4" />
+                        </Button>
+                      )}
                       <Button
                         size="sm"
                         variant="ghost"
