@@ -7,11 +7,27 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { X } from 'lucide-react';
+import { X, GripVertical } from 'lucide-react';
 import { lensApi } from '../../services/lensApi';
 import { LensProductAttribute } from '../../types/lens';
 import { toast } from 'sonner';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 const schema = z.object({
   name: z.string().min(1, 'Vui lòng nhập tên thuộc tính'),
@@ -28,6 +44,44 @@ interface Props {
   onClose: (success?: boolean) => void;
 }
 
+function SortableOptionItem({ option, onRemove }: { option: string; onRemove: () => void }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: option });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-2 px-3 py-2 bg-secondary rounded-lg group"
+    >
+      <div
+        {...attributes}
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing"
+      >
+        <GripVertical className="w-4 h-4 text-muted-foreground" />
+      </div>
+      <span className="flex-1 text-sm">{option}</span>
+      <X
+        className="w-4 h-4 text-muted-foreground hover:text-destructive cursor-pointer"
+        onClick={onRemove}
+      />
+    </div>
+  );
+}
+
 export function AttributeFormDialog({ open, attribute, onClose }: Props) {
   const [options, setOptions] = useState<string[]>([]);
   const [newOption, setNewOption] = useState('');
@@ -42,6 +96,24 @@ export function AttributeFormDialog({ open, attribute, onClose }: Props) {
   });
 
   const selectedType = watch('type');
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setOptions((items) => {
+        const oldIndex = items.indexOf(active.id as string);
+        const newIndex = items.indexOf(over.id as string);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
 
   useEffect(() => {
     if (attribute) {
@@ -177,26 +249,48 @@ export function AttributeFormDialog({ open, attribute, onClose }: Props) {
               />
               <Button type="button" onClick={handleAddOption}>Thêm</Button>
             </div>
-            <div className="flex flex-wrap gap-2 min-h-[40px] border rounded-md p-2">
+            <div className="space-y-2">
               {options.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  {selectedType === 'select' 
-                    ? 'Chưa có giá trị nào (VD: Plastic, Hi-Index, CR-39)' 
-                    : 'Chưa có giá trị nào (VD: Chống UV, Chống xước, Đổi màu)'}
-                </p>
+                <div className="flex items-center justify-center min-h-[80px] border rounded-md bg-muted/30">
+                  <p className="text-sm text-muted-foreground">
+                    {selectedType === 'select' 
+                      ? 'Chưa có giá trị nào (VD: Plastic, Hi-Index, CR-39)' 
+                      : 'Chưa có giá trị nào (VD: Chống UV, Chống xước, Đổi màu)'}
+                  </p>
+                </div>
               ) : (
-                options.map(opt => (
-                  <Badge key={opt} variant="secondary" className="cursor-pointer hover:bg-destructive hover:text-destructive-foreground">
-                    {opt}
-                    <X className="w-3 h-3 ml-1" onClick={() => handleRemoveOption(opt)} />
-                  </Badge>
-                ))
+                <>
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext
+                      items={options}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className="space-y-2 max-h-[300px] overflow-y-auto border rounded-md p-2">
+                        {options.map((opt) => (
+                          <SortableOptionItem
+                            key={opt}
+                            option={opt}
+                            onRemove={() => handleRemoveOption(opt)}
+                          />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <GripVertical className="w-3 h-3" />
+                    Kéo thả để sắp xếp thứ tự hiển thị
+                  </p>
+                </>
               )}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               {selectedType === 'select' 
-                ? '💡 Khi thêm sản phẩm, bạn sẽ chọn 1 giá trị từ danh sách này'
-                : '💡 Khi thêm sản phẩm, bạn sẽ chọn nhiều giá trị từ danh sách này (checkbox)'}
+                ? '💡 Thứ tự bên trên sẽ là thứ tự hiển thị khi thêm sản phẩm (chọn 1 giá trị)'
+                : '💡 Thứ tự bên trên sẽ là thứ tự hiển thị khi thêm sản phẩm (chọn nhiều giá trị)'}
             </p>
           </div>
 
