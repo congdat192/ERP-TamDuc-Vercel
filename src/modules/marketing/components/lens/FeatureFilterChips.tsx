@@ -46,7 +46,7 @@ export function FeatureFilterChips({ features }: FeatureFilterChipsProps) {
               {chip.label}
               
               {isActive && activeCount > 1 && (
-                <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 shadow-sm pointer-events-none z-10">
+                <span className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 bg-blue-600 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 shadow-sm pointer-events-none z-10">
                   {activeCount}
                 </span>
               )}
