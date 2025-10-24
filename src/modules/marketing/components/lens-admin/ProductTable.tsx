@@ -72,8 +72,16 @@ export function ProductTable({ products, onEdit, onRefetch }: ProductTableProps)
                       : product.attributes?.lens_brand || '-'}
                   </TableCell>
                   <TableCell>{product.price.toLocaleString('vi-VN')}₫</TableCell>
-                  <TableCell>{product.material || '-'}</TableCell>
-                  <TableCell>{product.refractive_index || '-'}</TableCell>
+                  <TableCell>
+                    {Array.isArray(product.attributes?.material) 
+                      ? product.attributes.material[0] 
+                      : product.attributes?.material || '-'}
+                  </TableCell>
+                  <TableCell>
+                    {Array.isArray(product.attributes?.refractive_index) 
+                      ? product.attributes.refractive_index[0] 
+                      : product.attributes?.refractive_index || '-'}
+                  </TableCell>
                   <TableCell>
                     <Badge variant={product.is_active ? 'default' : 'secondary'}>
                       {product.is_active ? 'Hoạt động' : 'Tạm ẩn'}
