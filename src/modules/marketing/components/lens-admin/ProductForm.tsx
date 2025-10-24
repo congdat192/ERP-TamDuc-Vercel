@@ -25,7 +25,14 @@ const schema = z.object({
   sku: z.string().optional(),
   description: z.string().optional(),
   price: z.number().min(0, 'Giá niêm yết phải lớn hơn 0'),
-  sale_price: z.number().optional(),
+  sale_price: z.preprocess(
+    (val) => {
+      if (val === '' || val === null || val === undefined) return undefined;
+      const num = Number(val);
+      return isNaN(num) ? undefined : num;
+    },
+    z.number().positive("Giá giảm phải lớn hơn 0").optional()
+  ),
   is_promotion: z.boolean(),
   promotion_text: z.string().optional(),
   is_active: z.boolean(),
@@ -361,6 +368,9 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
                 {...register('sale_price', { valueAsNumber: true })} 
                 placeholder="VD: 800,000"
               />
+              {errors.sale_price && (
+                <p className="text-sm text-destructive mt-1">{errors.sale_price.message}</p>
+              )}
               {discountPercent && (
                 <p className="text-xs text-green-600 mt-1 font-semibold">
                   ⚡ Giảm {discountPercent}%
