@@ -13,9 +13,8 @@ export function SortDropdown() {
 
   return (
     <Select value={filters.sort} onValueChange={(value: any) => updateFilter('sort', value)}>
-      <SelectTrigger className="w-[180px]">
-        <ArrowUpDown className="w-4 h-4 mr-2" />
-        <SelectValue />
+      <SelectTrigger className="w-auto p-2 border-border" title="Sắp xếp">
+        <ArrowUpDown className="w-5 h-5 text-blue-600" />
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="newest">Mới nhất</SelectItem>

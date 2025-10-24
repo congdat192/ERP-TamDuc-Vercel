@@ -78,10 +78,10 @@ export function LensCatalogPage() {
             <>
               <button
                 onClick={() => setShowAdvancedFilters(true)}
-                className="px-4 py-2 text-sm font-medium rounded-lg border border-border hover:bg-accent transition-colors flex items-center gap-2 whitespace-nowrap"
+                className="p-2 rounded-lg border border-border hover:bg-accent transition-colors"
+                title="Lọc nâng cao"
               >
-                <Filter className="w-4 h-4" />
-                Lọc nâng cao
+                <Filter className="w-5 h-5 text-blue-600" />
               </button>
               <SortDropdown />
             </>
