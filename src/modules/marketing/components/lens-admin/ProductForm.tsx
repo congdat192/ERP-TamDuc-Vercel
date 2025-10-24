@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { LensProduct, LensBrand } from '../../types/lens';
+import { LensProduct } from '../../types/lens';
 import { lensApi } from '../../services/lensApi';
 import { toast } from 'sonner';
 import { Upload, X, Check } from 'lucide-react';
@@ -20,7 +20,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 
 const schema = z.object({
-  brand_id: z.string().min(1, 'Vui lòng chọn thương hiệu'),
   name: z.string().min(1, 'Vui lòng nhập tên sản phẩm'),
   sku: z.string().optional(),
   description: z.string().optional(),
@@ -48,11 +47,10 @@ type FormData = z.infer<typeof schema>;
 interface ProductFormProps {
   open: boolean;
   product: LensProduct | null;
-  brands: LensBrand[];
   onClose: (success?: boolean) => void;
 }
 
-export function ProductForm({ open, product, brands, onClose }: ProductFormProps) {
+export function ProductForm({ open, product, onClose }: ProductFormProps) {
   const [attributeValues, setAttributeValues] = useState<Record<string, any>>({});
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
@@ -110,7 +108,6 @@ export function ProductForm({ open, product, brands, onClose }: ProductFormProps
   useEffect(() => {
     if (product) {
       reset({
-        brand_id: product.brand_id,
         name: product.name,
         sku: product.sku || '',
         description: product.description || '',
@@ -303,21 +300,6 @@ export function ProductForm({ open, product, brands, onClose }: ProductFormProps
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Thương hiệu *</Label>
-              <Select onValueChange={(v) => setValue('brand_id', v)} defaultValue={product?.brand_id}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Chọn thương hiệu" />
-                </SelectTrigger>
-                <SelectContent>
-                  {brands.map(brand => (
-                    <SelectItem key={brand.id} value={brand.id}>{brand.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.brand_id && <p className="text-sm text-destructive mt-1">{errors.brand_id.message}</p>}
-            </div>
-
             <div>
               <Label>Tên sản phẩm *</Label>
               <Input {...register('name')} />

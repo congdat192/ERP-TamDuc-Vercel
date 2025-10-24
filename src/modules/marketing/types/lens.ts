@@ -1,14 +1,3 @@
-export interface LensBrand {
-  id: string;
-  name: string;
-  logo_url: string | null;
-  description: string | null;
-  display_order: number;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface LensProductAttribute {
   id: string;
   name: string;
@@ -24,7 +13,6 @@ export interface LensProductAttribute {
 
 export interface LensProduct {
   id: string;
-  brand_id: string;
   name: string;
   sku: string | null;
   description: string | null;
@@ -45,7 +33,6 @@ export interface LensProduct {
   created_at: string;
   updated_at: string;
   created_by: string | null;
-  brand?: LensBrand;
 }
 
 export interface LensBanner {
@@ -72,6 +59,4 @@ export interface LensFilters {
   sort: 'newest' | 'price-asc' | 'price-desc' | 'popular';
 }
 
-export interface LensProductWithDetails extends LensProduct {
-  brand: LensBrand;
-}
+export interface LensProductWithDetails extends LensProduct {}

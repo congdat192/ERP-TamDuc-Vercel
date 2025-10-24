@@ -141,7 +141,11 @@ export function ProductDetailModal({
               <div>
                 <p className="text-base">
                   <span className="text-muted-foreground">Thương hiệu:</span>{' '}
-                  <span className="font-semibold">{product.brand?.name}</span>
+                  <span className="font-semibold">
+                    {Array.isArray(product.attributes?.lens_brand) 
+                      ? product.attributes.lens_brand[0] 
+                      : product.attributes?.lens_brand || '-'}
+                  </span>
                 </p>
               </div>
 
@@ -296,11 +300,11 @@ export function ProductDetailModal({
                         )}
                       </div>
                       
-                      {relatedProduct.brand && (
-                        <p className="text-xs text-muted-foreground">
-                          {relatedProduct.brand.name}
-                        </p>
-                      )}
+                      <p className="text-xs text-muted-foreground">
+                        {Array.isArray(relatedProduct.attributes?.lens_brand) 
+                          ? relatedProduct.attributes.lens_brand[0] 
+                          : relatedProduct.attributes?.lens_brand || '-'}
+                      </p>
                     </div>
                   </button>
                 ))}

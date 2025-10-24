@@ -6,12 +6,10 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
 import { lensExcelService, ParsedProduct } from '../../services/lensExcelService';
-import { LensBrand } from '../../types/lens';
 
 interface ImportExcelDialogProps {
   open: boolean;
   onClose: () => void;
-  brands: LensBrand[];
   onImportSuccess: () => void;
 }
 
@@ -68,7 +66,7 @@ export function ImportExcelDialog({
       }
 
       // Validate data
-      const validated = await lensExcelService.validateData(rows, brands);
+      const validated = await lensExcelService.validateData(rows);
       setParsedProducts(validated);
       setStep('preview');
     } catch (error: any) {

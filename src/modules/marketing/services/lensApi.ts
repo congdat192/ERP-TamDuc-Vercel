@@ -1,20 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
-import { LensBrand, LensProduct, LensBanner, LensFilters, LensProductWithDetails, LensProductAttribute } from '../types/lens';
+import { LensProduct, LensBanner, LensFilters, LensProductWithDetails, LensProductAttribute } from '../types/lens';
 
 export const lensApi = {
-  // Brands (kept for backward compatibility, but soft-deleted)
-  async getBrands(): Promise<LensBrand[]> {
-    const { data, error } = await supabase
-      .from('lens_brands')
-      .select('*')
-      .eq('is_active', true)
-      .is('deleted_at', null)
-      .order('display_order');
-    
-    if (error) throw error;
-    return data || [];
-  },
-
   // Products
   async getProducts(
     filters?: Partial<LensFilters>,
@@ -157,16 +144,6 @@ export const lensApi = {
         related_product_ids: Array.isArray(data.related_product_ids) 
           ? data.related_product_ids as string[] 
           : [],
-        brand: { 
-          id: '', 
-          name: '', 
-          logo_url: null, 
-          description: null, 
-          display_order: 0, 
-          is_active: true, 
-          created_at: '', 
-          updated_at: '' 
-        }
       } as LensProductWithDetails;
     } catch (error) {
       console.error('Error fetching product:', error);
@@ -194,16 +171,6 @@ export const lensApi = {
         related_product_ids: Array.isArray(product.related_product_ids) 
           ? product.related_product_ids as string[] 
           : [],
-        brand: { 
-          id: '', 
-          name: '', 
-          logo_url: null, 
-          description: null, 
-          display_order: 0, 
-          is_active: true, 
-          created_at: '', 
-          updated_at: '' 
-        }
       })) as LensProductWithDetails[];
     } catch (error) {
       console.error('Error fetching related products:', error);
