@@ -24,7 +24,6 @@ export interface LensProductAttribute {
 
 export interface LensProduct {
   id: string;
-  brand_id: string;
   name: string;
   sku: string | null;
   description: string | null;
@@ -32,11 +31,7 @@ export interface LensProduct {
   sale_price: number | null;
   discount_percent: number | null;
   image_urls: string[];
-  material: string | null;
-  refractive_index: string | null;
-  origin: string | null;
-  warranty_months: number | null;
-  attributes: Record<string, any>;
+  attributes: Record<string, string[]>; // JSONB: {"slug": ["value1", "value2"]}
   is_promotion: boolean;
   promotion_text: string | null;
   view_count: number;
@@ -61,18 +56,13 @@ export interface LensBanner {
 }
 
 export interface LensFilters {
-  brandIds: string[];
-  featureIds: string[];
-  material: string | null;
-  refractiveIndex: string | null;
+  attributeFilters: Record<string, string[]>; // {"lens_brand": ["CHEMI"], "tinh_nang_trong": ["Chống UV400"]}
   minPrice: number | null;
   maxPrice: number | null;
-  origin: string | null;
-  hasWarranty: boolean;
   search: string;
   sort: 'newest' | 'price-asc' | 'price-desc' | 'popular';
 }
 
 export interface LensProductWithDetails extends LensProduct {
-  brand: LensBrand;
+  // No additional fields needed - brand info is in attributes
 }

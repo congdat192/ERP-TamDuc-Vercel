@@ -6,19 +6,32 @@ interface FeatureFilterChipsProps {
 }
 
 export function FeatureFilterChips({ features }: FeatureFilterChipsProps) {
-  const { filters, toggleFeature } = useLensFilters();
+  const { filters, toggleAttributeValue } = useLensFilters();
   
+  // Get multiselect attributes and flatten their options
   const multiselectAttrs = features.filter(f => f.type === 'multiselect');
+  
+  const chips: { slug: string; value: string; label: string; icon: string | null }[] = [];
+  multiselectAttrs.forEach(attr => {
+    (attr.options as string[]).forEach(option => {
+      chips.push({
+        slug: attr.slug,
+        value: option,
+        label: option,
+        icon: attr.icon,
+      });
+    });
+  });
 
   return (
     <div className="px-4 py-3 overflow-x-auto">
       <div className="flex gap-2 min-w-max">
-        {multiselectAttrs.map((feature) => {
-          const isActive = filters.featureIds.includes(feature.id);
+        {chips.map((chip, index) => {
+          const isActive = filters.attributeFilters[chip.slug]?.includes(chip.value) || false;
           return (
             <button
-              key={feature.id}
-              onClick={() => toggleFeature(feature.id)}
+              key={`${chip.slug}-${chip.value}-${index}`}
+              onClick={() => toggleAttributeValue(chip.slug, chip.value)}
               className={cn(
                 'px-4 py-2 rounded-lg border text-sm font-medium transition-all whitespace-nowrap',
                 isActive
@@ -26,8 +39,8 @@ export function FeatureFilterChips({ features }: FeatureFilterChipsProps) {
                   : 'bg-background border-border hover:bg-accent'
               )}
             >
-              {feature.icon && <span className="mr-1">{feature.icon}</span>}
-              {feature.name}
+              {chip.icon && <span className="mr-1">{chip.icon}</span>}
+              {chip.label}
             </button>
           );
         })}

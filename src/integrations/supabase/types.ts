@@ -1287,39 +1287,6 @@ export type Database = {
         }
         Relationships: []
       }
-      lens_brands: {
-        Row: {
-          created_at: string | null
-          description: string | null
-          display_order: number | null
-          id: string
-          is_active: boolean | null
-          logo_url: string | null
-          name: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          description?: string | null
-          display_order?: number | null
-          id?: string
-          is_active?: boolean | null
-          logo_url?: string | null
-          name: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          description?: string | null
-          display_order?: number | null
-          id?: string
-          is_active?: boolean | null
-          logo_url?: string | null
-          name?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       lens_product_attributes: {
         Row: {
           created_at: string | null
@@ -1362,7 +1329,6 @@ export type Database = {
       lens_products: {
         Row: {
           attributes: Json | null
-          brand_id: string
           created_at: string | null
           created_by: string | null
           description: string | null
@@ -1371,22 +1337,17 @@ export type Database = {
           image_urls: Json | null
           is_active: boolean | null
           is_promotion: boolean | null
-          material: string | null
           name: string
-          origin: string | null
           price: number
           promotion_text: string | null
-          refractive_index: string | null
           related_product_ids: Json | null
           sale_price: number | null
           sku: string | null
           updated_at: string | null
           view_count: number | null
-          warranty_months: number | null
         }
         Insert: {
           attributes?: Json | null
-          brand_id: string
           created_at?: string | null
           created_by?: string | null
           description?: string | null
@@ -1395,22 +1356,17 @@ export type Database = {
           image_urls?: Json | null
           is_active?: boolean | null
           is_promotion?: boolean | null
-          material?: string | null
           name: string
-          origin?: string | null
           price?: number
           promotion_text?: string | null
-          refractive_index?: string | null
           related_product_ids?: Json | null
           sale_price?: number | null
           sku?: string | null
           updated_at?: string | null
           view_count?: number | null
-          warranty_months?: number | null
         }
         Update: {
           attributes?: Json | null
-          brand_id?: string
           created_at?: string | null
           created_by?: string | null
           description?: string | null
@@ -1419,28 +1375,16 @@ export type Database = {
           image_urls?: Json | null
           is_active?: boolean | null
           is_promotion?: boolean | null
-          material?: string | null
           name?: string
-          origin?: string | null
           price?: number
           promotion_text?: string | null
-          refractive_index?: string | null
           related_product_ids?: Json | null
           sale_price?: number | null
           sku?: string | null
           updated_at?: string | null
           view_count?: number | null
-          warranty_months?: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "lens_products_brand_id_fkey"
-            columns: ["brand_id"]
-            isOneToOne: false
-            referencedRelation: "lens_brands"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       modules: {
         Row: {

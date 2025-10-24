@@ -60,55 +60,44 @@ export function useLensFilters() {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 
-  const toggleBrand = (brandId: string) => {
-    setFilters(prev => ({
-      ...prev,
-      brandIds: prev.brandIds.includes(brandId)
-        ? prev.brandIds.filter(id => id !== brandId)
-        : [...prev.brandIds, brandId]
-    }));
-  };
-
-  const toggleFeature = (featureId: string) => {
-    setFilters(prev => ({
-      ...prev,
-      featureIds: prev.featureIds.includes(featureId)
-        ? prev.featureIds.filter(id => id !== featureId)
-        : [...prev.featureIds, featureId]
-    }));
+  const toggleAttributeValue = (slug: string, value: string) => {
+    setFilters(prev => {
+      const currentValues = prev.attributeFilters[slug] || [];
+      const newValues = currentValues.includes(value)
+        ? currentValues.filter(v => v !== value)
+        : [...currentValues, value];
+      
+      const newAttributeFilters = { ...prev.attributeFilters };
+      if (newValues.length === 0) {
+        delete newAttributeFilters[slug];
+      } else {
+        newAttributeFilters[slug] = newValues;
+      }
+      
+      return { ...prev, attributeFilters: newAttributeFilters };
+    });
   };
 
   const clearFilters = () => {
     setFilters({
-      brandIds: [],
-      featureIds: [],
-      material: null,
-      refractiveIndex: null,
+      attributeFilters: {},
       minPrice: null,
       maxPrice: null,
-      origin: null,
-      hasWarranty: false,
       search: '',
       sort: 'newest',
     });
   };
 
   const hasActiveFilters = 
-    filters.brandIds.length > 0 ||
-    filters.featureIds.length > 0 ||
-    filters.material !== null ||
-    filters.refractiveIndex !== null ||
+    Object.keys(filters.attributeFilters).length > 0 ||
     filters.minPrice !== null ||
     filters.maxPrice !== null ||
-    filters.origin !== null ||
-    filters.hasWarranty ||
     filters.search !== '';
 
   return {
     filters,
     updateFilter,
-    toggleBrand,
-    toggleFeature,
+    toggleAttributeValue,
     clearFilters,
     hasActiveFilters,
   };
