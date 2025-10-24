@@ -47,7 +47,9 @@ export function LensCatalogPage() {
 
   // Fetch products based on recommendation or regular filters
   const { data: productsData, isLoading } = useQuery({
-    queryKey: ['lens-products', filters, page, selectedRecommendation?.id],
+    queryKey: selectedRecommendation 
+      ? ['lens-products-recommendation', selectedRecommendation.id]
+      : ['lens-products', filters, page],
     queryFn: () => {
       if (selectedRecommendation) {
         return lensApi.getProductsByRecommendation(selectedRecommendation.id);
@@ -78,34 +80,57 @@ export function LensCatalogPage() {
     setPage(1);
   }, [filters]);
 
-  // Auto clear recommendation when user applies filters
-  const hasShownToast = useRef(false);
-  
+  // Infinite loop detector
+  const renderCountRef = useRef(0);
+  const renderTimestampRef = useRef(Date.now());
+
   useEffect(() => {
-    if (hasActiveFilters && selectedRecommendation && !hasShownToast.current) {
-      setSelectedRecommendation(null);
-      hasShownToast.current = true;
-      toast({
-        title: "Đã tắt tư vấn nhanh",
-        description: "Bộ lọc thủ công đã được áp dụng",
-      });
-    } else if (!hasActiveFilters) {
-      hasShownToast.current = false;
+    const now = Date.now();
+    if (now - renderTimestampRef.current < 1000) {
+      renderCountRef.current += 1;
+      
+      if (renderCountRef.current > 50) {
+        console.error('🚨 INFINITE LOOP DETECTED! Render count:', renderCountRef.current);
+        toast({
+          title: "Lỗi hệ thống",
+          description: "Trang đang bị lỗi vòng lặp. Vui lòng tải lại trang.",
+          variant: "destructive",
+        });
+        renderCountRef.current = 0; // Reset to prevent spam
+      }
+    } else {
+      renderCountRef.current = 0;
+      renderTimestampRef.current = now;
     }
-  }, [hasActiveFilters]);
+  });
 
   const handleRecommendationSelect = (group: LensRecommendationGroup | null) => {
     setSelectedRecommendation(group);
     if (group) {
-      clearFilters(); // Clear existing filters when selecting recommendation
+      clearFilters();
+      toast({
+        title: "Đã chọn tư vấn nhanh",
+        description: `Hiển thị ${group.name}`,
+      });
     }
     setPage(1);
+  };
+
+  const handleFilterChange = <K extends keyof typeof filters>(key: K, value: any) => {
+    if (selectedRecommendation) {
+      setSelectedRecommendation(null);
+      toast({
+        title: "Đã tắt tư vấn nhanh",
+        description: "Bộ lọc thủ công đã được áp dụng",
+      });
+    }
+    updateFilter(key, value);
   };
 
   return (
     <div className="min-h-screen bg-background">
       <LensAppBar 
-        onSearchChange={(q) => updateFilter('search', q)}
+        onSearchChange={(q) => handleFilterChange('search', q)}
         compareCount={compareState.count}
         onCompareClick={() => setShowCompareModal(true)}
         selectedRecommendation={selectedRecommendation}
