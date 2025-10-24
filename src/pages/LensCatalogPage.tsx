@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Filter } from 'lucide-react';
+import { Filter, Sliders } from 'lucide-react';
 import { lensApi } from '@/modules/marketing/services/lensApi';
 import { useLensFilters } from '@/modules/marketing/hooks/useLensFilters';
 import { useCompare } from '@/modules/marketing/hooks/useCompare';
@@ -8,6 +8,7 @@ import { LensAppBar } from '@/modules/marketing/components/lens/LensAppBar';
 import { FeatureFilterChips } from '@/modules/marketing/components/lens/FeatureFilterChips';
 import { AttributeDropdownFilters } from '@/modules/marketing/components/lens/AttributeDropdownFilters';
 import { AdvancedFilterDrawer } from '@/modules/marketing/components/lens/AdvancedFilterDrawer';
+import { SupplyUseCaseFilterDrawer } from '@/modules/marketing/components/lens/SupplyUseCaseFilterDrawer';
 import { SortDropdown } from '@/modules/marketing/components/lens/SortDropdown';
 import { ProductGrid } from '@/modules/marketing/components/lens/ProductGrid';
 import { BannerGrid } from '@/modules/marketing/components/lens/BannerGrid';
@@ -23,6 +24,7 @@ export function LensCatalogPage() {
   const [selectedProduct, setSelectedProduct] = useState<LensProductWithDetails | null>(null);
   const [showCompareModal, setShowCompareModal] = useState(false);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [showSupplyUseCaseFilters, setShowSupplyUseCaseFilters] = useState(false);
 
   const { data: brandsData } = useQuery({
     queryKey: ['lens-brands'],
@@ -79,9 +81,16 @@ export function LensCatalogPage() {
               <button
                 onClick={() => setShowAdvancedFilters(true)}
                 className="p-2 rounded-lg border border-border hover:bg-accent transition-colors"
-                title="Lọc nâng cao"
+                title="Lọc theo thương hiệu & tính năng"
               >
                 <Filter className="w-5 h-5 text-blue-600" />
+              </button>
+              <button
+                onClick={() => setShowSupplyUseCaseFilters(true)}
+                className="p-2 rounded-lg border border-border hover:bg-accent transition-colors"
+                title="Lọc theo thông số, nhu cầu & tầng cung ứng"
+              >
+                <Sliders className="w-5 h-5 text-purple-600" />
               </button>
               <SortDropdown />
             </>
@@ -136,6 +145,11 @@ export function LensCatalogPage() {
         open={showAdvancedFilters}
         onOpenChange={setShowAdvancedFilters}
         attributes={attributes || []}
+      />
+
+      <SupplyUseCaseFilterDrawer
+        open={showSupplyUseCaseFilters}
+        onOpenChange={setShowSupplyUseCaseFilters}
       />
 
       {selectedProduct && (
