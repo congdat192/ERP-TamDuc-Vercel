@@ -9,17 +9,18 @@ interface AttributeFilterChipsProps {
 export function AttributeFilterChips({ attributes }: AttributeFilterChipsProps) {
   const { filters, toggleAttributeOption } = useLensFilters();
 
-  // Only show multiselect attributes that have options
-  const multiselectAttributes = attributes.filter(
-    attr => attr.type === 'multiselect' && attr.is_active && attr.options?.length > 0
+  // Show both select and multiselect attributes as chips
+  // Users can multi-select for filtering even on select-type attributes
+  const chipAttributes = attributes.filter(
+    attr => attr.is_active && attr.options?.length > 0
   );
 
-  if (multiselectAttributes.length === 0) return null;
+  if (chipAttributes.length === 0) return null;
 
   return (
     <div className="px-4 py-3 overflow-x-auto border-t">
       <div className="space-y-4">
-        {multiselectAttributes.map((attribute) => {
+        {chipAttributes.map((attribute) => {
           const selectedOptions = filters.attributeFilters[attribute.slug] || [];
           
           return (
