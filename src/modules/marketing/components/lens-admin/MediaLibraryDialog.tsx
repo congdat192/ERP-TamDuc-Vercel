@@ -44,7 +44,7 @@ export function MediaLibraryDialog({
   const [activeTab, setActiveTab] = useState<'library' | 'upload'>('library');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [folderFilter, setFolderFilter] = useState<string>('');
+  const [folderFilter, setFolderFilter] = useState<string>('all');
   const [uploadFiles, setUploadFiles] = useState<File[]>([]);
   const [uploadFolder, setUploadFolder] = useState('products');
   const [uploadTags, setUploadTags] = useState('');
@@ -54,7 +54,7 @@ export function MediaLibraryDialog({
     queryKey: ['mediaLibrary', searchTerm, folderFilter],
     queryFn: () => lensApi.getMediaLibrary({
       search: searchTerm,
-      folder: folderFilter || undefined,
+      folder: folderFilter === 'all' ? undefined : folderFilter,
     }),
     enabled: open,
     retry: 1,
@@ -172,7 +172,7 @@ export function MediaLibraryDialog({
                   <SelectValue placeholder="Tất cả folder" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tất cả folder</SelectItem>
+                  <SelectItem value="all">Tất cả folder</SelectItem>
                   {folders.map(folder => (
                     <SelectItem key={folder} value={folder}>
                       {folder}

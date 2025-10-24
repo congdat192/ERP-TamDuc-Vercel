@@ -334,62 +334,49 @@ export const lensApi = {
 
   async getMediaLibrary(filters?: MediaLibraryFilters): Promise<LensMediaItem[]> {
     try {
-      // Check if bucket exists first
-      const { data: buckets, error: bucketError } = await supabase.storage.listBuckets();
-      if (bucketError) {
-        console.error('Error listing buckets:', bucketError);
-        throw new Error('Không thể truy cập storage buckets');
-      }
-
-      const bucketExists = buckets?.some(b => b.name === 'lens-images');
-      if (!bucketExists) {
-        console.warn('Bucket lens-images does not exist');
-        return [];
-      }
-
       // List files from all folders (products, banners, brands)
       const folders = ['products', 'banners', 'brands'];
       const allFiles: Array<{ file: any; folder: string; file_path: string }> = [];
 
       // Fetch files from each folder
       for (const folder of folders) {
-      // Skip if filtering by specific folder and this isn't it
-      if (filters?.folder && filters.folder !== folder) continue;
+        // Skip if filtering by specific folder and this isn't it
+        if (filters?.folder && filters.folder !== folder) continue;
 
-      try {
-        const { data: files, error } = await supabase.storage
-          .from('lens-images')
-          .list(folder, {
-            limit: 1000,
-            sortBy: { column: 'created_at', order: 'desc' }
-          });
-
-        if (error) {
-          console.warn(`Folder ${folder} not found or empty:`, error);
-          continue; // Skip missing folder
-        }
-
-        if (!files || files.length === 0) {
-          console.warn(`Folder ${folder} is empty`);
-          continue;
-        }
-
-        // Add files with folder info
-        files.forEach(file => {
-          // Ensure file has required properties
-          if (file.id && file.name) {
-            allFiles.push({
-              file,
-              folder,
-              file_path: `${folder}/${file.name}`
+        try {
+          const { data: files, error } = await supabase.storage
+            .from('lens-images')
+            .list(folder, {
+              limit: 1000,
+              sortBy: { column: 'created_at', order: 'desc' }
             });
+
+          if (error) {
+            console.warn(`Error listing folder ${folder}:`, error);
+            continue; // Skip missing folder
           }
-        });
-      } catch (err) {
-        console.warn(`Error listing ${folder}:`, err);
-        continue; // Skip folder with errors
+
+          if (!files || files.length === 0) {
+            console.info(`Folder ${folder} is empty`);
+            continue;
+          }
+
+          // Add files with folder info
+          files.forEach(file => {
+            // Ensure file has required properties
+            if (file.id && file.name) {
+              allFiles.push({
+                file,
+                folder,
+                file_path: `${folder}/${file.name}`
+              });
+            }
+          });
+        } catch (err) {
+          console.warn(`Unexpected error listing ${folder}:`, err);
+          continue; // Skip folder with errors
+        }
       }
-    }
 
     // Filter by search term (client-side)
     let filteredFiles = allFiles;
