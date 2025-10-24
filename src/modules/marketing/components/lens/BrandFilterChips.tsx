@@ -5,14 +5,18 @@ import { cn } from '@/lib/utils';
 
 interface BrandFilterChipsProps {
   brands: LensBrand[];
+  actionButtons?: React.ReactNode;
 }
 
-export function BrandFilterChips({ brands }: BrandFilterChipsProps) {
+export function BrandFilterChips({ brands, actionButtons }: BrandFilterChipsProps) {
   const { filters, toggleAttributeValue } = useLensFilters();
 
   return (
-    <div className="px-4 py-3 overflow-x-auto border-t">
-      <div className="flex gap-2 min-w-max">
+    <div className="px-4 py-3 border-t">
+      <div className="flex items-center gap-4">
+        {/* Scrollable brand chips */}
+        <div className="flex-1 overflow-x-auto">
+          <div className="flex gap-2 min-w-max">
         {brands.map((brand) => {
           const isActive = filters.attributeFilters.lens_brand?.includes(brand.name) || false;
           return (
@@ -42,6 +46,19 @@ export function BrandFilterChips({ brands }: BrandFilterChipsProps) {
             </button>
           );
         })}
+          </div>
+        </div>
+
+        {/* Vertical divider and action buttons */}
+        {actionButtons && (
+          <>
+            <div className="h-8 w-px bg-border flex-shrink-0" />
+            
+            <div className="flex items-center gap-3 flex-shrink-0">
+              {actionButtons}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

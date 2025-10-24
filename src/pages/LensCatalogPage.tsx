@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Filter } from 'lucide-react';
 import { lensApi } from '@/modules/marketing/services/lensApi';
 import { useLensFilters } from '@/modules/marketing/hooks/useLensFilters';
 import { useCompare } from '@/modules/marketing/hooks/useCompare';
@@ -71,18 +72,21 @@ export function LensCatalogPage() {
       {/* Sticky Filter Section */}
       <div className="sticky top-16 z-40 bg-background border-b">
         <FeatureFilterChips features={features} />
-        <BrandFilterChips brands={brands} />
-        
-        <div className="flex items-center justify-between px-4 py-3 border-t">
-          <button
-            onClick={() => setShowAdvancedFilters(true)}
-            className="px-4 py-2 text-sm font-medium rounded-lg border border-border hover:bg-accent transition-colors"
-          >
-            Lọc nâng cao
-          </button>
-          
-          <SortDropdown />
-        </div>
+        <BrandFilterChips 
+          brands={brands}
+          actionButtons={
+            <>
+              <button
+                onClick={() => setShowAdvancedFilters(true)}
+                className="px-4 py-2 text-sm font-medium rounded-lg border border-border hover:bg-accent transition-colors flex items-center gap-2 whitespace-nowrap"
+              >
+                <Filter className="w-4 h-4" />
+                Lọc nâng cao
+              </button>
+              <SortDropdown />
+            </>
+          }
+        />
       </div>
 
       <main className="container mx-auto px-4 py-6 space-y-8">
