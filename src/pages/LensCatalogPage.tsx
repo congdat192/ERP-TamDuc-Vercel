@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Filter, Sliders, LayoutGrid, Table as TableIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -79,15 +79,20 @@ export function LensCatalogPage() {
   }, [filters]);
 
   // Auto clear recommendation when user applies filters
+  const hasShownToast = useRef(false);
+  
   useEffect(() => {
-    if (hasActiveFilters && selectedRecommendation) {
+    if (hasActiveFilters && selectedRecommendation && !hasShownToast.current) {
       setSelectedRecommendation(null);
+      hasShownToast.current = true;
       toast({
         title: "Đã tắt tư vấn nhanh",
         description: "Bộ lọc thủ công đã được áp dụng",
       });
+    } else if (!hasActiveFilters) {
+      hasShownToast.current = false;
     }
-  }, [hasActiveFilters, selectedRecommendation]);
+  }, [hasActiveFilters]);
 
   const handleRecommendationSelect = (group: LensRecommendationGroup | null) => {
     setSelectedRecommendation(group);
