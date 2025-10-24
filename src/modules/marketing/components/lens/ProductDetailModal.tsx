@@ -36,12 +36,6 @@ export function ProductDetailModal({
   const supplyTiers = productWithExtras.supply_tiers || [];
   const useCaseScores = productWithExtras.use_case_scores || [];
 
-  // Fetch attributes from React Query cache
-  const { data: attributes = [] } = useQuery({
-    queryKey: ['lens-attributes'],
-    queryFn: () => lensApi.getAttributes(),
-  });
-
   const { data: relatedProducts = [] } = useQuery({
     queryKey: ['related-products', product.id],
     queryFn: async () => {
@@ -191,7 +185,8 @@ export function ProductDetailModal({
               </div>
 
               {(() => {
-                const multiselectAttrs = attributes.filter((a: any) => a.type === 'multiselect');
+                const allAttributes = (window as any).__allAttributes || [];
+                const multiselectAttrs = allAttributes.filter((a: any) => a.type === 'multiselect');
                 const hasAnyFeatures = multiselectAttrs.some((attr: any) => {
                   return product.attributes?.[attr.slug]?.length > 0;
                 });

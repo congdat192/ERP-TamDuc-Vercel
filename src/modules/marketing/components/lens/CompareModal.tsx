@@ -24,12 +24,6 @@ export function CompareModal({ productIds, open, onOpenChange, onRemove }: Compa
     enabled: open && productIds.length > 0,
   });
 
-  // Fetch attributes from React Query cache
-  const { data: attributes = [] } = useQuery({
-    queryKey: ['lens-attributes'],
-    queryFn: () => lensApi.getAttributes(),
-  });
-
   if (isLoading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -133,7 +127,8 @@ export function CompareModal({ productIds, open, onOpenChange, onRemove }: Compa
                     <td key={product!.id} className="border p-2">
                       <div className="flex flex-wrap gap-1">
                         {(() => {
-                          const multiselectAttrs = attributes.filter((a: any) => a.type === 'multiselect');
+                          const allAttributes = (window as any).__allAttributes || [];
+                          const multiselectAttrs = allAttributes.filter((a: any) => a.type === 'multiselect');
                           
                           return multiselectAttrs.map((attr: any) => {
                             const selectedValues = product!.attributes?.[attr.slug] || [];

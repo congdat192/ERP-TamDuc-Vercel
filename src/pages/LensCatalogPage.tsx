@@ -21,8 +21,6 @@ import { CompareModal } from '@/modules/marketing/components/lens/CompareModal';
 import { LensProductWithDetails, LensRecommendationGroup } from '@/modules/marketing/types/lens';
 import { getAdvancedFilterCount, getSupplyUseCaseFilterCount } from '@/modules/marketing/utils/filterCount';
 
-const PAGE_SIZE = 8;
-
 export function LensCatalogPage() {
   const { filters, updateFilter, clearFilters, hasActiveFilters } = useLensFilters();
   const compareState = useCompare();
@@ -49,14 +47,12 @@ export function LensCatalogPage() {
 
   // Fetch products based on recommendation or regular filters
   const { data: productsData, isLoading } = useQuery({
-    queryKey: selectedRecommendation 
-      ? ['lens-products-recommendation', selectedRecommendation.id]
-      : ['lens-products', filters, page],
+    queryKey: ['lens-products', filters, page, selectedRecommendation?.id],
     queryFn: () => {
       if (selectedRecommendation) {
         return lensApi.getProductsByRecommendation(selectedRecommendation.id);
       }
-      return lensApi.getProducts(filters, page, PAGE_SIZE);
+      return lensApi.getProducts(filters, page, 8);
     },
   });
 
@@ -70,62 +66,46 @@ export function LensCatalogPage() {
   const products = productsData?.products || [];
   const total = productsData?.total || 0;
   const banners = bannersData || [];
+  
+  // Store attributes globally for product cards
+  useEffect(() => {
+    if (attributes) {
+      (window as any).__allAttributes = attributes;
+    }
+  }, [attributes]);
 
   useEffect(() => {
     setPage(1);
   }, [filters]);
 
-  // Infinite loop detector - runs once on mount
-  const renderCountRef = useRef(0);
-  const renderTimestampRef = useRef(Date.now());
-
+  // Auto clear recommendation when user applies filters
+  const hasShownToast = useRef(false);
+  
   useEffect(() => {
-    const now = Date.now();
-    if (now - renderTimestampRef.current < 1000) {
-      renderCountRef.current += 1;
-      
-      if (renderCountRef.current > 50) {
-        console.error('🚨 INFINITE LOOP DETECTED! Render count:', renderCountRef.current);
-        toast({
-          title: "Lỗi hệ thống",
-          description: "Trang đang bị lỗi vòng lặp. Vui lòng tải lại trang.",
-          variant: "destructive",
-        });
-        renderCountRef.current = 0;
-      }
-    } else {
-      renderCountRef.current = 0;
-      renderTimestampRef.current = now;
-    }
-  }, []);
-
-  const handleRecommendationSelect = (group: LensRecommendationGroup | null) => {
-    setSelectedRecommendation(group);
-    if (group) {
-      clearFilters();
-      toast({
-        title: "Đã chọn tư vấn nhanh",
-        description: `Hiển thị ${group.name}`,
-      });
-    }
-    setPage(1);
-  };
-
-  const handleFilterChange = <K extends keyof typeof filters>(key: K, value: any) => {
-    if (selectedRecommendation) {
+    if (hasActiveFilters && selectedRecommendation && !hasShownToast.current) {
       setSelectedRecommendation(null);
+      hasShownToast.current = true;
       toast({
         title: "Đã tắt tư vấn nhanh",
         description: "Bộ lọc thủ công đã được áp dụng",
       });
+    } else if (!hasActiveFilters) {
+      hasShownToast.current = false;
     }
-    updateFilter(key, value);
+  }, [hasActiveFilters]);
+
+  const handleRecommendationSelect = (group: LensRecommendationGroup | null) => {
+    setSelectedRecommendation(group);
+    if (group) {
+      clearFilters(); // Clear existing filters when selecting recommendation
+    }
+    setPage(1);
   };
 
   return (
     <div className="min-h-screen bg-background">
       <LensAppBar 
-        onSearchChange={(q) => handleFilterChange('search', q)}
+        onSearchChange={(q) => updateFilter('search', q)}
         compareCount={compareState.count}
         onCompareClick={() => setShowCompareModal(true)}
         selectedRecommendation={selectedRecommendation}
@@ -222,10 +202,10 @@ export function LensCatalogPage() {
               Trước
             </button>
             <span className="px-4 py-2 text-sm">
-              Trang {page} / {Math.ceil(total / PAGE_SIZE)}
+              Trang {page} / {Math.ceil(total / 8)}
             </span>
             <button
-              disabled={page >= Math.ceil(total / PAGE_SIZE)}
+              disabled={page >= Math.ceil(total / 8)}
               onClick={() => setPage(p => p + 1)}
               className="px-4 py-2 text-sm font-medium rounded-lg border border-border disabled:opacity-50 disabled:cursor-not-allowed hover:bg-accent"
             >

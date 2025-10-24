@@ -78,19 +78,8 @@ export function LensAppBar({
                   {selectedRecommendation && (
                     <>
                       <span className="hidden md:inline text-muted-foreground">•</span>
-                      <Badge className="hidden md:inline-flex bg-orange-600 text-white text-xs gap-1 pr-1">
-                        <span>{selectedRecommendation.icon}</span>
-                        <span>{selectedRecommendation.name}</span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onRecommendationSelect(null);
-                          }}
-                          className="ml-1 hover:bg-white/20 rounded-full p-0.5 transition-colors"
-                          aria-label="Tắt tư vấn nhanh"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
+                      <Badge className="hidden md:inline-flex bg-orange-600 hover:bg-orange-600 text-white text-xs">
+                        {selectedRecommendation.icon} {selectedRecommendation.name}
                       </Badge>
                     </>
                   )}
