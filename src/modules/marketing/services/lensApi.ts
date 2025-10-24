@@ -333,40 +333,59 @@ export const lensApi = {
   // ============= MEDIA LIBRARY (Storage Only) =============
 
   async getMediaLibrary(filters?: MediaLibraryFilters): Promise<LensMediaItem[]> {
-    // List files directly from Storage bucket
-    const folderPath = filters?.folder || '';
-    const { data: files, error } = await supabase.storage
-      .from('lens-images')
-      .list(folderPath, {
-        limit: 1000,
-        sortBy: { column: 'created_at', order: 'desc' }
+    // List files from all folders (products, banners, brands)
+    const folders = ['products', 'banners', 'brands'];
+    const allFiles: Array<{ file: any; folder: string; file_path: string }> = [];
+
+    // Fetch files from each folder
+    for (const folder of folders) {
+      // Skip if filtering by specific folder and this isn't it
+      if (filters?.folder && filters.folder !== folder) continue;
+
+      const { data: files, error } = await supabase.storage
+        .from('lens-images')
+        .list(folder, {
+          limit: 1000,
+          sortBy: { column: 'created_at', order: 'desc' }
+        });
+
+      if (error) {
+        console.error(`Error listing files from ${folder}:`, error);
+        continue;
+      }
+
+      // Add files with folder info
+      (files || []).forEach(file => {
+        // Only include actual files (id !== null), skip subdirectories
+        if (file.id !== null) {
+          allFiles.push({
+            file,
+            folder,
+            file_path: `${folder}/${file.name}`
+          });
+        }
       });
-
-    if (error) throw error;
-
-    let filteredFiles = files || [];
+    }
 
     // Filter by search term (client-side)
+    let filteredFiles = allFiles;
     if (filters?.search) {
       const searchLower = filters.search.toLowerCase();
-      filteredFiles = filteredFiles.filter(file => 
-        file.name.toLowerCase().includes(searchLower)
+      filteredFiles = filteredFiles.filter(item => 
+        item.file.name.toLowerCase().includes(searchLower)
       );
     }
 
-    // Filter out folders (only show files)
-    filteredFiles = filteredFiles.filter(file => file.id !== null);
-
     // Convert to LensMediaItem format
-    const mediaItems: LensMediaItem[] = filteredFiles.map(file => ({
-      id: file.id || crypto.randomUUID(),
-      file_name: file.name,
-      file_path: folderPath ? `${folderPath}/${file.name}` : file.name,
-      file_size: file.metadata?.size || 0,
-      mime_type: file.metadata?.mimetype || 'image/jpeg',
+    const mediaItems: LensMediaItem[] = filteredFiles.map(item => ({
+      id: item.file.id || crypto.randomUUID(),
+      file_name: item.file.name,
+      file_path: item.file_path,
+      file_size: item.file.metadata?.size || 0,
+      mime_type: item.file.metadata?.mimetype || 'image/jpeg',
       width: null,
       height: null,
-      folder: folderPath || 'root',
+      folder: item.folder,
       tags: [],
       alt_text: null,
       caption: null,
@@ -374,14 +393,12 @@ export const lensApi = {
       usage_count: 0,
       is_active: true,
       uploaded_by: null,
-      created_at: file.created_at || new Date().toISOString(),
-      updated_at: file.updated_at || new Date().toISOString(),
+      created_at: item.file.created_at || new Date().toISOString(),
+      updated_at: item.file.updated_at || new Date().toISOString(),
     }));
 
     return mediaItems;
   },
-
-  // uploadToMediaLibrary removed - use uploadImage() instead for Storage-only approach
 
   async getImageDimensions(file: File): Promise<{ width: number; height: number }> {
     return new Promise((resolve) => {
@@ -394,8 +411,6 @@ export const lensApi = {
     });
   },
 
-  // updateMediaMetadata removed - metadata not stored in Storage-only approach
-
   async deleteMediaFromLibrary(filePath: string): Promise<void> {
     // Delete directly from Storage (no DB check needed)
     const { error } = await supabase.storage
@@ -405,26 +420,8 @@ export const lensApi = {
     if (error) throw error;
   },
 
-  // getUnusedMedia removed - usage tracking not available in Storage-only approach
-
   async getMediaFolders(): Promise<string[]> {
-    // List top-level folders in lens-images bucket
-    const { data: items, error } = await supabase.storage
-      .from('lens-images')
-      .list('', {
-        limit: 100,
-        sortBy: { column: 'name', order: 'asc' }
-      });
-
-    if (error) throw error;
-
-    // Filter only folders (folders have id = null)
-    const folderNames = items
-      ?.filter(item => item.id === null)
-      .map(item => item.name) || [];
-
-    return folderNames.sort();
+    // Hardcoded folders to avoid issues with Storage API returning folders with id = null
+    return ['products', 'banners', 'brands'];
   },
-
-  // getMediaTags removed - tags not stored in Storage-only approach
 };
