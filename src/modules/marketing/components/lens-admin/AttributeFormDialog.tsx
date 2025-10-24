@@ -181,120 +181,128 @@ export function AttributeFormDialog({ open, attribute, onClose }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={() => onClose()}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{attribute ? 'Chỉnh sửa thuộc tính' : 'Thêm thuộc tính'}</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <Label>Tên thuộc tính *</Label>
-            <Input {...register('name')} placeholder="Chất liệu" />
-            {errors.name && <p className="text-sm text-destructive mt-1">{errors.name.message}</p>}
-          </div>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Left Column - Basic Info */}
+            <div className="space-y-4">
+              <div>
+                <Label>Tên thuộc tính *</Label>
+                <Input {...register('name')} placeholder="Chất liệu" />
+                {errors.name && <p className="text-sm text-destructive mt-1">{errors.name.message}</p>}
+              </div>
 
-          <div>
-            <Label>Slug (dùng trong code) *</Label>
-            <Input {...register('slug')} placeholder="material" />
-            {errors.slug && <p className="text-sm text-destructive mt-1">{errors.slug.message}</p>}
-            <p className="text-xs text-muted-foreground mt-1">
-              Ví dụ: material, refractive_index, origin, warranty_months
-            </p>
-          </div>
+              <div>
+                <Label>Slug (dùng trong code) *</Label>
+                <Input {...register('slug')} placeholder="material" />
+                {errors.slug && <p className="text-sm text-destructive mt-1">{errors.slug.message}</p>}
+                <p className="text-xs text-muted-foreground mt-1">
+                  Ví dụ: material, refractive_index, origin, warranty_months
+                </p>
+              </div>
 
-          <div>
-            <Label>Icon (emoji)</Label>
-            <Input {...register('icon' as any)} placeholder="🧪" maxLength={3} defaultValue={attribute?.icon || ''} />
-            <p className="text-xs text-muted-foreground mt-1">
-              Emoji để hiển thị (VD: 🧪 🔍 🌍 ⏱️ ☀️ 🛡️)
-            </p>
-          </div>
+              <div>
+                <Label>Icon (emoji)</Label>
+                <Input {...register('icon' as any)} placeholder="🧪" maxLength={3} defaultValue={attribute?.icon || ''} />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Emoji để hiển thị (VD: 🧪 🔍 🌍 ⏱️ ☀️ 🛡️)
+                </p>
+              </div>
 
-          <div>
-            <Label>Loại</Label>
-            <Select 
-              onValueChange={(v: any) => setValue('type', v)} 
-              defaultValue={attribute?.type || 'select'}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="select">Select (chọn 1)</SelectItem>
-                <SelectItem value="multiselect">Multiselect (chọn nhiều)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+              <div>
+                <Label>Loại</Label>
+                <Select 
+                  onValueChange={(v: any) => setValue('type', v)} 
+                  defaultValue={attribute?.type || 'select'}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="select">Select (chọn 1)</SelectItem>
+                    <SelectItem value="multiselect">Multiselect (chọn nhiều)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-          <div>
-            <Label>Thứ tự hiển thị</Label>
-            <Input type="number" {...register('display_order', { valueAsNumber: true })} />
-          </div>
-
-          <div>
-            <Label>
-              {selectedType === 'select' ? 'Giá trị (chọn 1) *' : 'Giá trị (chọn nhiều) *'}
-            </Label>
-            <div className="flex gap-2 mb-2">
-              <Input
-                value={newOption}
-                onChange={(e) => setNewOption(e.target.value)}
-                placeholder={selectedType === 'select' ? 'VD: Plastic' : 'VD: Chống UV'}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddOption();
-                  }
-                }}
-              />
-              <Button type="button" onClick={handleAddOption}>Thêm</Button>
+              <div>
+                <Label>Thứ tự hiển thị</Label>
+                <Input type="number" {...register('display_order', { valueAsNumber: true })} />
+              </div>
             </div>
-            <div className="space-y-2">
-              {options.length === 0 ? (
-                <div className="flex items-center justify-center min-h-[80px] border rounded-md bg-muted/30">
-                  <p className="text-sm text-muted-foreground">
-                    {selectedType === 'select' 
-                      ? 'Chưa có giá trị nào (VD: Plastic, Hi-Index, CR-39)' 
-                      : 'Chưa có giá trị nào (VD: Chống UV, Chống xước, Đổi màu)'}
-                  </p>
+
+            {/* Right Column - Options List */}
+            <div className="space-y-4">
+              <div>
+                <Label>
+                  {selectedType === 'select' ? 'Giá trị (chọn 1) *' : 'Giá trị (chọn nhiều) *'}
+                </Label>
+                <div className="flex gap-2 mb-2">
+                  <Input
+                    value={newOption}
+                    onChange={(e) => setNewOption(e.target.value)}
+                    placeholder={selectedType === 'select' ? 'VD: Plastic' : 'VD: Chống UV'}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddOption();
+                      }
+                    }}
+                  />
+                  <Button type="button" onClick={handleAddOption}>Thêm</Button>
                 </div>
-              ) : (
-                <>
-                  <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={handleDragEnd}
-                  >
-                    <SortableContext
-                      items={options}
-                      strategy={verticalListSortingStrategy}
-                    >
-                      <div className="space-y-2 max-h-[300px] overflow-y-auto border rounded-md p-2">
-                        {options.map((opt) => (
-                          <SortableOptionItem
-                            key={opt}
-                            option={opt}
-                            onRemove={() => handleRemoveOption(opt)}
-                          />
-                        ))}
-                      </div>
-                    </SortableContext>
-                  </DndContext>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <GripVertical className="w-3 h-3" />
-                    Kéo thả để sắp xếp thứ tự hiển thị
-                  </p>
-                </>
-              )}
+                <div className="space-y-2">
+                  {options.length === 0 ? (
+                    <div className="flex items-center justify-center min-h-[200px] border rounded-md bg-muted/30">
+                      <p className="text-sm text-muted-foreground text-center px-4">
+                        {selectedType === 'select' 
+                          ? 'Chưa có giá trị nào (VD: Plastic, Hi-Index, CR-39)' 
+                          : 'Chưa có giá trị nào (VD: Chống UV, Chống xước, Đổi màu)'}
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={handleDragEnd}
+                      >
+                        <SortableContext
+                          items={options}
+                          strategy={verticalListSortingStrategy}
+                        >
+                          <div className="space-y-2 max-h-[400px] overflow-y-auto border rounded-md p-3">
+                            {options.map((opt) => (
+                              <SortableOptionItem
+                                key={opt}
+                                option={opt}
+                                onRemove={() => handleRemoveOption(opt)}
+                              />
+                            ))}
+                          </div>
+                        </SortableContext>
+                      </DndContext>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <GripVertical className="w-3 h-3" />
+                        Kéo thả để sắp xếp thứ tự hiển thị
+                      </p>
+                    </>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  {selectedType === 'select' 
+                    ? '💡 Thứ tự bên trên sẽ là thứ tự hiển thị khi thêm sản phẩm (chọn 1 giá trị)'
+                    : '💡 Thứ tự bên trên sẽ là thứ tự hiển thị khi thêm sản phẩm (chọn nhiều giá trị)'}
+                </p>
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {selectedType === 'select' 
-                ? '💡 Thứ tự bên trên sẽ là thứ tự hiển thị khi thêm sản phẩm (chọn 1 giá trị)'
-                : '💡 Thứ tự bên trên sẽ là thứ tự hiển thị khi thêm sản phẩm (chọn nhiều giá trị)'}
-            </p>
           </div>
 
-          <div className="flex justify-end gap-2 pt-4">
+          <div className="flex justify-end gap-2 pt-4 border-t">
             <Button type="button" variant="outline" onClick={() => onClose()}>Hủy</Button>
             <Button type="submit" disabled={isSubmitting} className="bg-green-600 hover:bg-green-700">
               {isSubmitting ? 'Đang lưu...' : attribute ? 'Cập nhật' : 'Tạo mới'}
