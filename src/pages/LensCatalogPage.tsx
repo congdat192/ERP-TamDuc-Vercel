@@ -7,7 +7,6 @@ import { LensAppBar } from '@/modules/marketing/components/lens/LensAppBar';
 import { FeatureFilterChips } from '@/modules/marketing/components/lens/FeatureFilterChips';
 import { BrandFilterChips } from '@/modules/marketing/components/lens/BrandFilterChips';
 import { AdvancedFilterDrawer } from '@/modules/marketing/components/lens/AdvancedFilterDrawer';
-import { QuickTags } from '@/modules/marketing/components/lens/QuickTags';
 import { SortDropdown } from '@/modules/marketing/components/lens/SortDropdown';
 import { ProductGrid } from '@/modules/marketing/components/lens/ProductGrid';
 import { BannerGrid } from '@/modules/marketing/components/lens/BannerGrid';
@@ -74,7 +73,7 @@ export function LensCatalogPage() {
         <FeatureFilterChips features={features} />
         <BrandFilterChips brands={brands} />
         
-        <div className="flex items-center gap-2 px-4 py-3 border-t">
+        <div className="flex items-center justify-between px-4 py-3 border-t">
           <button
             onClick={() => setShowAdvancedFilters(true)}
             className="px-4 py-2 text-sm font-medium rounded-lg border border-border hover:bg-accent transition-colors"
@@ -82,11 +81,7 @@ export function LensCatalogPage() {
             Lọc nâng cao
           </button>
           
-          <QuickTags />
-          
-          <div className="ml-auto">
-            <SortDropdown />
-          </div>
+          <SortDropdown />
         </div>
       </div>
 
