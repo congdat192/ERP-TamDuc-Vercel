@@ -41,13 +41,12 @@ export function ExportExcelButton() {
         const row: any = {
           'Mã SKU*': p.sku,
           'Tên sản phẩm*': p.name,
-          'Thương hiệu*': p.brand?.name || '',
+          'Thương hiệu*': p.attributes?.lens_brand?.[0] || '',
           'Giá niêm yết (VNĐ)*': p.price,
           'Giá giảm (VNĐ)': p.sale_price || '',
-          'Chất liệu': p.material || '',
-          'Chỉ số khúc xạ': p.refractive_index || '',
-          'Xuất xứ': p.origin || '',
-          'Bảo hành (tháng)': p.warranty_months || '',
+          'Chất liệu': p.attributes?.material?.[0] || '',
+          'Chỉ số khúc xạ': p.attributes?.refractive_index?.[0] || '',
+          'Xuất xứ': p.attributes?.origin?.[0] || '',
           'Mô tả': p.description || '',
           'Khuyến mãi (true/false)': p.is_promotion ? 'true' : 'false',
           'Text khuyến mãi': p.promotion_text || ''
@@ -55,8 +54,7 @@ export function ExportExcelButton() {
 
         // Add multiselect columns dynamically
         multiselectAttrs.forEach(attr => {
-          const valueKey = `${attr.slug}_values`;
-          const selectedValues = p.attributes?.[valueKey] || [];
+          const selectedValues = p.attributes?.[attr.slug] || [];
           
           // Create column for each option: "Chống UV" = "Có" or "Không"
           attr.options.forEach((option: string) => {

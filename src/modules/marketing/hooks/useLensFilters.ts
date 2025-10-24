@@ -5,50 +5,48 @@ import { LensFilters } from '../types/lens';
 export function useLensFilters() {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [filters, setFilters] = useState<LensFilters>({
-    brandIds: searchParams.get('brands')?.split(',').filter(Boolean) || [],
-    featureIds: searchParams.get('features')?.split(',').filter(Boolean) || [],
-    material: searchParams.get('material') || null,
-    refractiveIndex: searchParams.get('ri') || null,
-    minPrice: searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : null,
-    maxPrice: searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : null,
-    origin: searchParams.get('origin') || null,
-    hasWarranty: searchParams.get('warranty') === 'true',
-    search: searchParams.get('q') || '',
-    sort: (searchParams.get('sort') as any) || 'newest',
+  const [filters, setFilters] = useState<LensFilters>(() => {
+    // Parse attributeFilters from URL: ?attr_lens_brand=CHEMI,ESSILOR&attr_tinh_nang_trong=UV400
+    const attributeFilters: Record<string, string[]> = {};
+    searchParams.forEach((value, key) => {
+      if (key.startsWith('attr_')) {
+        const slug = key.replace('attr_', '');
+        attributeFilters[slug] = value.split(',').filter(Boolean);
+      }
+    });
+    
+    return {
+      attributeFilters,
+      minPrice: searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : null,
+      maxPrice: searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : null,
+      search: searchParams.get('search') || '',
+      sort: (searchParams.get('sort') as LensFilters['sort']) || 'newest',
+    };
   });
 
   // Sync filters to URL
   useEffect(() => {
     const params = new URLSearchParams();
-
-    if (filters.brandIds.length > 0) {
-      params.set('brands', filters.brandIds.join(','));
-    }
-    if (filters.featureIds.length > 0) {
-      params.set('features', filters.featureIds.join(','));
-    }
-    if (filters.material) {
-      params.set('material', filters.material);
-    }
-    if (filters.refractiveIndex) {
-      params.set('ri', filters.refractiveIndex);
-    }
+    
+    // Sync attributeFilters to URL as attr_slug=value1,value2
+    Object.entries(filters.attributeFilters).forEach(([slug, values]) => {
+      if (values.length > 0) {
+        params.set(`attr_${slug}`, values.join(','));
+      }
+    });
+    
     if (filters.minPrice !== null) {
-      params.set('minPrice', String(filters.minPrice));
+      params.set('minPrice', filters.minPrice.toString());
     }
+    
     if (filters.maxPrice !== null) {
-      params.set('maxPrice', String(filters.maxPrice));
+      params.set('maxPrice', filters.maxPrice.toString());
     }
-    if (filters.origin) {
-      params.set('origin', filters.origin);
-    }
-    if (filters.hasWarranty) {
-      params.set('warranty', 'true');
-    }
+    
     if (filters.search) {
-      params.set('q', filters.search);
+      params.set('search', filters.search);
     }
+    
     if (filters.sort !== 'newest') {
       params.set('sort', filters.sort);
     }

@@ -2,16 +2,30 @@ import { supabase } from '@/integrations/supabase/client';
 import { LensBrand, LensProduct, LensBanner, LensFilters, LensProductWithDetails, LensProductAttribute } from '../types/lens';
 
 export const lensApi = {
-  // Brands
+  // Brands - Get unique brands from products' attributes
   async getBrands(): Promise<LensBrand[]> {
-    const { data, error } = await supabase
-      .from('lens_brands')
-      .select('*')
-      .eq('is_active', true)
-      .order('display_order');
+    const { data } = await supabase
+      .from('lens_products')
+      .select('attributes')
+      .eq('is_active', true);
     
-    if (error) throw error;
-    return data || [];
+    const brandNames = new Set<string>();
+    (data || []).forEach(p => {
+      const attrs = p.attributes as Record<string, string[]> | null;
+      const brand = attrs?.lens_brand?.[0];
+      if (brand) brandNames.add(brand);
+    });
+    
+    return Array.from(brandNames).map((name, index) => ({
+      id: name,
+      name,
+      logo_url: null,
+      description: null,
+      display_order: index,
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }));
   },
 
   // Products

@@ -94,7 +94,6 @@ export function LensAdminPage() {
 
           <ProductTable
             products={products}
-            brands={brands || []}
             onEdit={handleEdit}
             onRefetch={refetch}
           />
@@ -108,7 +107,6 @@ export function LensAdminPage() {
       <ProductForm
         open={isFormOpen}
         product={editingProduct}
-        brands={brands || []}
         onClose={handleFormClose}
       />
 

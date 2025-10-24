@@ -3,33 +3,23 @@ import { useLensFilters } from '../../hooks/useLensFilters';
 import { Badge } from '@/components/ui/badge';
 
 export function QuickTags() {
-  const { filters, updateFilter, hasActiveFilters } = useLensFilters();
+  const { filters, updateFilter, toggleAttributeValue, hasActiveFilters } = useLensFilters();
 
   if (!hasActiveFilters) return null;
 
   const tags: Array<{ label: string; onRemove: () => void }> = [];
 
-  if (filters.material) {
-    tags.push({
-      label: `Chất liệu: ${filters.material}`,
-      onRemove: () => updateFilter('material', null),
+  // Attribute filters
+  Object.entries(filters.attributeFilters).forEach(([slug, values]) => {
+    values.forEach(value => {
+      tags.push({
+        label: value,
+        onRemove: () => toggleAttributeValue(slug, value),
+      });
     });
-  }
+  });
 
-  if (filters.refractiveIndex) {
-    tags.push({
-      label: `Chiết suất: ${filters.refractiveIndex}`,
-      onRemove: () => updateFilter('refractiveIndex', null),
-    });
-  }
-
-  if (filters.origin) {
-    tags.push({
-      label: `Xuất xứ: ${filters.origin}`,
-      onRemove: () => updateFilter('origin', null),
-    });
-  }
-
+  // Price filter
   if (filters.minPrice !== null || filters.maxPrice !== null) {
     const min = filters.minPrice ? `${filters.minPrice / 1000}k` : '0';
     const max = filters.maxPrice ? `${filters.maxPrice / 1000}k` : '∞';

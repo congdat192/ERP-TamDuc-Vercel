@@ -106,27 +106,19 @@ export function CompareModal({ productIds, open, onOpenChange, onRemove }: Compa
                 <tr>
                   <td className="border p-2 font-medium">Chất liệu</td>
                   {products.map((product) => (
-                    <td key={product!.id} className="border p-2">{product!.material || '-'}</td>
+                    <td key={product!.id} className="border p-2">{product!.attributes?.material?.[0] || '-'}</td>
                   ))}
                 </tr>
                 <tr>
                   <td className="border p-2 font-medium">Chiết suất</td>
                   {products.map((product) => (
-                    <td key={product!.id} className="border p-2">{product!.refractive_index || '-'}</td>
+                    <td key={product!.id} className="border p-2">{product!.attributes?.refractive_index?.[0] || '-'}</td>
                   ))}
                 </tr>
                 <tr>
                   <td className="border p-2 font-medium">Xuất xứ</td>
                   {products.map((product) => (
-                    <td key={product!.id} className="border p-2">{product!.origin || '-'}</td>
-                  ))}
-                </tr>
-                <tr>
-                  <td className="border p-2 font-medium">Bảo hành</td>
-                  {products.map((product) => (
-                    <td key={product!.id} className="border p-2">
-                      {product!.warranty_months ? `${product!.warranty_months} tháng` : '-'}
-                    </td>
+                    <td key={product!.id} className="border p-2">{product!.attributes?.origin?.[0] || '-'}</td>
                   ))}
                 </tr>
                 <tr>
@@ -139,8 +131,7 @@ export function CompareModal({ productIds, open, onOpenChange, onRemove }: Compa
                           const multiselectAttrs = allAttributes.filter((a: any) => a.type === 'multiselect');
                           
                           return multiselectAttrs.map((attr: any) => {
-                            const valueKey = `${attr.slug}_values`;
-                            const selectedValues = product!.attributes?.[valueKey] || [];
+                            const selectedValues = product!.attributes?.[attr.slug] || [];
                             
                             return selectedValues.map((value: string) => (
                               <span key={`${attr.id}-${value}`} className="text-sm" title={`${attr.name}: ${value}`}>

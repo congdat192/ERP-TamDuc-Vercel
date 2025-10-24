@@ -11,7 +11,6 @@ export interface ExcelRow {
   'Chất liệu': string;
   'Chỉ số khúc xạ': string;
   'Xuất xứ': string;
-  'Bảo hành (tháng)': number | '';
   'Mô tả': string;
   'Khuyến mãi (true/false)': string;
   'Text khuyến mãi': string;
@@ -22,8 +21,7 @@ export interface ValidationResult {
   valid: boolean;
   errors: string[];
   action: 'INSERT' | 'UPDATE';
-  brandId?: string;
-  featureIds?: string[];
+  brandName?: string;
 }
 
 export interface ParsedProduct extends Partial<LensProduct> {
@@ -95,15 +93,29 @@ export class LensExcelService {
       errors.push(`Thương hiệu "${brandName}" không tồn tại trong hệ thống`);
     }
 
+    // Build attributes object
+    const attributesData: Record<string, string[]> = {};
+    
+    // Add lens_brand
+    if (brandName) {
+      attributesData.lens_brand = [brandName];
+    }
+    
+    // Add select attributes
+    const selectAttrs = allAttributes.filter(a => a.type === 'select');
+    selectAttrs.forEach(attr => {
+      const value = row[attr.name as keyof ExcelRow]?.toString().trim();
+      if (value) {
+        attributesData[attr.slug] = [value];
+      }
+    });
+    
     // Parse multiselect attributes from columns
     const multiselectAttrs = allAttributes.filter(a => a.type === 'multiselect');
-    const attributesData: Record<string, any> = {};
-    
     multiselectAttrs.forEach(attr => {
-      const valueKey = `${attr.slug}_values`;
       const selectedValues: string[] = [];
       
-      // Check each option column (e.g., "Chống UV" = "Có")
+      // Check each option column (e.g., "Chống UV400" = "Có")
       attr.options.forEach((option: string) => {
         const columnValue = row[option as keyof ExcelRow]?.toString().trim().toLowerCase();
         if (columnValue === 'có' || columnValue === 'true') {
@@ -112,7 +124,7 @@ export class LensExcelService {
       });
       
       if (selectedValues.length > 0) {
-        attributesData[valueKey] = selectedValues;
+        attributesData[attr.slug] = selectedValues;
       }
     });
 
@@ -125,23 +137,12 @@ export class LensExcelService {
     // Calculate discount percent
     const discountPercent = salePrice && price ? Math.round((1 - salePrice / price) * 100) : null;
 
-    // Parse warranty
-    const warrantyValue = row['Bảo hành (tháng)'];
-    const warrantyMonths = warrantyValue !== '' && warrantyValue !== null && warrantyValue !== undefined 
-      ? Number(warrantyValue) 
-      : null;
-
     const parsedProduct: ParsedProduct = {
       sku,
       name,
-      brand_id: brand?.id,
       price,
       sale_price: salePrice,
       discount_percent: discountPercent,
-      material: row['Chất liệu']?.toString().trim() || null,
-      refractive_index: row['Chỉ số khúc xạ']?.toString().trim() || null,
-      origin: row['Xuất xứ']?.toString().trim() || null,
-      warranty_months: warrantyMonths,
       description: row['Mô tả']?.toString().trim() || null,
       is_promotion: isPromotion,
       promotion_text: row['Text khuyến mãi']?.toString().trim() || null,
@@ -150,7 +151,7 @@ export class LensExcelService {
         valid: errors.length === 0,
         errors,
         action,
-        brandId: brand?.id,
+        brandName,
       },
       _originalRow: rowIndex + 2 // +2 because Excel is 1-indexed and has header row
     };
@@ -173,12 +174,18 @@ export class LensExcelService {
     // Get all attributes for validation
     const { data: allAttributes } = await supabase
       .from('lens_product_attributes')
-      .select('id, slug, type');
+      .select('*')
+      .eq('is_active', true);
+    
+    const attributesWithParsedOptions = (allAttributes || []).map(attr => ({
+      ...attr,
+      options: typeof attr.options === 'string' ? JSON.parse(attr.options) : attr.options
+    }));
 
     // Validate each row
     const validatedProducts = await Promise.all(
       rows.map((row, index) => 
-        this.validateRow(row, index, brands, allAttributes || [], existingSKUs)
+        this.validateRow(row, index, brands, attributesWithParsedOptions, existingSKUs)
       )
     );
 
@@ -208,19 +215,17 @@ export class LensExcelService {
         const productsToUpsert = batch.map(p => ({
           sku: p.sku,
           name: p.name,
-          brand_id: p.brand_id,
           price: p.price,
           sale_price: p.sale_price,
           discount_percent: p.discount_percent,
-          material: p.material,
-          refractive_index: p.refractive_index,
-          origin: p.origin,
-          warranty_months: p.warranty_months,
           description: p.description,
           is_promotion: p.is_promotion,
           promotion_text: p.promotion_text,
           attributes: p.attributes || {},
-          is_active: true
+          is_active: true,
+          image_urls: p.image_urls || [],
+          related_product_ids: p.related_product_ids || [],
+          view_count: 0,
         }));
 
         const { data: upsertedProducts, error } = await supabase
@@ -275,17 +280,20 @@ export class LensExcelService {
 
   // Get empty template
   static async downloadTemplate() {
-    // Fetch all multiselect attributes from database
+    // Fetch all attributes from database
     const { data: allAttributes } = await supabase
       .from('lens_product_attributes')
       .select('*')
-      .eq('type', 'multiselect')
-      .eq('is_active', true);
+      .eq('is_active', true)
+      .order('display_order');
     
-    const multiselectAttrs = (allAttributes || []).map(attr => ({
+    const parsedAttributes = (allAttributes || []).map(attr => ({
       ...attr,
       options: typeof attr.options === 'string' ? JSON.parse(attr.options) : attr.options
     }));
+    
+    const selectAttrs = parsedAttributes.filter(a => a.type === 'select');
+    const multiselectAttrs = parsedAttributes.filter(a => a.type === 'multiselect');
 
     const template: any = {
       'Mã SKU*': 'EXAMPLE-SKU',
@@ -293,14 +301,15 @@ export class LensExcelService {
       'Thương hiệu*': 'Essilor',
       'Giá niêm yết (VNĐ)*': 1000000,
       'Giá giảm (VNĐ)': 800000,
-      'Chất liệu': 'Resin',
-      'Chỉ số khúc xạ': '1.56',
-      'Xuất xứ': 'Pháp',
-      'Bảo hành (tháng)': 12,
       'Mô tả': 'Mô tả sản phẩm',
       'Khuyến mãi (true/false)': 'false',
       'Text khuyến mãi': ''
     };
+
+    // Add select attribute columns
+    selectAttrs.forEach(attr => {
+      template[attr.name] = attr.options[0] || '';
+    });
 
     // Add multiselect columns dynamically
     multiselectAttrs.forEach(attr => {

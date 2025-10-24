@@ -156,31 +156,24 @@ export function ProductDetailModal({
                 <h3 className="font-semibold">Thông số kỹ thuật</h3>
                 
                 <div className="grid grid-cols-2 gap-2 text-sm">
-                  {product.material && (
+                  {product.attributes?.material?.[0] && (
                     <>
                       <span className="text-muted-foreground">Chất liệu:</span>
-                      <span className="font-medium">{product.material}</span>
+                      <span className="font-medium">{product.attributes.material[0]}</span>
                     </>
                   )}
                   
-                  {product.refractive_index && (
+                  {product.attributes?.refractive_index?.[0] && (
                     <>
                       <span className="text-muted-foreground">Chiết suất:</span>
-                      <span className="font-medium">{product.refractive_index}</span>
+                      <span className="font-medium">{product.attributes.refractive_index[0]}</span>
                     </>
                   )}
                   
-                  {product.origin && (
+                  {product.attributes?.origin?.[0] && (
                     <>
                       <span className="text-muted-foreground">Xuất xứ:</span>
-                      <span className="font-medium">{product.origin}</span>
-                    </>
-                  )}
-                  
-                  {product.warranty_months && (
-                    <>
-                      <span className="text-muted-foreground">Bảo hành:</span>
-                      <span className="font-medium">{product.warranty_months} tháng</span>
+                      <span className="font-medium">{product.attributes.origin[0]}</span>
                     </>
                   )}
                 </div>
@@ -190,8 +183,7 @@ export function ProductDetailModal({
                 const allAttributes = (window as any).__allAttributes || [];
                 const multiselectAttrs = allAttributes.filter((a: any) => a.type === 'multiselect');
                 const hasAnyFeatures = multiselectAttrs.some((attr: any) => {
-                  const valueKey = `${attr.slug}_values`;
-                  return product.attributes?.[valueKey]?.length > 0;
+                  return product.attributes?.[attr.slug]?.length > 0;
                 });
 
                 return hasAnyFeatures ? (
@@ -199,8 +191,7 @@ export function ProductDetailModal({
                     <p className="text-sm text-muted-foreground mb-2">Tính năng</p>
                     <div className="flex flex-wrap gap-2">
                       {multiselectAttrs.map((attr: any) => {
-                        const valueKey = `${attr.slug}_values`;
-                        const selectedValues = product.attributes?.[valueKey] || [];
+                        const selectedValues = product.attributes?.[attr.slug] || [];
                         
                         return selectedValues.map((value: string) => (
                           <Badge key={`${attr.id}-${value}`} variant="secondary">
