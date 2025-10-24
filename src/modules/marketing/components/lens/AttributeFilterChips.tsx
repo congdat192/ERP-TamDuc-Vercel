@@ -9,10 +9,15 @@ interface AttributeFilterChipsProps {
 export function AttributeFilterChips({ attributes }: AttributeFilterChipsProps) {
   const { filters, toggleAttributeOption } = useLensFilters();
 
-  // Show both select and multiselect attributes as chips
-  // Users can multi-select for filtering even on select-type attributes
+  // Only show Thương hiệu and Tính năng in filter chips
+  // Other attributes can still be used in Advanced Filters
+  const ALLOWED_FILTER_SLUGS = ['lens_brand', 'tinh_nang_trong'];
+
   const chipAttributes = attributes.filter(
-    attr => attr.is_active && attr.options?.length > 0
+    attr => 
+      attr.is_active && 
+      attr.options?.length > 0 &&
+      ALLOWED_FILTER_SLUGS.includes(attr.slug)
   );
 
   if (chipAttributes.length === 0) return null;
