@@ -298,11 +298,42 @@ export const lensApi = {
     const { data, error } = await supabase
       .from('lens_banners')
       .select('*')
-      .eq('is_active', true)
       .order('display_order');
     
     if (error) throw error;
     return data || [];
+  },
+
+  async createBanner(banner: Omit<LensBanner, 'id' | 'created_at' | 'updated_at'>): Promise<LensBanner> {
+    const { data, error } = await supabase
+      .from('lens_banners')
+      .insert(banner)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as LensBanner;
+  },
+
+  async updateBanner(id: string, banner: Partial<LensBanner>): Promise<LensBanner> {
+    const { data, error } = await supabase
+      .from('lens_banners')
+      .update({ ...banner, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as LensBanner;
+  },
+
+  async deleteBanner(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('lens_banners')
+      .update({ is_active: false })
+      .eq('id', id);
+    
+    if (error) throw error;
   },
 
   // Helper: Generate unique filename preserving original name

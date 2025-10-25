@@ -15,6 +15,7 @@ import { SupplyTiersManager } from '@/modules/marketing/components/lens-admin/Su
 import { UseCaseScoringManager } from '@/modules/marketing/components/lens-admin/UseCaseScoringManager';
 import { ProductSelector } from '@/modules/marketing/components/lens-admin/ProductSelector';
 import { RecommendationGroupManager } from '@/modules/marketing/components/lens-admin/RecommendationGroupManager';
+import { BannerManager } from '@/modules/marketing/components/lens-admin/BannerManager';
 import { LensProduct } from '@/modules/marketing/types/lens';
 import { toast } from 'sonner';
 
@@ -35,7 +36,7 @@ export function LensAdminPage() {
     );
   }
 
-  const [activeTab, setActiveTab] = useState<'products' | 'attributes' | 'tiers' | 'usecases' | 'recommendations'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'attributes' | 'tiers' | 'usecases' | 'recommendations' | 'banners'>('products');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<LensProduct | null>(null);
@@ -100,12 +101,13 @@ export function LensAdminPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="products">Danh sách sản phẩm</TabsTrigger>
           <TabsTrigger value="attributes">Thuộc tính sản phẩm</TabsTrigger>
           <TabsTrigger value="tiers">Tầng cung ứng</TabsTrigger>
           <TabsTrigger value="usecases">Use Cases</TabsTrigger>
           <TabsTrigger value="recommendations">Nhóm tư vấn</TabsTrigger>
+          <TabsTrigger value="banners">Banner</TabsTrigger>
         </TabsList>
 
         <TabsContent value="products" className="space-y-4">
@@ -180,6 +182,10 @@ export function LensAdminPage() {
 
         <TabsContent value="recommendations">
           <RecommendationGroupManager />
+        </TabsContent>
+
+        <TabsContent value="banners">
+          <BannerManager />
         </TabsContent>
       </Tabs>
 
