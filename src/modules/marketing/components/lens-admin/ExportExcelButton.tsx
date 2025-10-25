@@ -23,8 +23,9 @@ export function ExportExcelButton() {
       // Fetch all products
       const { products } = await lensApi.getProducts({}, 1, 10000);
       
-      // Fetch all attributes to lookup multiselect options
+      // Fetch all attributes to dynamically build columns
       const allAttributes = await lensApi.getAttributes();
+      const selectAttrs = allAttributes.filter(a => a.type === 'select');
       const multiselectAttrs = allAttributes.filter(a => a.type === 'multiselect');
 
       if (products.length === 0) {
@@ -44,13 +45,17 @@ export function ExportExcelButton() {
           'Thương hiệu*': p.attributes?.lens_brand?.[0] || '',
           'Giá niêm yết (VNĐ)*': p.price,
           'Giá giảm (VNĐ)': p.sale_price || '',
-          'Chất liệu': p.attributes?.material?.[0] || '',
-          'Chỉ số khúc xạ': p.attributes?.refractive_index?.[0] || '',
-          'Xuất xứ': p.attributes?.origin?.[0] || '',
           'Mô tả': p.description || '',
           'Khuyến mãi (true/false)': p.is_promotion ? 'true' : 'false',
           'Text khuyến mãi': p.promotion_text || ''
         };
+
+        // Add all select attribute columns dynamically (exclude lens_brand as it's already added)
+        selectAttrs.forEach(attr => {
+          if (attr.slug !== 'lens_brand') {
+            row[attr.name] = p.attributes?.[attr.slug]?.[0] || '';
+          }
+        });
 
         // Add multiselect columns dynamically
         multiselectAttrs.forEach(attr => {
