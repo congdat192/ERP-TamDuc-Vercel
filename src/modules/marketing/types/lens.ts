@@ -146,3 +146,38 @@ export interface UpdateRecommendationGroupInput {
   display_order?: number;
   is_active?: boolean;
 }
+
+export interface SupplierCatalog {
+  id: string;
+  supplier_name: string;
+  display_name: string;
+  icon: string | null;
+  pdf_url: string;
+  file_name: string;
+  file_size: number | null;
+  display_order: number;
+  is_active: boolean;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateSupplierCatalogInput {
+  supplier_name: string;
+  display_name: string;
+  icon?: string;
+  pdf_url: string;
+  file_name: string;
+  file_size?: number;
+  display_order?: number;
+}
+
+export interface UpdateSupplierCatalogInput {
+  display_name?: string;
+  icon?: string;
+  pdf_url?: string;
+  file_name?: string;
+  file_size?: number;
+  display_order?: number;
+  is_active?: boolean;
+}

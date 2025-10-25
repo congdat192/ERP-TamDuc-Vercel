@@ -1881,6 +1881,51 @@ export type Database = {
         }
         Relationships: []
       }
+      supplier_catalogs: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          display_name: string
+          display_order: number | null
+          file_name: string
+          file_size: number | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          pdf_url: string
+          supplier_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          display_name: string
+          display_order?: number | null
+          file_name: string
+          file_size?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          pdf_url: string
+          supplier_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          display_name?: string
+          display_order?: number | null
+          file_name?: string
+          file_size?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          pdf_url?: string
+          supplier_name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       training_competency_levels: {
         Row: {
           color: string

@@ -1,4 +1,5 @@
-import { Search, Menu, ShoppingBag, Lightbulb, Zap, X } from 'lucide-react';
+import { useState } from 'react';
+import { Search, Menu, ShoppingBag, Lightbulb, Zap, X, FileText } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -11,7 +12,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useQuery } from '@tanstack/react-query';
 import { lensApi } from '../../services/lensApi';
-import { LensRecommendationGroup } from '../../types/lens';
+import { LensRecommendationGroup, SupplierCatalog } from '../../types/lens';
+import { PDFViewerModal } from './PDFViewerModal';
 
 interface LensAppBarProps {
   onSearchChange: (query: string) => void;
@@ -28,9 +30,17 @@ export function LensAppBar({
   selectedRecommendation,
   onRecommendationSelect 
 }: LensAppBarProps) {
+  const [pdfModalOpen, setPdfModalOpen] = useState(false);
+  const [selectedCatalog, setSelectedCatalog] = useState<SupplierCatalog | null>(null);
+
   const { data: groups, isLoading } = useQuery({
     queryKey: ['recommendation-groups'],
     queryFn: () => lensApi.getRecommendationGroups(),
+  });
+
+  const { data: catalogs, isLoading: isLoadingCatalogs } = useQuery({
+    queryKey: ['supplier-catalogs'],
+    queryFn: () => lensApi.getSupplierCatalogs(),
   });
 
   return (
@@ -115,6 +125,35 @@ export function LensAppBar({
             </DropdownMenu>
           )}
 
+          {/* PDF Catalog Dropdown */}
+          {!isLoadingCatalogs && catalogs && catalogs.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className="gap-2 border-2 border-purple-500 bg-purple-50 hover:bg-purple-100 text-purple-700 font-semibold shadow-sm h-9"
+                >
+                  <FileText className="w-4 h-4 text-purple-500" />
+                  <span className="hidden sm:inline">Catalog PDF</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 z-[60]">
+                {catalogs.map((catalog) => (
+                  <DropdownMenuItem
+                    key={catalog.id}
+                    onClick={() => {
+                      setSelectedCatalog(catalog);
+                      setPdfModalOpen(true);
+                    }}
+                  >
+                    <span className="mr-2 text-lg">{catalog.icon}</span>
+                    <span className="flex-1">{catalog.display_name}</span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
           {/* Tư vấn chọn kính */}
           <Link
             to="/lens-quiz"
@@ -138,6 +177,16 @@ export function LensAppBar({
           </button>
         </div>
       </div>
+
+      {/* PDF Viewer Modal */}
+      <PDFViewerModal
+        open={pdfModalOpen}
+        onClose={() => {
+          setPdfModalOpen(false);
+          setSelectedCatalog(null);
+        }}
+        catalog={selectedCatalog}
+      />
     </header>
   );
 }

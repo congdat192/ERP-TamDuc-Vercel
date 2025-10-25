@@ -11,7 +11,10 @@ import {
   MediaUploadResult,
   LensRecommendationGroup,
   CreateRecommendationGroupInput,
-  UpdateRecommendationGroupInput
+  UpdateRecommendationGroupInput,
+  SupplierCatalog,
+  CreateSupplierCatalogInput,
+  UpdateSupplierCatalogInput
 } from '../types/lens';
 
 export const lensApi = {
@@ -339,7 +342,7 @@ export const lensApi = {
   // Helper: Generate unique filename preserving original name
   async generateUniqueFileName(
     originalName: string, 
-    folder: 'products' | 'banners' | 'brands'
+    folder: 'products' | 'banners' | 'brands' | 'catalogs'
   ): Promise<string> {
     // Step 1: Sanitize filename
     const sanitized = originalName
@@ -735,5 +738,74 @@ export const lensApi = {
       display_order: item.display_order,
       notes: item.notes
     }));
+  },
+
+  // ============= SUPPLIER CATALOGS =============
+
+  // Get all active supplier catalogs
+  async getSupplierCatalogs(): Promise<SupplierCatalog[]> {
+    const { data, error } = await supabase
+      .from('supplier_catalogs')
+      .select('*')
+      .eq('is_active', true)
+      .order('display_order');
+    
+    if (error) throw error;
+    return data || [];
+  },
+
+  // Create new supplier catalog
+  async createSupplierCatalog(input: CreateSupplierCatalogInput): Promise<SupplierCatalog> {
+    const { data, error } = await supabase
+      .from('supplier_catalogs')
+      .insert(input)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as SupplierCatalog;
+  },
+
+  // Update supplier catalog
+  async updateSupplierCatalog(id: string, input: UpdateSupplierCatalogInput): Promise<SupplierCatalog> {
+    const { data, error } = await supabase
+      .from('supplier_catalogs')
+      .update(input)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as SupplierCatalog;
+  },
+
+  // Delete supplier catalog
+  async deleteSupplierCatalog(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('supplier_catalogs')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+  },
+
+  // Upload PDF to storage
+  async uploadCatalogPDF(file: File): Promise<string> {
+    const fileName = await this.generateUniqueFileName(file.name, 'catalogs');
+    
+    const { error: uploadError } = await supabase.storage
+      .from('lens-images')
+      .upload(fileName, file, {
+        contentType: 'application/pdf',
+        cacheControl: '3600'
+      });
+    
+    if (uploadError) throw uploadError;
+    
+    const { data: { publicUrl } } = supabase.storage
+      .from('lens-images')
+      .getPublicUrl(fileName);
+    
+    return publicUrl;
   },
 };
