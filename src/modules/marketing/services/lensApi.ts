@@ -159,11 +159,16 @@ export const lensApi = {
       .from('lens_products')
       .select('*')
       .eq('id', id)
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('Error fetching product:', error);
       throw error;
+    }
+
+    // Product not found, return null
+    if (!data) {
+      return null;
     }
 
     // Increment view count

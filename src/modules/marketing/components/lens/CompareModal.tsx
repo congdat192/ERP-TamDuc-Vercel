@@ -16,10 +16,24 @@ export function CompareModal({ productIds, open, onOpenChange, onRemove }: Compa
   const { data: products, isLoading } = useQuery({
     queryKey: ['compare-products', productIds],
     queryFn: async () => {
-      const results = await Promise.all(
+      const results = await Promise.allSettled(
         productIds.map(id => lensApi.getProductById(id))
       );
-      return results.filter(Boolean);
+      
+      // Auto-cleanup: Remove invalid IDs from localStorage
+      const validProducts = results
+        .map((result, index) => {
+          if (result.status === 'fulfilled' && result.value) {
+            return result.value;
+          } else {
+            // Remove invalid product ID from compare list
+            onRemove(productIds[index]);
+            return null;
+          }
+        })
+        .filter(Boolean);
+      
+      return validProducts;
     },
     enabled: open && productIds.length > 0,
   });
