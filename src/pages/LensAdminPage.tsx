@@ -24,13 +24,13 @@ export function LensAdminPage() {
   const { hasFeatureAccess } = usePermissions();
   
   // Check permission
-  if (!hasFeatureAccess('manage_lens_products')) {
+  if (!hasFeatureAccess('manage_lens_admin')) {
     return (
       <div className="container mx-auto py-6">
         <Alert variant="destructive">
           <ShieldAlert className="h-4 w-4" />
           <AlertDescription>
-            Bạn không có quyền truy cập trang này. Vui lòng liên hệ admin để được cấp quyền "Quản lý Sản phẩm Tròng".
+            Bạn không có quyền truy cập module Lens Admin. Vui lòng liên hệ quản trị viên để được cấp quyền.
           </AlertDescription>
         </Alert>
       </div>
