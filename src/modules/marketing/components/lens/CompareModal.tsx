@@ -59,12 +59,12 @@ export function CompareModal({ productIds, open, onOpenChange, onRemove }: Compa
 
         {products && products.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
+            <table className="w-full border-collapse table-fixed">
               <thead>
                 <tr>
-                  <th className="border p-2 bg-muted text-left">Thông số</th>
+                  <th className="border p-2 bg-muted text-left w-32">Thông số</th>
                   {products.map((product) => (
-                    <th key={product!.id} className="border p-2 bg-muted min-w-[200px]">
+                    <th key={product!.id} className="border p-2 bg-muted w-80">
                       <div className="flex items-start justify-between gap-2">
                         <span className="text-sm font-medium">{product!.name}</span>
                         <Button
@@ -84,7 +84,7 @@ export function CompareModal({ productIds, open, onOpenChange, onRemove }: Compa
                 <tr>
                   <td className="border p-2 font-medium">Hình ảnh</td>
                   {products.map((product) => (
-                    <td key={product!.id} className="border p-2">
+                    <td key={product!.id} className="border p-2 w-80">
                       <div className="aspect-square bg-muted rounded overflow-hidden">
                         {product!.image_urls && product!.image_urls.length > 0 ? (
                           <img
@@ -104,7 +104,7 @@ export function CompareModal({ productIds, open, onOpenChange, onRemove }: Compa
                 <tr>
                   <td className="border p-2 font-medium">Giá</td>
                   {products.map((product) => (
-                    <td key={product!.id} className="border p-2">
+                    <td key={product!.id} className="border p-2 w-80">
                       <span className="text-lg font-bold text-green-700">
                         {product!.price.toLocaleString('vi-VN')}₫
                       </span>
@@ -114,31 +114,31 @@ export function CompareModal({ productIds, open, onOpenChange, onRemove }: Compa
                 <tr>
                   <td className="border p-2 font-medium">Thương hiệu</td>
                   {products.map((product) => (
-                    <td key={product!.id} className="border p-2">{product!.brand?.name}</td>
+                    <td key={product!.id} className="border p-2 w-80">{product!.brand?.name}</td>
                   ))}
                 </tr>
                 <tr>
                   <td className="border p-2 font-medium">Chất liệu</td>
                   {products.map((product) => (
-                    <td key={product!.id} className="border p-2">{product!.attributes?.material?.[0] || '-'}</td>
+                    <td key={product!.id} className="border p-2 w-80">{product!.attributes?.material?.[0] || '-'}</td>
                   ))}
                 </tr>
                 <tr>
                   <td className="border p-2 font-medium">Chiết suất</td>
                   {products.map((product) => (
-                    <td key={product!.id} className="border p-2">{product!.attributes?.refractive_index?.[0] || '-'}</td>
+                    <td key={product!.id} className="border p-2 w-80">{product!.attributes?.refractive_index?.[0] || '-'}</td>
                   ))}
                 </tr>
                 <tr>
                   <td className="border p-2 font-medium">Xuất xứ</td>
                   {products.map((product) => (
-                    <td key={product!.id} className="border p-2">{product!.attributes?.origin?.[0] || '-'}</td>
+                    <td key={product!.id} className="border p-2 w-80">{product!.attributes?.origin?.[0] || '-'}</td>
                   ))}
                 </tr>
                 <tr>
                   <td className="border p-2 font-medium">Tính năng</td>
                   {products.map((product) => (
-                    <td key={product!.id} className="border p-2">
+                    <td key={product!.id} className="border p-2 w-80">
                       <div className="flex flex-wrap gap-1">
                         {(() => {
                           const allAttributes = (window as any).__allAttributes || [];
