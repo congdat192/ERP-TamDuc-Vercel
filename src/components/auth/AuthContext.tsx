@@ -1,19 +1,12 @@
 /**
- * Ultra-Simplified AuthContext - FIXED VERSION
+ * Ultra-Simplified AuthContext
  * - No RLS in app logic, only role level check
  * - Single RPC call: get_user_profile_simple()
  * - Cache 2 hours in localStorage
  * - Owner/Admin bypass all checks (role level <= 2)
- *
- * FIXES:
- * - Token refresh now updates user profile
- * - Invalid refresh token handling
- * - Proper INACTIVE status blocking
- * - Better cleanup on auth state changes
- * - Fixed dependency array to prevent stale closures
  */
 
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, UserPermissions, ERPModule, VoucherFeature, UserStatus } from "@/types/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -52,10 +45,9 @@ const transformToUser = (data: CachedAuth): User => {
   const roleLevel = data.role.level;
   const isOwnerAdmin = isOwnerOrAdmin(roleLevel);
 
-  // ✅ FIXED: Block INACTIVE users properly
+  // SAFETY: Handle INACTIVE status at frontend level
   if (data.profile.status !== "ACTIVE") {
-    console.error("❌ [Auth] User account is not active:", data.profile.status);
-    throw new Error("USER_INACTIVE");
+    console.warn("⚠️ [Auth] User account is not active:", data.profile.status);
   }
 
   return {
@@ -66,10 +58,10 @@ const transformToUser = (data: CachedAuth): User => {
     phone: data.profile.phone,
     avatarPath: data.profile.avatar_path,
     status: data.profile.status as UserStatus,
-    role: data.role.name as any,
+    role: data.role.name as any, // Compatible with existing UserRole type
     permissions: {
-      modules: (data.modules || ["dashboard"]) as ERPModule[],
-      features: data.features || [],
+      modules: (data.modules || ["dashboard"]) as ERPModule[], // Use modules from RPC with fallback
+      features: data.features || [], // Use features from RPC (Owner/Admin get ['full_access'], custom roles get actual codes)
       voucherFeatures: [] as VoucherFeature[],
       canManageUsers: isOwnerAdmin,
       canViewAllVouchers: isOwnerAdmin,
@@ -125,25 +117,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  // ✅ FIXED: Better cleanup with localStorage clear
-  const clearAuthState = useCallback(async () => {
+  const clearAuthState = async () => {
     console.log("🧹 [AuthContext] Clearing auth state");
     setCurrentUser(null);
     setIsLoading(false);
     PermissionCache.clear();
-
-    // Clear Supabase localStorage tokens
-    try {
-      const keys = Object.keys(localStorage);
-      keys.forEach((key) => {
-        if (key.startsWith("sb-") && key.includes("-auth-token")) {
-          localStorage.removeItem(key);
-        }
-      });
-    } catch (error) {
-      console.warn("⚠️ [AuthContext] Could not clear localStorage:", error);
-    }
-  }, []);
+  };
 
   // Simplified session check (trust Supabase auto-refresh)
   const checkSession = async (): Promise<Session | null> => {
@@ -152,15 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data: { session },
         error,
       } = await supabase.auth.getSession();
-      if (error) {
-        // ✅ FIXED: Handle invalid refresh token gracefully
-        if (error.message?.includes("Invalid Refresh Token") || error.message?.includes("Refresh Token Not Found")) {
-          console.warn("⚠️ [AuthContext] Invalid/expired refresh token - clearing auth");
-          await clearAuthState();
-          return null;
-        }
-        throw error;
-      }
+      if (error) throw error;
       return session;
     } catch (error) {
       console.error("❌ [AuthContext] Session check error:", error);
@@ -179,20 +150,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (session?.user && mounted) {
           console.log("✅ [AuthContext] Session found, fetching user");
-          try {
-            const user = await fetchUserSimple(session.user.id);
-            if (mounted) {
-              setCurrentUser(user);
-            }
-          } catch (error: any) {
-            // Handle INACTIVE user
-            if (error.message === "USER_INACTIVE") {
-              console.warn("⚠️ [AuthContext] User is inactive, signing out");
-              await supabase.auth.signOut();
-              await clearAuthState();
-            } else {
-              throw error;
-            }
+          const user = await fetchUserSimple(session.user.id);
+          if (mounted) {
+            setCurrentUser(user);
           }
         } else {
           console.log("ℹ️ [AuthContext] No active session");
@@ -217,46 +177,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (!mounted) return;
 
-      // ✅ FIXED: Better handling of SIGNED_OUT event
-      if (event === "SIGNED_OUT") {
-        // Only clear if user was previously logged in (avoid noise on initial load)
-        if (currentUser) {
-          console.log("👋 [AuthContext] User signed out");
-        }
-        await clearAuthState();
-        return;
-      }
-
       if (event === "SIGNED_IN" && session?.user) {
         try {
           const user = await fetchUserSimple(session.user.id);
           if (mounted) {
             setCurrentUser(user);
           }
-        } catch (error: any) {
+        } catch (error) {
           console.error("❌ [AuthContext] Error fetching user after sign in:", error);
-          if (error.message === "USER_INACTIVE") {
-            await supabase.auth.signOut();
-          }
           await clearAuthState();
         }
-      } else if (event === "TOKEN_REFRESHED" && session?.user) {
-        // ✅ FIXED: Refresh user profile on token refresh
-        console.log("🔄 [AuthContext] Token refreshed, updating user profile");
-        try {
-          PermissionCache.clear(); // Force fresh fetch
-          const user = await fetchUserSimple(session.user.id);
-          if (mounted) {
-            setCurrentUser(user);
-            console.log("✅ [AuthContext] Profile updated after token refresh");
-          }
-        } catch (error: any) {
-          console.error("❌ [AuthContext] Error refreshing profile:", error);
-          if (error.message === "USER_INACTIVE") {
-            await supabase.auth.signOut();
-            await clearAuthState();
-          }
-        }
+      } else if (event === "SIGNED_OUT") {
+        await clearAuthState();
+      } else if (event === "TOKEN_REFRESHED") {
+        console.log("🔄 [AuthContext] Token refreshed");
       }
     });
 
@@ -265,7 +199,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       subscription.unsubscribe();
       mounted = false;
     };
-  }, [currentUser, clearAuthState]); // ✅ FIXED: Include dependencies
+  }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     console.log("🔐 [AuthContext] Login attempt for:", email);
@@ -286,32 +220,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       console.log("✅ [AuthContext] Supabase auth successful:", authUser.id);
 
-      // Step 2: Fetch user profile (includes status check)
-      try {
-        const user = await fetchUserSimple(authUser.id);
+      // Step 2: Check profile status
+      const { data: profile } = await supabase.from("profiles").select("status").eq("id", authUser.id).single();
 
-        console.log("✅ [AuthContext] Login successful:", user.fullName);
-        setCurrentUser(user);
-
+      if (profile?.status !== "ACTIVE") {
+        console.error("❌ [AuthContext] Account is not active:", profile?.status);
+        await supabase.auth.signOut();
         toast({
-          title: "Đăng nhập thành công",
-          description: `Chào mừng ${user.fullName}!`,
+          title: "Đăng nhập thất bại",
+          description: "Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.",
+          variant: "destructive",
         });
-
-        return true;
-      } catch (error: any) {
-        // ✅ FIXED: Handle INACTIVE status properly
-        if (error.message === "USER_INACTIVE") {
-          await supabase.auth.signOut();
-          toast({
-            title: "Đăng nhập thất bại",
-            description: "Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.",
-            variant: "destructive",
-          });
-          return false;
-        }
-        throw error;
+        return false;
       }
+
+      // Step 3: Fetch user profile (single RPC call)
+      const user = await fetchUserSimple(authUser.id);
+
+      console.log("✅ [AuthContext] Login successful:", user.fullName);
+      setCurrentUser(user);
+
+      toast({
+        title: "Đăng nhập thành công",
+        description: `Chào mừng ${user.fullName}!`,
+      });
+
+      return true;
     } catch (error: any) {
       console.error("❌ [AuthContext] Login error:", error);
 
@@ -373,13 +307,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const updatedUser = await fetchUserSimple(currentUser.id);
       setCurrentUser(updatedUser);
       console.log("✅ [AuthContext] User profile refreshed");
-    } catch (error: any) {
+    } catch (error) {
       console.error("❌ [AuthContext] Error refreshing user profile:", error);
-      if (error.message === "USER_INACTIVE") {
-        await supabase.auth.signOut();
-        await clearAuthState();
-        throw new Error("User account has been deactivated");
-      }
       throw error;
     }
   };
@@ -411,8 +340,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logout,
         refreshUserProfile,
         refreshPermissions,
-        requirePasswordChange: false,
-        setRequirePasswordChange: () => {},
+        requirePasswordChange: false, // Simplified: no password change flow
+        setRequirePasswordChange: () => {}, // No-op
       }}
     >
       {children}
