@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -48,6 +48,31 @@ export function BannerForm({ open, banner, onClose }: BannerFormProps) {
       display_order: banner?.display_order || 0,
     },
   });
+
+  // Reset form when modal opens or banner changes
+  useEffect(() => {
+    if (open && banner) {
+      // Edit mode: populate form with existing banner data
+      reset({
+        title: banner.title,
+        subtitle: banner.subtitle || '',
+        image_url: banner.image_url,
+        link_url: banner.link_url || '',
+        display_order: banner.display_order,
+      });
+      setPreviewUrl(banner.image_url);
+    } else if (open && !banner) {
+      // Create mode: clear form
+      reset({
+        title: '',
+        subtitle: '',
+        image_url: '',
+        link_url: '',
+        display_order: 0,
+      });
+      setPreviewUrl(null);
+    }
+  }, [open, banner, reset]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -135,7 +160,9 @@ export function BannerForm({ open, banner, onClose }: BannerFormProps) {
           </div>
 
           <div>
-            <Label>Ảnh Banner *</Label>
+            <Label className="flex items-center gap-2">
+              <span>🖼️ Ảnh Banner *</span>
+            </Label>
             <div className="space-y-2">
               <div className="flex gap-2">
                 <Button
@@ -178,7 +205,10 @@ export function BannerForm({ open, banner, onClose }: BannerFormProps) {
           </div>
 
           <div>
-            <Label htmlFor="link_url">Link URL</Label>
+            <Label htmlFor="link_url" className="flex items-center gap-2">
+              <span>🔗 Link URL</span>
+              <span className="text-xs text-muted-foreground font-normal">(URL đích khi click banner - tùy chọn)</span>
+            </Label>
             <Input
               id="link_url"
               {...register('link_url')}
