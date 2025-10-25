@@ -10,7 +10,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { lensApi } from '@/modules/marketing/services/lensApi';
 import { LensBanner } from '@/modules/marketing/types/lens';
 import { toast } from 'sonner';
-import { Upload } from 'lucide-react';
+import { Upload, Image } from 'lucide-react';
+import { MediaLibraryDialog } from './MediaLibraryDialog';
 
 const bannerSchema = z.object({
   title: z.string().min(1, 'Tiêu đề là bắt buộc').max(100, 'Tiêu đề tối đa 100 ký tự'),
@@ -31,6 +32,7 @@ interface BannerFormProps {
 export function BannerForm({ open, banner, onClose }: BannerFormProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(banner?.image_url || null);
+  const [showMediaLibrary, setShowMediaLibrary] = useState(false);
 
   const {
     register,
@@ -90,6 +92,16 @@ export function BannerForm({ open, banner, onClose }: BannerFormProps) {
     } finally {
       setIsUploading(false);
     }
+  };
+
+  const handleSelectFromLibrary = (selectedUrls: string[]) => {
+    if (selectedUrls.length > 0) {
+      const imageUrl = selectedUrls[0];
+      setValue('image_url', imageUrl);
+      setPreviewUrl(imageUrl);
+      toast.success('Đã chọn ảnh từ thư viện');
+    }
+    setShowMediaLibrary(false);
   };
 
   const onSubmit = async (data: BannerFormData) => {
@@ -162,6 +174,9 @@ export function BannerForm({ open, banner, onClose }: BannerFormProps) {
           <div>
             <Label className="flex items-center gap-2">
               <span>🖼️ Ảnh Banner *</span>
+              <span className="text-xs text-muted-foreground font-normal">
+                (Khuyến nghị: 1200x600px, dung lượng {'<'} 200KB)
+              </span>
             </Label>
             <div className="space-y-2">
               <div className="flex gap-2">
@@ -172,7 +187,7 @@ export function BannerForm({ open, banner, onClose }: BannerFormProps) {
                   onClick={() => document.getElementById('banner-upload')?.click()}
                 >
                   <Upload className="w-4 h-4 mr-2" />
-                  {isUploading ? 'Đang upload...' : 'Chọn ảnh'}
+                  {isUploading ? 'Đang upload...' : 'Upload ảnh'}
                 </Button>
                 <Input
                   id="banner-upload"
@@ -181,13 +196,23 @@ export function BannerForm({ open, banner, onClose }: BannerFormProps) {
                   className="hidden"
                   onChange={handleImageUpload}
                 />
-                <Input
-                  {...register('image_url')}
-                  placeholder="hoặc nhập URL ảnh"
-                  className="flex-1"
-                  onChange={(e) => setPreviewUrl(e.target.value)}
-                />
+                
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowMediaLibrary(true)}
+                >
+                  <Image className="w-4 h-4 mr-2" />
+                  Chọn từ thư viện
+                </Button>
               </div>
+              
+              <Input
+                {...register('image_url')}
+                placeholder="hoặc nhập URL ảnh trực tiếp"
+                onChange={(e) => setPreviewUrl(e.target.value)}
+              />
+              
               {errors.image_url && (
                 <p className="text-sm text-destructive">{errors.image_url.message}</p>
               )}
@@ -244,6 +269,13 @@ export function BannerForm({ open, banner, onClose }: BannerFormProps) {
           </div>
         </form>
       </DialogContent>
+
+      <MediaLibraryDialog
+        open={showMediaLibrary}
+        onClose={() => setShowMediaLibrary(false)}
+        onSelect={handleSelectFromLibrary}
+        maxSelection={1}
+      />
     </Dialog>
   );
 }
