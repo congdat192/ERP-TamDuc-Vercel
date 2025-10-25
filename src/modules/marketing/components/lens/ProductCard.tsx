@@ -24,7 +24,7 @@ export function ProductCard({
       onClick={onClick}
     >
       {product.is_promotion && product.promotion_text && (
-        <Badge className="absolute top-2 right-2 z-10 bg-red-600 hover:bg-red-700">
+        <Badge className="absolute top-2 right-2 z-10 bg-red-600 hover:bg-red-700 text-white">
           {product.promotion_text}
         </Badge>
       )}
@@ -73,7 +73,7 @@ export function ProductCard({
           })()}
         </div>
 
-        <div className="flex items-center justify-between pt-2 border-t">
+        <div className="flex items-center justify-between pt-1.5 border-t">
           <div>
             {product.sale_price ? (
               <div className="flex flex-col gap-1">
