@@ -46,167 +46,208 @@ function GroupRow({
   visibleColumns: Record<string, boolean>; 
   onProductClick: (product: LensProductWithDetails) => void;
 }) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
 
   return (
     <>
-      {/* Parent row - Group header */}
-      <TableRow className="bg-accent/30 font-semibold border-t-2 hover:bg-accent/40">
-        {/* Merged Image + Name column with vertical layout */}
-        {(visibleColumns.image || visibleColumns.name) && (
-          <TableCell 
-            rowSpan={expanded ? group.variants.length + 1 : 1} 
-            className="w-64 p-4"
-          >
-            <div className="flex flex-col items-center gap-3 text-center">
-              {/* 1. Product Name (Top) */}
-              {visibleColumns.name && (
-                <h3 className="font-bold text-lg leading-tight w-full px-2">
-                  {group.baseName}
-                </h3>
-              )}
-              
-              {/* 2. Product Image (Center) */}
-              {visibleColumns.image && (
-                <div className="w-full flex justify-center my-3">
+      {/* Collapsed state - Compact preview row */}
+      {!expanded && (
+        <TableRow 
+          className="hover:bg-accent/50 cursor-pointer border-t" 
+          onClick={() => setExpanded(true)}
+        >
+          {(visibleColumns.image || visibleColumns.name) && (
+            <TableCell className="w-64 p-3">
+              <div className="flex items-center gap-3">
+                {visibleColumns.image && (
                   <img 
                     src={group.image || '/placeholder.svg'} 
                     alt={group.baseName}
-                    className="w-52 h-52 rounded-lg object-contain shadow-md border border-border hover:scale-105 transition-transform duration-200"
+                    className="w-16 h-16 rounded-lg object-cover shadow-sm border border-border"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = '/placeholder.svg';
                     }}
                   />
-                </div>
-              )}
-              
-              {/* 3. Brand Name (Below image) */}
-              <p className="text-sm text-muted-foreground font-medium tracking-wide">
-                {group.brand}
-              </p>
-              
-              {/* 4. Feature Badges (Bottom) */}
-              {visibleColumns.features && group.features.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 justify-center mt-1">
-                  {group.features.slice(0, 6).map((feature, idx) => (
-                    <Badge 
-                      key={idx} 
-                      variant="secondary" 
-                      className="text-xs px-2.5 py-1"
-                    >
-                      {feature}
-                    </Badge>
-                  ))}
-                  {group.features.length > 6 && (
-                    <Badge 
-                      variant="secondary" 
-                      className="text-xs px-2.5 py-1"
-                    >
-                      +{group.features.length - 6}
-                    </Badge>
-                  )}
-                </div>
-              )}
-              
-              {/* 5. Expand/Collapse Button (Bottom) */}
-              <button 
-                onClick={() => setExpanded(!expanded)}
-                className="mt-2 hover:bg-accent rounded-md px-3 py-1.5 transition-colors text-xs text-muted-foreground flex items-center gap-1"
-              >
-                {expanded ? (
-                  <>
-                    <ChevronDown className="w-3.5 h-3.5" />
-                    Thu gọn
-                  </>
-                ) : (
-                  <>
-                    <ChevronRight className="w-3.5 h-3.5" />
-                    Xem {group.variants.length} phiên bản
-                  </>
                 )}
-              </button>
+                {visibleColumns.name && (
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-sm truncate">{group.baseName}</h4>
+                    <p className="text-xs text-muted-foreground truncate">{group.brand}</p>
+                  </div>
+                )}
+              </div>
+            </TableCell>
+          )}
+          <TableCell colSpan={100} className="text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <ChevronRight className="w-4 h-4" />
+              <span>Xem {group.variants.length} phiên bản</span>
             </div>
           </TableCell>
-        )}
-        
-        <TableCell colSpan={100} className="text-sm text-muted-foreground align-top pt-4">
-          {!expanded && (
-            <div className="text-xs">
-              {group.variants.length} phiên bản có sẵn
-            </div>
-          )}
-        </TableCell>
-      </TableRow>
-      
-      {/* Child rows - Variants */}
-      {expanded && group.variants.map((variant) => {
-        const supplyTier = variant.supply_tiers?.[0];
-        const refractiveIndex = variant.attributes?.chiet_suat?.[0] || 
-                               variant.attributes?.refractive_index?.[0];
-        
-        return (
-          <TableRow key={variant.id} className="hover:bg-accent/50">
-            {visibleColumns.refractive_index && (
-              <TableCell className="text-sm font-medium">
-                {refractiveIndex || '-'}
-              </TableCell>
-            )}
-            {visibleColumns.sph_range && (
-              <TableCell className="text-sm">
-                {supplyTier 
-                  ? `${supplyTier.sph_min} đến ${supplyTier.sph_max}`
-                  : '-'}
-              </TableCell>
-            )}
-            {visibleColumns.cyl_range && (
-              <TableCell className="text-sm">
-                {supplyTier
-                  ? `${supplyTier.cyl_min} đến ${supplyTier.cyl_max}`
-                  : '-'}
-              </TableCell>
-            )}
-            {visibleColumns.price && (
-              <TableCell className="text-right font-semibold">
-                {variant.sale_price ? (
-                  <div>
-                    <div className="text-sm text-destructive">
-                      {variant.sale_price.toLocaleString('vi-VN')}₫
+        </TableRow>
+      )}
+
+      {/* Expanded state */}
+      {expanded && (
+        <>
+          {/* Header row - Product info */}
+          <TableRow className="bg-accent/30 border-t-2">
+            {(visibleColumns.image || visibleColumns.name) && (
+              <TableCell className="w-64 p-4">
+                <div className="flex flex-col items-center gap-2 text-center">
+                  {/* Product Name */}
+                  {visibleColumns.name && (
+                    <h3 className="font-bold text-base leading-tight w-full px-2">
+                      {group.baseName}
+                    </h3>
+                  )}
+                  
+                  {/* Product Image */}
+                  {visibleColumns.image && (
+                    <div className="w-full flex justify-center my-2">
+                      <img 
+                        src={group.image || '/placeholder.svg'} 
+                        alt={group.baseName}
+                        className="w-40 h-40 rounded-lg object-contain shadow-sm border border-border hover:scale-105 transition-transform"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = '/placeholder.svg';
+                        }}
+                      />
                     </div>
-                    <div className="text-xs text-muted-foreground line-through">
-                      {variant.price.toLocaleString('vi-VN')}₫
+                  )}
+                  
+                  {/* Brand Name */}
+                  <p className="text-xs text-muted-foreground font-medium">
+                    {group.brand}
+                  </p>
+                  
+                  {/* Feature Badges */}
+                  {visibleColumns.features && group.features.length > 0 && (
+                    <div className="flex flex-wrap gap-1 justify-center">
+                      {group.features.slice(0, 4).map((feature, idx) => (
+                        <Badge 
+                          key={idx} 
+                          variant="secondary" 
+                          className="text-xs px-2 py-0.5 bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
+                        >
+                          {feature}
+                        </Badge>
+                      ))}
+                      {group.features.length > 4 && (
+                        <Badge 
+                          variant="secondary" 
+                          className="text-xs px-2 py-0.5"
+                        >
+                          +{group.features.length - 4}
+                        </Badge>
+                      )}
                     </div>
-                  </div>
-                ) : (
-                  <div className="text-sm">
-                    {variant.price.toLocaleString('vi-VN')}₫
-                  </div>
-                )}
+                  )}
+                  
+                  {/* Collapse button */}
+                  <button 
+                    onClick={() => setExpanded(false)}
+                    className="mt-1 text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+                  >
+                    <ChevronDown className="w-3 h-3" />
+                    Thu gọn
+                  </button>
+                </div>
               </TableCell>
             )}
-            {visibleColumns.tier_type && (
-              <TableCell>
-                {supplyTier ? (
-                  <Badge variant="outline" className="text-xs">
-                    {getTierDisplayName(supplyTier.tier_type)}
-                  </Badge>
-                ) : (
-                  '-'
-                )}
-              </TableCell>
-            )}
-            <TableCell className="text-right">
-              <Button 
-                size="sm" 
-                variant="ghost"
-                onClick={() => onProductClick(variant)}
-                className="h-8 w-8 p-0"
-              >
-                <Eye className="w-4 h-4" />
-              </Button>
+            <TableCell colSpan={100} className="align-top pt-2">
+              <p className="text-xs text-muted-foreground">
+                {group.variants.length} phiên bản có sẵn
+              </p>
             </TableCell>
           </TableRow>
-        );
-      })}
+
+          {/* Variant rows */}
+          {group.variants.map((variant, idx) => {
+            const supplyTier = variant.supply_tiers?.[0];
+            const refractiveIndex = variant.attributes?.chiet_suat?.[0] || 
+                                   variant.attributes?.refractive_index?.[0];
+            
+            return (
+              <TableRow key={variant.id} className="hover:bg-accent/50">
+                {/* Spacer cell for product info column */}
+                {(visibleColumns.image || visibleColumns.name) && (
+                  <TableCell className="w-64 bg-accent/5 border-r">
+                    <div className="text-center text-xs text-muted-foreground py-2">
+                      #{idx + 1}
+                    </div>
+                  </TableCell>
+                )}
+                
+                {/* Data columns */}
+                {visibleColumns.refractive_index && (
+                  <TableCell className="text-sm font-medium py-2">
+                    {refractiveIndex || '-'}
+                  </TableCell>
+                )}
+                
+                {visibleColumns.sph_range && (
+                  <TableCell className="text-sm py-2">
+                    {supplyTier 
+                      ? `${supplyTier.sph_min} đến ${supplyTier.sph_max}`
+                      : '-'}
+                  </TableCell>
+                )}
+                
+                {visibleColumns.cyl_range && (
+                  <TableCell className="text-sm py-2">
+                    {supplyTier
+                      ? `${supplyTier.cyl_min} đến ${supplyTier.cyl_max}`
+                      : '-'}
+                  </TableCell>
+                )}
+                
+                {visibleColumns.price && (
+                  <TableCell className="text-right font-semibold py-2">
+                    {variant.sale_price ? (
+                      <div>
+                        <div className="text-sm text-destructive">
+                          {variant.sale_price.toLocaleString('vi-VN')}₫
+                        </div>
+                        <div className="text-xs text-muted-foreground line-through">
+                          {variant.price.toLocaleString('vi-VN')}₫
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-sm">
+                        {variant.price.toLocaleString('vi-VN')}₫
+                      </div>
+                    )}
+                  </TableCell>
+                )}
+                
+                {visibleColumns.tier_type && (
+                  <TableCell className="py-2">
+                    {supplyTier ? (
+                      <Badge variant="outline" className="text-xs">
+                        {getTierDisplayName(supplyTier.tier_type)}
+                      </Badge>
+                    ) : (
+                      '-'
+                    )}
+                  </TableCell>
+                )}
+                
+                <TableCell className="text-right py-2">
+                  <Button 
+                    size="sm" 
+                    variant="ghost"
+                    onClick={() => onProductClick(variant)}
+                    className="h-7 w-7 p-0"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </>
+      )}
     </>
   );
 }
