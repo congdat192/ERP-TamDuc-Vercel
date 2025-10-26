@@ -2722,6 +2722,7 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: undefined
       }
+      validate_attribute_options: { Args: { opts: Json }; Returns: boolean }
       verify_employee_otp_batch: {
         Args: { p_email: string; p_otp_code: string }
         Returns: Json
