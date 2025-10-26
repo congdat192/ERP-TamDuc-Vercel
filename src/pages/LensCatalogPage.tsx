@@ -14,6 +14,8 @@ import { SupplyUseCaseFilterDrawer } from "@/modules/marketing/components/lens/S
 import { SortDropdown } from "@/modules/marketing/components/lens/SortDropdown";
 import { ProductGrid } from "@/modules/marketing/components/lens/ProductGrid";
 import { ProductComparisonTable } from "@/modules/marketing/components/lens/ProductComparisonTable";
+import { ProductGroupedTable } from "@/modules/marketing/components/lens/ProductGroupedTable";
+import { ColumnVisibilityFilter } from "@/modules/marketing/components/lens/ColumnVisibilityFilter";
 import { BannerGrid } from "@/modules/marketing/components/lens/BannerGrid";
 import { FooterBar } from "@/modules/marketing/components/lens/FooterBar";
 import { ProductDetailModal } from "@/modules/marketing/components/lens/ProductDetailModal";
@@ -31,6 +33,49 @@ export function LensCatalogPage() {
   const [showSupplyUseCaseFilters, setShowSupplyUseCaseFilters] = useState(false);
   const [selectedRecommendation, setSelectedRecommendation] = useState<LensRecommendationGroup | null>(null);
   const [viewMode, setViewMode] = useState<"card" | "table">("card");
+
+  // Column visibility state
+  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>(() => {
+    const saved = localStorage.getItem('lens-catalog-columns');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        // Fallback to default if parsing fails
+      }
+    }
+    return {
+      image: true,
+      name: true,
+      refractive_index: true,
+      sph_range: true,
+      cyl_range: true,
+      price: true,
+      tier_type: true,
+      features: true
+    };
+  });
+
+  // Column labels
+  const COLUMN_LABELS: Record<string, string> = {
+    image: 'Hình ảnh',
+    name: 'Tên sản phẩm',
+    refractive_index: 'Chiết suất',
+    sph_range: 'Độ cầu (SPH)',
+    cyl_range: 'Độ loạn (CYL)',
+    price: 'Đơn giá',
+    tier_type: 'Tầng cung ứng',
+    features: 'Tính năng'
+  };
+
+  // Handle column toggle
+  const handleColumnToggle = (key: string) => {
+    setVisibleColumns(prev => {
+      const updated = { ...prev, [key]: !prev[key] };
+      localStorage.setItem('lens-catalog-columns', JSON.stringify(updated));
+      return updated;
+    });
+  };
 
   const advancedFilterCount = getAdvancedFilterCount(filters);
   const supplyUseCaseFilterCount = getSupplyUseCaseFilterCount(filters);
@@ -185,6 +230,17 @@ export function LensCatalogPage() {
 
               <SortDropdown />
 
+              {viewMode === "table" && (
+                <ColumnVisibilityFilter 
+                  columns={Object.entries(visibleColumns).map(([key, visible]) => ({
+                    key,
+                    label: COLUMN_LABELS[key],
+                    visible
+                  }))}
+                  onColumnToggle={handleColumnToggle}
+                />
+              )}
+
               <div className="flex border border-border rounded-lg overflow-hidden">
                 <Button
                   variant={viewMode === "card" ? "default" : "ghost"}
@@ -219,10 +275,11 @@ export function LensCatalogPage() {
             canAddMore={compareState.canAddMore}
           />
         ) : (
-          <ProductComparisonTable
+          <ProductGroupedTable
             products={products}
             isLoading={isLoading}
             onProductClick={(product) => setSelectedProduct(product)}
+            visibleColumns={visibleColumns}
           />
         )}
 

@@ -67,6 +67,22 @@ export function ExportExcelButton() {
           });
         });
 
+        // Add supply tier columns if available
+        const firstTier = p.supply_tiers?.[0];
+        if (firstTier) {
+          row['Độ cầu Min (SPH)'] = firstTier.sph_min;
+          row['Độ cầu Max (SPH)'] = firstTier.sph_max;
+          row['Độ loạn Min (CYL)'] = firstTier.cyl_min;
+          row['Độ loạn Max (CYL)'] = firstTier.cyl_max;
+          row['Tầng cung ứng'] = firstTier.tier_type;
+        } else {
+          row['Độ cầu Min (SPH)'] = '';
+          row['Độ cầu Max (SPH)'] = '';
+          row['Độ loạn Min (CYL)'] = '';
+          row['Độ loạn Max (CYL)'] = '';
+          row['Tầng cung ứng'] = '';
+        }
+
         return row;
       });
 

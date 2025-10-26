@@ -69,7 +69,17 @@ export interface LensFilters {
 }
 
 export interface LensProductWithDetails extends LensProduct {
-  // No additional fields needed - brand info is in attributes
+  // Optional supply tiers for product grouping and filtering
+  supply_tiers?: Array<{
+    id: string;
+    tier_type: 'IN_STORE' | 'NEXT_DAY' | 'CUSTOM_ORDER' | 'FACTORY_ORDER';
+    sph_min: number;
+    sph_max: number;
+    cyl_min: number;
+    cyl_max: number;
+    lead_time_days: number;
+    price_adjustment: number;
+  }>;
 }
 
 export interface LensMediaItem {
