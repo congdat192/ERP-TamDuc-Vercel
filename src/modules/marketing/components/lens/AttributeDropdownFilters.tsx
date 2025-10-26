@@ -85,19 +85,17 @@ export function AttributeDropdownFilters({
                     
                     <DropdownMenuSeparator />
 
-                    {(attr.options as string[]).map((option) => {
-                      const isChecked = selectedValues.includes(option);
+                    {attr.options.map((option) => {
+                      const opt = typeof option === 'string' ? { value: option, label: option } : option;
+                      const isChecked = selectedValues.includes(opt.value);
                       return (
                         <DropdownMenuCheckboxItem
-                          key={option}
+                          key={opt.value}
                           checked={isChecked}
-                          onCheckedChange={() => toggleAttributeValue(attr.slug, option)}
+                          onCheckedChange={() => toggleAttributeValue(attr.slug, opt.value)}
                           className="cursor-pointer"
                         >
-                          <span className="flex-1">{option}</span>
-                          {isChecked && (
-                            <Check className="w-4 h-4 text-green-600" />
-                          )}
+                          {opt.label}
                         </DropdownMenuCheckboxItem>
                       );
                     })}

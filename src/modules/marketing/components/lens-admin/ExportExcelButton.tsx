@@ -62,8 +62,9 @@ export function ExportExcelButton() {
           const selectedValues = p.attributes?.[attr.slug] || [];
           
           // Create column for each option: "Chống UV" = "Có" or "Không"
-          attr.options.forEach((option: string) => {
-            row[option] = selectedValues.includes(option) ? 'Có' : 'Không';
+          attr.options.forEach((option) => {
+            const opt = typeof option === 'string' ? { value: option, label: option } : option;
+            row[opt.label] = selectedValues.includes(opt.value) ? 'Có' : 'Không';
           });
         });
 

@@ -9,12 +9,20 @@ export interface LensBrand {
   updated_at: string;
 }
 
+export interface AttributeOption {
+  value: string; // Key to save in product.attributes
+  label: string; // Display text in dropdown
+  image_url?: string | null; // Image for option
+  short_description?: string | null; // Tooltip text
+  content?: string | null; // Full HTML content for dialog
+}
+
 export interface LensProductAttribute {
   id: string;
   name: string;
   slug: string;
   type: 'select' | 'multiselect';
-  options: string[];
+  options: AttributeOption[];
   icon: string | null;
   display_order: number;
   is_active: boolean;

@@ -424,9 +424,12 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
                       <SelectValue placeholder={`Chọn ${attr.name.toLowerCase()}`} />
                     </SelectTrigger>
                     <SelectContent>
-                      {attr.options.map(option => (
-                        <SelectItem key={option} value={option}>{option}</SelectItem>
-                      ))}
+                      {attr.options.map(option => {
+                        const opt = typeof option === 'string' ? { value: option, label: option } : option;
+                        return (
+                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 </div>
@@ -447,12 +450,13 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
                       </Label>
                       <div className="grid grid-cols-2 gap-2 pl-6">
                         {attr.options.map(option => {
-                          const isChecked = (attributeValues[attr.slug] || []).includes(option);
+                          const opt = typeof option === 'string' ? { value: option, label: option } : option;
+                          const isChecked = (attributeValues[attr.slug] || []).includes(opt.value);
                           
                           return (
-                            <div key={option} className="flex items-center space-x-2">
+                            <div key={opt.value} className="flex items-center space-x-2">
                               <Checkbox
-                                id={`${attr.id}-${option}`}
+                                id={`${attr.id}-${opt.value}`}
                                 checked={isChecked}
                                 onCheckedChange={(checked) => {
                                   setAttributeValues(prev => {
@@ -460,14 +464,14 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
                                     return {
                                       ...prev,
                                       [attr.slug]: checked
-                                        ? [...currentValues, option]
-                                        : currentValues.filter((v: string) => v !== option)
+                                        ? [...currentValues, opt.value]
+                                        : currentValues.filter((v: string) => v !== opt.value)
                                     };
                                   });
                                 }}
                               />
-                              <Label htmlFor={`${attr.id}-${option}`} className="cursor-pointer text-sm">
-                                {option}
+                              <Label htmlFor={`${attr.id}-${opt.value}`} className="cursor-pointer text-sm">
+                                {opt.label}
                               </Label>
                             </div>
                           );
@@ -738,9 +742,12 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
                       <SelectValue placeholder={`Chọn ${attr.name.toLowerCase()}`} />
                     </SelectTrigger>
                     <SelectContent>
-                      {attr.options.map(option => (
-                        <SelectItem key={option} value={option}>{option}</SelectItem>
-                      ))}
+                      {attr.options.map(option => {
+                        const opt = typeof option === 'string' ? { value: option, label: option } : option;
+                        return (
+                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 </div>
@@ -761,12 +768,13 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
                       </Label>
                       <div className="grid grid-cols-2 gap-2 pl-6">
                         {attr.options.map(option => {
-                          const isChecked = (attributeValues[attr.slug] || []).includes(option);
+                          const opt = typeof option === 'string' ? { value: option, label: option } : option;
+                          const isChecked = (attributeValues[attr.slug] || []).includes(opt.value);
                           
                           return (
-                            <div key={option} className="flex items-center space-x-2">
+                            <div key={opt.value} className="flex items-center space-x-2">
                               <Checkbox
-                                id={`${attr.id}-${option}`}
+                                id={`${attr.id}-${opt.value}`}
                                 checked={isChecked}
                                 onCheckedChange={(checked) => {
                                   setAttributeValues(prev => {
@@ -774,14 +782,14 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
                                     return {
                                       ...prev,
                                       [attr.slug]: checked
-                                        ? [...currentValues, option]
-                                        : currentValues.filter((v: string) => v !== option)
+                                        ? [...currentValues, opt.value]
+                                        : currentValues.filter((v: string) => v !== opt.value)
                                     };
                                   });
                                 }}
                               />
-                              <Label htmlFor={`${attr.id}-${option}`} className="cursor-pointer text-sm">
-                                {option}
+                              <Label htmlFor={`${attr.id}-${opt.value}`} className="cursor-pointer text-sm">
+                                {opt.label}
                               </Label>
                             </div>
                           );

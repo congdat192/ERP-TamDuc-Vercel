@@ -81,9 +81,12 @@ export function AttributeManager() {
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      {attr.options.slice(0, 5).map(opt => (
-                        <Badge key={opt} variant="secondary">{opt}</Badge>
-                      ))}
+                      {attr.options.slice(0, 5).map((opt, i) => {
+                        const option = typeof opt === 'string' ? { value: opt, label: opt } : opt;
+                        return (
+                          <Badge key={i} variant="secondary">{option.label}</Badge>
+                        );
+                      })}
                       {attr.options.length > 5 && (
                         <Badge variant="secondary">+{attr.options.length - 5}</Badge>
                       )}

@@ -51,39 +51,41 @@ export function AdvancedFilterDrawer({ open, onOpenChange, attributes }: Advance
                 
                 {attr.type === 'select' ? (
                   <div className="flex flex-wrap gap-2">
-                    {(attr.options as string[]).map(option => {
-                      const isActive = filters.attributeFilters[attr.slug]?.includes(option) || false;
+                    {attr.options.map(option => {
+                      const opt = typeof option === 'string' ? { value: option, label: option } : option;
+                      const isActive = filters.attributeFilters[attr.slug]?.includes(opt.value) || false;
                       return (
                         <button
-                          key={option}
-                          onClick={() => toggleAttributeValue(attr.slug, option)}
+                          key={opt.value}
+                          onClick={() => toggleAttributeValue(attr.slug, opt.value)}
                           className={`px-4 py-2.5 rounded-md border text-sm font-medium transition-all ${
                             isActive
                               ? 'bg-green-600 border-green-600 text-white shadow-sm'
                               : 'bg-background border-border hover:bg-accent hover:border-green-400'
                           }`}
                         >
-                          {option}
+                          {opt.label}
                         </button>
                       );
                     })}
                   </div>
                 ) : (
                   <div className="grid grid-cols-3 gap-3">
-                    {(attr.options as string[]).map(option => {
-                      const isChecked = filters.attributeFilters[attr.slug]?.includes(option) || false;
+                    {attr.options.map(option => {
+                      const opt = typeof option === 'string' ? { value: option, label: option } : option;
+                      const isChecked = filters.attributeFilters[attr.slug]?.includes(opt.value) || false;
                       return (
-                        <div key={option} className="flex items-center space-x-2">
+                        <div key={opt.value} className="flex items-center space-x-2">
                           <Checkbox
-                            id={`${attr.slug}-${option}`}
+                            id={`${attr.slug}-${opt.value}`}
                             checked={isChecked}
-                            onCheckedChange={() => toggleAttributeValue(attr.slug, option)}
+                            onCheckedChange={() => toggleAttributeValue(attr.slug, opt.value)}
                           />
                           <label
-                            htmlFor={`${attr.slug}-${option}`}
+                            htmlFor={`${attr.slug}-${opt.value}`}
                             className="text-sm font-medium leading-none cursor-pointer"
                           >
-                            {option}
+                            {opt.label}
                           </label>
                         </div>
                       );
@@ -103,39 +105,41 @@ export function AdvancedFilterDrawer({ open, onOpenChange, attributes }: Advance
                   
                   {attr.type === 'select' ? (
                     <div className="flex flex-wrap gap-2">
-                      {(attr.options as string[]).map(option => {
-                        const isActive = filters.attributeFilters[attr.slug]?.includes(option) || false;
+                      {attr.options.map(option => {
+                        const opt = typeof option === 'string' ? { value: option, label: option } : option;
+                        const isActive = filters.attributeFilters[attr.slug]?.includes(opt.value) || false;
                         return (
                           <button
-                            key={option}
-                            onClick={() => toggleAttributeValue(attr.slug, option)}
+                            key={opt.value}
+                            onClick={() => toggleAttributeValue(attr.slug, opt.value)}
                             className={`px-3 py-2 rounded-md border text-sm font-medium transition-all ${
                               isActive
                                 ? 'bg-green-600 border-green-600 text-white shadow-sm'
                                 : 'bg-background border-border hover:bg-accent hover:border-green-400'
                             }`}
                           >
-                            {option}
+                            {opt.label}
                           </button>
                         );
                       })}
                     </div>
                   ) : (
                     <div className="space-y-2.5">
-                      {(attr.options as string[]).map(option => {
-                        const isChecked = filters.attributeFilters[attr.slug]?.includes(option) || false;
+                      {attr.options.map(option => {
+                        const opt = typeof option === 'string' ? { value: option, label: option } : option;
+                        const isChecked = filters.attributeFilters[attr.slug]?.includes(opt.value) || false;
                         return (
-                          <div key={option} className="flex items-center space-x-2">
+                          <div key={opt.value} className="flex items-center space-x-2">
                             <Checkbox
-                              id={`${attr.slug}-${option}`}
+                              id={`${attr.slug}-${opt.value}`}
                               checked={isChecked}
-                              onCheckedChange={() => toggleAttributeValue(attr.slug, option)}
+                              onCheckedChange={() => toggleAttributeValue(attr.slug, opt.value)}
                             />
                             <label
-                              htmlFor={`${attr.slug}-${option}`}
+                              htmlFor={`${attr.slug}-${opt.value}`}
                               className="text-sm font-medium leading-none cursor-pointer"
                             >
-                              {option}
+                              {opt.label}
                             </label>
                           </div>
                         );
