@@ -1,6 +1,7 @@
 import { X } from 'lucide-react';
 import { useLensFilters } from '../../hooks/useLensFilters';
 import { cn } from '@/lib/utils';
+import { normalizeAttributeOptions } from '../../utils/attributeHelpers';
 
 interface FeatureFilterChipsProps {
   features: any[];
@@ -14,11 +15,12 @@ export function FeatureFilterChips({ features }: FeatureFilterChipsProps) {
   
   const chips: { slug: string; value: string; label: string; icon: string | null }[] = [];
   multiselectAttrs.forEach(attr => {
-    (attr.options as string[]).forEach(option => {
+    const normalizedOptions = normalizeAttributeOptions(attr.options);
+    normalizedOptions.forEach(option => {
       chips.push({
         slug: attr.slug,
-        value: option,
-        label: option,
+        value: option.value,
+        label: option.label,
         icon: attr.icon,
       });
     });
