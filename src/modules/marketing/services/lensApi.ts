@@ -242,9 +242,7 @@ export const lensApi = {
     return (data || []).map(attr => ({
       ...attr,
       type: attr.type as 'select' | 'multiselect',
-      options: typeof attr.options === 'string' 
-        ? JSON.parse(attr.options) 
-        : (Array.isArray(attr.options) ? attr.options : []),
+      options: (attr.options as any) || [],
       icon: attr.icon || null
     }));
   },
@@ -256,7 +254,7 @@ export const lensApi = {
       .from('lens_product_attributes')
       .insert({
         ...attribute,
-        options: JSON.stringify(attribute.options)
+        options: attribute.options as any
       })
       .select()
       .single();
@@ -265,7 +263,7 @@ export const lensApi = {
     return { 
       ...data,
       type: data.type as 'select' | 'multiselect',
-      options: typeof data.options === 'string' ? JSON.parse(data.options) : data.options 
+      options: (data.options as any) || []
     };
   },
 
@@ -273,13 +271,18 @@ export const lensApi = {
     id: string,
     attribute: Partial<LensProductAttribute>
   ): Promise<LensProductAttribute> {
+    const updateData: any = {
+      ...attribute,
+      updated_at: new Date().toISOString()
+    };
+    
+    if (attribute.options) {
+      updateData.options = attribute.options as any;
+    }
+    
     const { data, error } = await supabase
       .from('lens_product_attributes')
-      .update({
-        ...attribute,
-        options: attribute.options ? JSON.stringify(attribute.options) : undefined,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();
@@ -288,7 +291,7 @@ export const lensApi = {
     return { 
       ...data,
       type: data.type as 'select' | 'multiselect',
-      options: typeof data.options === 'string' ? JSON.parse(data.options) : data.options 
+      options: (data.options as any) || []
     };
   },
 

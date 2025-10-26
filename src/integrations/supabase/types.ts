@@ -1365,6 +1365,45 @@ export type Database = {
         }
         Relationships: []
       }
+      lens_product_attributes_backup_v2: {
+        Row: {
+          created_at: string | null
+          display_order: number | null
+          icon: string | null
+          id: string | null
+          is_active: boolean | null
+          name: string | null
+          options: Json | null
+          slug: string | null
+          type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          display_order?: number | null
+          icon?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          name?: string | null
+          options?: Json | null
+          slug?: string | null
+          type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          display_order?: number | null
+          icon?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          name?: string | null
+          options?: Json | null
+          slug?: string | null
+          type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       lens_product_use_case_scores: {
         Row: {
           created_at: string | null
