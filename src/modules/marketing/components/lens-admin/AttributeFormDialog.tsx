@@ -1,58 +1,62 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { z } from 'zod';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { X, GripVertical } from 'lucide-react';
-import { lensApi } from '../../services/lensApi';
-import { LensProductAttribute } from '../../types/lens';
-import { toast } from 'sonner';
+import { Textarea } from '@/components/ui/textarea';
 import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { toast } from '@/hooks/use-toast';
+import { lensApi } from '@/modules/marketing/services/lensApi';
+import { LensProductAttribute, AttributeOption } from '@/modules/marketing/types/lens';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { GripVertical, Plus, X, Pencil, Upload, Info } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
-const schema = z.object({
-  name: z.string().min(1, 'Vui lòng nhập tên thuộc tính'),
-  slug: z.string().min(1, 'Vui lòng nhập slug').regex(/^[a-z_]+$/, 'Slug chỉ chứa chữ thường và _'),
+const formSchema = z.object({
+  name: z.string().min(1, 'Tên thuộc tính là bắt buộc'),
+  slug: z.string().min(1, 'Slug là bắt buộc'),
   type: z.enum(['select', 'multiselect']),
   display_order: z.number().min(0),
 });
 
-type FormData = z.infer<typeof schema>;
+type FormData = z.infer<typeof formSchema>;
 
-interface Props {
+interface AttributeFormDialogProps {
   open: boolean;
   attribute: LensProductAttribute | null;
   onClose: (success?: boolean) => void;
 }
 
-function SortableOptionItem({ option, onRemove }: { option: string; onRemove: () => void }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: option });
+function SortableOptionItem({
+  option,
+  onEdit,
+  onRemove,
+}: {
+  option: AttributeOption;
+  onEdit: () => void;
+  onRemove: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: option.value,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -61,41 +65,46 @@ function SortableOptionItem({ option, onRemove }: { option: string; onRemove: ()
   };
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className="flex items-center gap-2 px-3 py-2 bg-secondary rounded-lg group"
-    >
-      <div
-        {...attributes}
-        {...listeners}
-        className="cursor-grab active:cursor-grabbing"
-      >
+    <div ref={setNodeRef} style={style} className="flex items-center gap-3 px-3 py-3 bg-secondary rounded-lg group hover:bg-accent/50">
+      <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
         <GripVertical className="w-4 h-4 text-muted-foreground" />
       </div>
-      <span className="flex-1 text-sm">{option}</span>
-      <X
-        className="w-4 h-4 text-muted-foreground hover:text-destructive cursor-pointer"
-        onClick={onRemove}
-      />
+
+      {option.image_url && (
+        <img src={option.image_url} alt={option.label} className="w-10 h-10 rounded object-cover border" />
+      )}
+
+      <div className="flex-1 min-w-0">
+        <div className="font-medium text-sm">{option.label}</div>
+        {option.short_description && (
+          <div className="text-xs text-muted-foreground line-clamp-1">{option.short_description}</div>
+        )}
+      </div>
+
+      <Button size="sm" variant="ghost" onClick={onEdit} className="h-8 w-8 p-0">
+        <Pencil className="w-3 h-3" />
+      </Button>
+      <Button size="sm" variant="ghost" onClick={onRemove} className="h-8 w-8 p-0">
+        <X className="w-3 h-3 text-destructive" />
+      </Button>
     </div>
   );
 }
 
-export function AttributeFormDialog({ open, attribute, onClose }: Props) {
-  const [options, setOptions] = useState<string[]>([]);
-  const [newOption, setNewOption] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export function AttributeFormDialog({ open, attribute, onClose }: AttributeFormDialogProps) {
+  const [options, setOptions] = useState<AttributeOption[]>([]);
+  const [editingOption, setEditingOption] = useState<AttributeOption | null>(null);
+  const [showOptionForm, setShowOptionForm] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
-  const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<FormData>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      type: 'select',
-      display_order: 0,
-    },
+  const [optionFormData, setOptionFormData] = useState<AttributeOption>({
+    value: '',
+    label: '',
+    image_url: null,
+    short_description: null,
+    content: null,
   });
-
-  const selectedType = watch('type');
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -104,212 +113,371 @@ export function AttributeFormDialog({ open, attribute, onClose }: Props) {
     })
   );
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      setOptions((items) => {
-        const oldIndex = items.indexOf(active.id as string);
-        const newIndex = items.indexOf(over.id as string);
-        return arrayMove(items, oldIndex, newIndex);
-      });
-    }
-  };
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: '',
+      slug: '',
+      type: 'select',
+      display_order: 0,
+    },
+  });
 
   useEffect(() => {
     if (attribute) {
-      reset({
+      form.reset({
         name: attribute.name,
         slug: attribute.slug,
         type: attribute.type,
         display_order: attribute.display_order,
       });
-      setOptions(attribute.options);
+      // Normalize options to new format
+      const normalizedOptions = attribute.options.map(opt => 
+        typeof opt === 'string' ? { value: opt, label: opt, image_url: null, short_description: null, content: null } : opt
+      );
+      setOptions(normalizedOptions);
     } else {
-      reset({ type: 'select', display_order: 0 });
+      form.reset({
+        name: '',
+        slug: '',
+        type: 'select',
+        display_order: 0,
+      });
       setOptions([]);
-      setNewOption('');
     }
-  }, [attribute, reset]);
+  }, [attribute, form]);
 
-  const handleAddOption = () => {
-    if (!newOption.trim()) return;
-    if (options.includes(newOption.trim())) {
-      toast.error('Giá trị đã tồn tại');
-      return;
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setOptions((items) => {
+        const oldIndex = items.findIndex((item) => item.value === active.id);
+        const newIndex = items.findIndex((item) => item.value === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
     }
-    setOptions(prev => [...prev, newOption.trim()]);
-    setNewOption('');
   };
 
-  const handleRemoveOption = (option: string) => {
-    setOptions(prev => prev.filter(o => o !== option));
+  const handleOpenOptionForm = (option?: AttributeOption) => {
+    if (option) {
+      setEditingOption(option);
+      setOptionFormData(option);
+    } else {
+      setEditingOption(null);
+      setOptionFormData({
+        value: '',
+        label: '',
+        image_url: null,
+        short_description: null,
+        content: null,
+      });
+    }
+    setShowOptionForm(true);
+  };
+
+  const handleSaveOption = () => {
+    if (!optionFormData.value || !optionFormData.label) {
+      toast({ title: 'Lỗi', description: 'Giá trị và nhãn là bắt buộc', variant: 'destructive' });
+      return;
+    }
+
+    if (editingOption) {
+      // Update existing option
+      setOptions(prev => prev.map(opt => opt.value === editingOption.value ? optionFormData : opt));
+    } else {
+      // Add new option
+      if (options.some(opt => opt.value === optionFormData.value)) {
+        toast({ title: 'Lỗi', description: 'Giá trị đã tồn tại', variant: 'destructive' });
+        return;
+      }
+      setOptions(prev => [...prev, optionFormData]);
+    }
+
+    setShowOptionForm(false);
+    setEditingOption(null);
+  };
+
+  const handleRemoveOption = (value: string) => {
+    setOptions(prev => prev.filter(opt => opt.value !== value));
+  };
+
+  const handleUploadImage = async (file: File) => {
+    try {
+      setUploading(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `attribute-options/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('lens-images')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('lens-images')
+        .getPublicUrl(fileName);
+
+      setOptionFormData(prev => ({ ...prev, image_url: publicUrl }));
+      toast({ title: 'Thành công', description: 'Upload ảnh thành công' });
+    } catch (error: any) {
+      toast({ title: 'Lỗi', description: 'Lỗi upload: ' + error.message, variant: 'destructive' });
+    } finally {
+      setUploading(false);
+    }
   };
 
   const onSubmit = async (data: FormData) => {
     if (options.length === 0) {
-      toast.error('Vui lòng thêm ít nhất 1 giá trị');
+      toast({ title: 'Lỗi', description: 'Vui lòng thêm ít nhất 1 giá trị', variant: 'destructive' });
       return;
     }
 
-    setIsSubmitting(true);
     try {
-      const payload = {
-        name: data.name,
-        slug: data.slug,
-        type: data.type,
-        display_order: data.display_order,
-        options: options,
-        icon: (data as any).icon || null,
-        is_active: true
-      };
+      setSubmitting(true);
 
       if (attribute) {
-        await lensApi.updateAttribute(attribute.id, payload);
-        toast.success('Cập nhật thuộc tính thành công');
+        // Update - can use partial
+        await lensApi.updateAttribute(attribute.id, {
+          name: data.name,
+          slug: data.slug,
+          type: data.type,
+          display_order: data.display_order,
+          options,
+        });
+        toast({ title: 'Thành công', description: 'Cập nhật thuộc tính thành công' });
       } else {
-        await lensApi.createAttribute(payload);
-        toast.success('Tạo thuộc tính thành công');
+        // Create - must have all required fields
+        await lensApi.createAttribute({
+          name: data.name,
+          slug: data.slug,
+          type: data.type,
+          display_order: data.display_order,
+          options,
+          icon: null,
+          is_active: true,
+        });
+        toast({ title: 'Thành công', description: 'Tạo thuộc tính thành công' });
       }
 
       onClose(true);
     } catch (error: any) {
-      toast.error('Lỗi: ' + error.message);
+      toast({ title: 'Lỗi', description: error.message, variant: 'destructive' });
     } finally {
-      setIsSubmitting(false);
+      setSubmitting(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={() => onClose()}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{attribute ? 'Chỉnh sửa thuộc tính' : 'Thêm thuộc tính'}</DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={() => onClose()}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{attribute ? 'Chỉnh sửa thuộc tính' : 'Thêm thuộc tính mới'}</DialogTitle>
+            <DialogDescription>
+              Thuộc tính sẽ được dùng làm dropdown khi tạo sản phẩm
+            </DialogDescription>
+          </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left Column - Basic Info */}
-            <div className="space-y-4">
-              <div>
-                <Label>Tên thuộc tính *</Label>
-                <Input {...register('name')} placeholder="Chất liệu" />
-                {errors.name && <p className="text-sm text-destructive mt-1">{errors.name.message}</p>}
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Tên thuộc tính *</Label>
+                <Input
+                  id="name"
+                  {...form.register('name')}
+                  placeholder="Chất liệu"
+                />
+                {form.formState.errors.name && (
+                  <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
+                )}
               </div>
 
-              <div>
-                <Label>Slug (dùng trong code) *</Label>
-                <Input {...register('slug')} placeholder="material" />
-                {errors.slug && <p className="text-sm text-destructive mt-1">{errors.slug.message}</p>}
-                <p className="text-xs text-muted-foreground mt-1">
-                  Ví dụ: material, refractive_index, origin, warranty_months
-                </p>
+              <div className="space-y-2">
+                <Label htmlFor="slug">Slug (key) *</Label>
+                <Input
+                  id="slug"
+                  {...form.register('slug')}
+                  placeholder="chat_lieu"
+                />
+                {form.formState.errors.slug && (
+                  <p className="text-xs text-destructive">{form.formState.errors.slug.message}</p>
+                )}
               </div>
+            </div>
 
-              <div>
-                <Label>Icon (emoji)</Label>
-                <Input {...register('icon' as any)} placeholder="🧪" maxLength={3} defaultValue={attribute?.icon || ''} />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Emoji để hiển thị (VD: 🧪 🔍 🌍 ⏱️ ☀️ 🛡️)
-                </p>
-              </div>
-
-              <div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
                 <Label>Loại</Label>
-                <Select 
-                  onValueChange={(v: any) => setValue('type', v)} 
-                  defaultValue={attribute?.type || 'select'}
+                <Select
+                  value={form.watch('type')}
+                  onValueChange={(value) => form.setValue('type', value as 'select' | 'multiselect')}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="select">Select (chọn 1)</SelectItem>
-                    <SelectItem value="multiselect">Multiselect (chọn nhiều)</SelectItem>
+                    <SelectItem value="select">Chọn 1</SelectItem>
+                    <SelectItem value="multiselect">Chọn nhiều</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              <div>
-                <Label>Thứ tự hiển thị</Label>
-                <Input type="number" {...register('display_order', { valueAsNumber: true })} />
+              <div className="space-y-2">
+                <Label htmlFor="display_order">Thứ tự hiển thị</Label>
+                <Input
+                  id="display_order"
+                  type="number"
+                  {...form.register('display_order', { valueAsNumber: true })}
+                />
               </div>
             </div>
 
-            {/* Right Column - Options List */}
-            <div className="space-y-4">
-              <div>
-                <Label>
-                  {selectedType === 'select' ? 'Giá trị (chọn 1) *' : 'Giá trị (chọn nhiều) *'}
-                </Label>
-                <div className="flex gap-2 mb-2">
-                  <Input
-                    value={newOption}
-                    onChange={(e) => setNewOption(e.target.value)}
-                    placeholder={selectedType === 'select' ? 'VD: Plastic' : 'VD: Chống UV'}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleAddOption();
-                      }
-                    }}
-                  />
-                  <Button type="button" onClick={handleAddOption}>Thêm</Button>
-                </div>
-                <div className="space-y-2">
-                  {options.length === 0 ? (
-                    <div className="flex items-center justify-center min-h-[200px] border rounded-md bg-muted/30">
-                      <p className="text-sm text-muted-foreground text-center px-4">
-                        {selectedType === 'select' 
-                          ? 'Chưa có giá trị nào (VD: Plastic, Hi-Index, CR-39)' 
-                          : 'Chưa có giá trị nào (VD: Chống UV, Chống xước, Đổi màu)'}
-                      </p>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>Các giá trị ({options.length})</Label>
+                <Button type="button" size="sm" onClick={() => handleOpenOptionForm()}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Thêm giá trị
+                </Button>
+              </div>
+
+              {options.length > 0 && (
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <SortableContext items={options.map(opt => opt.value)} strategy={verticalListSortingStrategy}>
+                    <div className="space-y-2">
+                      {options.map((option) => (
+                        <SortableOptionItem
+                          key={option.value}
+                          option={option}
+                          onEdit={() => handleOpenOptionForm(option)}
+                          onRemove={() => handleRemoveOption(option.value)}
+                        />
+                      ))}
                     </div>
-                  ) : (
-                    <>
-                      <DndContext
-                        sensors={sensors}
-                        collisionDetection={closestCenter}
-                        onDragEnd={handleDragEnd}
-                      >
-                        <SortableContext
-                          items={options}
-                          strategy={verticalListSortingStrategy}
-                        >
-                          <div className="space-y-2 max-h-[400px] overflow-y-auto border rounded-md p-3">
-                            {options.map((opt) => (
-                              <SortableOptionItem
-                                key={opt}
-                                option={opt}
-                                onRemove={() => handleRemoveOption(opt)}
-                              />
-                            ))}
-                          </div>
-                        </SortableContext>
-                      </DndContext>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <GripVertical className="w-3 h-3" />
-                        Kéo thả để sắp xếp thứ tự hiển thị
-                      </p>
-                    </>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  {selectedType === 'select' 
-                    ? '💡 Thứ tự bên trên sẽ là thứ tự hiển thị khi thêm sản phẩm (chọn 1 giá trị)'
-                    : '💡 Thứ tự bên trên sẽ là thứ tự hiển thị khi thêm sản phẩm (chọn nhiều giá trị)'}
+                  </SortableContext>
+                </DndContext>
+              )}
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => onClose()}>
+                Hủy
+              </Button>
+              <Button type="submit" disabled={submitting}>
+                {submitting ? 'Đang lưu...' : attribute ? 'Cập nhật' : 'Tạo mới'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Option Form Dialog */}
+      <Dialog open={showOptionForm} onOpenChange={setShowOptionForm}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{editingOption ? 'Chỉnh sửa giá trị' : 'Thêm giá trị mới'}</DialogTitle>
+            <DialogDescription>
+              Cấu hình chi tiết cho giá trị thuộc tính
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="option-value">Giá trị (key) *</Label>
+                <Input
+                  id="option-value"
+                  placeholder="plastic"
+                  value={optionFormData.value}
+                  onChange={(e) => setOptionFormData(prev => ({ ...prev, value: e.target.value }))}
+                  disabled={!!editingOption}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Dùng để lưu vào database (không dấu, lowercase)
                 </p>
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="option-label">Nhãn hiển thị *</Label>
+                <Input
+                  id="option-label"
+                  placeholder="Plastic"
+                  value={optionFormData.label}
+                  onChange={(e) => setOptionFormData(prev => ({ ...prev, label: e.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="option-image">URL ảnh</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="option-image"
+                  placeholder="https://..."
+                  value={optionFormData.image_url || ''}
+                  onChange={(e) => setOptionFormData(prev => ({ ...prev, image_url: e.target.value }))}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={uploading}
+                  onClick={() => {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = 'image/*';
+                    input.onchange = (e) => {
+                      const file = (e.target as HTMLInputElement).files?.[0];
+                      if (file) handleUploadImage(file);
+                    };
+                    input.click();
+                  }}
+                >
+                  <Upload className="w-4 h-4" />
+                </Button>
+              </div>
+              {optionFormData.image_url && (
+                <img src={optionFormData.image_url} className="w-20 h-20 mt-2 rounded object-cover border" alt="Preview" />
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="option-desc">Mô tả ngắn (tooltip)</Label>
+              <Textarea
+                id="option-desc"
+                rows={2}
+                placeholder="Hiển thị khi hover vào option"
+                value={optionFormData.short_description || ''}
+                onChange={(e) => setOptionFormData(prev => ({ ...prev, short_description: e.target.value }))}
+              />
+              <p className="text-xs text-muted-foreground">Tối đa 100 ký tự</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="option-content">Nội dung chi tiết</Label>
+              <Textarea
+                id="option-content"
+                rows={5}
+                placeholder="Nội dung HTML hiển thị trong dialog"
+                value={optionFormData.content || ''}
+                onChange={(e) => setOptionFormData(prev => ({ ...prev, content: e.target.value }))}
+              />
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <Info className="w-3 h-3" />
+                Hỗ trợ HTML cơ bản: &lt;p&gt;, &lt;ul&gt;, &lt;strong&gt;, ...
+              </p>
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-4 border-t">
-            <Button type="button" variant="outline" onClick={() => onClose()}>Hủy</Button>
-            <Button type="submit" disabled={isSubmitting} className="bg-green-600 hover:bg-green-700">
-              {isSubmitting ? 'Đang lưu...' : attribute ? 'Cập nhật' : 'Tạo mới'}
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setShowOptionForm(false)}>
+              Hủy
             </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+            <Button onClick={handleSaveOption}>
+              {editingOption ? 'Cập nhật' : 'Thêm'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
