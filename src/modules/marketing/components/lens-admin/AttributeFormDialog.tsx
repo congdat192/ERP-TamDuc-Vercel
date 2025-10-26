@@ -81,7 +81,7 @@ function SortableOptionItem({
         )}
       </div>
 
-      <Button size="sm" variant="ghost" onClick={onEdit} className="h-8 w-8 p-0">
+      <Button type="button" size="sm" variant="ghost" onClick={onEdit} className="h-8 w-8 p-0">
         <Pencil className="w-3 h-3" />
       </Button>
       <Button size="sm" variant="ghost" onClick={onRemove} className="h-8 w-8 p-0">
@@ -97,6 +97,7 @@ export function AttributeFormDialog({ open, attribute, onClose }: AttributeFormD
   const [showOptionForm, setShowOptionForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [savingOption, setSavingOption] = useState(false);
 
   const [optionFormData, setOptionFormData] = useState<AttributeOption>({
     value: '',
@@ -175,22 +176,47 @@ export function AttributeFormDialog({ open, attribute, onClose }: AttributeFormD
     setShowOptionForm(true);
   };
 
-  const handleSaveOption = () => {
+  const handleSaveOption = async () => {
     if (!optionFormData.value || !optionFormData.label) {
       toast({ title: 'Lỗi', description: 'Giá trị và nhãn là bắt buộc', variant: 'destructive' });
       return;
     }
 
+    // Update local state
+    let updatedOptions: AttributeOption[];
     if (editingOption) {
-      // Update existing option
-      setOptions(prev => prev.map(opt => opt.value === editingOption.value ? optionFormData : opt));
+      updatedOptions = options.map(opt => opt.value === editingOption.value ? optionFormData : opt);
     } else {
-      // Add new option
       if (options.some(opt => opt.value === optionFormData.value)) {
         toast({ title: 'Lỗi', description: 'Giá trị đã tồn tại', variant: 'destructive' });
         return;
       }
-      setOptions(prev => [...prev, optionFormData]);
+      updatedOptions = [...options, optionFormData];
+    }
+    
+    setOptions(updatedOptions);
+
+    // Auto-save if editing existing attribute
+    if (attribute && attribute.id) {
+      try {
+        setSavingOption(true);
+        await lensApi.updateAttribute(attribute.id, {
+          options: updatedOptions,
+        });
+        toast({ title: 'Thành công', description: 'Đã lưu thay đổi giá trị' });
+        onClose(true); // Trigger refetch in parent
+      } catch (error: any) {
+        toast({ title: 'Lỗi', description: error.message, variant: 'destructive' });
+        return; // Don't close modal on error
+      } finally {
+        setSavingOption(false);
+      }
+    } else {
+      // For new attributes, just show local save message
+      toast({ 
+        title: 'Đã áp dụng', 
+        description: 'Nhớ click "Tạo mới" để lưu vào database' 
+      });
     }
 
     setShowOptionForm(false);
@@ -227,6 +253,9 @@ export function AttributeFormDialog({ open, attribute, onClose }: AttributeFormD
   };
 
   const onSubmit = async (data: FormData) => {
+    console.log('🔥 onSubmit called at:', new Date().toISOString());
+    console.log('📋 Call stack:', new Error().stack);
+    
     if (options.length === 0) {
       toast({ title: 'Lỗi', description: 'Vui lòng thêm ít nhất 1 giá trị', variant: 'destructive' });
       return;
@@ -472,8 +501,8 @@ export function AttributeFormDialog({ open, attribute, onClose }: AttributeFormD
             <Button type="button" variant="outline" onClick={() => setShowOptionForm(false)}>
               Hủy
             </Button>
-            <Button onClick={handleSaveOption}>
-              {editingOption ? 'Cập nhật' : 'Thêm'}
+            <Button onClick={handleSaveOption} disabled={savingOption}>
+              {savingOption ? 'Đang lưu...' : editingOption ? 'Lưu lại' : 'Thêm'}
             </Button>
           </DialogFooter>
         </DialogContent>
