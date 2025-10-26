@@ -52,50 +52,89 @@ function GroupRow({
     <>
       {/* Parent row - Group header */}
       <TableRow className="bg-accent/30 font-semibold border-t-2 hover:bg-accent/40">
-        {visibleColumns.image && (
-          <TableCell rowSpan={expanded ? group.variants.length + 1 : 1} className="w-20">
-            <img 
-              src={group.image || '/placeholder.svg'} 
-              alt={group.baseName}
-              className="w-16 h-16 rounded object-cover"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = '/placeholder.svg';
-              }}
-            />
-          </TableCell>
-        )}
-        {visibleColumns.name && (
-          <TableCell rowSpan={expanded ? group.variants.length + 1 : 1}>
-            <div className="flex items-start gap-2">
+        {/* Merged Image + Name column with vertical layout */}
+        {(visibleColumns.image || visibleColumns.name) && (
+          <TableCell 
+            rowSpan={expanded ? group.variants.length + 1 : 1} 
+            className="w-64 p-4"
+          >
+            <div className="flex flex-col items-center gap-3 text-center">
+              {/* 1. Product Name (Top) */}
+              {visibleColumns.name && (
+                <h3 className="font-bold text-lg leading-tight w-full px-2">
+                  {group.baseName}
+                </h3>
+              )}
+              
+              {/* 2. Product Image (Center) */}
+              {visibleColumns.image && (
+                <div className="w-full flex justify-center my-3">
+                  <img 
+                    src={group.image || '/placeholder.svg'} 
+                    alt={group.baseName}
+                    className="w-52 h-52 rounded-lg object-contain shadow-md border border-border hover:scale-105 transition-transform duration-200"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '/placeholder.svg';
+                    }}
+                  />
+                </div>
+              )}
+              
+              {/* 3. Brand Name (Below image) */}
+              <p className="text-sm text-muted-foreground font-medium tracking-wide">
+                {group.brand}
+              </p>
+              
+              {/* 4. Feature Badges (Bottom) */}
+              {visibleColumns.features && group.features.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 justify-center mt-1">
+                  {group.features.slice(0, 6).map((feature, idx) => (
+                    <Badge 
+                      key={idx} 
+                      variant="secondary" 
+                      className="text-xs px-2.5 py-1"
+                    >
+                      {feature}
+                    </Badge>
+                  ))}
+                  {group.features.length > 6 && (
+                    <Badge 
+                      variant="secondary" 
+                      className="text-xs px-2.5 py-1"
+                    >
+                      +{group.features.length - 6}
+                    </Badge>
+                  )}
+                </div>
+              )}
+              
+              {/* 5. Expand/Collapse Button (Bottom) */}
               <button 
                 onClick={() => setExpanded(!expanded)}
-                className="mt-1 hover:bg-accent rounded p-0.5 transition-colors"
+                className="mt-2 hover:bg-accent rounded-md px-3 py-1.5 transition-colors text-xs text-muted-foreground flex items-center gap-1"
               >
-                {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-              </button>
-              <div>
-                <p className="font-semibold text-sm">{group.baseName}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{group.brand}</p>
-                {visibleColumns.features && group.features.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {group.features.slice(0, 3).map((feature, idx) => (
-                      <Badge key={idx} variant="secondary" className="text-[10px] py-0 px-1">
-                        {feature}
-                      </Badge>
-                    ))}
-                    {group.features.length > 3 && (
-                      <Badge variant="secondary" className="text-[10px] py-0 px-1">
-                        +{group.features.length - 3}
-                      </Badge>
-                    )}
-                  </div>
+                {expanded ? (
+                  <>
+                    <ChevronDown className="w-3.5 h-3.5" />
+                    Thu gọn
+                  </>
+                ) : (
+                  <>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                    Xem {group.variants.length} phiên bản
+                  </>
                 )}
-              </div>
+              </button>
             </div>
           </TableCell>
         )}
-        <TableCell colSpan={100} className="text-sm text-muted-foreground">
-          {group.variants.length} phiên bản
+        
+        <TableCell colSpan={100} className="text-sm text-muted-foreground align-top pt-4">
+          {!expanded && (
+            <div className="text-xs">
+              {group.variants.length} phiên bản có sẵn
+            </div>
+          )}
         </TableCell>
       </TableRow>
       
@@ -247,8 +286,9 @@ export function ProductGroupedTable({
       <Table>
         <TableHeader>
           <TableRow>
-            {visibleColumns.image && <TableHead className="w-20">Hình ảnh</TableHead>}
-            {visibleColumns.name && <TableHead>Tên sản phẩm</TableHead>}
+            {(visibleColumns.image || visibleColumns.name) && (
+              <TableHead className="w-64">Thông tin sản phẩm</TableHead>
+            )}
             {visibleColumns.refractive_index && <TableHead>Chiết suất</TableHead>}
             {visibleColumns.sph_range && <TableHead>Độ cầu (SPH)</TableHead>}
             {visibleColumns.cyl_range && <TableHead>Độ loạn (CYL)</TableHead>}
