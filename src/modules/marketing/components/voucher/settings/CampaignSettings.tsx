@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Plus, Edit } from 'lucide-react';
 import { voucherService, type VoucherCampaign } from '../../../services/voucherService';
 import { toast } from 'sonner';
 import { CampaignDialog } from './CampaignDialog';
@@ -33,6 +34,22 @@ export function CampaignSettings() {
     setEditingCampaign(null);
   };
 
+  const handleToggleActive = async (campaign: VoucherCampaign) => {
+    try {
+      await voucherService.updateCampaign(campaign.id, { 
+        is_active: !campaign.is_active 
+      });
+      toast.success(
+        campaign.is_active 
+          ? 'Đã tắt chiến dịch' 
+          : 'Đã bật chiến dịch'
+      );
+      loadCampaigns();
+    } catch (error) {
+      toast.error('Không thể cập nhật trạng thái');
+    }
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -48,11 +65,41 @@ export function CampaignSettings() {
         ) : (
           <div className="space-y-2">
             {campaigns.map((campaign) => (
-              <div key={campaign.id} className="flex items-center justify-between p-3 border rounded-lg">
-                <div>
-                  <div className="font-medium">{campaign.name}</div>
-                  <div className="text-sm text-muted-foreground">ID: {campaign.campaign_id}</div>
+              <div 
+                key={campaign.id} 
+                className={`flex items-center justify-between p-3 border rounded-lg transition-opacity ${
+                  !campaign.is_active ? 'opacity-50 bg-muted/30' : ''
+                }`}
+              >
+                <div className="flex items-center gap-4 flex-1">
+                  {/* Campaign Info */}
+                  <div className="flex-1">
+                    <div className="font-medium flex items-center gap-2">
+                      {campaign.name}
+                      {!campaign.is_active && (
+                        <span className="text-xs bg-muted px-2 py-0.5 rounded">
+                          Đã tắt
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      ID: {campaign.campaign_id}
+                    </div>
+                  </div>
+
+                  {/* Toggle Switch */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">
+                      {campaign.is_active ? 'Bật' : 'Tắt'}
+                    </span>
+                    <Switch
+                      checked={campaign.is_active}
+                      onCheckedChange={() => handleToggleActive(campaign)}
+                    />
+                  </div>
                 </div>
+
+                {/* Edit Button */}
                 <Button 
                   variant="outline" 
                   size="sm"
@@ -60,7 +107,9 @@ export function CampaignSettings() {
                     setEditingCampaign(campaign);
                     setDialogOpen(true);
                   }}
+                  className="ml-4"
                 >
+                  <Edit className="w-4 h-4 mr-1" />
                   Sửa
                 </Button>
               </div>
