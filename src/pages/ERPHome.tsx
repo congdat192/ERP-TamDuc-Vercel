@@ -44,9 +44,6 @@ export function ERPHome({ currentUser: propCurrentUser, onModuleChange: propOnMo
         case 'sales':
           navigate('/ERP/Invoices');
           break;
-        case 'voucher':
-          navigate('/ERP/Voucher');
-          break;
         case 'inventory':
           navigate('/ERP/Products');
           break;

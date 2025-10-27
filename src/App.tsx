@@ -29,7 +29,6 @@ import { LensQuizPage } from "./pages/LensQuizPage";
 import { ERPHome } from "./pages/ERPHome";
 import { CustomerPage } from "./pages/CustomerPage";
 import { SalesPage } from "./pages/SalesPage";
-import { VoucherPage } from "./pages/VoucherPage";
 import { InventoryPage } from "./pages/InventoryPage";
 import { MarketingPage } from "./pages/MarketingPage";
 import { HRPage } from "./pages/HRPage";
@@ -114,9 +113,6 @@ const ProtectedERPRoute = ({ children, module }: { children: React.ReactNode; mo
         break;
       case 'sales':
         navigate('/ERP/Invoices');
-        break;
-      case 'voucher':
-        navigate('/ERP/Voucher');
         break;
       case 'inventory':
         navigate('/ERP/Products');
@@ -263,15 +259,7 @@ const AppContent = () => {
                     } 
                   />
                   <Route 
-                    path="/ERP/Voucher/*" 
-                    element={
-                      <ProtectedERPRoute module="voucher">
-                        <VoucherPage />
-                      </ProtectedERPRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/ERP/Products" 
+                    path="/ERP/Products"
                     element={
                       <ProtectedERPRoute module="inventory">
                         <InventoryPage />
