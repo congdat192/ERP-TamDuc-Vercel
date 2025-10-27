@@ -23,14 +23,10 @@ type ResetPasswordForm = z.infer<typeof resetPasswordSchema>;
 
 export const ResetPasswordPage = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-
-  // Get token and email from URL parameters
-  const token = searchParams.get('token');
-  const email = searchParams.get('email');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const form = useForm<ResetPasswordForm>({
     resolver: zodResolver(resetPasswordSchema),
@@ -40,15 +36,32 @@ export const ResetPasswordPage = () => {
     },
   });
 
+  // Read token from hash fragment (#access_token=xxx&type=recovery)
   useEffect(() => {
-    if (!token || !email) {
-      setError('Liên kết đặt lại mật khẩu không hợp lệ. Vui lòng thử lại.');
-    }
-  }, [token, email]);
+    const checkAuth = async () => {
+      // Parse hash fragment from Supabase Auth redirect
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      const type = hashParams.get('type');
+      
+      console.log('🔍 Hash params:', { accessToken: !!accessToken, type });
+      
+      if (type === 'recovery' && accessToken) {
+        // User is authenticated by Supabase Auth automatically
+        setIsAuthenticated(true);
+        console.log('✅ User authenticated for password recovery');
+      } else {
+        setError('Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu link mới.');
+        console.error('❌ Invalid recovery link');
+      }
+    };
+    
+    checkAuth();
+  }, []);
 
   const onSubmit = async (data: ResetPasswordForm) => {
-    if (!token || !email) {
-      setError('Thông tin đặt lại mật khẩu không hợp lệ');
+    if (!isAuthenticated) {
+      setError('Phiên làm việc không hợp lệ. Vui lòng yêu cầu link reset mới.');
       return;
     }
 
@@ -110,11 +123,11 @@ export const ResetPasswordPage = () => {
             </Alert>
           )}
 
-          {(!token || !email) ? (
+          {(!isAuthenticated) ? (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.
+                Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu link mới.
               </AlertDescription>
             </Alert>
           ) : (

@@ -155,12 +155,11 @@ export const forgotPassword = async (email: string): Promise<ForgotPasswordRespo
   
   if (error) throw error;
 
-  // Send custom email via edge function
+  // Send custom email via edge function (edge function generates link with token)
   try {
     await supabase.functions.invoke('send-password-reset-email', {
       body: {
         email,
-        resetUrl: `${window.location.origin}/reset-password`,
         userName: email.split('@')[0]
       }
     });
