@@ -105,12 +105,14 @@ export function VoucherIssueTab() {
               <Input
                 placeholder="0912345678"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                disabled={!!customerType}
+                onChange={(e) => {
+                  setPhone(e.target.value);
+                  setCustomerType('');
+                }}
               />
               <Button 
                 onClick={handleValidateCustomer} 
-                disabled={isValidating || !!customerType}
+                disabled={isValidating}
                 size="icon"
               >
                 {isValidating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
