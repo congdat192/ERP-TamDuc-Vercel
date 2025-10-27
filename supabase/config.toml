@@ -1,5 +1,8 @@
 project_id = "dtdtwhrqvkrymtyqbatn"
 
+[functions.get-voucher-campaigns-external]
+verify_jwt = false
+
 [functions.get-invoices-by-phone]
 verify_jwt = false
 

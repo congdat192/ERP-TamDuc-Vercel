@@ -35,6 +35,15 @@ export interface VoucherIssueResponse {
   };
 }
 
+export interface ExternalCampaign {
+  campaign_id: string;
+  campaign_name: string;
+  discount_type?: string;
+  discount_value?: number;
+  description?: string;
+  is_active?: boolean;
+}
+
 export const voucherService = {
   // ========== CAMPAIGNS ==========
   async getCampaigns(): Promise<VoucherCampaign[]> {
@@ -135,6 +144,21 @@ export const voucherService = {
 
     if (error) throw error;
     return data;
+  },
+
+  async getExternalCampaigns(): Promise<ExternalCampaign[]> {
+    const { data, error } = await supabase.functions.invoke('get-voucher-campaigns-external');
+    
+    if (error) {
+      console.error('Error loading external campaigns:', error);
+      throw new Error(error.message || 'Không thể tải campaigns từ hệ thống external');
+    }
+    
+    if (!data.success) {
+      throw new Error(data.error || 'API trả về lỗi');
+    }
+    
+    return data.data || [];
   },
 
   // ========== CUSTOMER TYPES & SOURCES (CRUD) ==========
