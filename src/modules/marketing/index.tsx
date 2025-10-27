@@ -1,6 +1,7 @@
-
 import React from 'react';
+import { Routes, Route } from 'react-router-dom';
 import { MarketingDashboard } from './pages/MarketingDashboard';
+import { VoucherIssuancePage } from './pages/VoucherIssuancePage';
 
 interface MarketingModuleProps {
   currentUser: any;
@@ -9,9 +10,10 @@ interface MarketingModuleProps {
 export function MarketingModule({ currentUser }: MarketingModuleProps) {
   return (
     <div className="marketing-module-background min-h-screen">
-      <div className="p-6">
-        <MarketingDashboard />
-      </div>
+      <Routes>
+        <Route index element={<MarketingDashboard />} />
+        <Route path="voucher" element={<VoucherIssuancePage />} />
+      </Routes>
     </div>
   );
 }

@@ -1,6 +1,9 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Ticket } from 'lucide-react';
 import { CustomerListTab } from '../components/tabs/CustomerListTab';
 import { CustomerFilterTab } from '../components/tabs/CustomerFilterTab';
 import { SavedFiltersTab } from '../components/tabs/SavedFiltersTab';
@@ -8,12 +11,20 @@ import { MarketingCampaignsTab } from '../components/tabs/MarketingCampaignsTab'
 import { LensAdminTab } from '../components/tabs/LensAdminTab';
 
 export function MarketingDashboard() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('customers');
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold theme-text">Marketing</h1>
+        <Button 
+          onClick={() => navigate('/ERP/Marketing/voucher')}
+          variant="outline"
+        >
+          <Ticket className="w-4 h-4 mr-2" />
+          Quản lý Voucher
+        </Button>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

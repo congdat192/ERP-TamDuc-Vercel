@@ -2696,6 +2696,165 @@ export type Database = {
           },
         ]
       }
+      voucher_campaigns: {
+        Row: {
+          campaign_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      voucher_customer_types: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          type_code: string
+          type_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          type_code: string
+          type_name: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          type_code?: string
+          type_name?: string
+        }
+        Relationships: []
+      }
+      voucher_issuance_history: {
+        Row: {
+          api_response: Json | null
+          campaign_id: string
+          created_at: string | null
+          customer_type: string | null
+          error_message: string | null
+          id: string
+          issued_by: string | null
+          phone: string
+          source: string
+          status: string | null
+          voucher_code: string | null
+        }
+        Insert: {
+          api_response?: Json | null
+          campaign_id: string
+          created_at?: string | null
+          customer_type?: string | null
+          error_message?: string | null
+          id?: string
+          issued_by?: string | null
+          phone: string
+          source: string
+          status?: string | null
+          voucher_code?: string | null
+        }
+        Update: {
+          api_response?: Json | null
+          campaign_id?: string
+          created_at?: string | null
+          customer_type?: string | null
+          error_message?: string | null
+          id?: string
+          issued_by?: string | null
+          phone?: string
+          source?: string
+          status?: string | null
+          voucher_code?: string | null
+        }
+        Relationships: []
+      }
+      voucher_sources: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          source_code: string
+          source_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          source_code: string
+          source_name: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          source_code?: string
+          source_name?: string
+        }
+        Relationships: []
+      }
+      voucher_templates: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          template_html: string | null
+          template_text: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          template_html?: string | null
+          template_text: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          template_html?: string | null
+          template_text?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
