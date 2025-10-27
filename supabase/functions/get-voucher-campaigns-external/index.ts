@@ -72,13 +72,14 @@ serve(async (req) => {
       campaigns = campaigns
         .filter((c: any) => c.isactive === true) // Double-check filter
         .map((c: any) => ({
-          campaign_id: c.code,                    // "code" → "campaign_id"
+          campaign_id: c.id,                      // "id" → "campaign_id" (numeric: 101111)
+          campaign_code: c.code,                  // "code" → "campaign_code" (string: "PHVC000003")
           campaign_name: c.name,                  // "name" → "campaign_name"
           discount_value: c.price || 0,           // "price" → "discount_value"
           discount_type: 'fixed',                 // Default "fixed" (VND)
           description: c.price 
-            ? `Giá trị: ${c.price.toLocaleString('vi-VN')}đ • Hết hạn sau ${c.expiretime || 0} ngày`
-            : `Hết hạn sau ${c.expiretime || 0} ngày`,
+            ? `Mã: ${c.code} • Giá trị: ${c.price.toLocaleString('vi-VN')}đ • Hết hạn sau ${c.expiretime || 0} ngày`
+            : `Mã: ${c.code} • Hết hạn sau ${c.expiretime || 0} ngày`,
           is_active: c.isactive,
           
           // Optional: Store original data for future reference

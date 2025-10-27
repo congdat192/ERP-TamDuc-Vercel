@@ -4,12 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useForm } from 'react-hook-form';
 import { voucherService, type VoucherCampaign, type ExternalCampaign } from '../../../services/voucherService';
 import { toast } from 'sonner';
-import { Loader2, RefreshCw, AlertCircle } from 'lucide-react';
+import { Loader2, RefreshCw, AlertCircle, Check, ChevronsUpDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface CampaignDialogProps {
   open: boolean;
@@ -22,17 +24,27 @@ export function CampaignDialog({ open, onOpenChange, campaign, onSave }: Campaig
   const { register, handleSubmit, reset, setValue } = useForm<VoucherCampaign>();
   const [externalCampaigns, setExternalCampaigns] = useState<ExternalCampaign[]>([]);
   const [isLoadingExternal, setIsLoadingExternal] = useState(false);
-  const [selectedCampaignId, setSelectedCampaignId] = useState('');
+  const [selectedCampaignId, setSelectedCampaignId] = useState<number | null>(null);
   const [showEditWarning, setShowEditWarning] = useState(false);
+  const [comboboxOpen, setComboboxOpen] = useState(false);
 
   useEffect(() => {
     if (campaign) {
-      reset(campaign);
-      setSelectedCampaignId(campaign.campaign_id);
+      reset({
+        ...campaign,
+        campaign_id: typeof campaign.campaign_id === 'number' 
+          ? campaign.campaign_id.toString() 
+          : campaign.campaign_id
+      });
+      setSelectedCampaignId(
+        typeof campaign.campaign_id === 'number' 
+          ? campaign.campaign_id 
+          : parseInt(campaign.campaign_id, 10)
+      );
       setShowEditWarning(false);
     } else {
       reset({ name: '', campaign_id: '', description: '', is_active: true } as any);
-      setSelectedCampaignId('');
+      setSelectedCampaignId(null);
       setExternalCampaigns([]);
       setShowEditWarning(false);
     }
@@ -52,15 +64,19 @@ export function CampaignDialog({ open, onOpenChange, campaign, onSave }: Campaig
     }
   };
 
-  const handleSelectCampaign = (value: string) => {
-    setSelectedCampaignId(value);
-    const selected = externalCampaigns.find(c => c.campaign_id === value);
+  const handleSelectCampaign = (campaignId: number) => {
+    setSelectedCampaignId(campaignId);
+    const selected = externalCampaigns.find(c => c.campaign_id === campaignId);
     if (selected) {
-      setValue('campaign_id', selected.campaign_id);
+      setValue('campaign_id', campaignId.toString());
       setValue('name', selected.campaign_name);
       setValue('description', selected.description || '');
       
-      if (campaign && campaign.campaign_id !== selected.campaign_id) {
+      const currentCampaignId = typeof campaign?.campaign_id === 'number' 
+        ? campaign.campaign_id 
+        : parseInt(campaign?.campaign_id || '0', 10);
+      
+      if (campaign && currentCampaignId !== campaignId) {
         setShowEditWarning(true);
       }
     }
@@ -126,27 +142,62 @@ export function CampaignDialog({ open, onOpenChange, campaign, onSave }: Campaig
             </Button>
 
             {externalCampaigns.length > 0 && (
-              <Select
-                value={selectedCampaignId}
-                onValueChange={handleSelectCampaign}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Chọn chiến dịch từ danh sách" />
-                </SelectTrigger>
-                <SelectContent>
-        {externalCampaigns.map((ec) => (
-          <SelectItem key={ec.campaign_id} value={ec.campaign_id}>
-            <div className="flex flex-col">
-              <span className="font-medium">{ec.campaign_name}</span>
-              <span className="text-xs text-muted-foreground">
-                ID: {ec.campaign_id}
-                {ec.discount_value && ` • Giá trị: ${ec.discount_value.toLocaleString('vi-VN')}đ`}
-              </span>
-            </div>
-          </SelectItem>
-        ))}
-                </SelectContent>
-              </Select>
+              <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={comboboxOpen}
+                    className="w-full justify-between"
+                  >
+                    {selectedCampaignId
+                      ? (() => {
+                          const selected = externalCampaigns.find(c => c.campaign_id === selectedCampaignId);
+                          return selected ? selected.campaign_name : "Chọn chiến dịch...";
+                        })()
+                      : "Chọn chiến dịch từ danh sách"}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[600px] p-0" align="start">
+                  <Command>
+                    <CommandInput 
+                      placeholder="Tìm kiếm theo tên, ID, hoặc mã..." 
+                      className="h-9"
+                    />
+                    <CommandList>
+                      <CommandEmpty>Không tìm thấy chiến dịch nào.</CommandEmpty>
+                      <CommandGroup>
+                        {externalCampaigns.map((ec) => (
+                          <CommandItem
+                            key={ec.campaign_id}
+                            value={`${ec.campaign_name} ${ec.campaign_id} ${ec.campaign_code}`}
+                            onSelect={() => {
+                              handleSelectCampaign(ec.campaign_id);
+                              setComboboxOpen(false);
+                            }}
+                            className="flex items-center gap-2 py-3"
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                selectedCampaignId === ec.campaign_id ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            <div className="flex flex-col flex-1">
+                              <span className="font-medium">{ec.campaign_name}</span>
+                              <span className="text-xs text-muted-foreground">
+                                ID: {ec.campaign_id} • Mã: {ec.campaign_code}
+                                {ec.discount_value && ` • Giá trị: ${ec.discount_value.toLocaleString('vi-VN')}đ`}
+                              </span>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             )}
 
             <Input

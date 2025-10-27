@@ -2698,7 +2698,7 @@ export type Database = {
       }
       voucher_campaigns: {
         Row: {
-          campaign_id: string
+          campaign_id: number
           created_at: string | null
           created_by: string | null
           description: string | null
@@ -2708,7 +2708,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          campaign_id: string
+          campaign_id: number
           created_at?: string | null
           created_by?: string | null
           description?: string | null
@@ -2718,7 +2718,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          campaign_id?: string
+          campaign_id?: number
           created_at?: string | null
           created_by?: string | null
           description?: string | null

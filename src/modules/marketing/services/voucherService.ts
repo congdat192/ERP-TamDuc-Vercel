@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 export interface VoucherCampaign {
   id: string;
   name: string;
-  campaign_id: string;
+  campaign_id: number | string; // DB stores as number (BIGINT), form uses string
   description: string | null;
   is_active: boolean;
 }
@@ -36,12 +36,19 @@ export interface VoucherIssueResponse {
 }
 
 export interface ExternalCampaign {
-  campaign_id: string;
-  campaign_name: string;
+  campaign_id: number;        // Numeric ID from external API (c.id): 101111
+  campaign_code: string;      // Campaign code (c.code): "PHVC000003"
+  campaign_name: string;      // Display name (c.name): "VC 50K đợt 2"
   discount_type?: string;
   discount_value?: number;
   description?: string;
   is_active?: boolean;
+  _meta?: {
+    external_id: number;
+    start_date?: string;
+    end_date?: string;
+    expire_time?: number;
+  };
 }
 
 export const voucherService = {
@@ -59,9 +66,18 @@ export const voucherService = {
   async createCampaign(campaign: Omit<VoucherCampaign, 'id'>): Promise<VoucherCampaign> {
     const { data: { user } } = await supabase.auth.getUser();
     
+    // Convert campaign_id from string to number for DB
+    const campaignData = {
+      ...campaign,
+      campaign_id: typeof campaign.campaign_id === 'string' 
+        ? parseInt(campaign.campaign_id, 10)
+        : campaign.campaign_id,
+      created_by: user?.id
+    };
+    
     const { data, error } = await supabase
       .from('voucher_campaigns')
-      .insert({ ...campaign, created_by: user?.id })
+      .insert(campaignData)
       .select()
       .single();
     
@@ -70,9 +86,17 @@ export const voucherService = {
   },
 
   async updateCampaign(id: string, updates: Partial<VoucherCampaign>): Promise<void> {
+    // Convert campaign_id from string to number if present
+    const updateData: any = { ...updates };
+    if (updateData.campaign_id !== undefined) {
+      updateData.campaign_id = typeof updateData.campaign_id === 'string'
+        ? parseInt(updateData.campaign_id, 10)
+        : updateData.campaign_id;
+    }
+    
     const { error } = await supabase
       .from('voucher_campaigns')
-      .update(updates)
+      .update(updateData)
       .eq('id', id);
     
     if (error) throw error;
