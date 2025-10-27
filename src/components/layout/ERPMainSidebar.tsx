@@ -2,16 +2,23 @@
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { X, Building2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Building2, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import { ERPModule, User } from '@/types/auth';
 import { MODULE_PERMISSIONS } from '@/constants/permissions';
 import { getIconComponent } from '@/lib/icons';
+import { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 
 interface ERPMainSidebarProps {
   currentModule: ERPModule;
@@ -32,9 +39,25 @@ export function ERPMainSidebar({
   onMobileToggle,
   currentUser 
 }: ERPMainSidebarProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [expandedModules, setExpandedModules] = useState<Set<ERPModule>>(new Set(['marketing']));
+  
   const allowedModules = MODULE_PERMISSIONS.filter(module => 
     currentUser.permissions.modules.includes(module.module)
   );
+
+  const toggleModuleExpand = (module: ERPModule) => {
+    setExpandedModules(prev => {
+      const next = new Set(prev);
+      if (next.has(module)) {
+        next.delete(module);
+      } else {
+        next.add(module);
+      }
+      return next;
+    });
+  };
 
   const getRoleDisplayName = (role: string) => {
     switch (role) {
@@ -147,6 +170,73 @@ export function ERPMainSidebar({
               {allowedModules.map((module) => {
                 const IconComponent = getIconComponent(module.icon);
                 const isActive = currentModule === module.module;
+                const hasSubMenus = module.subMenus && module.subMenus.length > 0;
+                const isExpanded_Module = expandedModules.has(module.module);
+                
+                // Check if any sub-menu is active
+                const isSubMenuActive = hasSubMenus && module.subMenus!.some(sub => 
+                  location.pathname === sub.path
+                );
+
+                if (hasSubMenus && (isExpanded || isMobileOpen)) {
+                  return (
+                    <Collapsible
+                      key={module.module}
+                      open={isExpanded_Module}
+                      onOpenChange={() => toggleModuleExpand(module.module)}
+                    >
+                      <CollapsibleTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          className={cn(
+                            "w-full h-11 transition-all duration-200 justify-between",
+                            isActive || isSubMenuActive
+                              ? "theme-bg-primary text-white hover:theme-bg-primary/90 shadow-md"
+                              : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                          )}
+                        >
+                          <div className="flex items-center">
+                            <IconComponent className="w-5 h-5 mr-3" />
+                            <span>{module.label}</span>
+                          </div>
+                          <ChevronDown className={cn(
+                            "w-4 h-4 transition-transform",
+                            isExpanded_Module && "rotate-180"
+                          )} />
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="space-y-1 mt-1 ml-4">
+                        {module.subMenus!.map((subMenu) => {
+                          const SubIcon = getIconComponent(subMenu.icon);
+                          const isSubActive = location.pathname === subMenu.path;
+                          
+                          return (
+                            <Button
+                              key={subMenu.path}
+                              variant="ghost"
+                              size="sm"
+                              className={cn(
+                                "w-full justify-start text-sm h-9",
+                                isSubActive
+                                  ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                                  : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50"
+                              )}
+                              onClick={() => {
+                                navigate(subMenu.path);
+                                if (isMobileOpen) {
+                                  onMobileToggle();
+                                }
+                              }}
+                            >
+                              <SubIcon className="w-4 h-4 mr-2" />
+                              {subMenu.label}
+                            </Button>
+                          );
+                        })}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  );
+                }
                 
                 const buttonContent = (
                   <Button

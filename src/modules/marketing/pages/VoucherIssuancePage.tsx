@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { VoucherIssueTab } from '../components/voucher/VoucherIssueTab';
 import { VoucherSettingsTab } from '../components/voucher/VoucherSettingsTab';
+import { VoucherHistoryTab } from '../components/voucher/VoucherHistoryTab';
 
 export function VoucherIssuancePage() {
   const [activeTab, setActiveTab] = useState('issue');
@@ -13,9 +14,10 @@ export function VoucherIssuancePage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 max-w-md">
-          <TabsTrigger value="issue">Phát hành Voucher</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 max-w-2xl">
+          <TabsTrigger value="issue">Phát hành</TabsTrigger>
           <TabsTrigger value="settings">Cài đặt</TabsTrigger>
+          <TabsTrigger value="history">Lịch sử</TabsTrigger>
         </TabsList>
 
         <TabsContent value="issue" className="mt-6">
@@ -24,6 +26,10 @@ export function VoucherIssuancePage() {
 
         <TabsContent value="settings" className="mt-6">
           <VoucherSettingsTab />
+        </TabsContent>
+
+        <TabsContent value="history" className="mt-6">
+          <VoucherHistoryTab />
         </TabsContent>
       </Tabs>
     </div>

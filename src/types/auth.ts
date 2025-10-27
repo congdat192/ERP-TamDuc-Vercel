@@ -25,11 +25,19 @@ export type VoucherFeature =
   | 'voucher-leaderboard'
   | 'voucher-settings';
 
+export interface SubMenu {
+  path: string;
+  label: string;
+  icon: string;
+  allowedRoles?: UserRole[];
+}
+
 export interface ModulePermission {
   module: ERPModule;
   label: string;
   icon: string;
   allowedRoles: UserRole[];
+  subMenus?: SubMenu[];
 }
 
 export interface UserPermissions {

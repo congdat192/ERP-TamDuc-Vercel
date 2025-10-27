@@ -1,7 +1,9 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CampaignSettings } from './settings/CampaignSettings';
+import { TemplateSettings } from './settings/TemplateSettings';
+import { CustomerTypeSettings } from './settings/CustomerTypeSettings';
+import { SourceSettings } from './settings/SourceSettings';
 
 export function VoucherSettingsTab() {
   return (
@@ -18,36 +20,15 @@ export function VoucherSettingsTab() {
       </TabsContent>
 
       <TabsContent value="templates">
-        <Card>
-          <CardHeader>
-            <CardTitle>Quản lý Template Voucher</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">Chức năng đang phát triển...</p>
-          </CardContent>
-        </Card>
+        <TemplateSettings />
       </TabsContent>
 
       <TabsContent value="customer-types">
-        <Card>
-          <CardHeader>
-            <CardTitle>Quản lý Loại khách hàng</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">Chức năng đang phát triển...</p>
-          </CardContent>
-        </Card>
+        <CustomerTypeSettings />
       </TabsContent>
 
       <TabsContent value="sources">
-        <Card>
-          <CardHeader>
-            <CardTitle>Quản lý Nguồn khách hàng</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">Chức năng đang phát triển...</p>
-          </CardContent>
-        </Card>
+        <SourceSettings />
       </TabsContent>
     </Tabs>
   );

@@ -137,6 +137,67 @@ export const voucherService = {
     return data;
   },
 
+  // ========== CUSTOMER TYPES & SOURCES (CRUD) ==========
+  async createCustomerType(data: { type_code: string; type_name: string; description?: string }) {
+    const { data: result, error } = await supabase
+      .from('voucher_customer_types')
+      .insert(data)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return result;
+  },
+
+  async updateCustomerType(id: string, updates: Partial<{ type_name: string; description: string; is_active: boolean }>) {
+    const { error } = await supabase
+      .from('voucher_customer_types')
+      .update(updates)
+      .eq('id', id);
+    
+    if (error) throw error;
+  },
+
+  async createSource(data: { source_code: string; source_name: string; description?: string }) {
+    const { data: result, error } = await supabase
+      .from('voucher_sources')
+      .insert(data)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return result;
+  },
+
+  async updateSource(id: string, updates: Partial<{ source_name: string; description: string; is_active: boolean }>) {
+    const { error } = await supabase
+      .from('voucher_sources')
+      .update(updates)
+      .eq('id', id);
+    
+    if (error) throw error;
+  },
+
+  async createTemplate(data: { name: string; template_text: string; template_html?: string; is_default: boolean }) {
+    const { data: result, error } = await supabase
+      .from('voucher_templates')
+      .insert(data)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return result;
+  },
+
+  async updateTemplate(id: string, updates: Partial<VoucherTemplate>) {
+    const { error } = await supabase
+      .from('voucher_templates')
+      .update(updates)
+      .eq('id', id);
+    
+    if (error) throw error;
+  },
+
   // ========== HISTORY ==========
   async getHistory(limit = 50) {
     const { data, error } = await supabase
@@ -147,5 +208,39 @@ export const voucherService = {
     
     if (error) throw error;
     return data || [];
+  },
+
+  async getHistoryWithFilters(filters: {
+    startDate?: Date;
+    endDate?: Date;
+    phone?: string;
+    status?: 'success' | 'failed';
+    limit?: number;
+  }) {
+    let query = supabase
+      .from('voucher_issuance_history')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (filters.startDate) query = query.gte('created_at', filters.startDate.toISOString());
+    if (filters.endDate) query = query.lte('created_at', filters.endDate.toISOString());
+    if (filters.phone) query = query.ilike('phone', `%${filters.phone}%`);
+    if (filters.status) query = query.eq('status', filters.status);
+    if (filters.limit) query = query.limit(filters.limit);
+    
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  },
+
+  // Helper to get employee name from user_id
+  async getEmployeeName(userId: string): Promise<string> {
+    const { data } = await supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('id', userId)
+      .single();
+    
+    return data?.full_name || 'Unknown';
   }
 };
