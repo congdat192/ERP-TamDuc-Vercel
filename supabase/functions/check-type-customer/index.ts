@@ -30,7 +30,7 @@ async function getOAuthToken(): Promise<string> {
 
   const data = await response.json();
   console.log('[check-type-customer] OAuth token obtained');
-  return data.access_token;
+  return data.data.access_token;
 }
 
 serve(async (req) => {
