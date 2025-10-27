@@ -36,9 +36,9 @@ serve(async (req) => {
     // Get OAuth token
     const oauthToken = await getOAuthToken();
 
-    // TODO: Thay endpoint khi user cung cấp
+    // Call Supabase B API với filter isactive=true
     const response = await fetch(
-      `${EXTERNAL_API_BASE}/voucher-campaigns`,
+      `${EXTERNAL_API_BASE}/list-voucher-campaigns-kiotviet?isactive=true&pageSize=200`,
       {
         method: 'GET',
         headers: {
@@ -66,10 +66,29 @@ serve(async (req) => {
 
     const data = await response.json();
     
-    // Filter chỉ lấy campaigns active
-    let campaigns = data.data || data;
+    // Transform Supabase B format → Supabase A format
+    let campaigns = data.data || [];
     if (Array.isArray(campaigns)) {
-      campaigns = campaigns.filter((c: any) => c.is_active === true);
+      campaigns = campaigns
+        .filter((c: any) => c.isactive === true) // Double-check filter
+        .map((c: any) => ({
+          campaign_id: c.code,                    // "code" → "campaign_id"
+          campaign_name: c.name,                  // "name" → "campaign_name"
+          discount_value: c.price || 0,           // "price" → "discount_value"
+          discount_type: 'fixed',                 // Default "fixed" (VND)
+          description: c.price 
+            ? `Giá trị: ${c.price.toLocaleString('vi-VN')}đ • Hết hạn sau ${c.expiretime || 0} ngày`
+            : `Hết hạn sau ${c.expiretime || 0} ngày`,
+          is_active: c.isactive,
+          
+          // Optional: Store original data for future reference
+          _meta: {
+            external_id: c.id,
+            start_date: c.startdate,
+            end_date: c.enddate,
+            expire_time: c.expiretime
+          }
+        }));
     }
     
     console.log(`[get-voucher-campaigns-external] Success: ${campaigns.length} active campaigns`);

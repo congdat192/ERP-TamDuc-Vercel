@@ -134,16 +134,17 @@ export function CampaignDialog({ open, onOpenChange, campaign, onSave }: Campaig
                   <SelectValue placeholder="Chọn chiến dịch từ danh sách" />
                 </SelectTrigger>
                 <SelectContent>
-                  {externalCampaigns.map((ec) => (
-                    <SelectItem key={ec.campaign_id} value={ec.campaign_id}>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{ec.campaign_name}</span>
-                        <span className="text-xs text-muted-foreground">
-                          ID: {ec.campaign_id}
-                        </span>
-                      </div>
-                    </SelectItem>
-                  ))}
+        {externalCampaigns.map((ec) => (
+          <SelectItem key={ec.campaign_id} value={ec.campaign_id}>
+            <div className="flex flex-col">
+              <span className="font-medium">{ec.campaign_name}</span>
+              <span className="text-xs text-muted-foreground">
+                ID: {ec.campaign_id}
+                {ec.discount_value && ` • Giá trị: ${ec.discount_value.toLocaleString('vi-VN')}đ`}
+              </span>
+            </div>
+          </SelectItem>
+        ))}
                 </SelectContent>
               </Select>
             )}
