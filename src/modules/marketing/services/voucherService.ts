@@ -19,8 +19,12 @@ export interface VoucherTemplate {
 export interface CustomerValidationResponse {
   success: boolean;
   data: {
-    customer_type: 'new' | 'existing' | 'vip';
     phone: string;
+    customer_type: 'new' | 'old';
+  };
+  meta?: {
+    request_id: string;
+    timestamp: string;
   };
 }
 
@@ -147,11 +151,17 @@ export const voucherService = {
 
   // ========== API CALLS ==========
   async validateCustomer(phone: string): Promise<CustomerValidationResponse> {
-    const { data, error } = await supabase.functions.invoke('validate-customer-external', {
-      body: { phone }
-    });
+    const params = new URLSearchParams({ phone });
+    const { data, error } = await supabase.functions.invoke(
+      `check-type-customer?${params.toString()}`
+    );
 
     if (error) throw error;
+    
+    if (!data.success) {
+      throw new Error(data.error || 'Không thể xác định loại khách hàng');
+    }
+    
     return data;
   },
 

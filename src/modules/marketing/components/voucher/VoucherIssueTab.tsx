@@ -122,7 +122,7 @@ export function VoucherIssueTab() {
           {customerType && (
             <Alert>
               <AlertDescription>
-                <strong>Loại khách hàng:</strong> {customerType === 'new' ? 'Khách mới' : customerType === 'vip' ? 'Khách VIP' : 'Khách cũ'}
+                <strong>Loại khách hàng:</strong> {customerType === 'new' ? '🆕 Khách mới' : '🔄 Khách cũ'}
               </AlertDescription>
             </Alert>
           )}

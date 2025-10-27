@@ -1,5 +1,8 @@
 project_id = "dtdtwhrqvkrymtyqbatn"
 
+[functions.check-type-customer]
+verify_jwt = false
+
 [functions.get-voucher-campaigns-external]
 verify_jwt = false
 
