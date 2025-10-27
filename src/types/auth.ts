@@ -10,7 +10,6 @@ export type ERPModule =
   | 'inventory'
   | 'accounting'
   | 'hr'
-  | 'voucher'
   | 'marketing'
   | 'operations'
   | 'affiliate'

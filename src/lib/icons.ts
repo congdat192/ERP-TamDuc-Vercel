@@ -13,7 +13,9 @@ import {
   Home,
   Target,
   UserPlus,
-  Megaphone
+  Megaphone,
+  Wrench,
+  Glasses
 } from 'lucide-react';
 
 const iconMap = {
@@ -30,7 +32,9 @@ const iconMap = {
   Home,
   Target,
   UserPlus,
-  Megaphone
+  Megaphone,
+  Wrench,
+  Glasses
 };
 
 export function getIconComponent(iconName: string) {

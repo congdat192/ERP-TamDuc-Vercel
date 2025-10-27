@@ -77,7 +77,7 @@ export function UserManagement() {
       phone: '+84901234567',
       role: 'erp-admin',
       permissions: {
-        modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'marketing', 'system-settings', 'user-management'],
+        modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'marketing', 'operations', 'affiliate', 'system-settings', 'user-management'],
         features: ['full_access'],
         voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
         canManageUsers: true,
@@ -106,7 +106,7 @@ export function UserManagement() {
       phone: '+84901234568',
       role: 'voucher-admin',
       permissions: {
-        modules: ['dashboard', 'voucher'],
+        modules: ['dashboard', 'marketing'],
         features: ['view_voucher', 'create_voucher', 'approve_voucher'],
         voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'],
         canManageUsers: false,
@@ -134,7 +134,7 @@ export function UserManagement() {
       phone: '+84901234569',
       role: 'telesales',
       permissions: {
-        modules: ['dashboard', 'customers', 'voucher'],
+        modules: ['dashboard', 'customers', 'marketing'],
         features: ['view_customers', 'view_voucher', 'create_voucher'],
         voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list'],
         canManageUsers: false,

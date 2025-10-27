@@ -259,7 +259,7 @@ export function UserEditModal({ isOpen, onClose, user, onUserUpdated }: UserEdit
                 </div>
 
                 {/* Voucher Features */}
-                {formData.permissions?.modules.includes('voucher') && (
+                {formData.permissions?.modules.includes('marketing') && (
                   <div className="space-y-3">
                     <h4 className="font-medium text-gray-900">Tính Năng Voucher</h4>
                     <div className="space-y-2 max-h-40 overflow-y-auto border rounded p-3">

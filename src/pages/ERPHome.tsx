@@ -73,8 +73,8 @@ export function ERPHome({ currentUser: propCurrentUser, onModuleChange: propOnMo
       description: 'Tạo voucher mới cho khách hàng',
       icon: Ticket,
       color: 'berry-warning-light',
-      action: () => handleModuleChange('voucher'),
-      available: currentUser.permissions.modules.includes('voucher')
+      action: () => handleModuleChange('marketing'),
+      available: currentUser.permissions.modules.includes('marketing')
     },
     {
       title: 'Quản Lý Khách Hàng',

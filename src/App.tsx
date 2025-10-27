@@ -285,6 +285,8 @@ const AppContent = () => {
                       </ProtectedERPRoute>
                     } 
                   />
+                  {/* Redirect old voucher URL to new location */}
+                  <Route path="/ERP/Voucher" element={<Navigate to="/ERP/Marketing/voucher" replace />} />
                   <Route 
                     path="/ERP/Marketing/*" 
                     element={

@@ -39,12 +39,6 @@ export const MODULE_PERMISSIONS: ModulePermission[] = [
     allowedRoles: ['erp-admin', 'custom']
   },
   {
-    module: 'voucher',
-    label: 'Voucher',
-    icon: 'Ticket',
-    allowedRoles: ['erp-admin', 'voucher-admin', 'telesales', 'custom']
-  },
-  {
     module: 'marketing',
     label: 'Marketing',
     icon: 'Target',
@@ -95,21 +89,21 @@ export const VOUCHER_FEATURES = [
 
 export const DEFAULT_PERMISSIONS = {
   'erp-admin': {
-    modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'marketing', 'operations', 'affiliate', 'system-settings', 'user-management'] as ERPModule[],
+    modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'marketing', 'operations', 'affiliate', 'system-settings', 'user-management'] as ERPModule[],
     features: ['full_access'],
     voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'] as VoucherFeature[],
     canManageUsers: true,
     canViewAllVouchers: true
   },
   'voucher-admin': {
-    modules: ['dashboard', 'voucher'] as ERPModule[],
+    modules: ['dashboard', 'marketing'] as ERPModule[],
     features: ['view_voucher', 'create_voucher', 'approve_voucher'],
     voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'] as VoucherFeature[],
     canManageUsers: false,
     canViewAllVouchers: true
   },
   'telesales': {
-    modules: ['dashboard', 'voucher'] as ERPModule[],
+    modules: ['dashboard', 'marketing'] as ERPModule[],
     features: ['view_voucher', 'create_voucher'],
     voucherFeatures: ['voucher-dashboard', 'issue-voucher', 'voucher-list', 'voucher-leaderboard'] as VoucherFeature[],
     canManageUsers: false,
