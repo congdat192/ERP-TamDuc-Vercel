@@ -50,7 +50,6 @@ export const voucherService = {
     const { data, error } = await supabase
       .from('voucher_campaigns')
       .select('*')
-      .eq('is_active', true)
       .order('name');
     
     if (error) throw error;
