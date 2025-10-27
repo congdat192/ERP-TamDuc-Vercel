@@ -17,7 +17,7 @@ export function LensAdminTab() {
           Quản lý sản phẩm tròng kính, thương hiệu, đặc tính và banner quảng cáo
         </p>
         <Button 
-          onClick={() => navigate('/ERP/Marketing/Lens-Admin')}
+          onClick={() => navigate('/ERP/Operations/Lens-Admin')}
           className="bg-green-600 hover:bg-green-700 text-white"
         >
           Vào trang quản lý

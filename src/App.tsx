@@ -120,6 +120,9 @@ const ProtectedERPRoute = ({ children, module }: { children: React.ReactNode; mo
       case 'marketing':
         navigate('/ERP/Marketing');
         break;
+      case 'operations':
+        navigate('/ERP/Operations/Lens-Admin');
+        break;
       case 'hr':
         navigate('/ERP/HR');
         break;
@@ -275,9 +278,9 @@ const AppContent = () => {
                     } 
                   />
                   <Route 
-                    path="/ERP/Marketing/Lens-Admin" 
+                    path="/ERP/Operations/Lens-Admin" 
                     element={
-                      <ProtectedERPRoute module="marketing">
+                      <ProtectedERPRoute module="operations">
                         <LensAdminPage />
                       </ProtectedERPRoute>
                     } 

@@ -55,6 +55,15 @@ export const MODULE_PERMISSIONS: ModulePermission[] = [
     ]
   },
   {
+    module: 'operations',
+    label: 'Vận Hành',
+    icon: 'Wrench',
+    allowedRoles: ['erp-admin', 'custom'],
+    subMenus: [
+      { path: '/ERP/Operations/Lens-Admin', label: 'Lens Catalog Admin', icon: 'Glasses' }
+    ]
+  },
+  {
     module: 'affiliate',
     label: 'Affiliate',
     icon: 'UserPlus',
@@ -86,7 +95,7 @@ export const VOUCHER_FEATURES = [
 
 export const DEFAULT_PERMISSIONS = {
   'erp-admin': {
-    modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'marketing', 'affiliate', 'system-settings', 'user-management'] as ERPModule[],
+    modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'voucher', 'marketing', 'operations', 'affiliate', 'system-settings', 'user-management'] as ERPModule[],
     features: ['full_access'],
     voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'] as VoucherFeature[],
     canManageUsers: true,

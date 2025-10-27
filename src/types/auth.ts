@@ -12,6 +12,7 @@ export type ERPModule =
   | 'hr'
   | 'voucher'
   | 'marketing'
+  | 'operations'
   | 'affiliate'
   | 'system-settings'
   | 'user-management';
