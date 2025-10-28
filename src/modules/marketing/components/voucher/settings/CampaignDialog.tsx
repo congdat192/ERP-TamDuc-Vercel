@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useForm } from 'react-hook-form';
 import { voucherService, type VoucherCampaign, type ExternalCampaign } from '../../../services/voucherService';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2, RefreshCw, AlertCircle, Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -23,6 +24,7 @@ interface CampaignDialogProps {
 export function CampaignDialog({ open, onOpenChange, campaign, onSave }: CampaignDialogProps) {
   const { register, handleSubmit, reset, setValue } = useForm<VoucherCampaign>();
   const [externalCampaigns, setExternalCampaigns] = useState<ExternalCampaign[]>([]);
+  const [templates, setTemplates] = useState<Array<{ name: string; url: string }>>([]);
   const [isLoadingExternal, setIsLoadingExternal] = useState(false);
   const [selectedCampaignId, setSelectedCampaignId] = useState<number | null>(null);
   const [showEditWarning, setShowEditWarning] = useState(false);
@@ -43,12 +45,35 @@ export function CampaignDialog({ open, onOpenChange, campaign, onSave }: Campaig
       );
       setShowEditWarning(false);
     } else {
-      reset({ name: '', campaign_id: '', description: '', is_active: true } as any);
+      reset({ name: '', campaign_id: '', description: '', voucher_image_url: '', is_active: true } as any);
       setSelectedCampaignId(null);
       setExternalCampaigns([]);
       setShowEditWarning(false);
     }
   }, [campaign, reset, open]);
+
+  useEffect(() => {
+    if (open) {
+      loadTemplates();
+    }
+  }, [open]);
+
+  const loadTemplates = async () => {
+    try {
+      const { data } = await supabase.storage.from('voucher-templates').list();
+      if (data) {
+        const urls = data.map(file => {
+          const { data: { publicUrl } } = supabase.storage
+            .from('voucher-templates')
+            .getPublicUrl(file.name);
+          return { name: file.name, url: publicUrl };
+        });
+        setTemplates(urls);
+      }
+    } catch (error) {
+      console.error('Error loading templates:', error);
+    }
+  };
 
   const handleLoadExternalCampaigns = async () => {
     setIsLoadingExternal(true);
@@ -216,6 +241,24 @@ export function CampaignDialog({ open, onOpenChange, campaign, onSave }: Campaig
           <div className="space-y-2">
             <Label>Mô tả</Label>
             <Textarea {...register('description')} />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Ảnh Voucher</Label>
+            {templates.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Chưa có ảnh template. Vui lòng upload ảnh ở tab "Ảnh Voucher"
+              </p>
+            ) : (
+              <select {...register('voucher_image_url')} className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                <option value="">Không chọn ảnh</option>
+                {templates.map(t => (
+                  <option key={t.url} value={t.url}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           <div className="flex justify-end gap-2">

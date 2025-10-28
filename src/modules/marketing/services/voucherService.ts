@@ -6,6 +6,7 @@ export interface VoucherCampaign {
   campaign_id: number | string; // DB stores as number (BIGINT), form uses string
   description: string | null;
   is_active: boolean;
+  voucher_image_url?: string | null;
 }
 
 export interface VoucherTemplate {

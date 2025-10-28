@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Copy, Download } from 'lucide-react';
 import { toast } from 'sonner';
-import html2canvas from 'html2canvas';
+import QRCode from 'qrcode';
+import { supabase } from '@/integrations/supabase/client';
 
 interface VoucherDisplayProps {
   voucherData: {
@@ -45,28 +46,126 @@ export function VoucherDisplay({ voucherData }: VoucherDisplayProps) {
   };
 
   const handleExportImage = async () => {
-    if (!voucherRef.current) return;
-
     try {
-      const canvas = await html2canvas(voucherRef.current, {
-        backgroundColor: '#ffffff',
-        scale: 2
+      toast.loading('Đang tạo ảnh voucher...');
+
+      // 1. Get campaign template image URL
+      const { data: campaign, error: campaignError } = await supabase
+        .from('voucher_campaigns')
+        .select('voucher_image_url')
+        .eq('campaign_id', voucherData.campaign_id)
+        .single();
+
+      if (campaignError) throw campaignError;
+
+      if (!campaign?.voucher_image_url) {
+        toast.dismiss();
+        toast.error('Chiến dịch chưa có ảnh voucher template');
+        return;
+      }
+
+      // 2. Create canvas
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Cannot get canvas context');
+
+      // 3. Load template image
+      const templateImg = new Image();
+      templateImg.crossOrigin = 'anonymous';
+      
+      await new Promise((resolve, reject) => {
+        templateImg.onload = resolve;
+        templateImg.onerror = () => reject(new Error('Failed to load template image'));
+        templateImg.src = campaign.voucher_image_url;
       });
 
+      canvas.width = templateImg.width;
+      canvas.height = templateImg.height;
+
+      // 4. Draw template image
+      ctx.drawImage(templateImg, 0, 0);
+
+      // 5. Generate QR code (black QR on white background)
+      const qrCanvas = document.createElement('canvas');
+      await QRCode.toCanvas(qrCanvas, voucherData.code, {
+        width: 150,
+        margin: 1,
+        color: {
+          dark: '#000000',  // Black QR code
+          light: '#FFFFFF'  // White background
+        }
+      });
+
+      // 6. Calculate position (20px from right, 60px from bottom)
+      const qrSize = 150;
+      const textHeight = 50; // Space for 2 lines of text
+      const padding = 10;
+      
+      const qrX = canvas.width - qrSize - 20;
+      const qrY = canvas.height - 60 - qrSize - textHeight;
+
+      // 7. Draw white background box for QR code
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(qrX - padding, qrY - padding, qrSize + padding * 2, qrSize + padding * 2);
+
+      // 8. Draw QR code
+      ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
+
+      // 9. Draw voucher code text (WHITE, BOLD)
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 18px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(
+        voucherData.code,
+        qrX + qrSize / 2,
+        qrY + qrSize + 25
+      );
+
+      // 10. Draw expiry date text (WHITE)
+      const expiryDate = new Date(voucherData.expired_at);
+      const formattedExpiry = `HSD: ${expiryDate.getDate().toString().padStart(2, '0')}/${(expiryDate.getMonth() + 1).toString().padStart(2, '0')}/${expiryDate.getFullYear().toString().slice(-2)}`;
+      
+      ctx.font = '16px Arial';
+      ctx.fillText(
+        formattedExpiry,
+        qrX + qrSize / 2,
+        qrY + qrSize + 45
+      );
+
+      // 11. Convert canvas to blob
       const blob = await new Promise<Blob>((resolve) => {
         canvas.toBlob((b) => resolve(b!), 'image/png');
       });
 
+      // 12. Upload to voucher-generated bucket
+      const fileName = `${voucherData.code}_${voucherData.recipient_phone}.png`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('voucher-generated')
+        .upload(fileName, blob, { 
+          upsert: true,
+          contentType: 'image/png'
+        });
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw uploadError;
+      }
+
+      // 13. Trigger download
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `voucher-${voucherData.code}.png`;
+      a.download = fileName;
       a.click();
       URL.revokeObjectURL(url);
 
+      toast.dismiss();
       toast.success('Đã tải xuống ảnh voucher!');
-    } catch (error) {
-      toast.error('Không thể xuất ảnh');
+    } catch (error: any) {
+      console.error('[VoucherDisplay] Export error:', error);
+      toast.dismiss();
+      toast.error(`Không thể xuất ảnh: ${error.message}`);
     }
   };
 

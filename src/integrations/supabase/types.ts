@@ -2706,6 +2706,7 @@ export type Database = {
           is_active: boolean | null
           name: string
           updated_at: string | null
+          voucher_image_url: string | null
         }
         Insert: {
           campaign_id: number
@@ -2716,6 +2717,7 @@ export type Database = {
           is_active?: boolean | null
           name: string
           updated_at?: string | null
+          voucher_image_url?: string | null
         }
         Update: {
           campaign_id?: number
@@ -2726,6 +2728,7 @@ export type Database = {
           is_active?: boolean | null
           name?: string
           updated_at?: string | null
+          voucher_image_url?: string | null
         }
         Relationships: []
       }

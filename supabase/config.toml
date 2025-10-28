@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.send-payroll-notification]
 verify_jwt = true
+
+[functions.cleanup-voucher-images]
+verify_jwt = false
