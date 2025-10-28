@@ -161,8 +161,13 @@ export function EmployeeOTPLoginPage() {
       });
 
       // Check if user already has a password
-      const { data: { user } } = await supabase.auth.getUser();
-      const hasPassword = user?.app_metadata?.providers?.includes('email');
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('password_change_required')
+        .eq('id', sessionData.user.id)
+        .single();
+
+      const hasPassword = !profile?.password_change_required;
 
       // Check if user has ERP access
       const { data: employee } = await supabase

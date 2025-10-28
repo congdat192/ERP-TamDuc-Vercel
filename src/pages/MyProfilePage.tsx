@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/components/auth/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -12,24 +13,27 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, User, Gift, FileText, Send, ChevronDown, DollarSign, Lock } from "lucide-react";
+import { LogOut, User, Gift, FileText, Send, ChevronDown, DollarSign, Lock, ExternalLink, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { EmployeePersonalInfoTab } from "@/components/profile/EmployeePersonalInfoTab";
 import { EmployeeBenefitsTab } from "@/components/profile/EmployeeBenefitsTab";
 import { EmployeePersonalDocumentsTab } from "@/components/profile/EmployeePersonalDocumentsTab";
 import { EmployeeChangeRequestsTab } from "@/components/profile/EmployeeChangeRequestsTab";
 import EmployeePayrollTab from "@/components/profile/EmployeePayrollTab";
+import { EmployeeSecurityTab } from "@/components/profile/EmployeeSecurityTab";
 import { Footer } from "@/components/layout/Footer";
 import logoTamDuc from "@/assets/logo_tamduc.jpg";
 import { CreatePasswordDialog } from "@/components/auth/CreatePasswordDialog";
 
 export function MyProfilePage() {
+  const navigate = useNavigate();
   const { currentUser, logout } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("personal");
   const [employee, setEmployee] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasPassword, setHasPassword] = useState(true);
+  const [hasERPAccess, setHasERPAccess] = useState(false);
   const [showCreatePasswordDialog, setShowCreatePasswordDialog] = useState(false);
   const retryCountRef = useRef(0);
   const maxRetries = 3;
@@ -89,6 +93,7 @@ export function MyProfilePage() {
         }
 
         setEmployee(data);
+        setHasERPAccess(!data?.is_employee_only); // false = có ERP, true = chỉ ESS
         setIsLoading(false);
       } catch (err: any) {
         console.error("❌ [MyProfile] Error in fetchEmployee:", err);
@@ -106,13 +111,18 @@ export function MyProfilePage() {
 
   useEffect(() => {
     const checkPassword = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setHasPassword(user?.app_metadata?.providers?.includes('email') || false);
+      if (!currentUser?.id) return;
+      
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('password_change_required')
+        .eq('id', currentUser.id)
+        .single();
+      
+      setHasPassword(!profile?.password_change_required);
     };
-    if (currentUser) {
-      checkPassword();
-    }
-  }, [currentUser]);
+    checkPassword();
+  }, [currentUser?.id]);
 
   if (isLoading) {
     return (
@@ -187,12 +197,16 @@ export function MyProfilePage() {
                 <Send className="w-4 h-4 mr-2" />
                 Yêu Cầu Thay Đổi
               </DropdownMenuItem>
-              {!hasPassword && (
+              <DropdownMenuItem onClick={() => setActiveTab('security')} className="cursor-pointer">
+                <Shield className="w-4 h-4 mr-2" />
+                Bảo Mật
+              </DropdownMenuItem>
+              {hasERPAccess && (
                 <>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setShowCreatePasswordDialog(true)} className="cursor-pointer">
-                    <Lock className="w-4 h-4 mr-2" />
-                    Tạo Mật Khẩu
+                  <DropdownMenuItem onClick={() => navigate('/ERP/Dashboard')} className="cursor-pointer">
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Truy Cập ERP
                   </DropdownMenuItem>
                 </>
               )}
@@ -207,7 +221,7 @@ export function MyProfilePage() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="relative">
           <div className="sticky top-0 z-20 bg-gradient-to-br from-green-50 via-white to-teal-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-            <TabsList className="grid w-full grid-cols-4 mb-6">
+            <TabsList className="grid w-full grid-cols-5 mb-6">
               <TabsTrigger value="personal">
                 <User className="w-4 h-4 mr-2" />
                 <span className="hidden sm:inline">Thông Tin</span>
@@ -223,6 +237,10 @@ export function MyProfilePage() {
               <TabsTrigger value="payroll">
                 <DollarSign className="w-4 h-4 mr-2" />
                 <span className="hidden sm:inline">Phiếu Lương</span>
+              </TabsTrigger>
+              <TabsTrigger value="security">
+                <Shield className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Mật Khẩu</span>
               </TabsTrigger>
             </TabsList>
           </div>
@@ -246,6 +264,10 @@ export function MyProfilePage() {
           <TabsContent value="requests">
             <EmployeeChangeRequestsTab employeeId={employee.id} employeeName={employee.full_name} />
           </TabsContent>
+
+          <TabsContent value="security">
+            <EmployeeSecurityTab />
+          </TabsContent>
         </Tabs>
       </div>
 
@@ -257,8 +279,15 @@ export function MyProfilePage() {
         onClose={() => {
           setShowCreatePasswordDialog(false);
           // Refresh password status after creating password
-          supabase.auth.getUser().then(({ data: { user } }) => {
-            setHasPassword(user?.app_metadata?.providers?.includes('email') || false);
+          supabase.auth.getUser().then(async ({ data: { user } }) => {
+            if (user) {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('password_change_required')
+                .eq('id', user.id)
+                .single();
+              setHasPassword(!profile?.password_change_required);
+            }
           });
         }}
         isRequired={false}

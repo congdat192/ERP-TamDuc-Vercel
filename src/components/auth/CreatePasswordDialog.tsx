@@ -43,8 +43,18 @@ export function CreatePasswordDialog({ isOpen, onClose, isRequired }: CreatePass
 
     setLoading(true);
     try {
+      // Step 1: Update password
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
+
+      // Step 2: Update profiles.password_change_required = false
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase
+          .from('profiles')
+          .update({ password_change_required: false })
+          .eq('id', user.id);
+      }
 
       toast({ 
         title: 'Thành công', 
