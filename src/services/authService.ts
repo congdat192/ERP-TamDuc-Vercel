@@ -148,25 +148,15 @@ export const updateUserProfile = async (data: UpdateProfileRequest): Promise<Use
 };
 
 export const forgotPassword = async (email: string): Promise<ForgotPasswordResponse> => {
-  // Generate password reset link via Supabase Auth
-  const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${window.location.origin}/reset-password`
+  // Send custom email via edge function (edge function handles Supabase Auth link generation)
+  const { error } = await supabase.functions.invoke('send-password-reset-email', {
+    body: {
+      email,
+      userName: email.split('@')[0]
+    }
   });
   
   if (error) throw error;
-
-  // Send custom email via edge function (edge function generates link with token)
-  try {
-    await supabase.functions.invoke('send-password-reset-email', {
-      body: {
-        email,
-        userName: email.split('@')[0]
-      }
-    });
-  } catch (emailError) {
-    console.error('Failed to send custom reset email:', emailError);
-    // Don't throw - Supabase Auth already sent default email
-  }
   
   return { message: 'Email đặt lại mật khẩu đã được gửi' };
 };

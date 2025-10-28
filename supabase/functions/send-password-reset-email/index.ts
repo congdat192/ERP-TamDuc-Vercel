@@ -52,8 +52,10 @@ serve(async (req: Request) => {
       throw linkError;
     }
 
-    // Get action_link with token
-    const resetUrl = linkData.properties.action_link;
+    // Extract hashed_token from properties and construct proper URL
+    // ResetPasswordPage expects: /reset-password#access_token=xxx&type=recovery
+    const hashedToken = linkData.properties.hashed_token;
+    const resetUrl = `${siteUrl}/reset-password#access_token=${hashedToken}&type=recovery`;
     console.log('🔗 Generated reset URL:', resetUrl);
 
     const emailResponse = await resend.emails.send({
