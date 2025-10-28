@@ -183,24 +183,8 @@ export function EmployeeOTPLoginPage() {
         description: `Chào mừng ${employee?.full_name || 'bạn'} quay trở lại`,
       });
 
-      // Navigate to /my-profile first
+      // Navigate to /my-profile - Password prompt will be handled there
       navigate('/my-profile');
-
-      // CASE 1: Has ERP access but NO password → Bắt buộc tạo password
-      if (hasERPAccess && !hasPassword) {
-        setTimeout(() => {
-          setShowCreatePasswordDialog(true);
-          setPasswordRequired(true); // Không cho skip
-        }, 500);
-      }
-      // CASE 2: No ERP access + No password + First time → Khuyến khích tạo password (chỉ 1 lần)
-      else if (!hasPassword && !sessionStorage.getItem('password_prompt_shown_once')) {
-        setTimeout(() => {
-          setShowCreatePasswordDialog(true);
-          setPasswordRequired(false); // Cho phép skip
-          sessionStorage.setItem('password_prompt_shown_once', 'true'); // Đánh dấu đã hiện
-        }, 500);
-      }
 
     } catch (error: any) {
       console.error('❌ Login error:', error);

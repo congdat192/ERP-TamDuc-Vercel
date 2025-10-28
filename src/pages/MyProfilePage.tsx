@@ -110,8 +110,8 @@ export function MyProfilePage() {
   }, [currentUser?.id, toast]);
 
   useEffect(() => {
-    const checkPassword = async () => {
-      if (!currentUser?.id) return;
+    const checkAndShowPasswordPrompt = async () => {
+      if (!currentUser?.id || !employee) return;
       
       const { data: profile } = await supabase
         .from('profiles')
@@ -119,10 +119,19 @@ export function MyProfilePage() {
         .eq('id', currentUser.id)
         .single();
       
-      setHasPassword(!profile?.password_change_required);
+      const hasPasswordNow = !profile?.password_change_required;
+      setHasPassword(hasPasswordNow);
+      
+      // Nếu CHƯA có password → Hiện pop-up tự động
+      if (!hasPasswordNow) {
+        setTimeout(() => {
+          setShowCreatePasswordDialog(true);
+        }, 1000);
+      }
     };
-    checkPassword();
-  }, [currentUser?.id]);
+    
+    checkAndShowPasswordPrompt();
+  }, [currentUser?.id, employee]);
 
   if (isLoading) {
     return (
@@ -176,52 +185,59 @@ export function MyProfilePage() {
             </div>
           </div>
 
-          {/* Right: User Menu Dropdown (compact) */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="gap-2">
-                <User className="w-4 h-4" />
-                <span className="hidden sm:inline">{employee.full_name}</span>
-                <ChevronDown className="w-4 h-4" />
+          {/* Right: ERP Button + User Menu Dropdown */}
+          <div className="flex items-center gap-2">
+            {/* Nút Truy Cập ERP - Hiện nếu có quyền */}
+            {hasERPAccess && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/ERP/Dashboard')}
+                className="gap-2"
+              >
+                <ExternalLink className="w-4 h-4" />
+                <span className="hidden sm:inline">Truy Cập ERP</span>
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium">{employee.full_name}</p>
-                  <p className="text-xs text-muted-foreground">{employee.employee_code}</p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setActiveTab('requests')} className="cursor-pointer">
-                <Send className="w-4 h-4 mr-2" />
-                Yêu Cầu Thay Đổi
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setActiveTab('security')} className="cursor-pointer">
-                <Shield className="w-4 h-4 mr-2" />
-                Bảo Mật
-              </DropdownMenuItem>
-              {hasERPAccess && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/ERP/Dashboard')} className="cursor-pointer">
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    Truy Cập ERP
-                  </DropdownMenuItem>
-                </>
-              )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={logout} className="text-destructive cursor-pointer">
-                <LogOut className="w-4 h-4 mr-2" />
-                Đăng Xuất
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            )}
+
+            {/* Dropdown Profile */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="gap-2">
+                  <User className="w-4 h-4" />
+                  <span className="hidden sm:inline">{employee.full_name}</span>
+                  <ChevronDown className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium">{employee.full_name}</p>
+                    <p className="text-xs text-muted-foreground">{employee.employee_code}</p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setActiveTab('requests')} className="cursor-pointer">
+                  <Send className="w-4 h-4 mr-2" />
+                  Yêu Cầu Thay Đổi
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowCreatePasswordDialog(true)} className="cursor-pointer">
+                  <Shield className="w-4 h-4 mr-2" />
+                  {hasPassword ? 'Đổi Mật Khẩu' : 'Tạo Mật Khẩu'}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={logout} className="text-destructive cursor-pointer">
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Đăng Xuất
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="relative">
           <div className="sticky top-0 z-20 bg-gradient-to-br from-green-50 via-white to-teal-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-            <TabsList className="grid w-full grid-cols-5 mb-6">
+            <TabsList className="grid w-full grid-cols-4 mb-6">
               <TabsTrigger value="personal">
                 <User className="w-4 h-4 mr-2" />
                 <span className="hidden sm:inline">Thông Tin</span>
@@ -237,10 +253,6 @@ export function MyProfilePage() {
               <TabsTrigger value="payroll">
                 <DollarSign className="w-4 h-4 mr-2" />
                 <span className="hidden sm:inline">Phiếu Lương</span>
-              </TabsTrigger>
-              <TabsTrigger value="security">
-                <Shield className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Mật Khẩu</span>
               </TabsTrigger>
             </TabsList>
           </div>
@@ -263,10 +275,6 @@ export function MyProfilePage() {
 
           <TabsContent value="requests">
             <EmployeeChangeRequestsTab employeeId={employee.id} employeeName={employee.full_name} />
-          </TabsContent>
-
-          <TabsContent value="security">
-            <EmployeeSecurityTab />
           </TabsContent>
         </Tabs>
       </div>
