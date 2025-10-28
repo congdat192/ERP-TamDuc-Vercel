@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { X, Building2, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
-import { ERPModule, User } from '@/types/auth';
+import { ERPModule, User, getAvatarUrl } from '@/types/auth';
 import { MODULE_PERMISSIONS } from '@/constants/permissions';
 import { getIconComponent } from '@/lib/icons';
 import { useState } from 'react';
@@ -137,9 +137,17 @@ export function ERPMainSidebar({
           {/* User Profile */}
           {(isExpanded || isMobileOpen) && (
             <div className="p-4 border-b border-sidebar-border">
-              <div className="flex items-center space-x-3">
+              <div 
+                className="flex items-center space-x-3 cursor-pointer hover:bg-sidebar-accent rounded-lg p-2 -m-2 transition-colors"
+                onClick={() => {
+                  navigate('/ERP/Profile');
+                  if (isMobileOpen) {
+                    onMobileToggle();
+                  }
+                }}
+              >
                 <Avatar className="w-10 h-10 flex-shrink-0">
-                  <AvatarImage src="/placeholder.svg" />
+                  <AvatarImage src={getAvatarUrl(currentUser.avatarPath) || "/placeholder.svg"} />
                   <AvatarFallback className="theme-bg-secondary text-white">
                     {currentUser.fullName.charAt(0)}
                   </AvatarFallback>
