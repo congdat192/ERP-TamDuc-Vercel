@@ -46,11 +46,11 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { phone, campaign_id, source, customer_info } = body;
+    const { campaign_id, creator_phone, recipient_phone, customer_source, customer_type } = body;
 
-    if (!phone || !campaign_id || !source) {
+    if (!recipient_phone || !campaign_id || !customer_source || !customer_type || !creator_phone) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields' }),
+        JSON.stringify({ error: 'Missing required fields: campaign_id, creator_phone, recipient_phone, customer_source, customer_type' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -67,24 +67,20 @@ serve(async (req) => {
       .eq('user_id', user.id)
       .maybeSingle();
 
-    console.log('[issue-voucher] Issuing voucher for phone:', phone);
+    console.log('[issue-voucher] Issuing voucher for recipient:', recipient_phone, 'creator:', creator_phone);
 
     const payload = {
-      phone,
       campaign_id,
-      source,
-      actor: {
-        employee_id: user.id,
-        employee_name: profile?.full_name || 'Unknown',
-        employee_code: employee?.employee_code || 'N/A'
-      },
-      customer_info: customer_info || {}
+      creator_phone,
+      recipient_phone,
+      customer_source,
+      customer_type
     };
 
     const oauthToken = await getOAuthToken();
 
     const response = await fetch(
-      `${EXTERNAL_API_BASE}/issue-voucher`,
+      `${EXTERNAL_API_BASE}/create-and-release-voucher`,
       {
         method: 'POST',
         headers: {
@@ -100,10 +96,10 @@ serve(async (req) => {
       console.error('[issue-voucher] API error:', response.status, errorText);
       
       await supabase.from('voucher_issuance_history').insert({
-        phone,
+        phone: recipient_phone,
         campaign_id,
-        source,
-        customer_type: customer_info?.customer_type,
+        source: customer_source,
+        customer_type,
         issued_by: user.id,
         status: 'failed',
         error_message: errorText
@@ -122,12 +118,12 @@ serve(async (req) => {
     console.log('[issue-voucher] Success:', data);
 
     await supabase.from('voucher_issuance_history').insert({
-      phone,
+      phone: recipient_phone,
       campaign_id,
-      source,
-      customer_type: customer_info?.customer_type,
+      source: customer_source,
+      customer_type,
       issued_by: user.id,
-      voucher_code: data.data?.voucher_code,
+      voucher_code: data.code,
       status: 'success',
       api_response: data
     });

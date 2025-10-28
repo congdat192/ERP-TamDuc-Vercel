@@ -181,7 +181,7 @@ export const voucherService = {
     customer_source: string;
     customer_type: 'new' | 'old';
   }): Promise<VoucherIssueResponse> {
-    const { data, error } = await supabase.functions.invoke('create-and-release-voucher', {
+    const { data, error } = await supabase.functions.invoke('issue-voucher-external', {
       body: payload
     });
 
