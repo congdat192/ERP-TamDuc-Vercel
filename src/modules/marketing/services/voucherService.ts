@@ -30,13 +30,22 @@ export interface CustomerValidationResponse {
 
 export interface VoucherIssueResponse {
   success: boolean;
-  data: {
-    voucher_code: string;
-    campaign_name: string;
-    discount_display: string;
-    expires_at: string;
-    status: string;
+  code: string;
+  campaign_id: number;
+  campaign_code: string;
+  created_at: string;
+  activated_at: string;
+  expired_at: string;
+  activation_status: string;
+  recipient_phone: string;
+  creator_phone: string;
+  customer_type: 'new' | 'old';
+  customer_source: string;
+  meta: {
+    request_id: string;
+    duration_ms: number;
   };
+  description?: string; // Error message if success: false
 }
 
 export interface ExternalCampaign {
@@ -166,16 +175,25 @@ export const voucherService = {
   },
 
   async issueVoucher(payload: {
-    phone: string;
-    campaign_id: string;
-    source: string;
-    customer_info: any;
+    campaign_id: number;
+    creator_phone: string;
+    recipient_phone: string;
+    customer_source: string;
+    customer_type: 'new' | 'old';
   }): Promise<VoucherIssueResponse> {
-    const { data, error } = await supabase.functions.invoke('issue-voucher-external', {
+    const { data, error } = await supabase.functions.invoke('create-and-release-voucher', {
       body: payload
     });
 
-    if (error) throw error;
+    if (error) {
+      const errorMsg = error?.context?.body?.description || error.message || 'Không thể phát hành voucher';
+      throw new Error(errorMsg);
+    }
+
+    if (!data.success) {
+      throw new Error(data.description || 'Không thể phát hành voucher');
+    }
+
     return data;
   },
 

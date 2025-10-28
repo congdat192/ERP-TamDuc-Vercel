@@ -9,10 +9,12 @@ import { Loader2, Search, Gift } from 'lucide-react';
 import { voucherService, type VoucherIssueResponse } from '../../services/voucherService';
 import { toast } from 'sonner';
 import { VoucherDisplay } from './VoucherDisplay';
+import { useAuth } from '@/components/auth/AuthContext';
 
 export function VoucherIssueTab() {
+  const { currentUser } = useAuth();
   const [phone, setPhone] = useState('');
-  const [customerType, setCustomerType] = useState<string>('');
+  const [customerType, setCustomerType] = useState<'new' | 'old' | ''>('');
   const [source, setSource] = useState('');
   const [campaignId, setCampaignId] = useState('');
   
@@ -64,13 +66,20 @@ export function VoucherIssueTab() {
       return;
     }
 
+    const creatorPhone = currentUser?.phone;
+    if (!creatorPhone) {
+      toast.error('Không tìm thấy số điện thoại của bạn trong hệ thống. Vui lòng cập nhật profile.');
+      return;
+    }
+
     setIsIssuing(true);
     try {
       const result = await voucherService.issueVoucher({
-        phone,
-        campaign_id: campaignId,
-        source,
-        customer_info: { customer_type: customerType }
+        campaign_id: parseInt(campaignId, 10),
+        creator_phone: creatorPhone,
+        recipient_phone: phone,
+        customer_source: source,
+        customer_type: customerType as 'new' | 'old'
       });
       
       setVoucherResult(result);
@@ -155,7 +164,7 @@ export function VoucherIssueTab() {
               </SelectTrigger>
               <SelectContent>
                 {campaigns.map((c) => (
-                  <SelectItem key={c.id} value={c.campaign_id}>
+                  <SelectItem key={c.id} value={String(c.campaign_id)}>
                     {c.name}
                   </SelectItem>
                 ))}
@@ -194,7 +203,7 @@ export function VoucherIssueTab() {
 
       {/* Right: Voucher Result */}
       {voucherResult && (
-        <VoucherDisplay voucherData={voucherResult.data} />
+        <VoucherDisplay voucherData={voucherResult} />
       )}
     </div>
   );
