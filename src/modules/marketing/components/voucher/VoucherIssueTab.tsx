@@ -16,7 +16,7 @@ export function VoucherIssueTab() {
   const [phone, setPhone] = useState('');
   const [customerType, setCustomerType] = useState<'new' | 'old' | ''>('');
   const [source, setSource] = useState('');
-  const [campaignId, setCampaignId] = useState('');
+  const [campaignId, setCampaignId] = useState<number | null>(null);
   
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [sources, setSources] = useState<any[]>([]);
@@ -61,7 +61,7 @@ export function VoucherIssueTab() {
   };
 
   const handleIssueVoucher = async () => {
-    if (!phone || !campaignId || !source || !customerType) {
+    if (!phone || campaignId === null || !source || !customerType) {
       toast.error('Vui lòng điền đầy đủ thông tin');
       return;
     }
@@ -75,7 +75,7 @@ export function VoucherIssueTab() {
     setIsIssuing(true);
     try {
       const result = await voucherService.issueVoucher({
-        campaign_id: parseInt(campaignId, 10),
+        campaign_id: campaignId,
         creator_phone: creatorPhone,
         recipient_phone: phone,
         customer_source: source,
@@ -95,7 +95,7 @@ export function VoucherIssueTab() {
     setPhone('');
     setCustomerType('');
     setSource('');
-    setCampaignId('');
+    setCampaignId(null);
     setVoucherResult(null);
   };
 
@@ -158,7 +158,7 @@ export function VoucherIssueTab() {
           {/* Campaign Selector */}
           <div className="space-y-2">
             <Label>Chiến dịch Voucher *</Label>
-            <Select value={campaignId} onValueChange={setCampaignId}>
+            <Select value={campaignId !== null ? String(campaignId) : undefined} onValueChange={(value) => setCampaignId(parseInt(value, 10))}>
               <SelectTrigger>
                 <SelectValue placeholder="Chọn chiến dịch" />
               </SelectTrigger>
