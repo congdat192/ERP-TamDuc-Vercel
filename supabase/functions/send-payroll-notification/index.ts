@@ -72,7 +72,7 @@ serve(async (req: Request) => {
 
       try {
         await resend.emails.send({
-          from: 'HR Department <hr@dangphuocquan.cloud>',
+          from: 'HR Department <hr@danganhtri.cloud>',
           to: [employeeEmail],
           subject: `📊 Phiếu Lương Tháng ${monthFormatted}`,
           html: `

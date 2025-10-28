@@ -44,15 +44,35 @@ export const ResetPasswordPage = () => {
       const accessToken = hashParams.get('access_token');
       const type = hashParams.get('type');
       
-      console.log('🔍 Hash params:', { accessToken: !!accessToken, type });
+      console.log('🔍 Reset Password - Hash params:', { accessToken: !!accessToken, type });
       
       if (type === 'recovery' && accessToken) {
-        // User is authenticated by Supabase Auth automatically
-        setIsAuthenticated(true);
-        console.log('✅ User authenticated for password recovery');
+        try {
+          // CRITICAL: Import supabase dynamically to avoid circular deps
+          const { supabase } = await import('@/integrations/supabase/client');
+          
+          // Verify token with Supabase Auth
+          const { data, error } = await supabase.auth.verifyOtp({
+            token_hash: accessToken,
+            type: 'recovery'
+          });
+          
+          if (error || !data.session) {
+            console.error('❌ Token verification failed:', error);
+            setError('Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu link mới.');
+            setIsAuthenticated(false);
+          } else {
+            console.log('✅ Token verified successfully, session created');
+            setIsAuthenticated(true);
+          }
+        } catch (err) {
+          console.error('❌ Error verifying token:', err);
+          setError('Có lỗi xảy ra khi xác thực link. Vui lòng thử lại.');
+          setIsAuthenticated(false);
+        }
       } else {
-        setError('Link đặt lại mật khẩu không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu link mới.');
-        console.error('❌ Invalid recovery link');
+        setError('Link đặt lại mật khẩu không hợp lệ. Vui lòng yêu cầu link mới.');
+        console.error('❌ Invalid recovery link - missing token or type');
       }
     };
     

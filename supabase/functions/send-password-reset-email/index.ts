@@ -37,7 +37,11 @@ serve(async (req: Request) => {
     );
 
     // Generate recovery link with token from Supabase
-    const siteUrl = Deno.env.get('SITE_URL')?.replace(/\/$/, '') || 'https://9bcb0ab3-b26e-43e4-90e1-aa42a42ef608.lovableproject.com';
+    const siteUrl = Deno.env.get('SITE_URL')?.replace(/\/$/, '');
+    if (!siteUrl) {
+      console.error('❌ SITE_URL environment variable is not set');
+      throw new Error('SITE_URL environment variable is required');
+    }
     
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'recovery',
@@ -59,7 +63,7 @@ serve(async (req: Request) => {
     console.log('🔗 Generated reset URL:', resetUrl);
 
     const emailResponse = await resend.emails.send({
-      from: 'ERP System <noreply@dangphuocquan.cloud>',
+      from: 'ERP System <noreply@danganhtri.cloud>',
       to: email,
       subject: 'Đặt lại mật khẩu ERP System',
       html: `

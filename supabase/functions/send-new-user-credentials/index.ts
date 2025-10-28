@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
     console.log('📧 Sending credentials email to:', email);
 
     const { data, error } = await resend.emails.send({
-      from: 'ERP System <noreply@dangphuocquan.cloud>',
+      from: 'ERP System <noreply@danganhtri.cloud>',
       to: email,
       subject: '🎉 Tài khoản ERP System của bạn đã được tạo',
       html: `

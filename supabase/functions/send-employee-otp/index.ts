@@ -175,7 +175,7 @@ Deno.serve(async (req) => {
     
     // Fire-and-forget email sending
     resend.emails.send({
-      from: 'ERP System <noreply@dangphuocquan.cloud>',
+      from: 'ERP System <noreply@danganhtri.cloud>',
       to: [emailLower],
       subject: `Mã OTP đăng nhập: ${otpCode} - Tam Duc ERP`,
       html: emailHtml
