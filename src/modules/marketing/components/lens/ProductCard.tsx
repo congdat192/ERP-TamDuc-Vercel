@@ -43,7 +43,7 @@ export function ProductCard({
         )}
         
         {product.brand?.name && (
-          <Badge className="absolute bottom-2 left-2 z-10 bg-black/70 text-white hover:bg-black/80 backdrop-blur-sm">
+          <Badge className="absolute bottom-2 left-2 z-20 bg-black/80 text-white hover:bg-black/90 backdrop-blur-sm">
             Thương hiệu: {product.brand.name}
           </Badge>
         )}
