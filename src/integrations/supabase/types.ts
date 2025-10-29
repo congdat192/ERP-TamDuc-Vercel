@@ -1251,6 +1251,213 @@ export type Database = {
           },
         ]
       }
+      kiotviet_categories: {
+        Row: {
+          category_name: string
+          id: number
+          level: number | null
+          parent_id: number | null
+          synced_at: string | null
+        }
+        Insert: {
+          category_name: string
+          id: number
+          level?: number | null
+          parent_id?: number | null
+          synced_at?: string | null
+        }
+        Update: {
+          category_name?: string
+          id?: number
+          level?: number | null
+          parent_id?: number | null
+          synced_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kiotviet_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "kiotviet_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kiotviet_credentials: {
+        Row: {
+          client_id: string
+          created_at: string | null
+          encrypted_token: string
+          id: string
+          is_active: boolean | null
+          retailer_name: string
+          token_expires_at: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string | null
+          encrypted_token: string
+          id?: string
+          is_active?: boolean | null
+          retailer_name: string
+          token_expires_at?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string | null
+          encrypted_token?: string
+          id?: string
+          is_active?: boolean | null
+          retailer_name?: string
+          token_expires_at?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      kiotviet_inventory: {
+        Row: {
+          available: number | null
+          branch_id: number
+          branch_name: string | null
+          id: string
+          on_hand: number | null
+          product_id: number | null
+          reserved: number | null
+          synced_at: string | null
+        }
+        Insert: {
+          available?: number | null
+          branch_id: number
+          branch_name?: string | null
+          id?: string
+          on_hand?: number | null
+          product_id?: number | null
+          reserved?: number | null
+          synced_at?: string | null
+        }
+        Update: {
+          available?: number | null
+          branch_id?: number
+          branch_name?: string | null
+          id?: string
+          on_hand?: number | null
+          product_id?: number | null
+          reserved?: number | null
+          synced_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kiotviet_inventory_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "kiotviet_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kiotviet_products: {
+        Row: {
+          allow_sale: boolean | null
+          attributes: Json | null
+          barcode: string | null
+          base_price: number | null
+          category_id: number | null
+          code: string
+          created_at: string | null
+          description: string | null
+          full_name: string | null
+          has_variants: boolean | null
+          id: number
+          images: Json | null
+          is_active: boolean | null
+          name: string
+          product_type: number | null
+          synced_at: string | null
+          units: Json | null
+        }
+        Insert: {
+          allow_sale?: boolean | null
+          attributes?: Json | null
+          barcode?: string | null
+          base_price?: number | null
+          category_id?: number | null
+          code: string
+          created_at?: string | null
+          description?: string | null
+          full_name?: string | null
+          has_variants?: boolean | null
+          id: number
+          images?: Json | null
+          is_active?: boolean | null
+          name: string
+          product_type?: number | null
+          synced_at?: string | null
+          units?: Json | null
+        }
+        Update: {
+          allow_sale?: boolean | null
+          attributes?: Json | null
+          barcode?: string | null
+          base_price?: number | null
+          category_id?: number | null
+          code?: string
+          created_at?: string | null
+          description?: string | null
+          full_name?: string | null
+          has_variants?: boolean | null
+          id?: number
+          images?: Json | null
+          is_active?: boolean | null
+          name?: string
+          product_type?: number | null
+          synced_at?: string | null
+          units?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kiotviet_products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "kiotviet_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kiotviet_sync_logs: {
+        Row: {
+          completed_at: string | null
+          error_message: string | null
+          id: string
+          records_synced: number | null
+          started_at: string | null
+          status: string
+          sync_type: string
+        }
+        Insert: {
+          completed_at?: string | null
+          error_message?: string | null
+          id?: string
+          records_synced?: number | null
+          started_at?: string | null
+          status: string
+          sync_type: string
+        }
+        Update: {
+          completed_at?: string | null
+          error_message?: string | null
+          id?: string
+          records_synced?: number | null
+          started_at?: string | null
+          status?: string
+          sync_type?: string
+        }
+        Relationships: []
+      }
       lens_banners: {
         Row: {
           created_at: string | null
