@@ -1,30 +1,30 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Plus, ShieldAlert } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { usePermissions } from '@/hooks/usePermissions';
-import { lensApi } from '@/modules/marketing/services/lensApi';
-import { ProductTable } from '@/modules/marketing/components/lens-admin/ProductTable';
-import { ProductForm } from '@/modules/marketing/components/lens-admin/ProductForm';
-import { ImportExcelDialog } from '@/modules/marketing/components/lens-admin/ImportExcelDialog';
-import { ExportExcelButton } from '@/modules/marketing/components/lens-admin/ExportExcelButton';
-import { AttributeManager } from '@/modules/marketing/components/lens-admin/AttributeManager';
-import { SupplyTiersManager } from '@/modules/marketing/components/lens-admin/SupplyTiersManager';
-import { UseCaseScoringManager } from '@/modules/marketing/components/lens-admin/UseCaseScoringManager';
-import { ProductSelector } from '@/modules/marketing/components/lens-admin/ProductSelector';
-import { RecommendationGroupManager } from '@/modules/marketing/components/lens-admin/RecommendationGroupManager';
-import { BannerManager } from '@/modules/marketing/components/lens-admin/BannerManager';
-import { SupplierCatalogManager } from '@/modules/marketing/components/lens-admin/SupplierCatalogManager';
-import { LensProduct } from '@/modules/marketing/types/lens';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Plus, ShieldAlert } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { usePermissions } from "@/hooks/usePermissions";
+import { lensApi } from "@/modules/marketing/services/lensApi";
+import { ProductTable } from "@/modules/marketing/components/lens-admin/ProductTable";
+import { ProductForm } from "@/modules/marketing/components/lens-admin/ProductForm";
+import { ImportExcelDialog } from "@/modules/marketing/components/lens-admin/ImportExcelDialog";
+import { ExportExcelButton } from "@/modules/marketing/components/lens-admin/ExportExcelButton";
+import { AttributeManager } from "@/modules/marketing/components/lens-admin/AttributeManager";
+import { SupplyTiersManager } from "@/modules/marketing/components/lens-admin/SupplyTiersManager";
+import { UseCaseScoringManager } from "@/modules/marketing/components/lens-admin/UseCaseScoringManager";
+import { ProductSelector } from "@/modules/marketing/components/lens-admin/ProductSelector";
+import { RecommendationGroupManager } from "@/modules/marketing/components/lens-admin/RecommendationGroupManager";
+import { BannerManager } from "@/modules/marketing/components/lens-admin/BannerManager";
+import { SupplierCatalogManager } from "@/modules/marketing/components/lens-admin/SupplierCatalogManager";
+import { LensProduct } from "@/modules/marketing/types/lens";
+import { toast } from "sonner";
 
 export function LensAdminPage() {
   const { hasFeatureAccess } = usePermissions();
-  
+
   // Check permission
-  if (!hasFeatureAccess('manage_lens_admin')) {
+  if (!hasFeatureAccess("manage_lens_admin")) {
     return (
       <div className="container mx-auto py-6">
         <Alert variant="destructive">
@@ -37,19 +37,25 @@ export function LensAdminPage() {
     );
   }
 
-  const [activeTab, setActiveTab] = useState<'products' | 'attributes' | 'tiers' | 'usecases' | 'recommendations' | 'banners' | 'catalogs'>('products');
+  const [activeTab, setActiveTab] = useState<
+    "products" | "attributes" | "tiers" | "usecases" | "recommendations" | "banners" | "catalogs"
+  >("products");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<LensProduct | null>(null);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
 
-  const { data: productsData, refetch, isLoading: isLoadingProducts } = useQuery({
-    queryKey: ['admin-lens-products'],
+  const {
+    data: productsData,
+    refetch,
+    isLoading: isLoadingProducts,
+  } = useQuery({
+    queryKey: ["admin-lens-products"],
     queryFn: () => lensApi.getProducts({}, 1, 100),
   });
 
   const { data: brands } = useQuery({
-    queryKey: ['lens-brands'],
+    queryKey: ["lens-brands"],
     queryFn: () => lensApi.getBrands(),
   });
 
@@ -68,18 +74,18 @@ export function LensAdminPage() {
   const handleClone = (product: LensProduct) => {
     const clonedProduct: LensProduct = {
       ...product,
-      id: '',
+      id: "",
       name: `[Copy] ${product.name}`,
       sku: null,
-      created_at: '',
-      updated_at: '',
+      created_at: "",
+      updated_at: "",
       view_count: 0,
     };
-    
+
     setEditingProduct(clonedProduct);
     setIsFormOpen(true);
-    
-    toast.info('Đang sao chép sản phẩm. Vui lòng kiểm tra và lưu lại.', {
+
+    toast.info("Đang sao chép sản phẩm. Vui lòng kiểm tra và lưu lại.", {
       duration: 3000,
     });
   };
@@ -103,11 +109,11 @@ export function LensAdminPage() {
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
         <TabsList className="grid w-full grid-cols-7">
-          <TabsTrigger value="products">Danh sách sản phẩm</TabsTrigger>
-          <TabsTrigger value="attributes">Thuộc tính sản phẩm</TabsTrigger>
+          <TabsTrigger value="products">Sản phẩm</TabsTrigger>
+          <TabsTrigger value="attributes">Thuộc tính</TabsTrigger>
           <TabsTrigger value="tiers">Tầng cung ứng</TabsTrigger>
           <TabsTrigger value="usecases">Use Cases</TabsTrigger>
-          <TabsTrigger value="recommendations">Nhóm tư vấn</TabsTrigger>
+          <TabsTrigger value="recommendations">Tư vấn nhanh</TabsTrigger>
           <TabsTrigger value="banners">Banner</TabsTrigger>
           <TabsTrigger value="catalogs">📄 PDF Catalogs</TabsTrigger>
         </TabsList>
@@ -131,7 +137,7 @@ export function LensAdminPage() {
             onRefetch={refetch}
             onSelect={(id) => {
               setSelectedProductId(id);
-              setActiveTab('tiers');
+              setActiveTab("tiers");
             }}
           />
         </TabsContent>
@@ -143,20 +149,18 @@ export function LensAdminPage() {
         <TabsContent value="tiers" className="space-y-4">
           <div className="mb-4">
             <label className="text-sm font-medium mb-2 block">Chọn sản phẩm</label>
-              <ProductSelector
-                products={products}
-                selectedId={selectedProductId}
-                onSelect={setSelectedProductId}
-                isLoading={isLoadingProducts}
-              />
+            <ProductSelector
+              products={products}
+              selectedId={selectedProductId}
+              onSelect={setSelectedProductId}
+              isLoading={isLoadingProducts}
+            />
           </div>
           {selectedProductId ? (
             <SupplyTiersManager productId={selectedProductId} />
           ) : (
             <div className="text-center py-12 border-2 border-dashed rounded-lg">
-              <p className="text-muted-foreground">
-                Chọn một sản phẩm để quản lý tầng cung ứng
-              </p>
+              <p className="text-muted-foreground">Chọn một sản phẩm để quản lý tầng cung ứng</p>
             </div>
           )}
         </TabsContent>
@@ -164,20 +168,18 @@ export function LensAdminPage() {
         <TabsContent value="usecases" className="space-y-4">
           <div className="mb-4">
             <label className="text-sm font-medium mb-2 block">Chọn sản phẩm</label>
-              <ProductSelector
-                products={products}
-                selectedId={selectedProductId}
-                onSelect={setSelectedProductId}
-                isLoading={isLoadingProducts}
-              />
+            <ProductSelector
+              products={products}
+              selectedId={selectedProductId}
+              onSelect={setSelectedProductId}
+              isLoading={isLoadingProducts}
+            />
           </div>
           {selectedProductId ? (
             <UseCaseScoringManager productId={selectedProductId} />
           ) : (
             <div className="text-center py-12 border-2 border-dashed rounded-lg">
-              <p className="text-muted-foreground">
-                Chọn một sản phẩm để chấm điểm use cases
-              </p>
+              <p className="text-muted-foreground">Chọn một sản phẩm để chấm điểm use cases</p>
             </div>
           )}
         </TabsContent>
@@ -195,11 +197,7 @@ export function LensAdminPage() {
         </TabsContent>
       </Tabs>
 
-      <ProductForm
-        open={isFormOpen}
-        product={editingProduct}
-        onClose={handleFormClose}
-      />
+      <ProductForm open={isFormOpen} product={editingProduct} onClose={handleFormClose} />
 
       <ImportExcelDialog
         open={isImportOpen}
