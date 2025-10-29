@@ -1,0 +1,301 @@
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { decrypt } from '../_shared/crypto.ts';
+
+const KIOTVIET_BASE_URL = 'https://public.kiotapi.com';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+interface KiotVietSyncRequest {
+  credentialId: string;
+  syncType: 'categories' | 'products' | 'inventory' | 'all';
+  options?: {
+    pageSize?: number;
+    dateFrom?: string;
+  };
+}
+
+serve(async (req) => {
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    console.log('🚀 KiotViet Sync started');
+    
+    // Parse request
+    const { credentialId, syncType, options }: KiotVietSyncRequest = await req.json();
+    console.log('📋 Sync type:', syncType);
+    
+    // Init Supabase client
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    // Get credentials
+    const { data: credential, error: credError } = await supabaseClient
+      .from('kiotviet_credentials')
+      .select('*')
+      .eq('id', credentialId)
+      .single();
+
+    if (credError || !credential) {
+      throw new Error('Credentials not found');
+    }
+
+    console.log('🔐 Credentials loaded, decrypting token...');
+
+    // Decrypt access token
+    const accessToken = await decrypt(credential.encrypted_token);
+
+    // Check token expiry
+    if (credential.token_expires_at && new Date(credential.token_expires_at) < new Date()) {
+      throw new Error('Token expired. Please update your access token in settings.');
+    }
+
+    // Sync based on type
+    const results: any = {};
+    const startTime = new Date().toISOString();
+
+    try {
+      if (syncType === 'categories' || syncType === 'all') {
+        console.log('📁 Syncing categories...');
+        results.categories = await syncCategories(accessToken, supabaseClient);
+        console.log(`✅ Categories synced: ${results.categories.count}`);
+      }
+
+      if (syncType === 'products' || syncType === 'all') {
+        console.log('📦 Syncing products...');
+        results.products = await syncProducts(accessToken, supabaseClient, options);
+        console.log(`✅ Products synced: ${results.products.count}`);
+      }
+
+      if (syncType === 'inventory' || syncType === 'all') {
+        console.log('📊 Syncing inventory...');
+        results.inventory = await syncInventory(accessToken, supabaseClient);
+        console.log(`✅ Inventory synced: ${results.inventory.count}`);
+      }
+
+      // Log successful sync
+      await supabaseClient.from('kiotviet_sync_logs').insert({
+        sync_type: syncType,
+        status: 'success',
+        records_synced: Object.values(results).reduce((sum: number, v: any) => sum + (v?.count || 0), 0),
+        started_at: startTime,
+        completed_at: new Date().toISOString()
+      });
+
+      console.log('✅ Sync completed successfully');
+
+      return new Response(JSON.stringify({ success: true, results }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      });
+
+    } catch (syncError: any) {
+      // Log failed sync
+      await supabaseClient.from('kiotviet_sync_logs').insert({
+        sync_type: syncType,
+        status: 'failed',
+        records_synced: 0,
+        error_message: syncError.message,
+        started_at: startTime,
+        completed_at: new Date().toISOString()
+      });
+
+      throw syncError;
+    }
+
+  } catch (error: any) {
+    console.error('❌ Sync error:', error);
+    return new Response(JSON.stringify({ 
+      success: false, 
+      error: error.message || 'Unknown error occurred' 
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 500,
+    });
+  }
+});
+
+// ==========================================
+// HELPER FUNCTIONS
+// ==========================================
+
+async function syncCategories(accessToken: string, supabase: any) {
+  console.log('📡 Fetching categories from KiotViet...');
+  
+  const response = await fetch(`${KIOTVIET_BASE_URL}/categories?hierachicalData=false`, {
+    headers: { 
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to fetch categories: ${response.status} ${errorText}`);
+  }
+
+  const apiData = await response.json();
+  const categories = apiData.data || apiData;
+
+  if (!Array.isArray(categories)) {
+    throw new Error('Invalid categories response format');
+  }
+
+  console.log(`📥 Received ${categories.length} categories`);
+
+  // Upsert categories
+  const { error } = await supabase.from('kiotviet_categories').upsert(
+    categories.map((cat: any) => ({
+      id: cat.categoryId,
+      category_name: cat.categoryName,
+      parent_id: cat.parentId || null,
+      level: cat.parentId ? 2 : 1,
+      synced_at: new Date().toISOString()
+    })),
+    { onConflict: 'id' }
+  );
+
+  if (error) {
+    console.error('❌ Error upserting categories:', error);
+    throw error;
+  }
+
+  return { count: categories.length };
+}
+
+async function syncProducts(accessToken: string, supabase: any, options: any) {
+  let allProducts: any[] = [];
+  let currentItem = 0;
+  const pageSize = options?.pageSize || 100;
+
+  console.log('📡 Fetching products from KiotViet (paginated)...');
+
+  // Paginated fetch
+  while (true) {
+    const url = new URL(`${KIOTVIET_BASE_URL}/products`);
+    url.searchParams.append('pageSize', pageSize.toString());
+    url.searchParams.append('currentItem', currentItem.toString());
+    url.searchParams.append('includeInventory', 'false');
+    
+    if (options?.dateFrom) {
+      url.searchParams.append('lastModifiedFrom', options.dateFrom);
+    }
+
+    console.log(`📄 Fetching page: currentItem=${currentItem}, pageSize=${pageSize}`);
+
+    const response = await fetch(url.toString(), {
+      headers: { 
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to fetch products: ${response.status} ${errorText}`);
+    }
+
+    const apiData = await response.json();
+    const data = apiData.data || [];
+    const total = apiData.total || data.length;
+
+    allProducts = [...allProducts, ...data];
+    console.log(`📥 Fetched ${data.length} products (total so far: ${allProducts.length}/${total})`);
+
+    if (allProducts.length >= total || data.length === 0) break;
+    currentItem += pageSize;
+  }
+
+  console.log(`💾 Upserting ${allProducts.length} products to database...`);
+
+  // Upsert products in batches (Supabase has a limit)
+  const batchSize = 500;
+  for (let i = 0; i < allProducts.length; i += batchSize) {
+    const batch = allProducts.slice(i, i + batchSize);
+    
+    const { error } = await supabase.from('kiotviet_products').upsert(
+      batch.map((p: any) => ({
+        id: p.id,
+        code: p.code,
+        barcode: p.barcode || null,
+        name: p.name,
+        category_id: p.categoryId || null,
+        full_name: p.fullName || p.name,
+        description: p.description || null,
+        base_price: p.basePrice || 0,
+        has_variants: p.hasVariants || false,
+        allow_sale: p.allowSale !== false,
+        is_active: p.isActive !== false,
+        images: JSON.stringify(p.images || []),
+        product_type: p.productType || 2,
+        attributes: JSON.stringify(p.attributes || []),
+        units: JSON.stringify(p.units || []),
+        synced_at: new Date().toISOString()
+      })),
+      { onConflict: 'id' }
+    );
+
+    if (error) {
+      console.error(`❌ Error upserting batch ${i}-${i + batch.length}:`, error);
+      throw error;
+    }
+
+    console.log(`✅ Batch ${i}-${i + batch.length} upserted`);
+  }
+
+  return { count: allProducts.length };
+}
+
+async function syncInventory(accessToken: string, supabase: any) {
+  console.log('📡 Fetching inventory from KiotViet...');
+  
+  const response = await fetch(`${KIOTVIET_BASE_URL}/productOnHands`, {
+    headers: { 
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to fetch inventory: ${response.status} ${errorText}`);
+  }
+
+  const apiData = await response.json();
+  const inventory = apiData.data || apiData;
+
+  if (!Array.isArray(inventory)) {
+    throw new Error('Invalid inventory response format');
+  }
+
+  console.log(`📥 Received ${inventory.length} inventory records`);
+
+  // Upsert inventory
+  const { error } = await supabase.from('kiotviet_inventory').upsert(
+    inventory.map((inv: any) => ({
+      product_id: inv.productId,
+      branch_id: inv.branchId,
+      branch_name: inv.branchName || 'Unknown',
+      on_hand: inv.onHand || 0,
+      reserved: inv.reserved || 0,
+      available: (inv.onHand || 0) - (inv.reserved || 0),
+      synced_at: new Date().toISOString()
+    })),
+    { onConflict: 'product_id,branch_id' }
+  );
+
+  if (error) {
+    console.error('❌ Error upserting inventory:', error);
+    throw error;
+  }
+
+  return { count: inventory.length };
+}
