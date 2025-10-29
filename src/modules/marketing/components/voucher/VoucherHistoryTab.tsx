@@ -23,6 +23,8 @@ export function VoucherHistoryTab() {
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState({
     recipient_phone: '',
+    code: '',
+    creator_name: '',
     activation_status: 'all',
     date_filter_type: 'created_at',
     created_at_from: '',
@@ -71,6 +73,8 @@ export function VoucherHistoryTab() {
       };
       
       if (filters.recipient_phone) filterParams.recipient_phone = filters.recipient_phone;
+      if (filters.code) filterParams.code = filters.code;
+      if (filters.creator_name) filterParams.creator_name = filters.creator_name;
       if (filters.activation_status !== 'all') filterParams.activation_status = filters.activation_status;
       
       // Dynamic date filter based on date_filter_type
@@ -115,20 +119,20 @@ export function VoucherHistoryTab() {
       'Đã sử dụng': item.voucher_used ? 'Có' : 'Không',
       'ID Hóa đơn': item.invoice_id || '',
       'Mã Hóa đơn': item.invoice_code || '',
-      'Trạng thái HD': item.invoice_status || '',
-      'Giá trị HD': item.invoice_amount || '',
-      'Mã VC cấp lại 1': item.reissue_1_code || '',
-      'TT VC cấp lại 1': item.reissue_1_status || '',
-      'ID HD cấp lại 1': item.reissue_1_invoice_id || '',
-      'Mã HD cấp lại 1': item.reissue_1_invoice_code || '',
-      'TT HD cấp lại 1': item.reissue_1_invoice_status || '',
-      'Giá trị HD cấp lại 1': item.reissue_1_invoice_amount || '',
-      'Mã VC cấp lại 2': item.reissue_2_code || '',
-      'TT VC cấp lại 2': item.reissue_2_status || '',
-      'ID HD cấp lại 2': item.reissue_2_invoice_id || '',
-      'Mã HD cấp lại 2': item.reissue_2_invoice_code || '',
-      'TT HD cấp lại 2': item.reissue_2_invoice_status || '',
-      'Giá trị HD cấp lại 2': item.reissue_2_invoice_amount || ''
+      'Trạng thái Hóa đơn': item.invoice_status || '',
+      'Giá trị Hóa đơn': item.invoice_amount || '',
+      'Voucher Cấp lại 1': item.reissue_1_code || '',
+      'Trạng thái VC Cấp lại 1': item.reissue_1_status || '',
+      'ID Hóa đơn Cấp lại 1': item.reissue_1_invoice_id || '',
+      'Mã Hóa đơn Cấp lại 1': item.reissue_1_invoice_code || '',
+      'Trạng thái HD Cấp lại 1': item.reissue_1_invoice_status || '',
+      'Giá trị HD Cấp lại 1': item.reissue_1_invoice_amount || '',
+      'Voucher Cấp lại 2': item.reissue_2_code || '',
+      'Trạng thái VC Cấp lại 2': item.reissue_2_status || '',
+      'ID Hóa đơn Cấp lại 2': item.reissue_2_invoice_id || '',
+      'Mã Hóa đơn Cấp lại 2': item.reissue_2_invoice_code || '',
+      'Trạng thái HD Cấp lại 2': item.reissue_2_invoice_status || '',
+      'Giá trị HD Cấp lại 2': item.reissue_2_invoice_amount || ''
     }));
 
     const ws = XLSX.utils.json_to_sheet(exportData);
@@ -159,13 +163,31 @@ export function VoucherHistoryTab() {
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 bg-muted/50 rounded-lg">
+        <div className="grid grid-cols-1 md:grid-cols-7 gap-4 p-4 bg-muted/50 rounded-lg">
           <div className="space-y-2">
             <Label>Số điện thoại</Label>
             <Input
               placeholder="0912345678"
               value={filters.recipient_phone}
               onChange={(e) => setFilters(prev => ({ ...prev, recipient_phone: e.target.value }))}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Mã voucher</Label>
+            <Input
+              placeholder="VOU-001"
+              value={filters.code}
+              onChange={(e) => setFilters(prev => ({ ...prev, code: e.target.value }))}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Tên người tạo</Label>
+            <Input
+              placeholder="Nguyễn Văn A"
+              value={filters.creator_name}
+              onChange={(e) => setFilters(prev => ({ ...prev, creator_name: e.target.value }))}
             />
           </div>
 
@@ -233,35 +255,35 @@ export function VoucherHistoryTab() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="min-w-[120px]">Mã voucher</TableHead>
-                <TableHead className="min-w-[100px]">ID Chiến dịch</TableHead>
-                <TableHead className="min-w-[120px]">Mã Chiến dịch</TableHead>
-                <TableHead className="min-w-[150px]">Ngày tạo</TableHead>
-                <TableHead className="min-w-[150px]">Ngày kích hoạt</TableHead>
-                <TableHead className="min-w-[150px]">Ngày hết hạn</TableHead>
-                <TableHead className="min-w-[120px]">Trạng thái</TableHead>
-                <TableHead className="min-w-[120px]">SĐT người tạo</TableHead>
+                <TableHead className="min-w-[130px]">Mã voucher</TableHead>
+                <TableHead className="min-w-[130px]">ID Chiến dịch</TableHead>
+                <TableHead className="min-w-[150px]">Mã Chiến dịch</TableHead>
+                <TableHead className="min-w-[170px]">Ngày tạo</TableHead>
+                <TableHead className="min-w-[170px]">Ngày kích hoạt</TableHead>
+                <TableHead className="min-w-[170px]">Ngày hết hạn</TableHead>
+                <TableHead className="min-w-[130px]">Trạng thái</TableHead>
+                <TableHead className="min-w-[150px]">SĐT người tạo</TableHead>
                 <TableHead className="min-w-[150px]">Tên người tạo</TableHead>
-                <TableHead className="min-w-[120px]">SĐT người nhận</TableHead>
-                <TableHead className="min-w-[100px]">Loại KH</TableHead>
-                <TableHead className="min-w-[100px]">Nguồn</TableHead>
-                <TableHead className="min-w-[80px]">Đã dùng</TableHead>
-                <TableHead className="min-w-[100px]">ID Hóa đơn</TableHead>
-                <TableHead className="min-w-[120px]">Mã Hóa đơn</TableHead>
-                <TableHead className="min-w-[120px]">TT Hóa đơn</TableHead>
-                <TableHead className="min-w-[120px]">Giá trị HD</TableHead>
-                <TableHead className="min-w-[120px]">VC Cấp lại 1</TableHead>
-                <TableHead className="min-w-[120px]">TT VC CL1</TableHead>
-                <TableHead className="min-w-[100px]">HD CL1</TableHead>
-                <TableHead className="min-w-[120px]">Mã HD CL1</TableHead>
-                <TableHead className="min-w-[120px]">TT HD CL1</TableHead>
-                <TableHead className="min-w-[120px]">GT HD CL1</TableHead>
-                <TableHead className="min-w-[120px]">VC Cấp lại 2</TableHead>
-                <TableHead className="min-w-[120px]">TT VC CL2</TableHead>
-                <TableHead className="min-w-[100px]">HD CL2</TableHead>
-                <TableHead className="min-w-[120px]">Mã HD CL2</TableHead>
-                <TableHead className="min-w-[120px]">TT HD CL2</TableHead>
-                <TableHead className="min-w-[120px]">GT HD CL2</TableHead>
+                <TableHead className="min-w-[150px]">SĐT người nhận</TableHead>
+                <TableHead className="min-w-[130px]">Loại KH</TableHead>
+                <TableHead className="min-w-[120px]">Nguồn</TableHead>
+                <TableHead className="min-w-[130px]">Đã sử dụng</TableHead>
+                <TableHead className="min-w-[130px]">ID Hóa đơn</TableHead>
+                <TableHead className="min-w-[140px]">Mã Hóa đơn</TableHead>
+                <TableHead className="min-w-[180px]">Trạng thái Hóa đơn</TableHead>
+                <TableHead className="min-w-[160px]">Giá trị Hóa đơn</TableHead>
+                <TableHead className="min-w-[180px]">Voucher Cấp lại 1</TableHead>
+                <TableHead className="min-w-[200px]">Trạng thái VC Cấp lại 1</TableHead>
+                <TableHead className="min-w-[200px]">ID Hóa đơn Cấp lại 1</TableHead>
+                <TableHead className="min-w-[200px]">Mã Hóa đơn Cấp lại 1</TableHead>
+                <TableHead className="min-w-[200px]">Trạng thái HD Cấp lại 1</TableHead>
+                <TableHead className="min-w-[200px]">Giá trị HD Cấp lại 1</TableHead>
+                <TableHead className="min-w-[180px]">Voucher Cấp lại 2</TableHead>
+                <TableHead className="min-w-[200px]">Trạng thái VC Cấp lại 2</TableHead>
+                <TableHead className="min-w-[200px]">ID Hóa đơn Cấp lại 2</TableHead>
+                <TableHead className="min-w-[200px]">Mã Hóa đơn Cấp lại 2</TableHead>
+                <TableHead className="min-w-[200px]">Trạng thái HD Cấp lại 2</TableHead>
+                <TableHead className="min-w-[200px]">Giá trị HD Cấp lại 2</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -308,8 +330,10 @@ export function VoucherHistoryTab() {
                         {item.customer_source}
                       </span>
                     </TableCell>
-                    <TableCell className="text-center">
-                      {item.voucher_used ? '✓' : '✗'}
+                    <TableCell>
+                      <Badge variant={item.voucher_used ? 'success' : 'destructive'}>
+                        {item.voucher_used ? '✓ Đã dùng' : '✗ Chưa dùng'}
+                      </Badge>
                     </TableCell>
                     <TableCell>{item.invoice_id || '-'}</TableCell>
                     <TableCell className="text-sm">{item.invoice_code || '-'}</TableCell>
