@@ -9,6 +9,7 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface ERPMainSidebarProps {
   currentModule: ERPModule;
@@ -31,6 +32,7 @@ export function ERPMainSidebar({
 }: ERPMainSidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { hasFeatureAccess, hasFullAccess } = usePermissions();
   const [expandedModules, setExpandedModules] = useState<Set<ERPModule>>(new Set(["marketing"]));
 
   const allowedModules = MODULE_PERMISSIONS.filter((module) => currentUser.permissions.modules.includes(module.module));
@@ -197,16 +199,17 @@ export function ERPMainSidebar({
                           const SubIcon = getIconComponent(subMenu.icon);
                           const isSubActive = location.pathname === subMenu.path;
                           
-                          // ✅ CHECK PERMISSION for voucher sub-menu
+                          // PHASE 2: CHECK FEATURE-LEVEL PERMISSIONS (thay vì module-level)
+                          // ✅ Owner có full_access → Thấy tất cả
+                          // ✅ Custom role cần có feature cụ thể
                           if (subMenu.path === '/ERP/Marketing/voucher') {
-                            if (!currentUser.permissions.modules.includes('voucher')) {
+                            if (!hasFullAccess() && !hasFeatureAccess('view_vouchers')) {
                               return null;
                             }
                           }
                           
-                          // ✅ CHECK PERMISSION for lens admin sub-menu
                           if (subMenu.path === '/ERP/Operations/Lens-Admin') {
-                            if (!currentUser.permissions.modules.includes('operations')) {
+                            if (!hasFullAccess() && !hasFeatureAccess('view_lens_catalog')) {
                               return null;
                             }
                           }
