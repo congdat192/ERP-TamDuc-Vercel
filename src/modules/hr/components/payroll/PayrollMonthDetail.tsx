@@ -4,9 +4,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Eye, CheckCircle } from 'lucide-react';
+import { Eye, CheckCircle, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PayrollDetailModal } from './PayrollDetailModal';
+import { PayrollEditModal } from './PayrollEditModal';
+import { usePermissions } from '@/hooks/usePermissions';
 
 interface PayrollMonthDetailProps {
   month: string;
@@ -20,7 +22,12 @@ export function PayrollMonthDetail({ month, onUpdate }: PayrollMonthDetailProps)
     isOpen: false,
     payrollId: null,
   });
+  const [editModal, setEditModal] = useState<{ isOpen: boolean; payrollId: string | null }>({
+    isOpen: false,
+    payrollId: null,
+  });
   const { toast } = useToast();
+  const { hasPermission } = usePermissions();
 
   useEffect(() => {
     fetchMonthPayrolls();
@@ -88,6 +95,32 @@ export function PayrollMonthDetail({ month, onUpdate }: PayrollMonthDetailProps)
     }
   };
 
+  const handleDeleteSingle = async (payrollId: string, employeeName: string) => {
+    if (!confirm(`Bạn có chắc muốn xóa phiếu lương của ${employeeName}?`)) return;
+    
+    try {
+      const { error } = await supabase
+        .from('employee_payrolls')
+        .delete()
+        .eq('id', payrollId);
+      
+      if (error) throw error;
+      
+      toast({
+        title: 'Xóa thành công',
+        description: `Đã xóa phiếu lương của ${employeeName}`,
+      });
+      fetchMonthPayrolls();
+      onUpdate();
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Lỗi',
+        description: error.message || 'Không thể xóa phiếu lương',
+      });
+    }
+  };
+
   const draftPayrolls = payrolls.filter(p => p.status === 'draft');
 
   return (
@@ -147,13 +180,35 @@ export function PayrollMonthDetail({ month, onUpdate }: PayrollMonthDetailProps)
                 </TableCell>
                 <TableCell>{getStatusBadge(payroll.status)}</TableCell>
                 <TableCell className="text-right">
-                  <Button 
-                    size="sm" 
-                    variant="ghost"
-                    onClick={() => setDetailModal({ isOpen: true, payrollId: payroll.id })}
-                  >
-                    <Eye className="w-4 h-4" />
-                  </Button>
+                  <div className="flex justify-end gap-2">
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => setDetailModal({ isOpen: true, payrollId: payroll.id })}
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                    
+                    {hasPermission('manage_payroll') && (
+                      <>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => setEditModal({ isOpen: true, payrollId: payroll.id })}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        
+                        <Button 
+                          size="sm" 
+                          variant="destructive"
+                          onClick={() => handleDeleteSingle(payroll.id, payroll.employee_name)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -165,6 +220,16 @@ export function PayrollMonthDetail({ month, onUpdate }: PayrollMonthDetailProps)
         isOpen={detailModal.isOpen}
         onClose={() => setDetailModal({ isOpen: false, payrollId: null })}
         payrollId={detailModal.payrollId}
+        onUpdate={() => {
+          fetchMonthPayrolls();
+          onUpdate();
+        }}
+      />
+
+      <PayrollEditModal
+        isOpen={editModal.isOpen}
+        onClose={() => setEditModal({ isOpen: false, payrollId: null })}
+        payrollId={editModal.payrollId}
         onUpdate={() => {
           fetchMonthPayrolls();
           onUpdate();

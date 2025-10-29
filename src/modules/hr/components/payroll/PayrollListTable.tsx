@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Eye, CheckCircle, Lock, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
+import { Eye, CheckCircle, Lock, Trash2, ChevronDown, ChevronRight, Edit, Unlock } from 'lucide-react';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useToast } from '@/hooks/use-toast';
 import { PayrollMonthDetail } from './PayrollMonthDetail';
 
@@ -21,7 +22,7 @@ interface ConfirmDialog {
   isOpen: boolean;
   month: string;
   count: number;
-  action: 'issue' | 'lock' | 'delete';
+  action: 'issue' | 'lock' | 'delete' | 'unlock';
   title: string;
   description: string;
 }
@@ -40,6 +41,7 @@ export function PayrollListTable() {
     description: '',
   });
   const { toast } = useToast();
+  const { hasPermission } = usePermissions();
 
   useEffect(() => {
     fetchPayrolls();
@@ -158,6 +160,17 @@ export function PayrollListTable() {
     });
   };
 
+  const handleUnlock = (month: string, count: number) => {
+    setConfirmDialog({
+      isOpen: true,
+      month,
+      count,
+      action: 'unlock',
+      title: 'Xác Nhận Mở Khóa',
+      description: `Bạn có chắc muốn mở khóa ${count} phiếu lương tháng ${formatMonth(month)}? Sau khi mở khóa, phiếu lương sẽ chuyển về trạng thái Đã Phát Hành và có thể chỉnh sửa lại.`,
+    });
+  };
+
   const executeAction = async () => {
     const { action, month } = confirmDialog;
     
@@ -204,14 +217,26 @@ export function PayrollListTable() {
         const { error } = await supabase
           .from('employee_payrolls')
           .delete()
-          .eq('month', month)
-          .eq('status', 'draft');
+          .eq('month', month);
 
         if (error) throw error;
 
         toast({
           title: 'Xóa thành công',
           description: `Đã xóa ${confirmDialog.count} phiếu lương.`,
+        });
+      } else if (action === 'unlock') {
+        const { error } = await supabase
+          .from('employee_payrolls')
+          .update({ status: 'issued' })
+          .eq('month', month)
+          .eq('status', 'locked');
+
+        if (error) throw error;
+
+        toast({
+          title: 'Mở khóa thành công',
+          description: `Đã mở khóa ${confirmDialog.count} phiếu lương.`,
         });
       }
 
@@ -330,6 +355,27 @@ export function PayrollListTable() {
                             >
                               <Lock className="w-4 h-4 mr-1" />
                               Khóa
+                            </Button>
+                          )}
+                          
+                          {payroll.status === 'locked' && hasPermission('manage_payroll') && (
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleUnlock(payroll.month, payroll.count)}
+                            >
+                              <Unlock className="w-4 h-4 mr-1" />
+                              Mở Khóa
+                            </Button>
+                          )}
+                          
+                          {hasPermission('manage_payroll') && (
+                            <Button 
+                              size="sm" 
+                              variant="destructive"
+                              onClick={() => handleDelete(payroll.month, payroll.count)}
+                            >
+                              <Trash2 className="w-4 h-4" />
                             </Button>
                           )}
                         </div>
