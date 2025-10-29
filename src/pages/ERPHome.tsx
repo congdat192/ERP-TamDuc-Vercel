@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { 
   Building2, 
   Users, 
@@ -16,6 +16,10 @@ import {
 import { User, ERPModule } from '@/types/auth';
 import { useAuth } from '@/components/auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { UniversalStatCard } from '@/components/ui/UniversalStatCard';
+import { UniversalDashboardService, ModuleStats } from '@/services/universalDashboardService';
+import { useState, useEffect } from 'react';
+import { getIconComponent } from '@/lib/icons';
 
 interface ERPHomeProps {
   currentUser?: User | null;
@@ -28,6 +32,9 @@ export function ERPHome({ currentUser: propCurrentUser, onModuleChange: propOnMo
   
   // Use auth context user if prop user is not provided
   const currentUser = propCurrentUser || authCurrentUser;
+  
+  const [moduleStats, setModuleStats] = useState<ModuleStats[]>([]);
+  const [loadingStats, setLoadingStats] = useState(true);
   
   const handleModuleChange = (module: ERPModule) => {
     if (propOnModuleChange) {
@@ -60,6 +67,26 @@ export function ERPHome({ currentUser: propCurrentUser, onModuleChange: propOnMo
           navigate('/ERP/Setting');
           break;
       }
+    }
+  };
+
+  useEffect(() => {
+    if (currentUser) {
+      loadModuleStats();
+    }
+  }, [currentUser]);
+
+  const loadModuleStats = async () => {
+    try {
+      setLoadingStats(true);
+      const stats = await UniversalDashboardService.getAllStats(
+        currentUser?.permissions.modules || []
+      );
+      setModuleStats(stats);
+    } catch (error) {
+      console.error('[ERPHome] Error loading module stats:', error);
+    } finally {
+      setLoadingStats(false);
     }
   };
 
@@ -182,46 +209,51 @@ export function ERPHome({ currentUser: propCurrentUser, onModuleChange: propOnMo
         )}
       </div>
 
-      {/* System Status - Updated card colors */}
+      {/* Module Statistics - Real-time data based on permissions */}
       <div>
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Trạng Thái Hệ Thống</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Thống Kê Module</h2>
+        {loadingStats ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map(i => (
+              <Card key={i} className="animate-pulse">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-10 w-10 rounded-lg" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-8 w-20 mb-2" />
+                  <Skeleton className="h-3 w-32" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : moduleStats.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {moduleStats.map((stat, index) => {
+              const Icon = getIconComponent(stat.icon);
+              return (
+                <UniversalStatCard
+                  key={stat.module}
+                  title={stat.title}
+                  value={String(stat.value)}
+                  change={stat.change || ''}
+                  icon={Icon}
+                  colorIndex={index}
+                />
+              );
+            })}
+          </div>
+        ) : (
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600">Trạng Thái Module</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold theme-text-success">
-                {currentUser.permissions.modules.length}
-              </div>
-              <p className="text-sm text-gray-600">Module được phép truy cập</p>
+            <CardContent className="p-6 text-center">
+              <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Không Có Dữ Liệu Thống Kê</h3>
+              <p className="text-gray-600">
+                Tài khoản của bạn chưa có quyền truy cập các module có dữ liệu.
+              </p>
             </CardContent>
           </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600">Vai Trò</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold theme-text-primary">
-                {currentUser.role === 'erp-admin' ? 'Admin' : 
-                 currentUser.role === 'voucher-admin' ? 'Quản Lý' : 
-                 'Nhân Viên'}
-              </div>
-              <p className="text-sm text-gray-600">Cấp độ truy cập hiện tại</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600">Kết Nối</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold theme-text-success">Trực Tuyến</div>
-              <p className="text-sm text-gray-600">Trạng thái kết nối</p>
-            </CardContent>
-          </Card>
-        </div>
+        )}
       </div>
 
       {/* Empty State Notice - Updated icon color */}
