@@ -6,7 +6,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePermissions } from "@/hooks/usePermissions";
 import { lensApi } from "@/modules/marketing/services/lensApi";
-import { ProductTable } from "@/modules/marketing/components/lens-admin/ProductTable";
+import { ProductTable, useProductColumnVisibility } from "@/modules/marketing/components/lens-admin/ProductTable";
+import { ProductColumnVisibilityFilter } from "@/modules/marketing/components/lens-admin/ProductColumnVisibilityFilter";
 import { ProductForm } from "@/modules/marketing/components/lens-admin/ProductForm";
 import { ImportExcelDialog } from "@/modules/marketing/components/lens-admin/ImportExcelDialog";
 import { ExportExcelButton } from "@/modules/marketing/components/lens-admin/ExportExcelButton";
@@ -44,6 +45,7 @@ export function LensAdminPage() {
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<LensProduct | null>(null);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const { columns, handleColumnToggle } = useProductColumnVisibility();
 
   const {
     data: productsData,
@@ -120,6 +122,10 @@ export function LensAdminPage() {
 
         <TabsContent value="products" className="space-y-4">
           <div className="flex gap-2 justify-end">
+            <ProductColumnVisibilityFilter
+              columns={columns}
+              onColumnToggle={handleColumnToggle}
+            />
             <ExportExcelButton />
             <Button variant="outline" onClick={() => setIsImportOpen(true)}>
               Nhập Excel
