@@ -16,13 +16,27 @@ async function getEncryptionKey(): Promise<CryptoKey> {
     throw new Error('KIOTVIET_ENCRYPTION_KEY not found in environment');
   }
 
+  console.log('🔑 Key string length:', keyString.length);
+
   // Decode base64 key
-  const keyData = Uint8Array.from(atob(keyString), c => c.charCodeAt(0));
+  let keyData: Uint8Array;
+  try {
+    keyData = Uint8Array.from(atob(keyString), c => c.charCodeAt(0));
+  } catch (error) {
+    throw new Error('Failed to decode base64 key: ' + (error as Error).message);
+  }
+  
+  console.log('🔑 Decoded key length (bytes):', keyData.length);
+  
+  // AES-256 requires exactly 32 bytes
+  if (keyData.length !== 32) {
+    throw new Error(`Invalid key length: ${keyData.length} bytes (expected 32 bytes for AES-256)`);
+  }
   
   // Import key for AES-GCM
   return await crypto.subtle.importKey(
     'raw',
-    keyData,
+    keyData.buffer as ArrayBuffer,
     { name: ALGORITHM, length: KEY_LENGTH },
     false,
     ['encrypt', 'decrypt']
