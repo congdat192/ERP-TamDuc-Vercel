@@ -31,6 +31,7 @@ export interface SubMenu {
   label: string;
   icon: string;
   allowedRoles?: UserRole[];
+  requiredFeature?: string; // Feature code for permission check
 }
 
 export interface ModulePermission {

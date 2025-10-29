@@ -45,7 +45,7 @@ export const MODULE_PERMISSIONS: ModulePermission[] = [
     allowedRoles: ['erp-admin', 'custom'],
     subMenus: [
       { path: '/ERP/Marketing', label: 'Khách hàng', icon: 'Users' },
-      { path: '/ERP/Marketing/voucher', label: 'Quản lý Voucher', icon: 'Ticket' }
+      { path: '/ERP/Marketing/voucher', label: 'Quản lý Voucher', icon: 'Ticket', requiredFeature: 'view_vouchers' }
     ]
   },
   {

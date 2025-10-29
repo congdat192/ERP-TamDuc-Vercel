@@ -35,7 +35,26 @@ export function ERPMainSidebar({
   const { hasFeatureAccess, hasFullAccess } = usePermissions();
   const [expandedModules, setExpandedModules] = useState<Set<ERPModule>>(new Set(["marketing"]));
 
-  const allowedModules = MODULE_PERMISSIONS.filter((module) => currentUser.permissions.modules.includes(module.module));
+  // Smart filter: Show module if user has module access OR has access to any submenu via features
+  const allowedModules = MODULE_PERMISSIONS.filter((module) => {
+    // Owner/Admin bypass
+    if (hasFullAccess()) return true;
+    
+    // Check module-level permission
+    if (currentUser.permissions.modules.includes(module.module)) return true;
+    
+    // Check if user has access to ANY submenu via features
+    if (module.subMenus) {
+      return module.subMenus.some((sub) => {
+        if (sub.requiredFeature) {
+          return hasFeatureAccess(sub.requiredFeature);
+        }
+        return false;
+      });
+    }
+    
+    return false;
+  });
 
   const toggleModuleExpand = (module: ERPModule) => {
     setExpandedModules((prev) => {
