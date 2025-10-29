@@ -79,6 +79,10 @@ export function PayrollDetailModal({ isOpen, onClose, payrollId, onUpdate }: Pay
                 <CardTitle>1️⃣ Thông Tin Nhân Viên</CardTitle>
               </CardHeader>
               <CardContent className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <Label>Tên Công Ty</Label>
+                  <p className="font-semibold text-lg">{payroll.company_name || 'Mắt Kính Tâm Đức'}</p>
+                </div>
                 <div>
                   <Label>Mã Nhân Viên</Label>
                   <p className="font-semibold">{payroll.employee_code}</p>

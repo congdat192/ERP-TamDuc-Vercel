@@ -226,6 +226,15 @@ export function PayrollEditModal({ isOpen, onClose, payrollId, onUpdate }: Payro
                   <Label>Chức Danh</Label>
                   <p>{payroll.position || 'N/A'}</p>
                 </div>
+                <div className="col-span-2">
+                  <Label htmlFor="company_name">Tên Công Ty</Label>
+                  <Input
+                    id="company_name"
+                    value={payroll.company_name || ''}
+                    onChange={(e) => handleInputChange('company_name', e.target.value)}
+                    placeholder="Mắt Kính Tâm Đức"
+                  />
+                </div>
                 <div>
                   <Label>Công Chuẩn</Label>
                   <Input 

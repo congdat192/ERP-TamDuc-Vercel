@@ -711,7 +711,7 @@ export type Database = {
           bonus_invoice_bh_cs?: number | null
           bonus_invoice_ktv?: number | null
           bonus_performance?: number | null
-          company_name: string
+          company_name?: string
           created_at?: string | null
           created_by?: string | null
           ct_actual_days?: number | null

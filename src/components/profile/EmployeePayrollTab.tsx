@@ -191,7 +191,7 @@ export default function EmployeePayrollTab({ employeeId }: { employeeId: string 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div>
               <p className="text-muted-foreground">Công ty</p>
-              <p className="font-medium">{selectedPayroll.company_name}</p>
+              <p className="font-medium">{selectedPayroll.company_name || 'Mắt Kính Tâm Đức'}</p>
             </div>
             <div>
               <p className="text-muted-foreground">Mã nhân viên</p>
