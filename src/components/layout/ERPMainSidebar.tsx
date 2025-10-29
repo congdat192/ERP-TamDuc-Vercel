@@ -196,6 +196,20 @@ export function ERPMainSidebar({
                         {module.subMenus!.map((subMenu) => {
                           const SubIcon = getIconComponent(subMenu.icon);
                           const isSubActive = location.pathname === subMenu.path;
+                          
+                          // ✅ CHECK PERMISSION for voucher sub-menu
+                          if (subMenu.path === '/ERP/Marketing/voucher') {
+                            if (!currentUser.permissions.modules.includes('voucher')) {
+                              return null;
+                            }
+                          }
+                          
+                          // ✅ CHECK PERMISSION for lens admin sub-menu
+                          if (subMenu.path === '/ERP/Operations/Lens-Admin') {
+                            if (!currentUser.permissions.modules.includes('operations')) {
+                              return null;
+                            }
+                          }
 
                           return (
                             <Button
