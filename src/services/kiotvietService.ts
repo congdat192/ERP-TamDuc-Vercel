@@ -18,7 +18,7 @@ export class KiotVietService {
   static async saveCredentials(data: {
     retailerName: string;
     clientId: string;
-    accessToken: string;
+    clientSecret: string;
   }) {
     const { data: result, error } = await supabase.functions.invoke('save-kiotviet-token', {
       body: data

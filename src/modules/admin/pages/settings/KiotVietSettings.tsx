@@ -19,7 +19,7 @@ export function KiotVietSettings() {
   const [formData, setFormData] = useState({
     retailerName: '',
     clientId: '',
-    accessToken: ''
+    clientSecret: ''
   });
 
   // Get existing credentials
@@ -37,8 +37,8 @@ export function KiotVietSettings() {
         title: 'Kết nối thành công', 
         description: 'Đã lưu thông tin kết nối KiotViet. Token đã được mã hóa an toàn.',
       });
-      // Clear access token field for security
-      setFormData(prev => ({ ...prev, accessToken: '' }));
+      // Clear client secret field for security
+      setFormData(prev => ({ ...prev, clientSecret: '' }));
     },
     onError: (error: Error) => {
       toast({ 
@@ -64,7 +64,7 @@ export function KiotVietSettings() {
   });
 
   const handleSave = () => {
-    if (!formData.retailerName || !formData.clientId || !formData.accessToken) {
+    if (!formData.retailerName || !formData.clientId || !formData.clientSecret) {
       toast({
         title: 'Thiếu thông tin',
         description: 'Vui lòng điền đầy đủ tất cả các trường',
@@ -116,8 +116,8 @@ export function KiotVietSettings() {
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
-              <strong>Bảo mật:</strong> Access Token sẽ được mã hóa AES-256-GCM trước khi lưu trữ.
-              Token không bao giờ được hiển thị sau khi lưu.
+              <strong>Bảo mật:</strong> Client Secret sẽ được dùng để lấy Access Token từ KiotViet.
+              Access Token sẽ được mã hóa AES-256-GCM trước khi lưu trữ.
             </AlertDescription>
           </Alert>
 
@@ -178,20 +178,20 @@ export function KiotVietSettings() {
             </div>
             
             <div>
-              <Label htmlFor="accessToken" className="flex items-center gap-2">
+              <Label htmlFor="clientSecret" className="flex items-center gap-2">
                 <CreditCard className="h-4 w-4" />
-                Access Token
+                Client Secret (Mã bảo mật)
               </Label>
               <Input
-                id="accessToken"
+                id="clientSecret"
                 type="password"
-                value={formData.accessToken}
-                onChange={(e) => setFormData(prev => ({ ...prev, accessToken: e.target.value }))}
-                placeholder="Nhập Access Token"
+                value={formData.clientSecret}
+                onChange={(e) => setFormData(prev => ({ ...prev, clientSecret: e.target.value }))}
+                placeholder="Nhập Client Secret"
                 className="mt-1.5"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Token này sẽ được mã hóa và lưu trữ an toàn
+                Mã bảo mật sẽ được dùng để lấy Access Token từ KiotViet
               </p>
             </div>
 
@@ -307,16 +307,17 @@ export function KiotVietSettings() {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="space-y-2 text-sm">
-            <p><strong>Bước 1:</strong> Đăng nhập vào KiotViet Developer Console</p>
-            <p><strong>Bước 2:</strong> Tạo Application mới hoặc chọn app có sẵn</p>
-            <p><strong>Bước 3:</strong> Copy <strong>Retailer Name</strong>, <strong>Client ID</strong> và <strong>Access Token</strong></p>
-            <p><strong>Bước 4:</strong> Paste thông tin vào form trên và nhấn "Kết nối"</p>
+            <p><strong>Bước 1:</strong> Đăng nhập vào KiotViet với tài khoản Admin</p>
+            <p><strong>Bước 2:</strong> Vào <strong>Thiết lập cửa hàng</strong> → <strong>Thiết lập kết nối API</strong></p>
+            <p><strong>Bước 3:</strong> Copy <strong>Tên gian hàng</strong>, <strong>Client ID</strong> và <strong>Client Secret (Mã bảo mật)</strong></p>
+            <p><strong>Bước 4:</strong> Paste vào form trên và nhấn "Kết nối"</p>
+            <p className="text-muted-foreground text-xs mt-2">Hệ thống sẽ tự động lấy Access Token từ KiotViet OAuth API</p>
           </div>
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
-              <strong>Lưu ý:</strong> Token có thể hết hạn sau một thời gian. Nếu gặp lỗi "Token expired", 
-              vui lòng cập nhật Access Token mới từ KiotViet Console.
+              <strong>Lưu ý:</strong> Access Token sẽ được tự động gia hạn khi hết hạn. 
+              Nếu gặp lỗi kết nối, vui lòng kiểm tra lại Client Secret.
             </AlertDescription>
           </Alert>
         </CardContent>

@@ -10,7 +10,7 @@ const corsHeaders = {
 interface SaveTokenRequest {
   retailerName: string;
   clientId: string;
-  accessToken: string;
+  clientSecret: string;
 }
 
 serve(async (req) => {
@@ -44,17 +44,48 @@ serve(async (req) => {
     }
 
     // Parse request
-    const { retailerName, clientId, accessToken }: SaveTokenRequest = await req.json();
+    const { retailerName, clientId, clientSecret }: SaveTokenRequest = await req.json();
 
     // Validate inputs
-    if (!retailerName || !clientId || !accessToken) {
-      throw new Error('Missing required fields: retailerName, clientId, accessToken');
+    if (!retailerName || !clientId || !clientSecret) {
+      throw new Error('Missing required fields: retailerName, clientId, clientSecret');
     }
 
     console.log('✅ Inputs validated');
 
-    // Test connection with KiotViet API
-    console.log('🔍 Testing KiotViet connection...');
+    // Step 1: Get Access Token from KiotViet OAuth
+    console.log('🔑 Requesting access token from KiotViet OAuth...');
+    const oauthResponse = await fetch('https://id.kiotviet.vn/connect/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams({
+        scopes: 'PublicApi.Access',
+        grant_type: 'client_credentials',
+        client_id: clientId,
+        client_secret: clientSecret
+      }).toString()
+    });
+
+    if (!oauthResponse.ok) {
+      const errorText = await oauthResponse.text();
+      console.error('❌ OAuth error:', errorText);
+      throw new Error(`Failed to obtain access token: ${oauthResponse.status} ${errorText}`);
+    }
+
+    const oauthData = await oauthResponse.json();
+    const accessToken = oauthData.access_token;
+    const expiresIn = oauthData.expires_in; // seconds
+
+    if (!accessToken) {
+      throw new Error('No access token returned from KiotViet OAuth');
+    }
+
+    console.log(`✅ Access token obtained (expires in ${expiresIn}s)`);
+
+    // Step 2: Test connection with KiotViet API
+    console.log('🔍 Testing KiotViet API connection...');
     const testResponse = await fetch('https://public.kiotapi.com/categories?pageSize=1', {
       headers: {
         'Retailer': retailerName,
@@ -65,10 +96,10 @@ serve(async (req) => {
 
     if (!testResponse.ok) {
       const errorText = await testResponse.text();
-      throw new Error(`Invalid access token or connection failed: ${testResponse.status} ${errorText}`);
+      throw new Error(`API connection test failed: ${testResponse.status} ${errorText}`);
     }
 
-    console.log('✅ KiotViet connection test passed');
+    console.log('✅ KiotViet API connection test passed');
 
     // Encrypt token
     console.log('🔐 Encrypting access token...');
@@ -86,6 +117,9 @@ serve(async (req) => {
       .update({ is_active: false })
       .eq('user_id', user.id);
 
+    // Calculate token expiry time
+    const tokenExpiresAt = new Date(Date.now() + expiresIn * 1000).toISOString();
+
     // Save new credentials
     const { data: credential, error: saveError } = await supabaseAdmin
       .from('kiotviet_credentials')
@@ -94,6 +128,7 @@ serve(async (req) => {
         retailer_name: retailerName,
         client_id: clientId,
         encrypted_token: encryptedToken,
+        token_expires_at: tokenExpiresAt,
         is_active: true
       })
       .select()
