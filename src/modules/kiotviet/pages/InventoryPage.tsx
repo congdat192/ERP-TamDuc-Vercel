@@ -18,7 +18,7 @@ export function InventoryPage() {
   const [search, setSearch] = useState('');
 
   // Fetch products with inventory
-  const { data: products = [], isLoading } = useQuery({
+  const { data: productsData, isLoading } = useQuery({
     queryKey: ['kiotviet-products-inventory'],
     queryFn: () => KiotVietService.getProducts({ pageSize: 100 })
   });
@@ -29,7 +29,7 @@ export function InventoryPage() {
     queryFn: KiotVietService.getTotalInventoryValue
   });
 
-  const filteredProducts = products.products?.filter((product: any) =>
+  const filteredProducts = productsData?.products?.filter((product: any) =>
     (product.full_name || product.name).toLowerCase().includes(search.toLowerCase()) ||
     product.code.toLowerCase().includes(search.toLowerCase())
   ) || [];

@@ -24,7 +24,13 @@ export const MODULE_PERMISSIONS: ModulePermission[] = [
     module: 'inventory',
     label: 'Kho Hàng',
     icon: 'Package',
-    allowedRoles: ['erp-admin', 'custom']
+    allowedRoles: ['erp-admin', 'custom'],
+    subMenus: [
+      { path: '/ERP/Products', label: 'Sản phẩm', icon: 'Package' },
+      { path: '/ERP/KiotViet/products', label: 'KiotViet - Sản phẩm', icon: 'Database' },
+      { path: '/ERP/KiotViet/categories', label: 'KiotViet - Nhóm hàng', icon: 'FolderTree' },
+      { path: '/ERP/KiotViet/inventory', label: 'KiotViet - Tồn kho', icon: 'Boxes' }
+    ]
   },
   {
     module: 'accounting',
