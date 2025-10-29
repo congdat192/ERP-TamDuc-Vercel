@@ -69,8 +69,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (employee.status !== 'active') {
-      console.error('❌ Employee not active');
+    if (!['active', 'probation'].includes(employee.status)) {
+      console.error(`❌ Employee status not allowed: ${employee.status}`);
       return new Response(
         JSON.stringify({
           success: false,
