@@ -30,6 +30,12 @@ export function ProductCard({
       )}
 
       <div className="aspect-square bg-muted relative overflow-hidden">
+        {product.brand?.name && (
+          <Badge className="absolute bottom-2 left-2 z-10 bg-black/70 text-white hover:bg-black/80 backdrop-blur-sm">
+            Thương hiệu: {product.brand.name}
+          </Badge>
+        )}
+        
         {product.image_urls && product.image_urls.length > 0 ? (
           <img
             src={product.image_urls[0]}
@@ -47,8 +53,6 @@ export function ProductCard({
         <h3 className="font-semibold text-sm line-clamp-2">
           {product.name}
         </h3>
-
-        <p className="text-sm text-muted-foreground">{product.brand?.name}</p>
 
         <div className="flex gap-1 flex-wrap">
           {(() => {
