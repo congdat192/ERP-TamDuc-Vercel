@@ -8,6 +8,7 @@ import { AuthProvider } from "@/components/auth/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ThemeSystem } from "@/components/theme/ThemeSystem";
 import { ForceChangePasswordDialog } from "@/components/auth/ForceChangePasswordDialog";
+import { FeatureProtectedRoute } from "@/components/auth/FeatureProtectedRoute";
 import React, { useEffect } from "react";
 import { useAuth } from "@/components/auth/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -43,6 +44,7 @@ import { UserManagementLayout, MembersPage, RolesPage, UserManagementDashboard }
 import { AffiliateModule } from "./modules/affiliate";
 import { ERPLayout } from "@/components/layout/ERPLayout";
 import { Navigate, useNavigate } from "react-router-dom";
+import { VoucherIssuancePage } from "./modules/marketing/pages/VoucherIssuancePage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -291,6 +293,20 @@ const AppContent = () => {
                   />
                   {/* Redirect old voucher URL to new location */}
                   <Route path="/ERP/Voucher" element={<Navigate to="/ERP/Marketing/voucher" replace />} />
+                  
+                  {/* Voucher route with feature-level protection */}
+                  <Route 
+                    path="/ERP/Marketing/voucher" 
+                    element={
+                      <ProtectedERPRoute module="voucher">
+                        <FeatureProtectedRoute requiredFeature="view_vouchers">
+                          <VoucherIssuancePage />
+                        </FeatureProtectedRoute>
+                      </ProtectedERPRoute>
+                    } 
+                  />
+                  
+                  {/* Other Marketing routes */}
                   <Route 
                     path="/ERP/Marketing/*" 
                     element={
