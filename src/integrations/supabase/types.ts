@@ -1254,23 +1254,35 @@ export type Database = {
       kiotviet_categories: {
         Row: {
           category_name: string
+          created_date: string | null
+          has_child: boolean | null
           id: number
           level: number | null
+          modified_date: string | null
           parent_id: number | null
+          retailer_id: number | null
           synced_at: string | null
         }
         Insert: {
           category_name: string
+          created_date?: string | null
+          has_child?: boolean | null
           id: number
           level?: number | null
+          modified_date?: string | null
           parent_id?: number | null
+          retailer_id?: number | null
           synced_at?: string | null
         }
         Update: {
           category_name?: string
+          created_date?: string | null
+          has_child?: boolean | null
           id?: number
           level?: number | null
+          modified_date?: string | null
           parent_id?: number | null
+          retailer_id?: number | null
           synced_at?: string | null
         }
         Relationships: [

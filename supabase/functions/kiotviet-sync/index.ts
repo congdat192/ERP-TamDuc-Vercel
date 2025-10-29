@@ -130,7 +130,8 @@ serve(async (req) => {
 async function syncCategories(accessToken: string, supabase: any, retailerName: string) {
   console.log('📡 Fetching categories from KiotViet...');
   
-  const response = await fetch(`${KIOTVIET_BASE_URL}/categories?hierachicalData=false`, {
+  // Use hierachicalData=true to get full tree structure with all fields
+  const response = await fetch(`${KIOTVIET_BASE_URL}/categories?hierachicalData=true`, {
     headers: { 
       'Retailer': retailerName,
       'Authorization': `Bearer ${accessToken}`,
@@ -150,17 +151,41 @@ async function syncCategories(accessToken: string, supabase: any, retailerName: 
     throw new Error('Invalid categories response format');
   }
 
-  console.log(`📥 Received ${categories.length} categories`);
+  console.log(`📥 Received ${categories.length} root categories from KiotViet`);
 
-  // Build category map
-  const categoryMap = new Map(categories.map((c: any) => [c.categoryId, c]));
+  // Flatten hierarchical data into a flat list with correct levels
+  const flatCategories: any[] = [];
+  
+  function flattenCategory(cat: any, level: number = 1) {
+    flatCategories.push({
+      categoryId: cat.categoryId,
+      categoryName: cat.categoryName,
+      parentId: cat.parentId || null,
+      retailerId: cat.retailerId,
+      hasChild: cat.hasChild || false,
+      modifiedDate: cat.modifiedDate,
+      createdDate: cat.createdDate,
+      level: level
+    });
+    
+    // Recursively flatten children (max 3 levels per KiotViet spec)
+    if (cat.children && Array.isArray(cat.children) && level < 3) {
+      cat.children.forEach((child: any) => flattenCategory(child, level + 1));
+    }
+  }
+
+  categories.forEach(cat => flattenCategory(cat));
+  
+  console.log(`✅ Flattened to ${flatCategories.length} total categories`);
+
+  // Build category map for validation
+  const categoryMap = new Map(flatCategories.map((c: any) => [c.categoryId, c]));
   
   // Validate and clean orphaned categories
-  const validCategories = categories.map((cat: any) => {
-    // If parent_id references a non-existent parent, set it to null
+  const validCategories = flatCategories.map((cat: any) => {
     if (cat.parentId && !categoryMap.has(cat.parentId)) {
-      console.warn(`⚠️ Orphaned category: ${cat.categoryName} (id=${cat.categoryId}) has parent_id=${cat.parentId} which doesn't exist. Setting parent_id to null.`);
-      return { ...cat, parentId: null };
+      console.warn(`⚠️ Orphaned category: ${cat.categoryName} (id=${cat.categoryId}) has parent_id=${cat.parentId} which doesn't exist. Setting parent_id to null and level to 1.`);
+      return { ...cat, parentId: null, level: 1 };
     }
     return cat;
   });
@@ -185,13 +210,17 @@ async function syncCategories(accessToken: string, supabase: any, retailerName: 
 
   console.log(`✅ Sorted ${sortedCategories.length} categories by hierarchy`);
 
-  // Upsert categories in correct order
+  // Upsert with ALL fields from KiotViet API
   const { error } = await supabase.from('kiotviet_categories').upsert(
     sortedCategories.map((cat: any) => ({
       id: cat.categoryId,
       category_name: cat.categoryName,
-      parent_id: cat.parentId || null,
-      level: cat.parentId ? 2 : 1,
+      parent_id: cat.parentId,
+      retailer_id: cat.retailerId,
+      has_child: cat.hasChild,
+      modified_date: cat.modifiedDate,
+      created_date: cat.createdDate,
+      level: cat.level,
       synced_at: new Date().toISOString()
     })),
     { onConflict: 'id' }

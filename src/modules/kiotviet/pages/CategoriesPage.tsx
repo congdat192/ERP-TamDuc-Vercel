@@ -1,8 +1,9 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { KiotVietService } from '@/services/kiotvietService';
-import { FolderTree, Loader2, ChevronRight } from 'lucide-react';
+import { FolderTree, Loader2, ChevronRight, ChevronDown } from 'lucide-react';
 
 interface CategoryTreeItemProps {
   category: any;
@@ -10,24 +11,64 @@ interface CategoryTreeItemProps {
 }
 
 function CategoryTreeItem({ category, level }: CategoryTreeItemProps) {
+  const [isExpanded, setIsExpanded] = useState(level < 2);
+
   return (
-    <div className="space-y-1">
+    <div className="border-b last:border-0">
       <div 
-        className="flex items-center gap-2 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+        className="flex items-center justify-between p-3 hover:bg-muted/50 transition-colors cursor-pointer"
         style={{ paddingLeft: `${level * 24 + 12}px` }}
+        onClick={() => category.has_child && setIsExpanded(!isExpanded)}
       >
-        {category.children && category.children.length > 0 && (
-          <ChevronRight className="h-4 w-4 text-muted-foreground" />
-        )}
-        <FolderTree className="h-4 w-4 text-blue-500" />
-        <span className="font-medium flex-1">{category.category_name}</span>
-        <Badge variant="secondary" className="text-xs">
-          {category.product_count || 0} SP
-        </Badge>
+        <div className="flex items-center gap-3 flex-1">
+          {category.has_child && (
+            <button
+              className="p-1 hover:bg-muted rounded transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsExpanded(!isExpanded);
+              }}
+            >
+              {isExpanded ? (
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              )}
+            </button>
+          )}
+          {!category.has_child && <div className="w-6" />}
+          
+          <FolderTree className="h-5 w-5 text-primary" />
+          
+          <div className="flex-1">
+            <div className="font-medium">{category.category_name}</div>
+            {category.modified_date && (
+              <div className="text-xs text-muted-foreground">
+                Cập nhật: {new Date(category.modified_date).toLocaleDateString('vi-VN', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric'
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Badge variant="outline" className="text-xs">
+            Cấp {category.level}
+          </Badge>
+          
+          {category.has_child && (
+            <Badge variant="secondary" className="text-xs">
+              Có nhóm con
+            </Badge>
+          )}
+        </div>
       </div>
-      
-      {category.children && category.children.length > 0 && (
-        <div className="space-y-1">
+
+      {isExpanded && category.children && category.children.length > 0 && (
+        <div>
           {category.children.map((child: any) => (
             <CategoryTreeItem key={child.id} category={child} level={level + 1} />
           ))}

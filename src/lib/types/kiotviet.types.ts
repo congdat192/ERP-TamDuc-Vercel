@@ -7,7 +7,11 @@ export interface KiotVietCategory {
   categoryId: number;
   categoryName: string;
   parentId?: number;
+  retailerId: number;
   hasChild?: boolean;
+  modifiedDate?: string;
+  createdDate: string;
+  children?: KiotVietCategory[];
 }
 
 export interface KiotVietCategoryTree extends KiotVietCategory {
@@ -118,6 +122,10 @@ export interface KiotVietCategoryDB {
   id: number;
   category_name: string;
   parent_id?: number;
+  retailer_id?: number;
+  has_child?: boolean;
+  modified_date?: string;
+  created_date?: string;
   level: number;
   synced_at: string;
 }
