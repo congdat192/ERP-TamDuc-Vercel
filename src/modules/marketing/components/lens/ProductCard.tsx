@@ -28,7 +28,7 @@ export function ProductCard({
           <img
             src={product.image_urls[0]}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform relative z-0"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-muted-foreground">
@@ -43,7 +43,7 @@ export function ProductCard({
         )}
         
         {product.brand?.name && (
-          <Badge className="absolute bottom-2 left-2 z-20 bg-black/80 text-white hover:bg-black/90 backdrop-blur-sm">
+          <Badge className="absolute bottom-2 left-2 z-10 bg-black/80 text-white hover:bg-black/90 backdrop-blur-sm">
             Thương hiệu: {product.brand.name}
           </Badge>
         )}
