@@ -23,12 +23,12 @@ export function ProductCard({
       className="group relative bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-all cursor-pointer"
       onClick={onClick}
     >
-      <div className="aspect-square bg-muted relative overflow-hidden">
+      <div className="aspect-square bg-muted relative">
         {product.image_urls && product.image_urls.length > 0 ? (
           <img
             src={product.image_urls[0]}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform relative z-0"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-muted-foreground">
