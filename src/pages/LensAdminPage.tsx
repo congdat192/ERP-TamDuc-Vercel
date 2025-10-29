@@ -46,6 +46,12 @@ export function LensAdminPage() {
   const [editingProduct, setEditingProduct] = useState<LensProduct | null>(null);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const { columns, handleColumnToggle } = useProductColumnVisibility();
+  
+  // Convert columns to visibility object
+  const columnVisibility = columns.reduce((acc, col) => ({
+    ...acc, 
+    [col.key]: col.visible
+  }), {} as Record<string, boolean>);
 
   const {
     data: productsData,
@@ -145,6 +151,7 @@ export function LensAdminPage() {
               setSelectedProductId(id);
               setActiveTab("tiers");
             }}
+            columnVisibility={columnVisibility}
           />
         </TabsContent>
 

@@ -24,21 +24,22 @@ interface ProductTableProps {
   onClone: (product: LensProduct) => void;
   onRefetch: () => void;
   onSelect?: (productId: string) => void;
+  columnVisibility: Record<string, boolean>;
 }
 
 export const DEFAULT_PRODUCT_COLUMNS = [
   { key: 'name', label: 'Tên sản phẩm', visible: true },
   { key: 'sku', label: 'Mã SKU', visible: true },
-  { key: 'brand', label: 'Thương hiệu', visible: true },
+  { key: 'description', label: 'Mô tả', visible: false },
   { key: 'price', label: 'Giá gốc', visible: true },
   { key: 'sale_price', label: 'Giá khuyến mãi', visible: false },
   { key: 'discount_percent', label: 'Chiết khấu %', visible: false },
+  { key: 'brand', label: 'Thương hiệu', visible: true },
   { key: 'material', label: 'Chất liệu', visible: true },
   { key: 'refractive_index', label: 'Chiết suất', visible: true },
   { key: 'is_promotion', label: 'Khuyến mãi', visible: false },
   { key: 'promotion_text', label: 'Text KM', visible: false },
   { key: 'view_count', label: 'Lượt xem', visible: false },
-  { key: 'description', label: 'Mô tả', visible: false },
   { key: 'is_active', label: 'Trạng thái', visible: true },
   { key: 'created_at', label: 'Ngày tạo', visible: false },
   { key: 'updated_at', label: 'Ngày cập nhật', visible: false },
@@ -55,17 +56,10 @@ const truncateText = (text: string | null, maxLength: number = 50) => {
   return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
 };
 
-export function ProductTable({ products, onEdit, onClone, onRefetch, onSelect }: ProductTableProps) {
+export function ProductTable({ products, onEdit, onClone, onRefetch, onSelect, columnVisibility }: ProductTableProps) {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-
-  const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>(() => {
-    const saved = localStorage.getItem('lens-product-columns-visibility');
-    return saved 
-      ? JSON.parse(saved) 
-      : DEFAULT_PRODUCT_COLUMNS.reduce((acc, col) => ({ ...acc, [col.key]: col.visible }), {});
-  });
 
   // Calculate pagination
   const totalPages = Math.ceil(products.length / pageSize);
@@ -100,26 +94,26 @@ export function ProductTable({ products, onEdit, onClone, onRefetch, onSelect }:
     <>
       <div className="border rounded-lg overflow-x-auto">
         <Table className="min-w-max">
-          <TableHeader>
-            <TableRow>
-              {columnVisibility.name && <TableHead className="min-w-[200px]">Tên sản phẩm</TableHead>}
-              {columnVisibility.sku && <TableHead className="min-w-[120px]">Mã SKU</TableHead>}
-              {columnVisibility.brand && <TableHead className="min-w-[120px]">Thương hiệu</TableHead>}
-              {columnVisibility.price && <TableHead className="min-w-[120px]">Giá gốc</TableHead>}
-              {columnVisibility.sale_price && <TableHead className="min-w-[120px]">Giá KM</TableHead>}
-              {columnVisibility.discount_percent && <TableHead className="min-w-[100px]">Chiết khấu</TableHead>}
-              {columnVisibility.material && <TableHead className="min-w-[120px]">Chất liệu</TableHead>}
-              {columnVisibility.refractive_index && <TableHead className="min-w-[100px]">Chiết suất</TableHead>}
-              {columnVisibility.is_promotion && <TableHead className="min-w-[100px]">Khuyến mãi</TableHead>}
-              {columnVisibility.promotion_text && <TableHead className="min-w-[150px]">Text KM</TableHead>}
-              {columnVisibility.view_count && <TableHead className="min-w-[100px]">Lượt xem</TableHead>}
-              {columnVisibility.description && <TableHead className="min-w-[250px]">Mô tả</TableHead>}
-              {columnVisibility.is_active && <TableHead className="min-w-[100px]">Trạng thái</TableHead>}
-              {columnVisibility.created_at && <TableHead className="min-w-[120px]">Ngày tạo</TableHead>}
-              {columnVisibility.updated_at && <TableHead className="min-w-[120px]">Cập nhật</TableHead>}
-              {columnVisibility.actions && <TableHead className="text-right min-w-[180px]">Thao tác</TableHead>}
-            </TableRow>
-          </TableHeader>
+      <TableHeader>
+        <TableRow>
+          {columnVisibility.name && <TableHead className="min-w-[200px]">Tên sản phẩm</TableHead>}
+          {columnVisibility.sku && <TableHead className="min-w-[120px]">Mã SKU</TableHead>}
+          {columnVisibility.description && <TableHead className="min-w-[250px]">Mô tả</TableHead>}
+          {columnVisibility.price && <TableHead className="min-w-[120px]">Giá gốc</TableHead>}
+          {columnVisibility.sale_price && <TableHead className="min-w-[120px]">Giá KM</TableHead>}
+          {columnVisibility.discount_percent && <TableHead className="min-w-[100px]">Chiết khấu</TableHead>}
+          {columnVisibility.brand && <TableHead className="min-w-[120px]">Thương hiệu</TableHead>}
+          {columnVisibility.material && <TableHead className="min-w-[120px]">Chất liệu</TableHead>}
+          {columnVisibility.refractive_index && <TableHead className="min-w-[100px]">Chiết suất</TableHead>}
+          {columnVisibility.is_promotion && <TableHead className="min-w-[100px]">Khuyến mãi</TableHead>}
+          {columnVisibility.promotion_text && <TableHead className="min-w-[150px]">Text KM</TableHead>}
+          {columnVisibility.view_count && <TableHead className="min-w-[100px]">Lượt xem</TableHead>}
+          {columnVisibility.is_active && <TableHead className="min-w-[100px]">Trạng thái</TableHead>}
+          {columnVisibility.created_at && <TableHead className="min-w-[120px]">Ngày tạo</TableHead>}
+          {columnVisibility.updated_at && <TableHead className="min-w-[120px]">Cập nhật</TableHead>}
+          {columnVisibility.actions && <TableHead className="text-right min-w-[180px]">Thao tác</TableHead>}
+        </TableRow>
+      </TableHeader>
           <TableBody>
             {paginatedProducts.length === 0 ? (
               <TableRow>
@@ -138,8 +132,8 @@ export function ProductTable({ products, onEdit, onClone, onRefetch, onSelect }:
                   {columnVisibility.sku && (
                     <TableCell>{product.sku || '-'}</TableCell>
                   )}
-                  {columnVisibility.brand && (
-                    <TableCell>{product.attributes?.lens_brand?.[0] || '-'}</TableCell>
+                  {columnVisibility.description && (
+                    <TableCell>{truncateText(product.description, 60)}</TableCell>
                   )}
                   {columnVisibility.price && (
                     <TableCell>{product.price.toLocaleString('vi-VN')}₫</TableCell>
@@ -151,6 +145,9 @@ export function ProductTable({ products, onEdit, onClone, onRefetch, onSelect }:
                   )}
                   {columnVisibility.discount_percent && (
                     <TableCell>{product.discount_percent ? `${product.discount_percent}%` : '-'}</TableCell>
+                  )}
+                  {columnVisibility.brand && (
+                    <TableCell>{product.attributes?.lens_brand?.[0] || '-'}</TableCell>
                   )}
                   {columnVisibility.material && (
                     <TableCell>{product.attributes?.material?.[0] || '-'}</TableCell>
@@ -172,9 +169,6 @@ export function ProductTable({ products, onEdit, onClone, onRefetch, onSelect }:
                   )}
                   {columnVisibility.view_count && (
                     <TableCell>{product.view_count.toLocaleString('vi-VN')}</TableCell>
-                  )}
-                  {columnVisibility.description && (
-                    <TableCell>{truncateText(product.description, 60)}</TableCell>
                   )}
                   {columnVisibility.is_active && (
                     <TableCell>
