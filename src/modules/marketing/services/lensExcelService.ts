@@ -8,13 +8,17 @@ export interface ExcelRow {
   'Thương hiệu*': string;
   'Giá niêm yết (VNĐ)*': number;
   'Giá giảm (VNĐ)': number | '';
-  'Chất liệu': string;
-  'Chỉ số khúc xạ': string;
-  'Xuất xứ': string;
   'Mô tả': string;
   'Khuyến mãi (true/false)': string;
   'Text khuyến mãi': string;
-  [key: string]: any; // Allow dynamic multiselect columns
+  // Supply tier columns
+  'Độ cầu Min (SPH)': number | '';
+  'Độ cầu Max (SPH)': number | '';
+  'Độ loạn Min (CYL)': number | '';
+  'Độ loạn Max (CYL)': number | '';
+  'Tầng cung ứng': string;
+  // Dynamic columns for select and multiselect attributes
+  [key: string]: any;
 }
 
 export interface ValidationResult {
@@ -27,6 +31,13 @@ export interface ValidationResult {
 export interface ParsedProduct extends Partial<LensProduct> {
   _validation?: ValidationResult;
   _originalRow?: number;
+  _supply_tier_data?: {
+    sph_min: number;
+    sph_max: number;
+    cyl_min: number;
+    cyl_max: number;
+    tier_type: string;
+  } | null;
 }
 
 export class LensExcelService {
@@ -137,6 +148,43 @@ export class LensExcelService {
     // Calculate discount percent
     const discountPercent = salePrice && price ? Math.round((1 - salePrice / price) * 100) : null;
 
+    // Parse supply tier data (optional)
+    let supplyTierData: ParsedProduct['_supply_tier_data'] = null;
+    const sphMin = row['Độ cầu Min (SPH)'];
+    const sphMax = row['Độ cầu Max (SPH)'];
+    const cylMin = row['Độ loạn Min (CYL)'];
+    const cylMax = row['Độ loạn Max (CYL)'];
+    const tierType = row['Tầng cung ứng']?.toString().trim();
+
+    // If any supply tier data is provided, validate and parse it
+    if (sphMin !== '' && sphMin !== undefined || sphMax !== '' && sphMax !== undefined || 
+        cylMin !== '' && cylMin !== undefined || cylMax !== '' && cylMax !== undefined || tierType) {
+      const parsedSphMin = Number(sphMin);
+      const parsedSphMax = Number(sphMax);
+      const parsedCylMin = Number(cylMin);
+      const parsedCylMax = Number(cylMax);
+
+      // Validate supply tier data
+      if (isNaN(parsedSphMin) || isNaN(parsedSphMax) || isNaN(parsedCylMin) || isNaN(parsedCylMax)) {
+        errors.push('Dữ liệu tầng cung ứng phải là số hợp lệ');
+      } else if (parsedSphMin > parsedSphMax) {
+        errors.push('Độ cầu Min phải <= Độ cầu Max');
+      } else if (parsedCylMin > parsedCylMax) {
+        errors.push('Độ loạn Min phải <= Độ loạn Max');
+      } else {
+        const validTierTypes = ['IN_STORE', 'NEXT_DAY', 'CUSTOM_ORDER', 'FACTORY_ORDER'];
+        const finalTierType = tierType && validTierTypes.includes(tierType) ? tierType : 'IN_STORE';
+        
+        supplyTierData = {
+          sph_min: parsedSphMin,
+          sph_max: parsedSphMax,
+          cyl_min: parsedCylMin,
+          cyl_max: parsedCylMax,
+          tier_type: finalTierType
+        };
+      }
+    }
+
     const parsedProduct: ParsedProduct = {
       sku,
       name,
@@ -147,6 +195,7 @@ export class LensExcelService {
       is_promotion: isPromotion,
       promotion_text: row['Text khuyến mãi']?.toString().trim() || null,
       attributes: attributesData,
+      _supply_tier_data: supplyTierData,
       _validation: {
         valid: errors.length === 0,
         errors,
@@ -238,17 +287,83 @@ export class LensExcelService {
 
         if (error) throw error;
 
-        // Count inserts vs updates
+        // Process supply tier data for upserted products
+        const supplyTierOps = [];
         for (let j = 0; j < batch.length; j++) {
           const product = batch[j];
           const upsertedProduct = upsertedProducts?.find(up => up.sku === product.sku);
           
           if (upsertedProduct) {
+            // Count inserts vs updates
             if (upsertedProduct.created_at === upsertedProduct.updated_at) {
               results.inserted++;
             } else {
               results.updated++;
             }
+
+            // Handle supply tier data if present
+            if (product._supply_tier_data) {
+              supplyTierOps.push({
+                productId: upsertedProduct.id,
+                tierData: product._supply_tier_data
+              });
+            }
+          }
+        }
+
+        // Upsert supply tiers if any
+        if (supplyTierOps.length > 0) {
+          // Fetch existing tiers for these products
+          const productIds = supplyTierOps.map(op => op.productId);
+          const { data: existingTiers } = await supabase
+            .from('lens_supply_tiers')
+            .select('id, product_id')
+            .in('product_id', productIds)
+            .order('display_order')
+            .limit(productIds.length);
+
+          const existingTierMap = new Map(
+            (existingTiers || []).map(tier => [tier.product_id, tier.id])
+          );
+
+          // Prepare tier inserts and updates
+          const tiersToInsert = [];
+          const tiersToUpdate = [];
+
+          for (const { productId, tierData } of supplyTierOps) {
+            const tierRecord = {
+              product_id: productId,
+              sph_min: tierData.sph_min,
+              sph_max: tierData.sph_max,
+              cyl_min: tierData.cyl_min,
+              cyl_max: tierData.cyl_max,
+              tier_type: tierData.tier_type,
+              tier_name: tierData.tier_type.replace(/_/g, ' ').toLowerCase(),
+              lead_time_days: 0,
+              price_adjustment: 0,
+              is_active: true,
+              display_order: 0
+            };
+
+            const existingTierId = existingTierMap.get(productId);
+            if (existingTierId) {
+              tiersToUpdate.push({ ...tierRecord, id: existingTierId });
+            } else {
+              tiersToInsert.push(tierRecord);
+            }
+          }
+
+          // Bulk insert new tiers
+          if (tiersToInsert.length > 0) {
+            await supabase.from('lens_supply_tiers').insert(tiersToInsert);
+          }
+
+          // Bulk update existing tiers
+          for (const tier of tiersToUpdate) {
+            await supabase
+              .from('lens_supply_tiers')
+              .update(tier)
+              .eq('id', tier.id);
           }
         }
       } catch (error: any) {
@@ -308,20 +423,30 @@ export class LensExcelService {
 
     // Add select attribute columns
     selectAttrs.forEach(attr => {
-      template[attr.name] = attr.options[0] || '';
+      template[attr.name] = attr.options[0]?.label || attr.options[0] || '';
     });
 
     // Add multiselect columns dynamically
     multiselectAttrs.forEach(attr => {
-      attr.options.forEach((option: string) => {
-        template[option] = 'Không'; // Default value
+      attr.options.forEach((option: any) => {
+        const optLabel = typeof option === 'string' ? option : option.label;
+        template[optLabel] = 'Không'; // Default value
       });
     });
 
     // Add 1 example with "Có"
     if (multiselectAttrs.length > 0 && multiselectAttrs[0].options.length > 0) {
-      template[multiselectAttrs[0].options[0]] = 'Có';
+      const firstOption = multiselectAttrs[0].options[0];
+      const firstOptionLabel = typeof firstOption === 'string' ? firstOption : firstOption.label;
+      template[firstOptionLabel] = 'Có';
     }
+
+    // Add supply tier columns at the end (matching export format)
+    template['Độ cầu Min (SPH)'] = -6.00;
+    template['Độ cầu Max (SPH)'] = 6.00;
+    template['Độ loạn Min (CYL)'] = -2.00;
+    template['Độ loạn Max (CYL)'] = 0;
+    template['Tầng cung ứng'] = 'IN_STORE';
 
     this.downloadExcel([template], `lens-template-${Date.now()}.xlsx`);
   }
