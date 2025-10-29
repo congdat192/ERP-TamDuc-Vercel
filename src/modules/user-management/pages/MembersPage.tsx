@@ -205,7 +205,10 @@ export function MembersPage() {
       
       toast({
         title: "Thành công",
-        description: "Cập nhật vai trò thành viên thành công",
+        description: memberId === currentUser?.id 
+          ? "Vai trò của bạn đã được cập nhật. Sidebar sẽ tự động làm mới." 
+          : "Vai trò đã được cập nhật. User sẽ nhận quyền mới trong vài giây (tự động).",
+        duration: 5000
       });
       
       await fetchMembers();

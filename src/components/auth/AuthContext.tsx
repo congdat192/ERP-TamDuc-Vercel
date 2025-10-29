@@ -201,6 +201,67 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // Listen to user_roles changes for current user (Realtime Permission Sync)
+  useEffect(() => {
+    if (!currentUser) return;
+    
+    console.log('🔔 [AuthContext] Setting up user_roles realtime listener for user:', currentUser.id);
+    
+    const channel = supabase
+      .channel(`user-role-changes-${currentUser.id}`)
+      .on('postgres_changes', {
+        event: '*', // Listen to INSERT, UPDATE, DELETE
+        schema: 'public',
+        table: 'user_roles',
+        filter: `user_id=eq.${currentUser.id}` // Only changes for THIS user
+      }, async (payload) => {
+        console.log('🔔 [AuthContext] User role changed:', payload);
+        console.log('   - Event type:', payload.eventType);
+        console.log('   - New role_id:', (payload.new as any)?.role_id);
+        
+        // Clear permission cache to force DB fetch
+        PermissionCache.clear();
+        
+        try {
+          // Fetch fresh permissions from database
+          const updatedUser = await fetchUserSimple(currentUser.id);
+          setCurrentUser(updatedUser);
+          
+          console.log('✅ [AuthContext] Permissions refreshed successfully');
+          console.log('   - New modules:', updatedUser.permissions.modules);
+          console.log('   - New features:', updatedUser.permissions.features);
+          
+          // Show success notification to user
+          toast({
+            title: "Quyền hạn đã được cập nhật",
+            description: "Các module và tính năng mới đã sẵn sàng sử dụng",
+            duration: 5000
+          });
+        } catch (error) {
+          console.error('❌ [AuthContext] Error refreshing permissions:', error);
+          toast({
+            title: "Lỗi cập nhật quyền",
+            description: "Vui lòng tải lại trang để nhận quyền mới",
+            variant: "destructive"
+          });
+        }
+      })
+      .subscribe((status) => {
+        console.log('📡 [AuthContext] User roles subscription status:', status);
+        
+        if (status === 'SUBSCRIBED') {
+          console.log('✅ [AuthContext] Successfully subscribed to user_roles changes');
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('❌ [AuthContext] User roles subscription failed');
+        }
+      });
+    
+    return () => {
+      console.log('🧹 [AuthContext] Cleaning up user_roles listener');
+      supabase.removeChannel(channel);
+    };
+  }, [currentUser?.id]);
+
   const login = async (email: string, password: string): Promise<boolean> => {
     console.log("🔐 [AuthContext] Login attempt for:", email);
     setIsLoading(true);
