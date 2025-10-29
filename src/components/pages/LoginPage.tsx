@@ -81,7 +81,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
           {/* Left Side - Branding */}
           <div className="text-center lg:text-left">
             <div className="flex items-center justify-center lg:justify-start space-x-4 mb-6">
-              <div className="w-20 h-20 rounded-lg overflow-hidden bg-white border border-gray-300 shadow-md">
+              <div className="w-20 h-20 rounded-lg overflow-hidden bg-white border border-gray-500 shadow-md">
                 <img
                   src="https://danganhtri.cloud/assets/logo_tamduc-CS9crF3F.jpg"
                   alt="Tâm Đức Optical Logo"
