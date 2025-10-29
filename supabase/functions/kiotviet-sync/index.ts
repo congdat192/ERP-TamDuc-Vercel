@@ -152,9 +152,34 @@ async function syncCategories(accessToken: string, supabase: any, retailerName: 
 
   console.log(`📥 Received ${categories.length} categories`);
 
-  // Upsert categories
+  // Sort categories by hierarchy (parents first, then children)
+  // This prevents foreign key constraint violations
+  const sortedCategories: any[] = [];
+  const categoryMap = new Map(categories.map((c: any) => [c.categoryId, c]));
+  const processed = new Set<number>();
+
+  // Helper function to recursively add category and its parents
+  function addCategoryWithParents(cat: any) {
+    if (processed.has(cat.categoryId)) return;
+    
+    // Add parent first if exists
+    if (cat.parentId && categoryMap.has(cat.parentId)) {
+      addCategoryWithParents(categoryMap.get(cat.parentId));
+    }
+    
+    // Then add this category
+    sortedCategories.push(cat);
+    processed.add(cat.categoryId);
+  }
+
+  // Process all categories
+  categories.forEach((cat: any) => addCategoryWithParents(cat));
+
+  console.log(`✅ Sorted ${sortedCategories.length} categories by hierarchy`);
+
+  // Upsert categories in correct order
   const { error } = await supabase.from('kiotviet_categories').upsert(
-    categories.map((cat: any) => ({
+    sortedCategories.map((cat: any) => ({
       id: cat.categoryId,
       category_name: cat.categoryName,
       parent_id: cat.parentId || null,
@@ -169,7 +194,7 @@ async function syncCategories(accessToken: string, supabase: any, retailerName: 
     throw error;
   }
 
-  return { count: categories.length };
+  return { count: sortedCategories.length };
 }
 
 async function syncProducts(accessToken: string, supabase: any, options: any, retailerName: string) {
