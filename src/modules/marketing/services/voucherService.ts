@@ -65,6 +65,54 @@ export interface ExternalCampaign {
   };
 }
 
+export interface VoucherTrackingRecord {
+  code: string;
+  campaign_id: number;
+  campaign_code: string;
+  created_at: string;
+  activated_at: string;
+  expired_at: string;
+  activation_status: string;
+  creator_phone: string;
+  creator_name: string;
+  recipient_phone: string;
+  customer_type: string;
+  customer_source: string;
+  voucher_used: boolean;
+  invoice_id: number | null;
+  invoice_code: string | null;
+  invoice_status: string | null;
+  invoice_amount: number | null;
+  reissue_1_code: string | null;
+  reissue_1_status: string | null;
+  reissue_1_invoice_id: number | null;
+  reissue_1_invoice_code: string | null;
+  reissue_1_invoice_status: string | null;
+  reissue_1_invoice_amount: number | null;
+  reissue_2_code: string | null;
+  reissue_2_status: string | null;
+  reissue_2_invoice_id: number | null;
+  reissue_2_invoice_code: string | null;
+  reissue_2_invoice_status: string | null;
+  reissue_2_invoice_amount: number | null;
+}
+
+export interface VoucherTrackingResponse {
+  success: boolean;
+  data: VoucherTrackingRecord[];
+  pagination: {
+    total: number;
+    page_size: number;
+    offset: number;
+    has_more: boolean;
+  };
+  meta: {
+    request_id: string;
+    duration_ms: number;
+    filters_applied: string[];
+  };
+}
+
 export const voucherService = {
   // ========== CAMPAIGNS ==========
   async getCampaigns(): Promise<VoucherCampaign[]> {
@@ -319,5 +367,33 @@ export const voucherService = {
       .single();
     
     return data?.full_name || 'Unknown';
+  },
+
+  // ========== VOUCHER TRACKING (External API) ==========
+  async getVoucherTracking(filters: {
+    recipient_phone?: string;
+    activation_status?: string;
+    created_at_from?: string;
+    created_at_to?: string;
+    page_size?: number;
+    offset?: number;
+  }): Promise<VoucherTrackingResponse> {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== '') {
+        params.append(key, String(value));
+      }
+    });
+
+    const { data, error } = await supabase.functions.invoke(
+      `list-voucher-tracking?${params.toString()}`
+    );
+
+    if (error) throw error;
+    if (!data.success) {
+      throw new Error(data.description || 'Không thể tải lịch sử voucher');
+    }
+
+    return data;
   }
 };

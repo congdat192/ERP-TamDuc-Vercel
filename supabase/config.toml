@@ -1,5 +1,8 @@
 project_id = "dtdtwhrqvkrymtyqbatn"
 
+[functions.list-voucher-tracking]
+verify_jwt = false
+
 [functions.check-type-customer]
 verify_jwt = false
 
