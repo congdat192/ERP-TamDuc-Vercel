@@ -6,9 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { KiotVietService } from '@/services/kiotvietService';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, CheckCircle2, XCircle, Info, RefreshCw, Store, Key, CreditCard, Copy } from 'lucide-react';
+import { Loader2, CheckCircle2, XCircle, Info, RefreshCw, Store, Key, CreditCard, Copy, Database, Package, Boxes } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { generateAES256Key, validateAES256Key } from '@/utils/cryptoKeyGenerator';
@@ -25,6 +26,7 @@ export function KiotVietSettings() {
 
   const [showKeyGenerator, setShowKeyGenerator] = useState(false);
   const [generatedKey, setGeneratedKey] = useState('');
+  const [syncingType, setSyncingType] = useState<'categories' | 'products' | 'inventory' | 'all' | null>(null);
 
   // Get existing credentials
   const { data: credential, isLoading: credentialLoading } = useQuery({
@@ -67,6 +69,29 @@ export function KiotVietSettings() {
     enabled: !!credential
   });
 
+  // Sync mutation
+  const syncMutation = useMutation({
+    mutationFn: (syncType: 'categories' | 'products' | 'inventory' | 'all') => 
+      KiotVietService.syncData(syncType),
+    onSuccess: (data, syncType) => {
+      queryClient.invalidateQueries({ queryKey: ['kiotviet-sync-logs'] });
+      queryClient.invalidateQueries({ queryKey: ['kiotviet-stats'] });
+      setSyncingType(null);
+      toast({
+        title: 'Đồng bộ thành công',
+        description: `Đã đồng bộ ${syncType === 'all' ? 'tất cả dữ liệu' : syncType} từ KiotViet`,
+      });
+    },
+    onError: (error: Error, syncType) => {
+      setSyncingType(null);
+      toast({
+        title: 'Lỗi đồng bộ',
+        description: error.message,
+        variant: 'destructive'
+      });
+    }
+  });
+
   const handleSave = () => {
     if (!formData.retailerName || !formData.clientId || !formData.clientSecret) {
       toast({
@@ -91,6 +116,11 @@ export function KiotVietSettings() {
       title: 'Đã copy',
       description: 'Key đã được copy vào clipboard. Vui lòng cập nhật vào KIOTVIET_ENCRYPTION_KEY secret.',
     });
+  };
+
+  const handleSync = (syncType: 'categories' | 'products' | 'inventory' | 'all') => {
+    setSyncingType(syncType);
+    syncMutation.mutate(syncType);
   };
 
   const isConnected = credential?.is_active;
@@ -234,32 +264,179 @@ export function KiotVietSettings() {
         </CardContent>
       </Card>
 
-      {/* Statistics Card */}
-      {isConnected && stats && (
+      {/* Sync & Statistics Card */}
+      {isConnected && (
         <Card>
           <CardHeader>
-            <CardTitle>Thống kê dữ liệu</CardTitle>
-            <CardDescription>Dữ liệu đã đồng bộ từ KiotViet</CardDescription>
+            <CardTitle>Đồng bộ & Thống kê</CardTitle>
+            <CardDescription>Quản lý dữ liệu từ KiotViet</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">Tổng sản phẩm</p>
-                <p className="text-2xl font-bold mt-1">{stats.totalProducts}</p>
-              </div>
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">Đang bán</p>
-                <p className="text-2xl font-bold mt-1 text-green-600">{stats.activeProducts}</p>
-              </div>
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">Ngừng bán</p>
-                <p className="text-2xl font-bold mt-1 text-gray-600">{stats.inactiveProducts}</p>
-              </div>
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">Nhóm hàng</p>
-                <p className="text-2xl font-bold mt-1">{stats.totalCategories}</p>
-              </div>
-            </div>
+            <Tabs defaultValue="sync" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="sync">Đồng bộ dữ liệu</TabsTrigger>
+                <TabsTrigger value="stats">Thống kê</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="sync" className="space-y-4">
+                <Alert>
+                  <Info className="h-4 w-4" />
+                  <AlertDescription>
+                    Đồng bộ dữ liệu từ KiotViet về hệ thống. Quá trình có thể mất vài phút tùy thuộc vào lượng dữ liệu.
+                  </AlertDescription>
+                </Alert>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <Database className="h-8 w-8 text-blue-500" />
+                        <div>
+                          <h4 className="font-semibold">Nhóm hàng</h4>
+                          <p className="text-xs text-muted-foreground">Categories</p>
+                        </div>
+                      </div>
+                      <Button 
+                        onClick={() => handleSync('categories')}
+                        disabled={syncingType !== null}
+                        className="w-full"
+                        variant="outline"
+                      >
+                        {syncingType === 'categories' ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Đang đồng bộ...
+                          </>
+                        ) : (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                            Đồng bộ nhóm hàng
+                          </>
+                        )}
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <Package className="h-8 w-8 text-green-500" />
+                        <div>
+                          <h4 className="font-semibold">Sản phẩm</h4>
+                          <p className="text-xs text-muted-foreground">Products</p>
+                        </div>
+                      </div>
+                      <Button 
+                        onClick={() => handleSync('products')}
+                        disabled={syncingType !== null}
+                        className="w-full"
+                        variant="outline"
+                      >
+                        {syncingType === 'products' ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Đang đồng bộ...
+                          </>
+                        ) : (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                            Đồng bộ sản phẩm
+                          </>
+                        )}
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <Boxes className="h-8 w-8 text-orange-500" />
+                        <div>
+                          <h4 className="font-semibold">Tồn kho</h4>
+                          <p className="text-xs text-muted-foreground">Inventory</p>
+                        </div>
+                      </div>
+                      <Button 
+                        onClick={() => handleSync('inventory')}
+                        disabled={syncingType !== null}
+                        className="w-full"
+                        variant="outline"
+                      >
+                        {syncingType === 'inventory' ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Đang đồng bộ...
+                          </>
+                        ) : (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                            Đồng bộ tồn kho
+                          </>
+                        )}
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <RefreshCw className="h-8 w-8 text-purple-500" />
+                        <div>
+                          <h4 className="font-semibold">Toàn bộ</h4>
+                          <p className="text-xs text-muted-foreground">All Data</p>
+                        </div>
+                      </div>
+                      <Button 
+                        onClick={() => handleSync('all')}
+                        disabled={syncingType !== null}
+                        className="w-full"
+                      >
+                        {syncingType === 'all' ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Đang đồng bộ...
+                          </>
+                        ) : (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                            Đồng bộ toàn bộ
+                          </>
+                        )}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="stats" className="space-y-4">
+                {stats ? (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="p-4 bg-muted rounded-lg">
+                      <p className="text-sm text-muted-foreground">Tổng sản phẩm</p>
+                      <p className="text-2xl font-bold mt-1">{stats.totalProducts}</p>
+                    </div>
+                    <div className="p-4 bg-muted rounded-lg">
+                      <p className="text-sm text-muted-foreground">Đang bán</p>
+                      <p className="text-2xl font-bold mt-1 text-green-600">{stats.activeProducts}</p>
+                    </div>
+                    <div className="p-4 bg-muted rounded-lg">
+                      <p className="text-sm text-muted-foreground">Ngừng bán</p>
+                      <p className="text-2xl font-bold mt-1 text-gray-600">{stats.inactiveProducts}</p>
+                    </div>
+                    <div className="p-4 bg-muted rounded-lg">
+                      <p className="text-sm text-muted-foreground">Nhóm hàng</p>
+                      <p className="text-2xl font-bold mt-1">{stats.totalCategories}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Database className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p>Chưa có dữ liệu</p>
+                    <p className="text-sm mt-1">Vui lòng đồng bộ dữ liệu từ KiotViet</p>
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       )}
