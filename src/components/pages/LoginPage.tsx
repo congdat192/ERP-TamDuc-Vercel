@@ -84,7 +84,10 @@ export function LoginPage({ onLogin }: LoginPageProps) {
               <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
                 <Building2 className="w-7 h-7 text-white" />
               </div>
-              <h1 className="text-3xl font-bold text-gray-900"> ERP System by Tâm Đức Optical</h1>
+              <h1 className="text-3xl font-bold text-gray-900 leading-tight">
+                <span className="block">ERP System</span>
+                <span className="block">by Tâm Đức Optical</span>
+              </h1>
             </div>
             <h2 className="text-xl text-gray-600 mb-4">Hệ Thống Quản Lý Doanh Nghiệp</h2>
             <p className="text-gray-500 mb-8">
