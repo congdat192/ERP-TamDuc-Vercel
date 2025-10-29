@@ -103,6 +103,9 @@ export class KiotVietService {
   static async getCategoryTree(): Promise<any[]> {
     const categories = await this.getCategories();
     
+    console.log('📊 Total categories fetched:', categories.length);
+    console.log('📊 Sample category:', categories[0]);
+    
     // Build tree structure
     const categoryMap = new Map();
     categories.forEach(cat => categoryMap.set(cat.id, { ...cat, children: [] }));
@@ -112,11 +115,18 @@ export class KiotVietService {
       const node = categoryMap.get(cat.id);
       if (cat.parent_id) {
         const parent = categoryMap.get(cat.parent_id);
-        if (parent) parent.children.push(node);
+        if (parent) {
+          parent.children.push(node);
+        } else {
+          console.warn('⚠️ Orphaned category:', cat.category_name, 'parent_id:', cat.parent_id);
+        }
       } else {
         tree.push(node);
       }
     });
+
+    console.log('🌳 Tree built:', tree.length, 'root categories');
+    console.log('🌳 Tree structure:', tree);
 
     return tree;
   }

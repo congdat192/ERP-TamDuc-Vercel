@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { KiotVietService } from '@/services/kiotvietService';
-import { FolderTree, Loader2, ChevronRight, ChevronDown } from 'lucide-react';
+import { FolderTree, Loader2, ChevronRight, ChevronDown, RefreshCw } from 'lucide-react';
 
 interface CategoryTreeItemProps {
   category: any;
@@ -79,22 +80,31 @@ function CategoryTreeItem({ category, level }: CategoryTreeItemProps) {
 }
 
 export function CategoriesPage() {
-  const { data: categoryTree = [], isLoading } = useQuery({
+  const { data: categoryTree = [], isLoading, refetch } = useQuery({
     queryKey: ['kiotviet-category-tree'],
-    queryFn: KiotVietService.getCategoryTree
+    queryFn: KiotVietService.getCategoryTree,
+    staleTime: 0,
+    gcTime: 0
   });
 
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <FolderTree className="h-8 w-8" />
-          Nhóm hàng KiotViet
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Cấu trúc phân loại sản phẩm từ KiotViet
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <FolderTree className="h-8 w-8" />
+            Nhóm hàng KiotViet
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Cấu trúc phân loại sản phẩm từ KiotViet
+          </p>
+        </div>
+        
+        <Button onClick={() => refetch()} variant="outline">
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Làm mới
+        </Button>
       </div>
 
       {/* Category Tree */}
