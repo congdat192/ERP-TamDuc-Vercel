@@ -8,9 +8,10 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { KiotVietService } from '@/services/kiotvietService';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, CheckCircle2, XCircle, Info, RefreshCw, Store, Key, CreditCard } from 'lucide-react';
+import { Loader2, CheckCircle2, XCircle, Info, RefreshCw, Store, Key, CreditCard, Copy } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
+import { generateAES256Key, validateAES256Key } from '@/utils/cryptoKeyGenerator';
 
 export function KiotVietSettings() {
   const { toast } = useToast();
@@ -21,6 +22,9 @@ export function KiotVietSettings() {
     clientId: '',
     clientSecret: ''
   });
+
+  const [showKeyGenerator, setShowKeyGenerator] = useState(false);
+  const [generatedKey, setGeneratedKey] = useState('');
 
   // Get existing credentials
   const { data: credential, isLoading: credentialLoading } = useQuery({
@@ -73,6 +77,20 @@ export function KiotVietSettings() {
       return;
     }
     saveMutation.mutate(formData);
+  };
+
+  const handleGenerateKey = () => {
+    const newKey = generateAES256Key();
+    setGeneratedKey(newKey);
+    setShowKeyGenerator(true);
+  };
+
+  const handleCopyKey = () => {
+    navigator.clipboard.writeText(generatedKey);
+    toast({
+      title: 'Đã copy',
+      description: 'Key đã được copy vào clipboard. Vui lòng cập nhật vào KIOTVIET_ENCRYPTION_KEY secret.',
+    });
   };
 
   const isConnected = credential?.is_active;
@@ -299,6 +317,70 @@ export function KiotVietSettings() {
           </CardContent>
         </Card>
       )}
+
+      {/* Encryption Key Generator */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Key className="h-5 w-5" />
+            🔑 Generate Encryption Key
+          </CardTitle>
+          <CardDescription>
+            Nếu gặp lỗi "Invalid key length", hãy generate key mới ở đây
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Yêu cầu:</strong> KIOTVIET_ENCRYPTION_KEY phải là key 32 bytes (base64 encoded).
+              Nếu bạn gặp lỗi khi kết nối, hãy generate key mới bằng nút bên dưới.
+            </AlertDescription>
+          </Alert>
+
+          <div className="space-y-3">
+            <Button onClick={handleGenerateKey} variant="outline" className="w-full">
+              <Key className="h-4 w-4 mr-2" />
+              Generate New AES-256 Key
+            </Button>
+
+            {showKeyGenerator && generatedKey && (
+              <div className="space-y-3 p-4 bg-muted rounded-lg">
+                <div className="space-y-2">
+                  <Label>Generated Key (32 bytes, base64):</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={generatedKey}
+                      readOnly
+                      className="font-mono text-xs"
+                    />
+                    <Button size="icon" variant="outline" onClick={handleCopyKey}>
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Key length: {generatedKey.length} chars (decoded: {atob(generatedKey).length} bytes) ✅
+                  </p>
+                </div>
+
+                <Alert>
+                  <Info className="h-4 w-4" />
+                  <AlertDescription className="text-xs">
+                    <strong>Bước tiếp theo:</strong>
+                    <ol className="list-decimal ml-4 mt-2 space-y-1">
+                      <li>Copy key bên trên (đã tự động copy vào clipboard)</li>
+                      <li>Vào <strong>Backend → Secrets</strong></li>
+                      <li>Tìm secret <code className="bg-background px-1">KIOTVIET_ENCRYPTION_KEY</code></li>
+                      <li>Nhấn Update và paste key vừa copy</li>
+                      <li>Lưu lại và thử kết nối KiotViet lại</li>
+                    </ol>
+                  </AlertDescription>
+                </Alert>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Help Card */}
       <Card>
