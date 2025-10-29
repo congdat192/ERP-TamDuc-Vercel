@@ -23,19 +23,7 @@ export function ProductCard({
       className="group relative bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-all cursor-pointer"
       onClick={onClick}
     >
-      {product.is_promotion && product.promotion_text && (
-        <Badge className="absolute top-2 right-2 z-10 bg-red-600 hover:bg-red-700 text-white">
-          {product.promotion_text}
-        </Badge>
-      )}
-
       <div className="aspect-square bg-muted relative overflow-hidden">
-        {product.brand?.name && (
-          <Badge className="absolute bottom-2 left-2 z-10 bg-black/70 text-white hover:bg-black/80 backdrop-blur-sm">
-            Thương hiệu: {product.brand.name}
-          </Badge>
-        )}
-        
         {product.image_urls && product.image_urls.length > 0 ? (
           <img
             src={product.image_urls[0]}
@@ -46,6 +34,18 @@ export function ProductCard({
           <div className="w-full h-full flex items-center justify-center text-muted-foreground">
             Chưa có ảnh
           </div>
+        )}
+        
+        {product.is_promotion && product.promotion_text && (
+          <Badge className="absolute top-2 right-2 z-10 bg-red-600 hover:bg-red-700 text-white">
+            {product.promotion_text}
+          </Badge>
+        )}
+        
+        {product.brand?.name && (
+          <Badge className="absolute bottom-2 left-2 z-10 bg-black/70 text-white hover:bg-black/80 backdrop-blur-sm">
+            Thương hiệu: {product.brand.name}
+          </Badge>
         )}
       </div>
 
