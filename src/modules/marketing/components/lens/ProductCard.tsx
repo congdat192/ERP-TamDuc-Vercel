@@ -23,7 +23,13 @@ export function ProductCard({
       className="group relative bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-all cursor-pointer"
       onClick={onClick}
     >
-      <div className="aspect-square bg-muted relative">
+      {product.is_promotion && product.promotion_text && (
+        <Badge className="absolute top-2 right-2 z-10 bg-red-600 hover:bg-red-700 text-white">
+          {product.promotion_text}
+        </Badge>
+      )}
+
+      <div className="aspect-square bg-muted relative overflow-hidden">
         {product.image_urls && product.image_urls.length > 0 ? (
           <img
             src={product.image_urls[0]}
@@ -35,24 +41,14 @@ export function ProductCard({
             Chưa có ảnh
           </div>
         )}
-        
-        {product.is_promotion && product.promotion_text && (
-          <Badge className="absolute top-2 right-2 z-10 bg-red-600 hover:bg-red-700 text-white">
-            {product.promotion_text}
-          </Badge>
-        )}
-        
-        {product.brand?.name && (
-          <Badge className="absolute bottom-2 left-2 z-10 bg-black/80 text-white hover:bg-black/90 backdrop-blur-sm">
-            Thương hiệu: {product.brand.name}
-          </Badge>
-        )}
       </div>
 
       <div className="p-4 space-y-1">
         <h3 className="font-semibold text-sm line-clamp-2">
           {product.name}
         </h3>
+
+        <p className="text-sm text-muted-foreground">{product.brand?.name}</p>
 
         <div className="flex gap-1 flex-wrap">
           {(() => {
