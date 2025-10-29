@@ -57,6 +57,7 @@ serve(async (req) => {
     console.log('🔍 Testing KiotViet connection...');
     const testResponse = await fetch('https://public.kiotapi.com/categories?pageSize=1', {
       headers: {
+        'Retailer': retailerName,
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json'
       }

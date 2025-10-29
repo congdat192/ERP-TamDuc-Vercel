@@ -65,19 +65,19 @@ serve(async (req) => {
     try {
       if (syncType === 'categories' || syncType === 'all') {
         console.log('📁 Syncing categories...');
-        results.categories = await syncCategories(accessToken, supabaseClient);
+        results.categories = await syncCategories(accessToken, supabaseClient, credential.retailer_name);
         console.log(`✅ Categories synced: ${results.categories.count}`);
       }
 
       if (syncType === 'products' || syncType === 'all') {
         console.log('📦 Syncing products...');
-        results.products = await syncProducts(accessToken, supabaseClient, options);
+        results.products = await syncProducts(accessToken, supabaseClient, options, credential.retailer_name);
         console.log(`✅ Products synced: ${results.products.count}`);
       }
 
       if (syncType === 'inventory' || syncType === 'all') {
         console.log('📊 Syncing inventory...');
-        results.inventory = await syncInventory(accessToken, supabaseClient);
+        results.inventory = await syncInventory(accessToken, supabaseClient, credential.retailer_name);
         console.log(`✅ Inventory synced: ${results.inventory.count}`);
       }
 
@@ -127,11 +127,12 @@ serve(async (req) => {
 // HELPER FUNCTIONS
 // ==========================================
 
-async function syncCategories(accessToken: string, supabase: any) {
+async function syncCategories(accessToken: string, supabase: any, retailerName: string) {
   console.log('📡 Fetching categories from KiotViet...');
   
   const response = await fetch(`${KIOTVIET_BASE_URL}/categories?hierachicalData=false`, {
     headers: { 
+      'Retailer': retailerName,
       'Authorization': `Bearer ${accessToken}`,
       'Content-Type': 'application/json'
     }
@@ -171,7 +172,7 @@ async function syncCategories(accessToken: string, supabase: any) {
   return { count: categories.length };
 }
 
-async function syncProducts(accessToken: string, supabase: any, options: any) {
+async function syncProducts(accessToken: string, supabase: any, options: any, retailerName: string) {
   let allProducts: any[] = [];
   let currentItem = 0;
   const pageSize = options?.pageSize || 100;
@@ -193,6 +194,7 @@ async function syncProducts(accessToken: string, supabase: any, options: any) {
 
     const response = await fetch(url.toString(), {
       headers: { 
+        'Retailer': retailerName,
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json'
       }
@@ -254,11 +256,12 @@ async function syncProducts(accessToken: string, supabase: any, options: any) {
   return { count: allProducts.length };
 }
 
-async function syncInventory(accessToken: string, supabase: any) {
+async function syncInventory(accessToken: string, supabase: any, retailerName: string) {
   console.log('📡 Fetching inventory from KiotViet...');
   
   const response = await fetch(`${KIOTVIET_BASE_URL}/productOnHands`, {
     headers: { 
+      'Retailer': retailerName,
       'Authorization': `Bearer ${accessToken}`,
       'Content-Type': 'application/json'
     }
