@@ -178,6 +178,7 @@ export const voucherService = {
   async issueVoucher(payload: {
     campaign_id: number;
     creator_phone: string;
+    creator_name: string;
     recipient_phone: string;
     customer_source: string;
     customer_type: 'new' | 'old';

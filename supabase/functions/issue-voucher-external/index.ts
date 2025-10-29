@@ -46,11 +46,11 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { campaign_id, creator_phone, recipient_phone, customer_source, customer_type } = body;
+    const { campaign_id, creator_phone, creator_name, recipient_phone, customer_source, customer_type } = body;
 
-    if (!recipient_phone || !campaign_id || !customer_source || !customer_type || !creator_phone) {
+    if (!recipient_phone || !campaign_id || !customer_source || !customer_type || !creator_phone || !creator_name) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: campaign_id, creator_phone, recipient_phone, customer_source, customer_type' }),
+        JSON.stringify({ error: 'Missing required fields: campaign_id, creator_phone, creator_name, recipient_phone, customer_source, customer_type' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -67,11 +67,12 @@ serve(async (req) => {
       .eq('user_id', user.id)
       .maybeSingle();
 
-    console.log('[issue-voucher] Issuing voucher for recipient:', recipient_phone, 'creator:', creator_phone);
+    console.log('[issue-voucher] Issuing voucher for recipient:', recipient_phone, 'creator:', creator_name, '(' + creator_phone + ')');
 
     const payload = {
       campaign_id,
       creator_phone,
+      creator_name,
       recipient_phone,
       customer_source,
       customer_type

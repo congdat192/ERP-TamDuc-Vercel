@@ -67,8 +67,15 @@ export function VoucherIssueTab() {
     }
 
     const creatorPhone = currentUser?.phone;
+    const creatorName = currentUser?.fullName;
+    
     if (!creatorPhone) {
       toast.error('Không tìm thấy số điện thoại của bạn trong hệ thống. Vui lòng cập nhật profile.');
+      return;
+    }
+    
+    if (!creatorName) {
+      toast.error('Không tìm thấy tên của bạn trong hệ thống. Vui lòng cập nhật profile.');
       return;
     }
 
@@ -77,6 +84,7 @@ export function VoucherIssueTab() {
       const result = await voucherService.issueVoucher({
         campaign_id: campaignId,
         creator_phone: creatorPhone,
+        creator_name: creatorName,
         recipient_phone: phone,
         customer_source: source,
         customer_type: customerType as 'new' | 'old'
