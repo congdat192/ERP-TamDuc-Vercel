@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -37,6 +38,7 @@ interface Integration {
 
 export function IntegrationsSettings() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedIntegration, setSelectedIntegration] = useState<string | null>(null);
   
@@ -209,7 +211,9 @@ export function IntegrationsSettings() {
   };
 
   const handleConnect = (integrationId: string, name: string) => {
-    if (integrationId === 'kiotviet' || integrationId === 'vihat') {
+    if (integrationId === 'kiotviet') {
+      navigate('/ERP/Setting/Integrations/KiotViet');
+    } else if (integrationId === 'vihat') {
       setSelectedIntegration(integrationId);
       setDialogOpen(true);
     } else {
@@ -221,7 +225,9 @@ export function IntegrationsSettings() {
   };
 
   const handleSettings = (integrationId: string) => {
-    if (integrationId === 'kiotviet' || integrationId === 'vihat') {
+    if (integrationId === 'kiotviet') {
+      navigate('/ERP/Setting/Integrations/KiotViet');
+    } else if (integrationId === 'vihat') {
       setSelectedIntegration(integrationId);
       setDialogOpen(true);
     }

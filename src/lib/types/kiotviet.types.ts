@@ -106,10 +106,10 @@ export interface KiotVietProductDB {
   has_variants: boolean;
   allow_sale: boolean;
   is_active: boolean;
-  images: string[];
+  images: any; // JSONB
   product_type: number;
-  attributes: any[];
-  units: any[];
+  attributes: any; // JSONB
+  units: any; // JSONB
   synced_at: string;
   created_at: string;
 }
