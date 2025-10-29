@@ -28,8 +28,8 @@ interface ProductTableProps {
 }
 
 export const DEFAULT_PRODUCT_COLUMNS = [
-  { key: 'name', label: 'Tên sản phẩm', visible: true },
   { key: 'sku', label: 'Mã SKU', visible: true },
+  { key: 'name', label: 'Tên sản phẩm', visible: true },
   { key: 'description', label: 'Mô tả', visible: false },
   { key: 'price', label: 'Giá gốc', visible: true },
   { key: 'sale_price', label: 'Giá khuyến mãi', visible: false },
@@ -96,8 +96,8 @@ export function ProductTable({ products, onEdit, onClone, onRefetch, onSelect, c
         <Table className="min-w-max">
       <TableHeader>
         <TableRow>
-          {columnVisibility.name && <TableHead className="min-w-[200px]">Tên sản phẩm</TableHead>}
           {columnVisibility.sku && <TableHead className="min-w-[120px]">Mã SKU</TableHead>}
+          {columnVisibility.name && <TableHead className="min-w-[200px]">Tên sản phẩm</TableHead>}
           {columnVisibility.description && <TableHead className="min-w-[250px]">Mô tả</TableHead>}
           {columnVisibility.price && <TableHead className="min-w-[120px]">Giá gốc</TableHead>}
           {columnVisibility.sale_price && <TableHead className="min-w-[120px]">Giá KM</TableHead>}
@@ -126,11 +126,11 @@ export function ProductTable({ products, onEdit, onClone, onRefetch, onSelect, c
             ) : (
               paginatedProducts.map((product) => (
                 <TableRow key={product.id}>
-                  {columnVisibility.name && (
-                    <TableCell className="font-medium">{product.name}</TableCell>
-                  )}
                   {columnVisibility.sku && (
                     <TableCell>{product.sku || '-'}</TableCell>
+                  )}
+                  {columnVisibility.name && (
+                    <TableCell className="font-medium">{product.name}</TableCell>
                   )}
                   {columnVisibility.description && (
                     <TableCell>{truncateText(product.description, 60)}</TableCell>
