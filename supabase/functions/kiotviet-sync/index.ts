@@ -152,13 +152,23 @@ async function syncCategories(accessToken: string, supabase: any, retailerName: 
 
   console.log(`📥 Received ${categories.length} categories`);
 
-  // Sort categories by hierarchy (parents first, then children)
-  // This prevents foreign key constraint violations
-  const sortedCategories: any[] = [];
+  // Build category map
   const categoryMap = new Map(categories.map((c: any) => [c.categoryId, c]));
+  
+  // Validate and clean orphaned categories
+  const validCategories = categories.map((cat: any) => {
+    // If parent_id references a non-existent parent, set it to null
+    if (cat.parentId && !categoryMap.has(cat.parentId)) {
+      console.warn(`⚠️ Orphaned category: ${cat.categoryName} (id=${cat.categoryId}) has parent_id=${cat.parentId} which doesn't exist. Setting parent_id to null.`);
+      return { ...cat, parentId: null };
+    }
+    return cat;
+  });
+
+  // Sort categories by hierarchy (parents first, then children)
+  const sortedCategories: any[] = [];
   const processed = new Set<number>();
 
-  // Helper function to recursively add category and its parents
   function addCategoryWithParents(cat: any) {
     if (processed.has(cat.categoryId)) return;
     
@@ -167,13 +177,11 @@ async function syncCategories(accessToken: string, supabase: any, retailerName: 
       addCategoryWithParents(categoryMap.get(cat.parentId));
     }
     
-    // Then add this category
     sortedCategories.push(cat);
     processed.add(cat.categoryId);
   }
 
-  // Process all categories
-  categories.forEach((cat: any) => addCategoryWithParents(cat));
+  validCategories.forEach((cat: any) => addCategoryWithParents(cat));
 
   console.log(`✅ Sorted ${sortedCategories.length} categories by hierarchy`);
 
