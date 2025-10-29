@@ -80,12 +80,12 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
           {/* Left Side - Branding */}
           <div className="text-center lg:text-left">
-            <div className="flex items-center justify-center lg:justify-start space-x-3 mb-6">
-              <div className="w-12 h-12 rounded-lg overflow-hidden bg-white shadow-sm">
+            <div className="flex items-center justify-center lg:justify-start space-x-4 mb-6">
+              <div className="w-20 h-20 rounded-lg overflow-hidden bg-white border border-gray-300 shadow-md">
                 <img
                   src="https://danganhtri.cloud/assets/logo_tamduc-CS9crF3F.jpg"
                   alt="Tâm Đức Optical Logo"
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-contain p-1"
                 />
               </div>
               <h1 className="text-3xl font-bold text-gray-900 leading-tight">
