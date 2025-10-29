@@ -1,10 +1,17 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, ShieldAlert } from "lucide-react";
+import { Plus, ShieldAlert, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useNavigate } from "react-router-dom";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { lensApi } from "@/modules/marketing/services/lensApi";
 import { ProductTable, useProductColumnVisibility } from "@/modules/marketing/components/lens-admin/ProductTable";
 import { ProductColumnVisibilityFilter } from "@/modules/marketing/components/lens-admin/ProductColumnVisibilityFilter";
@@ -23,6 +30,7 @@ import { toast } from "sonner";
 
 export function LensAdminPage() {
   const { hasFeatureAccess } = usePermissions();
+  const navigate = useNavigate();
 
   // Check permission
   if (!hasFeatureAccess("manage_lens_admin")) {
@@ -109,9 +117,27 @@ export function LensAdminPage() {
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Quản lý Lens Catalog</h1>
-          <p className="text-muted-foreground">Quản lý sản phẩm tròng kính và thuộc tính</p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h1 className="text-3xl font-bold">Quản lý Lens Catalog</h1>
+            <p className="text-muted-foreground">Quản lý sản phẩm tròng kính và thuộc tính</p>
+          </div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  onClick={() => navigate('/help/lens-admin')}
+                >
+                  <HelpCircle className="w-5 h-5 text-blue-600" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Hướng dẫn sử dụng</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
 

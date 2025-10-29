@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Glasses, ArrowRight } from 'lucide-react';
+import { Glasses, ArrowRight, HelpCircle } from 'lucide-react';
 
 export function LensAdminTab() {
   const navigate = useNavigate();
@@ -13,16 +13,26 @@ export function LensAdminTab() {
           <Glasses className="w-8 h-8 text-green-600 dark:text-green-400" />
         </div>
         <h3 className="text-xl font-semibold mb-2 theme-text">Quản lý Lens Catalog</h3>
-        <p className="theme-text-muted mb-6">
+        <p className="theme-text-muted mb-2">
           Quản lý sản phẩm tròng kính, thương hiệu, đặc tính và banner quảng cáo
         </p>
         <Button 
-          onClick={() => navigate('/ERP/Operations/Lens-Admin')}
-          className="bg-green-600 hover:bg-green-700 text-white"
+          variant="link" 
+          className="text-blue-600 p-0 h-auto mb-4"
+          onClick={() => navigate('/help/lens-admin')}
         >
-          Vào trang quản lý
-          <ArrowRight className="w-4 h-4 ml-2" />
+          <HelpCircle className="w-4 h-4 mr-1" />
+          Xem hướng dẫn sử dụng
         </Button>
+        <div>
+          <Button 
+            onClick={() => navigate('/ERP/Operations/Lens-Admin')}
+            className="bg-green-600 hover:bg-green-700 text-white"
+          >
+            Vào trang quản lý
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Search, Menu, ShoppingBag, Lightbulb, Zap, X, FileText } from 'lucide-react';
+import { Search, Menu, ShoppingBag, Lightbulb, Zap, X, FileText, HelpCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,6 +30,7 @@ export function LensAppBar({
   selectedRecommendation,
   onRecommendationSelect 
 }: LensAppBarProps) {
+  const navigate = useNavigate();
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
   const [selectedCatalog, setSelectedCatalog] = useState<SupplierCatalog | null>(null);
 
@@ -162,6 +163,15 @@ export function LensAppBar({
             <Lightbulb className="w-4 h-4" />
             <span className="hidden lg:inline">Tư vấn chọn kính</span>
           </Link>
+          
+          {/* Help Button */}
+          <button
+            onClick={() => navigate('/help/lens-catalog')}
+            className="p-2 hover:bg-accent rounded-lg transition-colors"
+            title="Hướng dẫn sử dụng"
+          >
+            <HelpCircle className="w-5 h-5 text-blue-600" />
+          </button>
           
           {/* Compare Bag */}
           <button

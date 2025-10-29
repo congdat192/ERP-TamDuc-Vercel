@@ -26,6 +26,8 @@ import { MyProfilePage } from "./pages/MyProfilePage";
 import { LensCatalogPage } from "./pages/LensCatalogPage";
 import { LensAdminPage } from "./pages/LensAdminPage";
 import { LensQuizPage } from "./pages/LensQuizPage";
+import { LensAdminGuide } from "./pages/help/LensAdminGuide";
+import { LensCatalogGuide } from "./pages/help/LensCatalogGuide";
 import { ERPHome } from "./pages/ERPHome";
 import { CustomerPage } from "./pages/CustomerPage";
 import { SalesPage } from "./pages/SalesPage";
@@ -222,8 +224,10 @@ const AppContent = () => {
                 <Route path="/change-password" element={<ChangePasswordPage />} />
                 
                 {/* Public Lens Catalog - No login required */}
-                <Route path="/lens-catalog" element={<LensCatalogPage />} />
-                <Route path="/lens-quiz" element={<LensQuizPage />} />
+            <Route path="/lens-catalog" element={<LensCatalogPage />} />
+            <Route path="/lens-quiz" element={<LensQuizPage />} />
+            <Route path="/help/lens-admin" element={<LensAdminGuide />} />
+            <Route path="/help/lens-catalog" element={<LensCatalogGuide />} />
                   
                   {/* Redirect /ERP to /ERP/Dashboard */}
                   <Route path="/ERP" element={<Navigate to="/ERP/Dashboard" replace />} />
