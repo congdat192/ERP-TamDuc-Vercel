@@ -43,14 +43,14 @@ export function ProductCard({
         )}
       </div>
 
-      <div className="p-4 space-y-1.5">
-        <h3 className="font-semibold text-sm line-clamp-2 min-h-[40px]">
+      <div className="p-4 space-y-1">
+        <h3 className="font-semibold text-sm line-clamp-2">
           {product.name}
         </h3>
 
         <p className="text-sm text-muted-foreground">{product.brand?.name}</p>
 
-        <div className="flex gap-1 flex-wrap min-h-[24px]">
+        <div className="flex gap-1 flex-wrap">
           {(() => {
             const allAttributes = (window as any).__allAttributes || [];
             const multiselectAttrs = allAttributes.filter((a: any) => a.type === 'multiselect');
@@ -73,7 +73,7 @@ export function ProductCard({
           })()}
         </div>
 
-        <div className="flex items-center justify-between pt-1.5 border-t">
+        <div className="flex items-center justify-between pt-2 mt-2 border-t">
           <div>
             {product.sale_price ? (
               <div className="flex flex-col gap-1">
