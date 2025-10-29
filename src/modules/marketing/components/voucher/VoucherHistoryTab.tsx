@@ -24,6 +24,7 @@ export function VoucherHistoryTab() {
   const [filters, setFilters] = useState({
     recipient_phone: '',
     activation_status: 'all',
+    date_filter_type: 'created_at',
     created_at_from: '',
     created_at_to: ''
   });
@@ -33,10 +34,32 @@ export function VoucherHistoryTab() {
   }, [pagination.offset]);
 
   const formatDateVN = (utcDate: string) => {
-    // Convert UTC+0 to UTC+7
+    // Browser automatically converts UTC+0 to local timezone (Vietnam = UTC+7)
     const date = new Date(utcDate);
-    const vnTime = new Date(date.getTime() + 7 * 60 * 60 * 1000);
-    return format(vnTime, 'dd/MM/yyyy HH:mm:ss');
+    return format(date, 'dd/MM/yyyy HH:mm:ss');
+  };
+
+  const getCustomerTypeVariant = (type: string): 'default' | 'secondary' | 'outline' => {
+    return type === 'new' ? 'default' : 'outline';
+  };
+
+  const getCustomerSourceColor = (source: string): string => {
+    switch(source?.toLowerCase()) {
+      case 'zalo': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      case 'fanpage': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
+      case 'website': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      case 'walk-in': return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200';
+    }
+  };
+
+  const getInvoiceStatusColor = (status: string | null): string => {
+    if (!status) return 'text-gray-400';
+    switch(status) {
+      case 'Hoàn thành': return 'text-green-600 font-medium';
+      case 'Đã hủy': return 'text-red-600 font-medium';
+      default: return 'text-gray-600';
+    }
   };
 
   const loadHistory = async () => {
@@ -49,12 +72,15 @@ export function VoucherHistoryTab() {
       
       if (filters.recipient_phone) filterParams.recipient_phone = filters.recipient_phone;
       if (filters.activation_status !== 'all') filterParams.activation_status = filters.activation_status;
+      
+      // Dynamic date filter based on date_filter_type
       if (filters.created_at_from) {
-        // Convert to UTC+0: YYYY-MM-DDTHH:MM:SS+00:00
-        filterParams.created_at_from = new Date(filters.created_at_from + 'T00:00:00').toISOString();
+        const fromField = `${filters.date_filter_type}_from`;
+        filterParams[fromField] = new Date(filters.created_at_from + 'T00:00:00').toISOString();
       }
       if (filters.created_at_to) {
-        filterParams.created_at_to = new Date(filters.created_at_to + 'T23:59:59').toISOString();
+        const toField = `${filters.date_filter_type}_to`;
+        filterParams[toField] = new Date(filters.created_at_to + 'T23:59:59').toISOString();
       }
 
       const response = await voucherService.getVoucherTracking(filterParams);
@@ -133,7 +159,7 @@ export function VoucherHistoryTab() {
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-muted/50 rounded-lg">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 bg-muted/50 rounded-lg">
           <div className="space-y-2">
             <Label>Số điện thoại</Label>
             <Input
@@ -153,6 +179,20 @@ export function VoucherHistoryTab() {
                 <SelectItem value="all">Tất cả</SelectItem>
                 <SelectItem value="Đã kích hoạt">Đã kích hoạt</SelectItem>
                 <SelectItem value="Chưa kích hoạt">Chưa kích hoạt</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Lọc theo ngày</Label>
+            <Select value={filters.date_filter_type} onValueChange={(val) => setFilters(prev => ({ ...prev, date_filter_type: val }))}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="created_at">Ngày tạo</SelectItem>
+                <SelectItem value="activated_at">Ngày kích hoạt</SelectItem>
+                <SelectItem value="expired_at">Ngày hết hạn</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -258,14 +298,24 @@ export function VoucherHistoryTab() {
                     <TableCell>{item.creator_phone}</TableCell>
                     <TableCell className="text-sm">{item.creator_name}</TableCell>
                     <TableCell>{item.recipient_phone}</TableCell>
-                    <TableCell className="text-sm">{item.customer_type}</TableCell>
-                    <TableCell className="text-sm">{item.customer_source}</TableCell>
+                    <TableCell>
+                      <Badge variant={getCustomerTypeVariant(item.customer_type)}>
+                        {item.customer_type}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${getCustomerSourceColor(item.customer_source)}`}>
+                        {item.customer_source}
+                      </span>
+                    </TableCell>
                     <TableCell className="text-center">
                       {item.voucher_used ? '✓' : '✗'}
                     </TableCell>
                     <TableCell>{item.invoice_id || '-'}</TableCell>
                     <TableCell className="text-sm">{item.invoice_code || '-'}</TableCell>
-                    <TableCell className="text-sm">{item.invoice_status || '-'}</TableCell>
+                    <TableCell className={getInvoiceStatusColor(item.invoice_status)}>
+                      {item.invoice_status || '-'}
+                    </TableCell>
                     <TableCell className="text-sm">
                       {item.invoice_amount ? item.invoice_amount.toLocaleString('vi-VN') : '-'}
                     </TableCell>
@@ -273,7 +323,9 @@ export function VoucherHistoryTab() {
                     <TableCell className="text-sm">{item.reissue_1_status || '-'}</TableCell>
                     <TableCell>{item.reissue_1_invoice_id || '-'}</TableCell>
                     <TableCell className="text-sm">{item.reissue_1_invoice_code || '-'}</TableCell>
-                    <TableCell className="text-sm">{item.reissue_1_invoice_status || '-'}</TableCell>
+                    <TableCell className={getInvoiceStatusColor(item.reissue_1_invoice_status)}>
+                      {item.reissue_1_invoice_status || '-'}
+                    </TableCell>
                     <TableCell className="text-sm">
                       {item.reissue_1_invoice_amount ? item.reissue_1_invoice_amount.toLocaleString('vi-VN') : '-'}
                     </TableCell>
@@ -281,7 +333,9 @@ export function VoucherHistoryTab() {
                     <TableCell className="text-sm">{item.reissue_2_status || '-'}</TableCell>
                     <TableCell>{item.reissue_2_invoice_id || '-'}</TableCell>
                     <TableCell className="text-sm">{item.reissue_2_invoice_code || '-'}</TableCell>
-                    <TableCell className="text-sm">{item.reissue_2_invoice_status || '-'}</TableCell>
+                    <TableCell className={getInvoiceStatusColor(item.reissue_2_invoice_status)}>
+                      {item.reissue_2_invoice_status || '-'}
+                    </TableCell>
                     <TableCell className="text-sm">
                       {item.reissue_2_invoice_amount ? item.reissue_2_invoice_amount.toLocaleString('vi-VN') : '-'}
                     </TableCell>
