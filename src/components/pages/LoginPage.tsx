@@ -1,33 +1,26 @@
-
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Building2, Eye, EyeOff, Lock, Mail } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { useToast } from '@/hooks/use-toast';
-import { resendVerificationEmail } from '@/services/authService';
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Building2, Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { resendVerificationEmail } from "@/services/authService";
 
 interface LoginPageProps {
   onLogin: (email: string, password: string, rememberMe?: boolean) => void;
 }
 
 export function LoginPage({ onLogin }: LoginPageProps) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showResendVerification, setShowResendVerification] = useState(false);
-  const [resendEmail, setResendEmail] = useState('');
+  const [resendEmail, setResendEmail] = useState("");
   const [isLoadingResend, setIsLoadingResend] = useState(false);
   const { toast } = useToast();
 
@@ -57,7 +50,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         duration: 6000,
       });
       setShowResendVerification(false);
-      setResendEmail('');
+      setResendEmail("");
     } catch (error) {
       toast({
         title: "Lỗi",
@@ -91,16 +84,13 @@ export function LoginPage({ onLogin }: LoginPageProps) {
               <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
                 <Building2 className="w-7 h-7 text-white" />
               </div>
-              <h1 className="text-3xl font-bold text-gray-900">ERP System</h1>
+              <h1 className="text-3xl font-bold text-gray-900"> ERP System by Tâm Đức Optical</h1>
             </div>
-            <h2 className="text-xl text-gray-600 mb-4">
-              Hệ Thống Quản Lý Doanh Nghiệp
-            </h2>
+            <h2 className="text-xl text-gray-600 mb-4">Hệ Thống Quản Lý Doanh Nghiệp</h2>
             <p className="text-gray-500 mb-8">
-              Giải pháp quản lý toàn diện với kiến trúc modular, 
-              hỗ trợ đa vai trò và phân quyền chi tiết.
+              Giải pháp quản lý toàn diện với kiến trúc modular, hỗ trợ đa vai trò và phân quyền chi tiết.
             </p>
-            
+
             {/* Features */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-600">
               <div className="flex items-center space-x-2">
@@ -126,9 +116,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
           <Card className="w-full max-w-md mx-auto">
             <CardHeader>
               <CardTitle className="text-2xl font-bold text-center">Đăng Nhập</CardTitle>
-              <CardDescription className="text-center">
-                Nhập thông tin đăng nhập của bạn
-              </CardDescription>
+              <CardDescription className="text-center">Nhập thông tin đăng nhập của bạn</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Login Form */}
@@ -148,7 +136,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                     />
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="password">Mật Khẩu</Label>
                   <div className="relative">
@@ -169,11 +157,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                       className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                       onClick={() => setShowPassword(!showPassword)}
                     >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
                   </div>
                 </div>
@@ -198,7 +182,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
               {/* Employee OTP Login Link */}
               <div className="text-center border-t pt-4">
                 <p className="text-sm text-gray-600 mb-2">Nhân viên?</p>
-                <Link 
+                <Link
                   to="/employee-login"
                   className="text-sm font-medium text-blue-600 hover:text-blue-800 underline-offset-4 hover:underline inline-flex items-center gap-1"
                 >
@@ -210,13 +194,13 @@ export function LoginPage({ onLogin }: LoginPageProps) {
               {/* Action Links */}
               <div className="text-center space-y-2">
                 <div className="flex items-center justify-center space-x-4">
-                  <Link 
+                  <Link
                     to="/forgot-password"
                     className="text-sm text-blue-600 hover:text-blue-800 underline-offset-4 hover:underline"
                   >
                     Quên mật khẩu?
                   </Link>
-                  
+
                   <button
                     type="button"
                     onClick={() => setShowResendVerification(true)}
@@ -225,12 +209,12 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                     Gửi lại email xác thực
                   </button>
                 </div>
-                
+
                 {/* Clear Cache Button */}
-                <Button 
+                <Button
                   type="button"
-                  variant="ghost" 
-                  size="sm" 
+                  variant="ghost"
+                  size="sm"
                   onClick={handleClearCache}
                   className="mt-2 text-xs text-gray-500 hover:text-gray-700"
                 >
@@ -261,9 +245,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
               <Mail className="w-5 h-5" />
               <span>Gửi Lại Email Xác Thực</span>
             </DialogTitle>
-            <DialogDescription>
-              Nhập địa chỉ email để gửi lại email xác thực tài khoản.
-            </DialogDescription>
+            <DialogDescription>Nhập địa chỉ email để gửi lại email xác thực tài khoản.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -277,20 +259,16 @@ export function LoginPage({ onLogin }: LoginPageProps) {
               />
             </div>
             <div className="flex space-x-2">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="flex-1"
                 onClick={() => setShowResendVerification(false)}
                 disabled={isLoadingResend}
               >
                 Hủy
               </Button>
-              <Button 
-                className="flex-1"
-                onClick={handleResendVerification}
-                disabled={isLoadingResend}
-              >
-                {isLoadingResend ? 'Đang gửi...' : 'Gửi Email'}
+              <Button className="flex-1" onClick={handleResendVerification} disabled={isLoadingResend}>
+                {isLoadingResend ? "Đang gửi..." : "Gửi Email"}
               </Button>
             </div>
           </div>
