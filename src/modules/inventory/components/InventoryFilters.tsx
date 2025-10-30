@@ -50,15 +50,19 @@ export function InventoryFilters({
   });
 
   // Convert categories to tree format for display
-  const categoryOptions = categories.map(cat => ({
-    value: cat.id.toString(),
-    label: cat.name
-  }));
+  const categoryOptions = categories
+    .filter(cat => cat.name)
+    .map(cat => ({
+      value: cat.id.toString(),
+      label: cat.name
+    }));
 
-  const brandOptions = brands.map(brand => ({
-    value: brand.id.toString(),
-    label: brand.name
-  }));
+  const brandOptions = brands
+    .filter(brand => brand.name)
+    .map(brand => ({
+      value: brand.id.toString(),
+      label: brand.name
+    }));
 
   return (
     <div className="space-y-4">
