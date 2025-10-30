@@ -349,9 +349,20 @@ async function syncInventory(accessToken: string, supabase: any, retailerName: s
 
   console.log(`📥 Received ${inventory.length} inventory records`);
 
+  // Filter out records without branch_id (cannot track inventory without branch)
+  const validInventory = inventory.filter((inv: any) => {
+    if (!inv.branchId) {
+      console.warn(`⚠️ Skipping inventory record for product ${inv.productId} - missing branch_id`);
+      return false;
+    }
+    return true;
+  });
+
+  console.log(`✅ Valid inventory records: ${validInventory.length}/${inventory.length}`);
+
   // Upsert inventory
   const { error } = await supabase.from('kiotviet_inventory').upsert(
-    inventory.map((inv: any) => ({
+    validInventory.map((inv: any) => ({
       product_id: inv.productId,
       branch_id: inv.branchId,
       branch_name: inv.branchName || 'Unknown',
