@@ -412,11 +412,26 @@ export const voucherService = {
     });
 
     if (error) {
-      // Map error to user-friendly message
-      const errorMessage = error.context?.body?.message 
-        || error.context?.body?.description 
+      // Parse error.context.body (might be string or object)
+      let errorBody = error.context?.body;
+      
+      // If body is a string, try to parse it as JSON
+      if (typeof errorBody === 'string') {
+        try {
+          errorBody = JSON.parse(errorBody);
+        } catch {
+          // Keep as string if not valid JSON
+        }
+      }
+
+      // Extract detailed message from parsed body or use fallback
+      const errorMessage = 
+        errorBody?.message 
+        || errorBody?.description 
+        || errorBody?.details
         || error.message 
         || 'Không thể cấp lại voucher. Vui lòng thử lại.';
+      
       throw new Error(errorMessage);
     }
 

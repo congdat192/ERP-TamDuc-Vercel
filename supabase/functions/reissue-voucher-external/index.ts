@@ -75,14 +75,30 @@ serve(async (req) => {
     );
 
     if (!response.ok) {
+      // Try to parse error response as JSON first
+      let extBody: any = null;
       const errorText = await response.text();
-      console.error('[reissue-voucher] API error:', response.status, errorText);
+      
+      try {
+        extBody = JSON.parse(errorText);
+      } catch {
+        // Not JSON, keep as plain text
+        extBody = null;
+      }
+
+      // Extract detailed message from external API
+      const detailedMessage = extBody?.message 
+        || extBody?.description 
+        || errorText 
+        || 'Không thể cấp lại voucher.';
+
+      console.error('[reissue-voucher] API error:', response.status, detailedMessage);
 
       return new Response(
         JSON.stringify({ 
-          error: 'Failed to reissue voucher', 
-          message: errorText || 'Không thể cấp lại voucher.',
-          details: errorText 
+          error: 'External API Error',
+          message: detailedMessage,
+          details: extBody || errorText
         }),
         {
           status: response.status,

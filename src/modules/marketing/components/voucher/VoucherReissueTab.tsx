@@ -7,6 +7,14 @@ import { Loader2, AlertCircle } from 'lucide-react';
 import { voucherService, VoucherReissueResponse } from '../../services/voucherService';
 import { VoucherReissueDisplay } from './VoucherReissueDisplay';
 import { useToast } from '@/hooks/use-toast';
+import { z } from 'zod';
+
+const voucherCodeSchema = z.string()
+  .trim()
+  .toUpperCase()
+  .min(5, 'Mã voucher phải có ít nhất 5 ký tự')
+  .max(32, 'Mã voucher không được quá 32 ký tự')
+  .regex(/^[A-Z0-9-]+$/, 'Mã voucher chỉ được chứa chữ in hoa, số và dấu gạch ngang');
 
 export function VoucherReissueTab() {
   const [voucherCode, setVoucherCode] = useState('');
@@ -16,8 +24,12 @@ export function VoucherReissueTab() {
   const { toast } = useToast();
 
   const handleReissue = async () => {
-    if (!voucherCode.trim()) {
-      setError('Vui lòng nhập mã voucher');
+    // Validate input with zod
+    const validationResult = voucherCodeSchema.safeParse(voucherCode);
+    
+    if (!validationResult.success) {
+      const errorMessage = validationResult.error.errors[0]?.message || 'Mã voucher không hợp lệ';
+      setError(errorMessage);
       return;
     }
 
@@ -26,7 +38,7 @@ export function VoucherReissueTab() {
     setResult(null);
 
     try {
-      const response = await voucherService.reissueVoucher(voucherCode.trim());
+      const response = await voucherService.reissueVoucher(validationResult.data);
       
       if (response.success) {
         setResult(response);
