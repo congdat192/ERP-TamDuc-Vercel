@@ -182,32 +182,69 @@ export class KiotVietProductsFullService {
 
     if (error) throw error;
 
-    // Group by category_id and count products
-    const categoryMap = new Map<number, { 
+    // Step 1: Count products per category_id (leaf categories only)
+    const productCountMap = new Map<number, number>();
+    data?.forEach((item) => {
+      if (item.category_id) {
+        productCountMap.set(
+          item.category_id, 
+          (productCountMap.get(item.category_id) || 0) + 1
+        );
+      }
+    });
+
+    // Step 2: Extract ALL category levels from paths
+    const allCategories = new Map<string, { 
       id: number; 
       name: string; 
       path: string;
       productCount: number;
     }>();
-    
+
     data?.forEach((item) => {
-      if (item.category_id) {
-        const existing = categoryMap.get(item.category_id);
-        if (existing) {
-          existing.productCount++;
-        } else {
-          categoryMap.set(item.category_id, {
-            id: item.category_id,
-            name: item.category_name || '',
-            path: item.category_path || '',
-            productCount: 1
+      if (!item.category_path) return;
+
+      // Parse all levels from path
+      // Example: "1. Gọng kính Cty > 2. Cty Hào Phát > Bolon club"
+      const pathParts = item.category_path.split(' > ').map(p => p.trim());
+      
+      // Build cumulative path for each level
+      for (let i = 0; i < pathParts.length; i++) {
+        const currentPath = pathParts.slice(0, i + 1).join(' > ');
+        const currentName = pathParts[i];
+        
+        // If this is the final level (actual category), use real id and count
+        if (i === pathParts.length - 1) {
+          allCategories.set(currentPath, {
+            id: item.category_id!,
+            name: currentName,
+            path: currentPath,
+            productCount: productCountMap.get(item.category_id!) || 0
           });
+        } else {
+          // Parent level - create ghost node if not exists
+          if (!allCategories.has(currentPath)) {
+            // Generate pseudo ID from path hash
+            const pseudoId = Math.abs(
+              currentPath.split('').reduce((a, b) => {
+                a = ((a << 5) - a) + b.charCodeAt(0);
+                return a & a;
+              }, 0)
+            );
+            
+            allCategories.set(currentPath, {
+              id: pseudoId,
+              name: currentName,
+              path: currentPath,
+              productCount: 0 // Parent nodes have 0 direct products
+            });
+          }
         }
       }
     });
 
-    return Array.from(categoryMap.values())
-      .sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+    return Array.from(allCategories.values())
+      .sort((a, b) => a.path.localeCompare(b.path, 'vi'));
   }
 
   /**
