@@ -83,6 +83,7 @@ export interface VoucherTrackingRecord {
   invoice_code: string | null;
   invoice_status: string | null;
   invoice_amount: number | null;
+  note?: string | null;
   reissue_1_code: string | null;
   reissue_1_status: string | null;
   reissue_1_invoice_id: number | null;

@@ -86,8 +86,9 @@ serve(async (req) => {
       'activated_at_from', 'activated_at_to',
       'expired_at_from', 'expired_at_to',
       'page_size', 'offset', 'order_by', 'sort',
+      'note',
       // Reissue 1
-      'reissue_1_code', 'reissue_1_status', 
+      'reissue_1_code', 'reissue_1_status',
       'reissue_1_invoice_id', 'reissue_1_invoice_code',
       'reissue_1_invoice_status', 'reissue_1_invoice_amount',
       // Reissue 2

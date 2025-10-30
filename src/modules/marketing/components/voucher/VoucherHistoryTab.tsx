@@ -121,6 +121,7 @@ export function VoucherHistoryTab() {
       'Mã Hóa đơn': item.invoice_code || '',
       'Trạng thái Hóa đơn': item.invoice_status || '',
       'Giá trị Hóa đơn': item.invoice_amount || '',
+      'Ghi chú': item.note || '',
       'Voucher Cấp lại 1': item.reissue_1_code || '',
       'Trạng thái VC Cấp lại 1': item.reissue_1_status || '',
       'ID Hóa đơn Cấp lại 1': item.reissue_1_invoice_id || '',
@@ -272,6 +273,7 @@ export function VoucherHistoryTab() {
                 <TableHead className="min-w-[140px]">Mã Hóa đơn</TableHead>
                 <TableHead className="min-w-[180px]">Trạng thái Hóa đơn</TableHead>
                 <TableHead className="min-w-[160px]">Giá trị Hóa đơn</TableHead>
+                <TableHead className="min-w-[200px]">Ghi chú</TableHead>
                 <TableHead className="min-w-[180px]">Voucher Cấp lại 1</TableHead>
                 <TableHead className="min-w-[200px]">Trạng thái VC Cấp lại 1</TableHead>
                 <TableHead className="min-w-[200px]">ID Hóa đơn Cấp lại 1</TableHead>
@@ -289,13 +291,13 @@ export function VoucherHistoryTab() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={29} className="text-center py-8">
+                  <TableCell colSpan={30} className="text-center py-8">
                     Đang tải...
                   </TableCell>
                 </TableRow>
               ) : history.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={29} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={30} className="text-center py-8 text-muted-foreground">
                     Không có dữ liệu
                   </TableCell>
                 </TableRow>
@@ -343,6 +345,7 @@ export function VoucherHistoryTab() {
                     <TableCell className="text-sm">
                       {item.invoice_amount ? item.invoice_amount.toLocaleString('vi-VN') : '-'}
                     </TableCell>
+                    <TableCell className="text-sm">{item.note || '-'}</TableCell>
                     <TableCell className="text-sm">{item.reissue_1_code || '-'}</TableCell>
                     <TableCell className="text-sm">{item.reissue_1_status || '-'}</TableCell>
                     <TableCell>{item.reissue_1_invoice_id || '-'}</TableCell>
