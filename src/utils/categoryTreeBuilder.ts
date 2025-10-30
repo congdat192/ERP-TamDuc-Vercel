@@ -27,7 +27,7 @@ export function buildCategoryTree(flatCategories: FlatCategory[]): CategoryNode[
     return aDepth - bDepth;
   });
 
-  const nodeMap = new Map<number, CategoryNode>();
+  const pathMap = new Map<string, CategoryNode>();
   const rootNodes: CategoryNode[] = [];
 
   sorted.forEach(category => {
@@ -43,27 +43,21 @@ export function buildCategoryTree(flatCategories: FlatCategory[]): CategoryNode[
       children: []
     };
 
-    nodeMap.set(category.id, node);
+    pathMap.set(category.path, node);
 
     if (level === 1) {
       // Top-level category
       rootNodes.push(node);
     } else {
-      // Find parent by reconstructing parent path
+      // Find parent by exact path match
       const parentPath = pathParts.slice(0, -1).join(' > ');
-      
-      // Find parent node by matching path
-      const parentNode = Array.from(nodeMap.values()).find(n => {
-        const nodePath = pathParts.slice(0, n.level).join(' > ');
-        return nodePath === parentPath.split(' > ').slice(0, n.level).join(' > ') && n.level === level - 1;
-      });
+      const parentNode = pathMap.get(parentPath);
 
       if (parentNode) {
         parentNode.children.push(node);
-        // Update parent's product count to include children
-        parentNode.productCount += category.productCount;
       } else {
         // Orphan node - add to root as fallback
+        console.warn(`Orphan category detected: ${category.name} (path: ${category.path})`);
         rootNodes.push(node);
       }
     }
