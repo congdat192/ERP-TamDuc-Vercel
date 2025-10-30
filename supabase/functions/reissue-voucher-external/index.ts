@@ -86,18 +86,19 @@ serve(async (req) => {
         extBody = null;
       }
 
-      // Extract detailed message from external API
-      const detailedMessage = extBody?.message 
+      // Extract ORIGINAL message from external API (no prefix, no generic text)
+      const apiMessage = extBody?.message 
         || extBody?.description 
         || errorText 
         || 'Không thể cấp lại voucher.';
 
-      console.error('[reissue-voucher] API error:', response.status, detailedMessage);
+      console.error('[reissue-voucher] API error:', response.status, apiMessage);
 
+      // Return same format as external API: { success: false, message: "..." }
       return new Response(
         JSON.stringify({ 
-          error: 'External API Error',
-          message: detailedMessage,
+          success: false,  // Match external API format
+          message: apiMessage,  // ORIGINAL message from external API
           details: extBody || errorText
         }),
         {
