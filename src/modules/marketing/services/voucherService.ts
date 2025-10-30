@@ -114,6 +114,13 @@ export interface VoucherTrackingResponse {
   };
 }
 
+export interface VoucherReissueResponse {
+  success: boolean;
+  message: string;
+  reissue_1_code?: string;
+  reissue_2_code?: string;
+}
+
 export const voucherService = {
   // ========== CAMPAIGNS ==========
   async getCampaigns(): Promise<VoucherCampaign[]> {
@@ -395,6 +402,16 @@ export const voucherService = {
       throw new Error(data.description || 'Không thể tải lịch sử voucher');
     }
 
+    return data;
+  },
+
+  // ========== VOUCHER REISSUE (External API) ==========
+  async reissueVoucher(voucher_code: string): Promise<VoucherReissueResponse> {
+    const { data, error } = await supabase.functions.invoke('reissue-voucher', {
+      body: { voucher_code }
+    });
+
+    if (error) throw error;
     return data;
   }
 };
