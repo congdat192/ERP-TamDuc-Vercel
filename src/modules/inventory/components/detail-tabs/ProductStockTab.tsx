@@ -8,11 +8,46 @@ interface ProductStockTabProps {
 }
 
 export function ProductStockTab({ product }: ProductStockTabProps) {
-  const stockPercentage = (product.stock / (product.minStock * 3)) * 100;
-  const isLowStock = product.stock < product.minStock;
+  const stockPercentage = product.maxStock > 0 ? (product.stock / product.maxStock) * 100 : 0;
+  const isLowStock = product.lowStockAlert;
+  const inventoryByBranch = product.inventoryByBranch || [];
 
   return (
     <div className="space-y-6">
+      {/* Inventory by Branch */}
+      {inventoryByBranch.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="font-semibold theme-text text-lg">Tồn kho theo chi nhánh</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {inventoryByBranch.map((branch: any) => (
+              <div key={branch.branch_id} className="p-4 theme-card rounded-lg border theme-border-primary">
+                <h4 className="font-medium theme-text mb-3">{branch.branch_name}</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="theme-text-muted">Tồn kho:</span>
+                    <span className="font-semibold theme-text">{branch.on_hand}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="theme-text-muted">Đã đặt:</span>
+                    <span className="theme-text">{branch.reserved}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="theme-text-muted">Khả dụng:</span>
+                    <span className="theme-text">{branch.available}</span>
+                  </div>
+                  {branch.location && (
+                    <div className="flex justify-between">
+                      <span className="theme-text-muted">Vị trí:</span>
+                      <span className="theme-text">{branch.location}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Current Stock Status */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="p-4 theme-card rounded-lg border theme-border-primary">
@@ -40,7 +75,7 @@ export function ProductStockTab({ product }: ProductStockTabProps) {
             <TrendingUp className="w-5 h-5 theme-text-secondary" />
             <span className="text-sm font-medium theme-text-muted">Tồn kho tối đa</span>
           </div>
-          <p className="text-2xl font-bold theme-text">{product.minStock * 3}</p>
+          <p className="text-2xl font-bold theme-text">{product.maxStock || 0}</p>
           <p className="text-sm theme-text-muted">{product.unit}</p>
         </div>
 
@@ -69,7 +104,7 @@ export function ProductStockTab({ product }: ProductStockTabProps) {
           <div className="flex justify-between text-xs theme-text-muted">
             <span>0</span>
             <span>Định mức: {product.minStock}</span>
-            <span>Tối đa: {product.minStock * 3}</span>
+            <span>Tối đa: {product.maxStock || 0}</span>
           </div>
         </div>
       </div>

@@ -41,7 +41,9 @@ export class KiotVietProductsFullService {
    */
   static async getProducts(filters?: {
     categoryId?: number;
+    categoryIds?: number[];
     trademarkId?: number;
+    trademarkIds?: number[];
     search?: string;
     isActive?: boolean;
     lowStock?: boolean;
@@ -57,8 +59,16 @@ export class KiotVietProductsFullService {
       query = query.eq('category_id', filters.categoryId);
     }
 
+    if (filters?.categoryIds && filters.categoryIds.length > 0) {
+      query = query.in('category_id', filters.categoryIds);
+    }
+
     if (filters?.trademarkId) {
       query = query.eq('trademark_id', filters.trademarkId);
+    }
+
+    if (filters?.trademarkIds && filters.trademarkIds.length > 0) {
+      query = query.in('trademark_id', filters.trademarkIds);
     }
 
     if (filters?.search) {

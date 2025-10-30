@@ -19,6 +19,14 @@ interface InventorySearchActionsProps {
   applyFilters: () => void;
   isMobile: boolean;
   inventoryData: any[];
+  selectedCategories: number[];
+  setSelectedCategories: (categories: number[]) => void;
+  selectedBrands: number[];
+  setSelectedBrands: (brands: number[]) => void;
+  lowStockOnly: boolean;
+  setLowStockOnly: (value: boolean) => void;
+  overstockOnly: boolean;
+  setOverstockOnly: (value: boolean) => void;
 }
 
 export function InventorySearchActions({
@@ -31,7 +39,15 @@ export function InventorySearchActions({
   clearAllFilters,
   applyFilters,
   isMobile,
-  inventoryData
+  inventoryData,
+  selectedCategories,
+  setSelectedCategories,
+  selectedBrands,
+  setSelectedBrands,
+  lowStockOnly,
+  setLowStockOnly,
+  overstockOnly,
+  setOverstockOnly
 }: InventorySearchActionsProps) {
   return (
     <div className="theme-card rounded-lg border theme-border-primary">
@@ -87,6 +103,14 @@ export function InventorySearchActions({
                         onClearFilters={clearAllFilters}
                         onApplyFilters={applyFilters}
                         isMobile={isMobile}
+                        selectedCategories={selectedCategories}
+                        setSelectedCategories={setSelectedCategories}
+                        selectedBrands={selectedBrands}
+                        setSelectedBrands={setSelectedBrands}
+                        lowStockOnly={lowStockOnly}
+                        setLowStockOnly={setLowStockOnly}
+                        overstockOnly={overstockOnly}
+                        setOverstockOnly={setOverstockOnly}
                       />
                     </div>
                   </DrawerContent>

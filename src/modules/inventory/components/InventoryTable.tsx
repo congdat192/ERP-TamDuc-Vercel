@@ -18,6 +18,7 @@ interface InventoryTableProps {
   totalPages: number;
   expandedRowId?: string;
   onRowClick?: (itemId: string) => void;
+  isLoading?: boolean;
 }
 
 export function InventoryTable({ 
@@ -33,7 +34,8 @@ export function InventoryTable({
   totalItems,
   totalPages,
   expandedRowId,
-  onRowClick
+  onRowClick,
+  isLoading = false
 }: InventoryTableProps) {
   // Format currency helper
   const formatCurrency = (amount: number) => {
@@ -52,7 +54,7 @@ export function InventoryTable({
   // Calculate pagination display
   const startIndex = (currentPage - 1) * itemsPerPage + 1;
   const endIndex = Math.min(currentPage * itemsPerPage, totalItems);
-  const paginatedData = inventoryData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const paginatedData = inventoryData; // Data already paginated from server
 
   const allSelected = paginatedData.length > 0 && selectedItems.length === paginatedData.length;
 
@@ -90,7 +92,22 @@ export function InventoryTable({
             </tr>
           </thead>
           <tbody>
-            {paginatedData.map((item) => (
+            {isLoading ? (
+              <tr>
+                <td colSpan={visibleColumns.length + 1} className="px-4 py-12 text-center">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                    <p className="text-sm theme-text-muted">Đang tải dữ liệu...</p>
+                  </div>
+                </td>
+              </tr>
+            ) : paginatedData.length === 0 ? (
+              <tr>
+                <td colSpan={visibleColumns.length + 1} className="px-4 py-12 text-center">
+                  <p className="text-sm theme-text-muted">Không tìm thấy sản phẩm nào</p>
+                </td>
+              </tr>
+            ) : paginatedData.map((item) => (
               <>
                 <tr 
                   key={item.id} 
@@ -163,9 +180,21 @@ export function InventoryTable({
                       )}
                       {/* Tồn kho */}
                       {column.key === 'stock' && (
-                        <span className={`font-medium ${item.stock < 10 ? 'text-red-600' : 'theme-text'}`}>
-                          {item.stock}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className={`font-medium ${item.lowStockAlert ? 'text-red-600' : 'theme-text'}`}>
+                            {item.stock}
+                          </span>
+                          {item.lowStockAlert && (
+                            <Badge variant="destructive" className="text-xs">
+                              Tồn thấp
+                            </Badge>
+                          )}
+                          {item.overstockAlert && (
+                            <Badge variant="warning" className="text-xs bg-orange-100 text-orange-700">
+                              Quá tồn
+                            </Badge>
+                          )}
+                        </div>
                       )}
                       {/* Vị trí */}
                       {column.key === 'location' && (

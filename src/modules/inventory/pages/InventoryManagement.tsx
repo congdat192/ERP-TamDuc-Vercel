@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ThemedInventoryStats } from '../components/ThemedInventoryStats';
 import { InventoryFilters } from '../components/InventoryFilters';
@@ -6,7 +7,7 @@ import { InventorySearchActions } from '../components/InventorySearchActions';
 import { InventoryTable } from '../components/InventoryTable';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ColumnConfig } from '../components/ColumnVisibilityFilter';
-import { mockInventory } from '@/data/mockData';
+import { KiotVietProductsFullService } from '@/services/kiotvietProductsFullService';
 
 interface InventoryManagementProps {
   currentUser: any;
@@ -20,6 +21,12 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [expandedRowId, setExpandedRowId] = useState<string | undefined>(undefined);
+  
+  // Filter states
+  const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
+  const [selectedBrands, setSelectedBrands] = useState<number[]>([]);
+  const [lowStockOnly, setLowStockOnly] = useState(false);
+  const [overstockOnly, setOverstockOnly] = useState(false);
 
   // Column visibility state - All 27 required columns
   const [columns, setColumns] = useState<ColumnConfig[]>([
@@ -54,11 +61,78 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
 
   const isMobile = useIsMobile();
 
+  // Fetch products from kiotviet_products_full
+  const { data: productsData, isLoading } = useQuery({
+    queryKey: ['kiotviet-products-full', { 
+      search: searchTerm,
+      categoryIds: selectedCategories,
+      trademarkIds: selectedBrands,
+      lowStock: lowStockOnly,
+      overstock: overstockOnly,
+      page: currentPage,
+      pageSize: itemsPerPage
+    }],
+    queryFn: () => KiotVietProductsFullService.getProducts({
+      search: searchTerm,
+      categoryIds: selectedCategories,
+      trademarkIds: selectedBrands,
+      lowStock: lowStockOnly,
+      overstock: overstockOnly,
+      page: currentPage,
+      pageSize: itemsPerPage
+    })
+  });
+
   // Get visible columns
   const visibleColumns = columns.filter(col => col.visible);
 
-  // Use mock data
-  const inventoryData = mockInventory;
+  // Map data to UI format
+  const inventoryData = useMemo(() => {
+    if (!productsData?.products) return [];
+    
+    return productsData.products.map(p => {
+      // Get first unit from units JSONB
+      const firstUnit = Array.isArray(p.units) && p.units.length > 0 ? p.units[0].unitName : '-';
+      
+      return {
+        id: p.id.toString(),
+        image: p.images?.[0] || '',
+        productCode: p.code,
+        barcode: p.barcode || '-',
+        name: p.name,
+        category: p.category_path || p.category_name || '-',
+        productType: p.product_type === 2 ? 'Dịch vụ' : 'Hàng hóa',
+        channelLinked: false, // KiotViet doesn't have this field
+        price: p.base_price,
+        brand: p.trademark_name || '-',
+        stock: p.total_on_hand,
+        location: p.inventory_by_branch?.[0]?.location || '-',
+        reservedCustomers: 0, // Not available in KiotViet
+        createdDate: p.created_at ? new Date(p.created_at).toLocaleDateString('vi-VN') : '-',
+        expectedOutOfStock: '-', // Not available
+        minStock: p.min_stock || 0,
+        maxStock: p.max_stock || 0,
+        status: p.is_active ? 'Đang bán' : 'Ngừng bán',
+        pointsEarning: p.is_reward_point,
+        directSales: p.allow_sale,
+        costPrice: 0, // Removed as per user request
+        importPrice: 0, // Not available
+        unit: firstUnit,
+        weight: p.weight ? `${p.weight} kg` : '-',
+        dimensions: '-', // Not available
+        description: p.description || '',
+        notes: '-',
+        creator: '-',
+        lastUpdated: p.updated_at ? new Date(p.updated_at).toLocaleDateString('vi-VN') : '-',
+        // Additional fields for detail view
+        inventoryByBranch: p.inventory_by_branch || [],
+        lowStockAlert: p.low_stock_alert,
+        overstockAlert: p.overstock_alert,
+        basePrice: p.base_price,
+        fullData: p // Keep full data for detail tabs
+      };
+    });
+  }, [productsData]);
 
   const handleColumnToggle = (columnKey: string) => {
     setColumns(prev => prev.map(col => 
@@ -97,13 +171,20 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
     setIsFilterOpen(false);
     setSelectedItems([]);
     setExpandedRowId(undefined);
+    setSelectedCategories([]);
+    setSelectedBrands([]);
+    setLowStockOnly(false);
+    setOverstockOnly(false);
+    setSearchTerm('');
+    setCurrentPage(1);
   };
 
   const applyFilters = () => {
     setIsFilterOpen(false);
+    setCurrentPage(1); // Reset to first page when applying filters
   };
 
-  const totalItems = inventoryData.length;
+  const totalItems = productsData?.total || 0;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
   return (
@@ -135,6 +216,14 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
                   onClearFilters={clearAllFilters}
                   onApplyFilters={applyFilters}
                   isMobile={isMobile}
+                  selectedCategories={selectedCategories}
+                  setSelectedCategories={setSelectedCategories}
+                  selectedBrands={selectedBrands}
+                  setSelectedBrands={setSelectedBrands}
+                  lowStockOnly={lowStockOnly}
+                  setLowStockOnly={setLowStockOnly}
+                  overstockOnly={overstockOnly}
+                  setOverstockOnly={setOverstockOnly}
                 />
               </div>
             </ScrollArea>
@@ -155,6 +244,14 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
                   onClearFilters={clearAllFilters}
                   onApplyFilters={applyFilters}
                   isMobile={isMobile}
+                  selectedCategories={selectedCategories}
+                  setSelectedCategories={setSelectedCategories}
+                  selectedBrands={selectedBrands}
+                  setSelectedBrands={setSelectedBrands}
+                  lowStockOnly={lowStockOnly}
+                  setLowStockOnly={setLowStockOnly}
+                  overstockOnly={overstockOnly}
+                  setOverstockOnly={setOverstockOnly}
                 />
               </div>
             </ScrollArea>
@@ -176,6 +273,14 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
               applyFilters={applyFilters}
               isMobile={isMobile}
               inventoryData={inventoryData}
+              selectedCategories={selectedCategories}
+              setSelectedCategories={setSelectedCategories}
+              selectedBrands={selectedBrands}
+              setSelectedBrands={setSelectedBrands}
+              lowStockOnly={lowStockOnly}
+              setLowStockOnly={setLowStockOnly}
+              overstockOnly={overstockOnly}
+              setOverstockOnly={setOverstockOnly}
             />
           </div>
 
@@ -195,6 +300,7 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
               totalPages={totalPages}
               expandedRowId={expandedRowId}
               onRowClick={handleRowClick}
+              isLoading={isLoading}
             />
           </div>
         </div>
