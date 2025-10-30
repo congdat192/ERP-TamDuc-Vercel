@@ -13,7 +13,6 @@ import { Loader2, CheckCircle2, XCircle, Info, RefreshCw, Store, Key, CreditCard
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { generateAES256Key, validateAES256Key } from '@/utils/cryptoKeyGenerator';
-import { KiotVietScheduleConfig } from '@/modules/admin/components/KiotVietScheduleConfig';
 
 export function KiotVietSettings() {
   const { toast } = useToast();
@@ -264,11 +263,6 @@ export function KiotVietSettings() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Schedule Config Card - Only show when connected */}
-      {isConnected && credential?.id && (
-        <KiotVietScheduleConfig credentialId={credential.id} />
-      )}
 
       {/* Sync & Statistics Card */}
       {isConnected && (
