@@ -45,7 +45,6 @@ import { AffiliateModule } from "./modules/affiliate";
 import { ERPLayout } from "@/components/layout/ERPLayout";
 import { Navigate, useNavigate } from "react-router-dom";
 import { VoucherIssuancePage } from "./modules/marketing/pages/VoucherIssuancePage";
-import { KiotVietRoutes } from "./modules/kiotviet/routes";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -281,16 +280,6 @@ const AppContent = () => {
                     element={
                       <ProtectedERPRoute module="inventory">
                         <ProductDetailPage />
-                      </ProtectedERPRoute>
-                    } 
-                  />
-                  
-                  {/* KiotViet Integration Routes */}
-                  <Route 
-                    path="/ERP/KiotViet/*" 
-                    element={
-                      <ProtectedERPRoute module="inventory">
-                        <KiotVietRoutes />
                       </ProtectedERPRoute>
                     } 
                   />
