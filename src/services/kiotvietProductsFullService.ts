@@ -174,29 +174,40 @@ export class KiotVietProductsFullService {
   /**
    * Get all unique categories from products
    */
-  static async getCategories(): Promise<Array<{ id: number; name: string; path: string }>> {
+  static async getCategories(): Promise<Array<{ id: number; name: string; path: string; productCount: number }>> {
     const { data, error } = await supabase
       .from('kiotviet_products_full')
       .select('category_id, category_name, category_path')
-      .not('category_id', 'is', null)
-      .order('category_name');
+      .not('category_id', 'is', null);
 
     if (error) throw error;
 
-    // Deduplicate categories
-    const uniqueCategories = new Map<number, { id: number; name: string; path: string }>();
+    // Group by category_id and count products
+    const categoryMap = new Map<number, { 
+      id: number; 
+      name: string; 
+      path: string;
+      productCount: number;
+    }>();
     
     data?.forEach((item) => {
-      if (item.category_id && !uniqueCategories.has(item.category_id)) {
-        uniqueCategories.set(item.category_id, {
-          id: item.category_id,
-          name: item.category_name || '',
-          path: item.category_path || '',
-        });
+      if (item.category_id) {
+        const existing = categoryMap.get(item.category_id);
+        if (existing) {
+          existing.productCount++;
+        } else {
+          categoryMap.set(item.category_id, {
+            id: item.category_id,
+            name: item.category_name || '',
+            path: item.category_path || '',
+            productCount: 1
+          });
+        }
       }
     });
 
-    return Array.from(uniqueCategories.values());
+    return Array.from(categoryMap.values())
+      .sort((a, b) => a.name.localeCompare(b.name, 'vi'));
   }
 
   /**

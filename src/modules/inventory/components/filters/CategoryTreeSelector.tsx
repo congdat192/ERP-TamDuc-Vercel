@@ -1,23 +1,30 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChevronDown, ChevronRight, Search, Plus } from 'lucide-react';
-import { CategoryNode } from '@/data/inventoryMockData';
+import { buildCategoryTree, CategoryNode, FlatCategory } from '@/utils/categoryTreeBuilder';
 
 interface CategoryTreeSelectorProps {
-  categories: CategoryNode[];
-  selectedCategories: string[];
-  onSelectionChange: (selected: string[]) => void;
+  categories: FlatCategory[];
+  selectedCategories: number[];
+  onSelectionChange: (selected: number[]) => void;
 }
 
 export function CategoryTreeSelector({ categories, selectedCategories, onSelectionChange }: CategoryTreeSelectorProps) {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+  const [categoryTree, setCategoryTree] = useState<CategoryNode[]>([]);
+
+  // Build tree when categories change
+  useEffect(() => {
+    const tree = buildCategoryTree(categories);
+    setCategoryTree(tree);
+  }, [categories]);
 
   const toggleExpanded = (nodeId: string) => {
     const newExpanded = new Set(expandedNodes);
@@ -29,7 +36,7 @@ export function CategoryTreeSelector({ categories, selectedCategories, onSelecti
     setExpandedNodes(newExpanded);
   };
 
-  const handleCategoryToggle = (categoryId: string) => {
+  const handleCategoryToggle = (categoryId: number) => {
     if (selectedCategories.includes(categoryId)) {
       onSelectionChange(selectedCategories.filter(id => id !== categoryId));
     } else {
@@ -38,15 +45,15 @@ export function CategoryTreeSelector({ categories, selectedCategories, onSelecti
   };
 
   const handleSelectAll = () => {
-    const allIds = getAllCategoryIds(categories);
+    const allIds = getAllCategoryIds(categoryTree);
     onSelectionChange(allIds);
   };
 
-  const getAllCategoryIds = (nodes: CategoryNode[]): string[] => {
-    let ids: string[] = [];
+  const getAllCategoryIds = (nodes: CategoryNode[]): number[] => {
+    let ids: number[] = [];
     nodes.forEach(node => {
       ids.push(node.id);
-      if (node.children) {
+      if (node.children && node.children.length > 0) {
         ids = ids.concat(getAllCategoryIds(node.children));
       }
     });
@@ -67,31 +74,31 @@ export function CategoryTreeSelector({ categories, selectedCategories, onSelecti
   };
 
   const renderCategoryNode = (node: CategoryNode, level: number = 0) => {
-    const isExpanded = expandedNodes.has(node.id);
+    const isExpanded = expandedNodes.has(node.id.toString());
     const hasChildren = node.children && node.children.length > 0;
     const isSelected = selectedCategories.includes(node.id);
 
     return (
       <div key={node.id} className="space-y-1">
         <div 
-          className="flex items-center gap-2 py-1 px-2 hover:theme-bg-primary/5 rounded"
-          style={{ paddingLeft: `${8 + level * 16}px` }}
+          className="flex items-center gap-2 py-1.5 px-2 hover:bg-accent/50 rounded-md transition-colors"
+          style={{ paddingLeft: `${8 + level * 20}px` }}
         >
           {hasChildren && (
             <Button
               variant="ghost"
               size="sm"
-              className="h-4 w-4 p-0 hover:theme-bg-primary/10"
-              onClick={() => toggleExpanded(node.id)}
+              className="h-5 w-5 p-0 hover:bg-transparent"
+              onClick={() => toggleExpanded(node.id.toString())}
             >
               {isExpanded ? (
-                <ChevronDown className="h-3 w-3" />
+                <ChevronDown className="h-4 w-4 theme-text-muted" />
               ) : (
-                <ChevronRight className="h-3 w-3" />
+                <ChevronRight className="h-4 w-4 theme-text-muted" />
               )}
             </Button>
           )}
-          {!hasChildren && <div className="w-4" />}
+          {!hasChildren && <div className="w-5" />}
           
           <Checkbox
             checked={isSelected}
@@ -101,7 +108,7 @@ export function CategoryTreeSelector({ categories, selectedCategories, onSelecti
           
           <div className="flex items-center justify-between flex-1 min-w-0">
             <span className="text-sm theme-text truncate">{node.name}</span>
-            <span className="text-xs theme-text-muted ml-2 flex-shrink-0">
+            <span className="text-xs theme-text-muted ml-2 flex-shrink-0 font-medium">
               ({node.productCount})
             </span>
           </div>
@@ -116,7 +123,7 @@ export function CategoryTreeSelector({ categories, selectedCategories, onSelecti
     );
   };
 
-  const filteredCategories = filterCategories(categories, searchTerm);
+  const filteredCategories = filterCategories(categoryTree, searchTerm);
 
   return (
     <div className="space-y-2">

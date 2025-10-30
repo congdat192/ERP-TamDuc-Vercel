@@ -9,6 +9,16 @@ export interface CategoryNode {
   expanded?: boolean;
 }
 
+// Legacy interface - kept for backward compatibility
+// Use CategoryNode from @/utils/categoryTreeBuilder for new code
+export interface CategoryNodeLegacy {
+  id: string;
+  name: string;
+  productCount: number;
+  children?: CategoryNodeLegacy[];
+  expanded?: boolean;
+}
+
 export interface AttributeOption {
   value: string;
   label: string;

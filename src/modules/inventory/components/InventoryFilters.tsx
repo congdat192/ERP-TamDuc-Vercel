@@ -1,11 +1,10 @@
 
-import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { KiotVietProductsFullService } from '@/services/kiotvietProductsFullService';
 import { MultiSelectFilter } from './filters/MultiSelectFilter';
+import { CategoryTreeSelector } from './filters/CategoryTreeSelector';
 
 interface InventoryFiltersProps {
   onClearFilters: () => void;
@@ -34,10 +33,6 @@ export function InventoryFilters({
   overstockOnly,
   setOverstockOnly
 }: InventoryFiltersProps) {
-  const [productName, setProductName] = useState('');
-  const [sku, setSku] = useState('');
-  const [barcode, setBarcode] = useState('');
-
   // Fetch categories and brands
   const { data: categories = [] } = useQuery({
     queryKey: ['kiotviet-categories'],
@@ -49,14 +44,6 @@ export function InventoryFilters({
     queryFn: () => KiotVietProductsFullService.getTrademarks()
   });
 
-  // Convert categories to tree format for display
-  const categoryOptions = categories
-    .filter(cat => cat.name)
-    .map(cat => ({
-      value: cat.id.toString(),
-      label: cat.name
-    }));
-
   const brandOptions = brands
     .filter(brand => brand.name)
     .map(brand => ({
@@ -66,13 +53,11 @@ export function InventoryFilters({
 
   return (
     <div className="space-y-4">
-      {/* Nhóm hàng */}
-      <MultiSelectFilter
-        label="Nhóm hàng"
-        options={categoryOptions}
-        selectedValues={selectedCategories.map(String)}
-        onSelectionChange={(values) => setSelectedCategories(values.map(Number))}
-        placeholder="Chọn nhóm hàng"
+      {/* Nhóm hàng - Tree Selector */}
+      <CategoryTreeSelector
+        categories={categories}
+        selectedCategories={selectedCategories}
+        onSelectionChange={setSelectedCategories}
       />
 
       {/* Thương hiệu */}
