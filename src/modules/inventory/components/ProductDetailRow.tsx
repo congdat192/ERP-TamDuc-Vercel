@@ -5,6 +5,7 @@ import { ProductDescriptionTab } from './detail-tabs/ProductDescriptionTab';
 import { ProductInventoryTagTab } from './detail-tabs/ProductInventoryTagTab';
 import { ProductStockTab } from './detail-tabs/ProductStockTab';
 import { ProductChannelLinkTab } from './detail-tabs/ProductChannelLinkTab';
+import { ProductAdvancedTab } from './detail-tabs/ProductAdvancedTab';
 
 interface ProductDetailRowProps {
   product: any;
@@ -17,11 +18,12 @@ export function ProductDetailRow({ product, visibleColumnsCount }: ProductDetail
       <td colSpan={visibleColumnsCount + 1} className="p-0">
         <div className="p-6 border-2 border-solid theme-border-primary bg-white/80 rounded-lg mx-2 my-1 shadow-sm">
           <Tabs defaultValue="info" className="w-full">
-            <TabsList className="grid grid-cols-5 w-full max-w-2xl mb-6">
+            <TabsList className="grid grid-cols-6 w-full max-w-3xl mb-6">
               <TabsTrigger value="info" className="text-sm">Thông tin</TabsTrigger>
               <TabsTrigger value="description" className="text-sm">Mô tả, ghi chú</TabsTrigger>
               <TabsTrigger value="inventory" className="text-sm">Thẻ kho</TabsTrigger>
               <TabsTrigger value="stock" className="text-sm">Tồn kho</TabsTrigger>
+              <TabsTrigger value="advanced" className="text-sm">Thuộc tính & Giá</TabsTrigger>
               <TabsTrigger value="channels" className="text-sm">Liên kết kênh bán</TabsTrigger>
             </TabsList>
             
@@ -39,6 +41,10 @@ export function ProductDetailRow({ product, visibleColumnsCount }: ProductDetail
             
             <TabsContent value="stock" className="mt-0">
               <ProductStockTab product={product} />
+            </TabsContent>
+            
+            <TabsContent value="advanced" className="mt-0">
+              <ProductAdvancedTab product={product} />
             </TabsContent>
             
             <TabsContent value="channels" className="mt-0">

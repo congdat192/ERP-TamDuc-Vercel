@@ -31,17 +31,23 @@ export function ProductInfoTab({ product }: ProductInfoTabProps) {
 
   // Support both mock data and database fields
   const productCode = product.code || product.productCode || '-';
-  const productName = product.product_name || product.name || '-';
+  const productName = product.full_name || product.product_name || product.name || '-';
   const categoryPath = product.category_path || product.category || 'Chưa phân loại';
   const barcode = product.barcode || 'Chưa có';
   const retailPrice = product.retail_price || product.price || 0;
   const basePrice = product.base_price || product.costPrice || 0;
   const onHand = product.on_hand !== undefined ? product.on_hand : (product.stock || 0);
+  const totalReserved = product.total_reserved || 0;
+  const totalAvailable = product.total_available || 0;
   const trademarkName = product.trademark_name || product.brand || '-';
   const location = product.location || 'Chưa có';
   const weight = product.weight || null;
   const minStock = product.min_stock || 0;
   const maxStock = product.max_stock || 999999999;
+  const lowStockAlert = product.low_stock_alert || false;
+  const overstockAlert = product.overstock_alert || false;
+  const hasVariants = product.has_variants || false;
+  const productType = product.product_type || 'standard';
   const allowEarnPoints = product.allow_earn_points !== undefined ? product.allow_earn_points : product.pointsEarning;
   const allowDirectSale = product.allow_direct_sale !== undefined ? product.allow_direct_sale : product.directSales;
   const isStandard = product.is_standard_product !== undefined ? product.is_standard_product : true;
@@ -129,13 +135,30 @@ export function ProductInfoTab({ product }: ProductInfoTabProps) {
         {/* Column 3 - Chi tiết sản phẩm */}
         <div className="space-y-4">
           <InfoRow label="Tồn kho" value={onHand.toString()} />
+          <InfoRow label="Có thể bán" value={totalAvailable.toString()} />
+          <InfoRow label="Đang đặt" value={totalReserved.toString()} />
           <InfoRow label="Thương hiệu" value={trademarkName} />
           <InfoRow label="Vị trí" value={location} />
         </div>
         
-        {/* Column 4 - Định mức tồn */}
+        {/* Column 4 - Định mức tồn & Alerts */}
         <div className="space-y-4">
           <InfoRow label="Định mức tồn" value={`${minStock} - ${maxStock.toLocaleString('vi-VN')}`} />
+          {lowStockAlert && (
+            <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
+              Cảnh báo tồn thấp
+            </Badge>
+          )}
+          {overstockAlert && (
+            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+              Cảnh báo tồn cao
+            </Badge>
+          )}
+          {hasVariants && (
+            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+              Có biến thể
+            </Badge>
+          )}
         </div>
       </div>
       
