@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -158,13 +157,9 @@ export function VoucherHistoryTab() {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Lịch sử phát hành Voucher</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-7 gap-4 p-4 bg-muted/50 rounded-lg">
+    <div className="space-y-3">
+      {/* Filters */}
+      <div className="grid grid-cols-1 md:grid-cols-7 gap-3 p-3 bg-muted/50 rounded-lg">
           <div className="space-y-2">
             <Label>Số điện thoại</Label>
             <Input
@@ -399,7 +394,6 @@ export function VoucherHistoryTab() {
             </Button>
           </div>
         </div>
-      </CardContent>
-    </Card>
+    </div>
   );
 }

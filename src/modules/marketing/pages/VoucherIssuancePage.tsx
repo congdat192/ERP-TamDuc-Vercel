@@ -22,11 +22,7 @@ export function VoucherIssuancePage() {
   const visibleTabs = [canIssueVouchers, canAccessSettings, canViewHistory].filter(Boolean).length;
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Quản lý Voucher</h1>
-      </div>
-
+    <div className="p-4">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className={`grid w-full grid-cols-${visibleTabs} max-w-2xl`}>
           {canIssueVouchers && <TabsTrigger value="issue">Phát hành</TabsTrigger>}
@@ -35,19 +31,19 @@ export function VoucherIssuancePage() {
         </TabsList>
 
         {canIssueVouchers && (
-          <TabsContent value="issue" className="mt-6">
+          <TabsContent value="issue" className="mt-3">
             <VoucherIssueTab />
           </TabsContent>
         )}
 
         {canAccessSettings && (
-          <TabsContent value="settings" className="mt-6">
+          <TabsContent value="settings" className="mt-3">
             <VoucherSettingsTab />
           </TabsContent>
         )}
 
         {canViewHistory && (
-          <TabsContent value="history" className="mt-6">
+          <TabsContent value="history" className="mt-3">
             <VoucherHistoryTab />
           </TabsContent>
         )}
