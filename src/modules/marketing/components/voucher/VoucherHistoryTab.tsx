@@ -32,7 +32,7 @@ export function VoucherHistoryTab() {
 
   useEffect(() => {
     loadHistory();
-  }, [pagination.offset]);
+  }, [pagination.offset, pagination.page_size]);
 
   const formatDateVN = (utcDate: string) => {
     // Browser automatically converts UTC+0 to local timezone (Vietnam = UTC+7)
@@ -246,11 +246,12 @@ export function VoucherHistoryTab() {
           </Button>
         </div>
 
-        {/* Table with horizontal scroll */}
-        <div className="border rounded-lg overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
+        {/* Table with sticky header and vertical scroll */}
+        <div className="border rounded-lg overflow-hidden">
+          <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+            <Table>
+              <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
+                <TableRow>
                 <TableHead className="min-w-[130px]">Mã voucher</TableHead>
                 <TableHead className="min-w-[130px]">ID Chiến dịch</TableHead>
                 <TableHead className="min-w-[150px]">Mã Chiến dịch</TableHead>
@@ -365,14 +366,45 @@ export function VoucherHistoryTab() {
                 ))
               )}
             </TableBody>
-          </Table>
+            </Table>
+          </div>
         </div>
 
-        {/* Pagination Controls */}
-        <div className="flex items-center justify-between pt-4">
-          <p className="text-sm text-muted-foreground">
-            Tổng: {pagination.total} | Hiển thị: {pagination.offset + 1}-{pagination.offset + history.length}
-          </p>
+        {/* Enhanced Pagination */}
+        <div className="flex items-center justify-between pt-4 border-t">
+          {/* Left: Total + Current range */}
+          <div className="flex items-center gap-4">
+            <p className="text-sm text-muted-foreground">
+              Tổng: <span className="font-medium">{pagination.total}</span> bản ghi
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Hiển thị: <span className="font-medium">{pagination.offset + 1}</span>-<span className="font-medium">{Math.min(pagination.offset + pagination.page_size, pagination.total)}</span>
+            </p>
+          </div>
+
+          {/* Center: Page size selector */}
+          <div className="flex items-center gap-2">
+            <Label className="text-sm text-muted-foreground">Hiển thị:</Label>
+            <Select 
+              value={pagination.page_size.toString()} 
+              onValueChange={(value) => {
+                setPagination(prev => ({ ...prev, page_size: parseInt(value), offset: 0 }));
+              }}
+            >
+              <SelectTrigger className="w-[100px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+                <SelectItem value="200">200</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Right: Previous/Next buttons */}
           <div className="flex gap-2">
             <Button
               variant="outline"
