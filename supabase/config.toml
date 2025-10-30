@@ -1,5 +1,8 @@
 project_id = "dtdtwhrqvkrymtyqbatn"
 
+[functions.reissue-voucher-external]
+verify_jwt = true
+
 [functions.list-voucher-tracking]
 verify_jwt = false
 
