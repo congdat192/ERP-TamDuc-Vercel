@@ -18,7 +18,8 @@ import {
   Glasses,
   Database,
   FolderTree,
-  Boxes
+  Boxes,
+  ImageIcon
 } from 'lucide-react';
 
 const iconMap = {
@@ -40,7 +41,8 @@ const iconMap = {
   Glasses,
   Database,
   FolderTree,
-  Boxes
+  Boxes,
+  ImageIcon
 };
 
 export function getIconComponent(iconName: string) {
