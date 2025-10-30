@@ -11,10 +11,11 @@ import { buildCategoryTree, CategoryNode, FlatCategory } from '@/utils/categoryT
 interface CategoryTreeSelectorProps {
   categories: FlatCategory[];
   selectedCategories: number[];
-  onSelectionChange: (selected: number[]) => void;
+  selectedCategoryPaths: string[];
+  onSelectionChange: (selectedIds: number[], selectedPaths: string[]) => void;
 }
 
-export function CategoryTreeSelector({ categories, selectedCategories, onSelectionChange }: CategoryTreeSelectorProps) {
+export function CategoryTreeSelector({ categories, selectedCategories, selectedCategoryPaths, onSelectionChange }: CategoryTreeSelectorProps) {
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
@@ -39,17 +40,36 @@ export function CategoryTreeSelector({ categories, selectedCategories, onSelecti
     setExpandedNodes(newExpanded);
   };
 
-  const handleCategoryToggle = (categoryId: number) => {
+  const handleCategoryToggle = (categoryId: number, categoryPath: string) => {
+    let newSelectedIds: number[];
+    let newSelectedPaths: string[];
+    
     if (selectedCategories.includes(categoryId)) {
-      onSelectionChange(selectedCategories.filter(id => id !== categoryId));
+      newSelectedIds = selectedCategories.filter(id => id !== categoryId);
+      newSelectedPaths = selectedCategoryPaths.filter(p => p !== categoryPath);
     } else {
-      onSelectionChange([...selectedCategories, categoryId]);
+      newSelectedIds = [...selectedCategories, categoryId];
+      newSelectedPaths = [...selectedCategoryPaths, categoryPath];
     }
+    
+    onSelectionChange(newSelectedIds, newSelectedPaths);
   };
 
   const handleSelectAll = () => {
     const allIds = getAllCategoryIds(categoryTree);
-    onSelectionChange(allIds);
+    const allPaths = getAllCategoryPaths(categoryTree);
+    onSelectionChange(allIds, allPaths);
+  };
+
+  const getAllCategoryPaths = (nodes: CategoryNode[]): string[] => {
+    let paths: string[] = [];
+    nodes.forEach(node => {
+      paths.push(node.path);
+      if (node.children && node.children.length > 0) {
+        paths = paths.concat(getAllCategoryPaths(node.children));
+      }
+    });
+    return paths;
   };
 
   const getAllCategoryIds = (nodes: CategoryNode[]): number[] => {
@@ -105,7 +125,7 @@ export function CategoryTreeSelector({ categories, selectedCategories, onSelecti
           
           <Checkbox
             checked={isSelected}
-            onCheckedChange={() => handleCategoryToggle(node.id)}
+            onCheckedChange={() => handleCategoryToggle(node.id, node.path)}
             className="h-4 w-4"
           />
           

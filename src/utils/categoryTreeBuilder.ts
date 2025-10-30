@@ -8,6 +8,7 @@ export interface FlatCategory {
 export interface CategoryNode {
   id: number;
   name: string;
+  path: string;
   productCount: number;
   level: number;
   children: CategoryNode[];
@@ -38,6 +39,7 @@ export function buildCategoryTree(flatCategories: FlatCategory[]): CategoryNode[
     const node: CategoryNode = {
       id: category.id,
       name: category.name,
+      path: category.path,
       productCount: category.productCount,
       level,
       children: []
@@ -75,6 +77,24 @@ export function buildCategoryTree(flatCategories: FlatCategory[]): CategoryNode[
 
   sortChildren(rootNodes);
   rootNodes.sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+
+  // Aggregate product counts upward (parent = own count + all descendants)
+  const aggregateProductCount = (node: CategoryNode): number => {
+    if (!node.children || node.children.length === 0) {
+      return node.productCount; // Leaf node - return own count
+    }
+    
+    // Recursively sum all children + own count
+    const childrenTotal = node.children.reduce((sum, child) => {
+      return sum + aggregateProductCount(child);
+    }, 0);
+    
+    node.productCount = node.productCount + childrenTotal;
+    return node.productCount;
+  };
+
+  // Apply aggregation to all root nodes
+  rootNodes.forEach(node => aggregateProductCount(node));
 
   return rootNodes;
 }

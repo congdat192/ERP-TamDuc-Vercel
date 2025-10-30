@@ -11,7 +11,8 @@ interface InventoryFiltersProps {
   onApplyFilters: () => void;
   isMobile: boolean;
   selectedCategories: number[];
-  setSelectedCategories: (categories: number[]) => void;
+  selectedCategoryPaths: string[];
+  onCategoriesChange: (ids: number[], paths: string[]) => void;
   selectedBrands: number[];
   setSelectedBrands: (brands: number[]) => void;
   lowStockOnly: boolean;
@@ -25,7 +26,8 @@ export function InventoryFilters({
   onApplyFilters, 
   isMobile,
   selectedCategories,
-  setSelectedCategories,
+  selectedCategoryPaths,
+  onCategoriesChange,
   selectedBrands,
   setSelectedBrands,
   lowStockOnly,
@@ -98,7 +100,8 @@ export function InventoryFilters({
       <CategoryTreeSelector
         categories={categories}
         selectedCategories={selectedCategories}
-        onSelectionChange={setSelectedCategories}
+        selectedCategoryPaths={selectedCategoryPaths}
+        onSelectionChange={(ids, paths) => onCategoriesChange(ids, paths)}
       />
 
       {/* Trạng thái tồn kho */}

@@ -26,6 +26,7 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
   
   // Filter states
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
+  const [selectedCategoryPaths, setSelectedCategoryPaths] = useState<string[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<number[]>([]);
   const [lowStockOnly, setLowStockOnly] = useState(false);
   const [overstockOnly, setOverstockOnly] = useState(false);
@@ -94,7 +95,7 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
   const { data: productsData, isLoading } = useQuery({
     queryKey: ['kiotviet-products-full', { 
       search: searchTerm,
-      categoryIds: selectedCategories,
+      categoryPaths: selectedCategoryPaths,
       trademarkIds: selectedBrands,
       lowStock: lowStockOnly,
       overstock: overstockOnly,
@@ -103,7 +104,7 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
     }],
     queryFn: () => KiotVietProductsFullService.getProducts({
       search: searchTerm,
-      categoryIds: selectedCategories,
+      categoryPaths: selectedCategoryPaths,
       trademarkIds: selectedBrands,
       lowStock: lowStockOnly,
       overstock: overstockOnly,
@@ -201,6 +202,7 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
     setSelectedItems([]);
     setExpandedRowId(undefined);
     setSelectedCategories([]);
+    setSelectedCategoryPaths([]);
     setSelectedBrands([]);
     setLowStockOnly(false);
     setOverstockOnly(false);
@@ -246,7 +248,11 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
                   onApplyFilters={applyFilters}
                   isMobile={isMobile}
                   selectedCategories={selectedCategories}
-                  setSelectedCategories={setSelectedCategories}
+                  selectedCategoryPaths={selectedCategoryPaths}
+                  onCategoriesChange={(ids, paths) => {
+                    setSelectedCategories(ids);
+                    setSelectedCategoryPaths(paths);
+                  }}
                   selectedBrands={selectedBrands}
                   setSelectedBrands={setSelectedBrands}
                   lowStockOnly={lowStockOnly}
@@ -274,7 +280,11 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
                   onApplyFilters={applyFilters}
                   isMobile={isMobile}
                   selectedCategories={selectedCategories}
-                  setSelectedCategories={setSelectedCategories}
+                  selectedCategoryPaths={selectedCategoryPaths}
+                  onCategoriesChange={(ids, paths) => {
+                    setSelectedCategories(ids);
+                    setSelectedCategoryPaths(paths);
+                  }}
                   selectedBrands={selectedBrands}
                   setSelectedBrands={setSelectedBrands}
                   lowStockOnly={lowStockOnly}
@@ -303,7 +313,11 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
               isMobile={isMobile}
               inventoryData={inventoryData}
               selectedCategories={selectedCategories}
-              setSelectedCategories={setSelectedCategories}
+              selectedCategoryPaths={selectedCategoryPaths}
+              onCategoriesChange={(ids, paths) => {
+                setSelectedCategories(ids);
+                setSelectedCategoryPaths(paths);
+              }}
               selectedBrands={selectedBrands}
               setSelectedBrands={setSelectedBrands}
               lowStockOnly={lowStockOnly}

@@ -20,7 +20,8 @@ interface InventorySearchActionsProps {
   isMobile: boolean;
   inventoryData: any[];
   selectedCategories: number[];
-  setSelectedCategories: (categories: number[]) => void;
+  selectedCategoryPaths: string[];
+  onCategoriesChange: (ids: number[], paths: string[]) => void;
   selectedBrands: number[];
   setSelectedBrands: (brands: number[]) => void;
   lowStockOnly: boolean;
@@ -41,7 +42,8 @@ export function InventorySearchActions({
   isMobile,
   inventoryData,
   selectedCategories,
-  setSelectedCategories,
+  selectedCategoryPaths,
+  onCategoriesChange,
   selectedBrands,
   setSelectedBrands,
   lowStockOnly,
@@ -104,7 +106,8 @@ export function InventorySearchActions({
                         onApplyFilters={applyFilters}
                         isMobile={isMobile}
                         selectedCategories={selectedCategories}
-                        setSelectedCategories={setSelectedCategories}
+                        selectedCategoryPaths={selectedCategoryPaths}
+                        onCategoriesChange={onCategoriesChange}
                         selectedBrands={selectedBrands}
                         setSelectedBrands={setSelectedBrands}
                         lowStockOnly={lowStockOnly}

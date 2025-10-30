@@ -42,6 +42,7 @@ export class KiotVietProductsFullService {
   static async getProducts(filters?: {
     categoryId?: number;
     categoryIds?: number[];
+    categoryPaths?: string[];
     trademarkId?: number;
     trademarkIds?: number[];
     search?: string;
@@ -55,11 +56,16 @@ export class KiotVietProductsFullService {
       .from('kiotviet_products_full')
       .select('*', { count: 'exact' });
 
-    if (filters?.categoryId) {
+    // Category filter - prefer path-based filtering for hierarchical categories
+    if (filters?.categoryPaths && filters.categoryPaths.length > 0) {
+      // Use path prefix matching to include all subcategories
+      const pathConditions = filters.categoryPaths
+        .map(path => `category_path.ilike.${path}%`)
+        .join(',');
+      query = query.or(pathConditions);
+    } else if (filters?.categoryId) {
       query = query.eq('category_id', filters.categoryId);
-    }
-
-    if (filters?.categoryIds && filters.categoryIds.length > 0) {
+    } else if (filters?.categoryIds && filters.categoryIds.length > 0) {
       query = query.in('category_id', filters.categoryIds);
     }
 
