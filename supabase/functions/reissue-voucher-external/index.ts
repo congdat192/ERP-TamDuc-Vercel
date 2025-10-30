@@ -1,71 +1,56 @@
-import { createClient } from 'jsr:@supabase/supabase-js@2';
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const EXTERNAL_API_BASE = Deno.env.get('EXTERNAL_API_BASE');
+const EXTERNAL_API_BASE = 'https://kcirpjxbjqagrqrjfldu.supabase.co/functions/v1';
 
-// Get OAuth token from external API
 async function getOAuthToken(): Promise<string> {
-  const clientId = Deno.env.get('EXTERNAL_API_CLIENT_ID');
-  const clientSecret = Deno.env.get('EXTERNAL_API_CLIENT_SECRET');
-
-  if (!clientId || !clientSecret) {
-    throw new Error('Missing EXTERNAL_API_CLIENT_ID or EXTERNAL_API_CLIENT_SECRET');
-  }
-
   const response = await fetch(`${EXTERNAL_API_BASE}/get-token-supabase`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ client_id: clientId, client_secret: clientSecret })
+    body: JSON.stringify({
+      client_id: Deno.env.get('EXTERNAL_API_CLIENT_ID'),
+      client_secret: Deno.env.get('EXTERNAL_API_CLIENT_SECRET')
+    })
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to get OAuth token: ${response.statusText}`);
+    throw new Error(`Failed to get OAuth token: ${response.status}`);
   }
 
   const data = await response.json();
-  return data.access_token;
+  return data.success ? data.data.access_token : data.access_token;
 }
 
-Deno.serve(async (req) => {
-  // Handle CORS preflight requests
+serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Initialize Supabase client
-    const supabaseClient = createClient(
+    const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
-        },
-      }
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Authenticate user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabaseClient.auth.getUser();
+    const authHeader = req.headers.get('Authorization')!;
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user } } = await supabase.auth.getUser(token);
 
-    if (authError || !user) {
+    if (!user) {
       return new Response(
-        JSON.stringify({ error: 'Unauthorized', message: 'Bạn chưa đăng nhập. Vui lòng đăng nhập lại.' }),
+        JSON.stringify({ error: 'Unauthorized', message: 'Bạn chưa đăng nhập.' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Parse request body
     const body = await req.json();
     const { voucher_code } = body;
 
-    // Validate required fields
     if (!voucher_code) {
       return new Response(
         JSON.stringify({ error: 'Missing required field: voucher_code' }),
@@ -73,85 +58,61 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`[Reissue Voucher] User ${user.email} requesting reissue for voucher: ${voucher_code}`);
+    console.log(`[reissue-voucher] User ${user.email} requesting reissue for: ${voucher_code}`);
 
-    // Get user profile and employee data
-    const { data: profile } = await supabaseClient
-      .from('profiles')
-      .select('full_name, phone, email')
-      .eq('id', user.id)
-      .single();
+    const oauthToken = await getOAuthToken();
 
-    const { data: employee } = await supabaseClient
-      .from('employees')
-      .select('employee_code, full_name, department, position')
-      .eq('user_id', user.id)
-      .single();
+    const response = await fetch(
+      `${EXTERNAL_API_BASE}/reissue-voucher`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${oauthToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ voucher_code })
+      }
+    );
 
-    // Get OAuth token
-    const accessToken = await getOAuthToken();
-
-    // Call external API to reissue voucher
-    const externalResponse = await fetch(`${EXTERNAL_API_BASE}/reissue-voucher`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({ voucher_code }),
-    });
-
-    const externalData = await externalResponse.json();
-
-    if (!externalResponse.ok) {
-      console.error('[Reissue Voucher] External API error:', {
-        status: externalResponse.status,
-        statusText: externalResponse.statusText,
-        data: externalData
-      });
-
-      // Log failure to database (optional, can add voucher_reissue_history table if needed)
-      console.log('[Reissue Voucher] Failed:', {
-        voucher_code,
-        user_email: user.email,
-        employee_code: employee?.employee_code,
-        error: externalData
-      });
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[reissue-voucher] API error:', response.status, errorText);
 
       return new Response(
-        JSON.stringify({
-          error: 'External API Error',
-          message: externalData.message || externalData.description || 'Không thể cấp lại voucher. Vui lòng thử lại.',
-          details: externalData
+        JSON.stringify({ 
+          error: 'Failed to reissue voucher', 
+          message: errorText || 'Không thể cấp lại voucher.',
+          details: errorText 
         }),
-        { 
-          status: externalResponse.status, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        {
+          status: response.status,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
       );
     }
 
-    // Success - log to database (optional)
-    console.log('[Reissue Voucher] Success:', {
-      voucher_code,
-      user_email: user.email,
-      employee_code: employee?.employee_code,
-      result: externalData
-    });
+    const data = await response.json();
+    console.log('[reissue-voucher] Success:', data);
 
     return new Response(
-      JSON.stringify(externalData),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify(data),
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
     );
 
-  } catch (error: any) {
-    console.error('[Reissue Voucher] Internal error:', error);
+  } catch (error) {
+    console.error('[reissue-voucher] Exception:', error);
     return new Response(
-      JSON.stringify({
-        error: 'Internal Server Error',
-        message: error.message || 'Đã xảy ra lỗi. Vui lòng thử lại.',
+      JSON.stringify({ 
+        error: 'Internal server error',
+        message: error instanceof Error ? error.message : 'Unknown error'
       }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
     );
   }
 });
