@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ChevronDown, ChevronRight, Search, Plus } from 'lucide-react';
+import { ChevronDown, ChevronRight, Search, Plus, Loader2 } from 'lucide-react';
 import { buildCategoryTree, CategoryNode, FlatCategory } from '@/utils/categoryTreeBuilder';
 
 interface CategoryTreeSelectorProps {
@@ -19,11 +19,14 @@ export function CategoryTreeSelector({ categories, selectedCategories, onSelecti
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [categoryTree, setCategoryTree] = useState<CategoryNode[]>([]);
+  const [isBuilding, setIsBuilding] = useState(false);
 
   // Build tree when categories change
   useEffect(() => {
+    setIsBuilding(true);
     const tree = buildCategoryTree(categories);
     setCategoryTree(tree);
+    setIsBuilding(false);
   }, [categories]);
 
   const toggleExpanded = (nodeId: string) => {
@@ -130,13 +133,24 @@ export function CategoryTreeSelector({ categories, selectedCategories, onSelecti
       <label className="text-sm font-medium theme-text">Nhóm hàng</label>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button variant="outline" className="w-full justify-between voucher-input h-10 rounded-md">
-            <span className="truncate">
-              {selectedCategories.length > 0 
-                ? `Đã chọn ${selectedCategories.length} nhóm` 
-                : "Chọn nhóm hàng"
-              }
-            </span>
+          <Button 
+            variant="outline" 
+            className="w-full justify-between voucher-input h-10 rounded-md"
+            disabled={isBuilding}
+          >
+            {isBuilding ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Đang tải...
+              </span>
+            ) : (
+              <span className="truncate">
+                {selectedCategories.length > 0 
+                  ? `Đã chọn ${selectedCategories.length} nhóm` 
+                  : "Chọn nhóm hàng"
+                }
+              </span>
+            )}
             <ChevronDown className="h-4 w-4" />
           </Button>
         </PopoverTrigger>

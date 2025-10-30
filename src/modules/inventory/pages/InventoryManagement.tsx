@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useMemo, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ThemedInventoryStats } from '../components/ThemedInventoryStats';
 import { InventoryFilters } from '../components/InventoryFilters';
@@ -8,6 +8,7 @@ import { InventoryTable } from '../components/InventoryTable';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ColumnConfig } from '../components/ColumnVisibilityFilter';
 import { KiotVietProductsFullService } from '@/services/kiotvietProductsFullService';
+import { supabase } from '@/integrations/supabase/client';
 
 interface InventoryManagementProps {
   currentUser: any;
@@ -15,6 +16,7 @@ interface InventoryManagementProps {
 }
 
 export function InventoryManagement({ currentUser, onBackToModules }: InventoryManagementProps) {
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
@@ -60,6 +62,33 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
   ]);
 
   const isMobile = useIsMobile();
+
+  // Realtime listener for products list
+  useEffect(() => {
+    const channel = supabase
+      .channel('kiotviet-products-list-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'kiotviet_products_full'
+        },
+        (payload) => {
+          console.log('Products list change detected:', payload.eventType);
+          
+          // Refetch current page data
+          queryClient.invalidateQueries({ 
+            queryKey: ['kiotviet-products-full'] 
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   // Fetch products from kiotviet_products_full
   const { data: productsData, isLoading } = useQuery({

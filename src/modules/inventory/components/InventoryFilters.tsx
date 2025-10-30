@@ -1,10 +1,10 @@
-
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { KiotVietProductsFullService } from '@/services/kiotvietProductsFullService';
-import { MultiSelectFilter } from './filters/MultiSelectFilter';
 import { CategoryTreeSelector } from './filters/CategoryTreeSelector';
+import { supabase } from '@/integrations/supabase/client';
 
 interface InventoryFiltersProps {
   onClearFilters: () => void;
@@ -33,6 +33,9 @@ export function InventoryFilters({
   overstockOnly,
   setOverstockOnly
 }: InventoryFiltersProps) {
+  const queryClient = useQueryClient();
+  const debounceTimerRef = useRef<NodeJS.Timeout>();
+
   // Fetch categories and brands
   const { data: categories = [] } = useQuery({
     queryKey: ['kiotviet-categories'],
@@ -43,6 +46,44 @@ export function InventoryFilters({
     queryKey: ['kiotviet-brands'],
     queryFn: () => KiotVietProductsFullService.getTrademarks()
   });
+
+  // Realtime listener for product changes
+  useEffect(() => {
+    const channel = supabase
+      .channel('kiotviet-products-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'kiotviet_products_full'
+        },
+        (payload) => {
+          console.log('Product change detected:', payload.eventType);
+          
+          // Clear existing timer
+          if (debounceTimerRef.current) {
+            clearTimeout(debounceTimerRef.current);
+          }
+
+          // Set new timer - refetch after 2 seconds of no changes
+          debounceTimerRef.current = setTimeout(() => {
+            console.log('Refetching categories and brands after changes...');
+            queryClient.invalidateQueries({ queryKey: ['kiotviet-categories'] });
+            queryClient.invalidateQueries({ queryKey: ['kiotviet-brands'] });
+            queryClient.invalidateQueries({ queryKey: ['kiotviet-products-full'] });
+          }, 2000);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const brandOptions = brands
     .filter(brand => brand.name)
@@ -58,15 +99,6 @@ export function InventoryFilters({
         categories={categories}
         selectedCategories={selectedCategories}
         onSelectionChange={setSelectedCategories}
-      />
-
-      {/* Thương hiệu */}
-      <MultiSelectFilter
-        label="Thương hiệu"
-        options={brandOptions}
-        selectedValues={selectedBrands.map(String)}
-        onSelectionChange={(values) => setSelectedBrands(values.map(Number))}
-        placeholder="Chọn thương hiệu"
       />
 
       {/* Trạng thái tồn kho */}
