@@ -140,3 +140,77 @@ export interface KiotVietInventoryDB {
   available: number;
   synced_at: string;
 }
+
+// New Single Table Design (No Cost/Profit)
+export interface InventoryByBranch {
+  branch_id: number;
+  branch_name: string;
+  on_hand: number;
+  reserved: number;
+  available: number;
+  min_quality?: number;
+  max_quality?: number;
+  location?: string;
+}
+
+export interface KiotVietProductFullDB {
+  id: number;
+  code: string;
+  barcode?: string;
+  name: string;
+  full_name?: string;
+  description?: string;
+  
+  // Category (Denormalized)
+  category_id?: number;
+  category_name?: string;
+  category_path?: string;
+  
+  // Trademark/Brand (Denormalized)
+  trademark_id?: number;
+  trademark_name?: string;
+  
+  // Pricing (NO COST)
+  base_price: number;
+  
+  // Inventory Summary
+  total_on_hand: number;
+  total_reserved: number;
+  total_available: number;
+  inventory_by_branch: InventoryByBranch[]; // JSONB
+  
+  // Stock Management
+  min_stock: number;
+  max_stock: number;
+  low_stock_alert?: boolean; // Generated column
+  overstock_alert?: boolean; // Generated column
+  
+  // Product Details
+  weight: number;
+  
+  // Settings
+  has_variants: boolean;
+  allow_sale: boolean;
+  is_active: boolean;
+  product_type: number;
+  is_reward_point: boolean;
+  is_lot_serial_control: boolean;
+  is_batch_expire_control: boolean;
+  
+  order_template?: string;
+  
+  // JSONB Fields
+  images: any;
+  attributes: any;
+  units: any;
+  price_books: any;
+  product_formulas: any;
+  product_serials: any;
+  product_batch_expires: any;
+  product_shelves: any;
+  
+  // Metadata
+  synced_at: string;
+  created_at: string;
+  updated_at: string;
+}

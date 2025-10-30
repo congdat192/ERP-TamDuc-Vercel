@@ -1440,6 +1440,135 @@ export type Database = {
           },
         ]
       }
+      kiotviet_products_full: {
+        Row: {
+          allow_sale: boolean | null
+          attributes: Json | null
+          barcode: string | null
+          base_price: number | null
+          category_id: number | null
+          category_name: string | null
+          category_path: string | null
+          code: string
+          created_at: string | null
+          description: string | null
+          full_name: string | null
+          has_variants: boolean | null
+          id: number
+          images: Json | null
+          inventory_by_branch: Json | null
+          is_active: boolean | null
+          is_batch_expire_control: boolean | null
+          is_lot_serial_control: boolean | null
+          is_reward_point: boolean | null
+          low_stock_alert: boolean | null
+          max_stock: number | null
+          min_stock: number | null
+          name: string
+          order_template: string | null
+          overstock_alert: boolean | null
+          price_books: Json | null
+          product_batch_expires: Json | null
+          product_formulas: Json | null
+          product_serials: Json | null
+          product_shelves: Json | null
+          product_type: number | null
+          synced_at: string | null
+          total_available: number | null
+          total_on_hand: number | null
+          total_reserved: number | null
+          trademark_id: number | null
+          trademark_name: string | null
+          units: Json | null
+          updated_at: string | null
+          weight: number | null
+        }
+        Insert: {
+          allow_sale?: boolean | null
+          attributes?: Json | null
+          barcode?: string | null
+          base_price?: number | null
+          category_id?: number | null
+          category_name?: string | null
+          category_path?: string | null
+          code: string
+          created_at?: string | null
+          description?: string | null
+          full_name?: string | null
+          has_variants?: boolean | null
+          id: number
+          images?: Json | null
+          inventory_by_branch?: Json | null
+          is_active?: boolean | null
+          is_batch_expire_control?: boolean | null
+          is_lot_serial_control?: boolean | null
+          is_reward_point?: boolean | null
+          low_stock_alert?: boolean | null
+          max_stock?: number | null
+          min_stock?: number | null
+          name: string
+          order_template?: string | null
+          overstock_alert?: boolean | null
+          price_books?: Json | null
+          product_batch_expires?: Json | null
+          product_formulas?: Json | null
+          product_serials?: Json | null
+          product_shelves?: Json | null
+          product_type?: number | null
+          synced_at?: string | null
+          total_available?: number | null
+          total_on_hand?: number | null
+          total_reserved?: number | null
+          trademark_id?: number | null
+          trademark_name?: string | null
+          units?: Json | null
+          updated_at?: string | null
+          weight?: number | null
+        }
+        Update: {
+          allow_sale?: boolean | null
+          attributes?: Json | null
+          barcode?: string | null
+          base_price?: number | null
+          category_id?: number | null
+          category_name?: string | null
+          category_path?: string | null
+          code?: string
+          created_at?: string | null
+          description?: string | null
+          full_name?: string | null
+          has_variants?: boolean | null
+          id?: number
+          images?: Json | null
+          inventory_by_branch?: Json | null
+          is_active?: boolean | null
+          is_batch_expire_control?: boolean | null
+          is_lot_serial_control?: boolean | null
+          is_reward_point?: boolean | null
+          low_stock_alert?: boolean | null
+          max_stock?: number | null
+          min_stock?: number | null
+          name?: string
+          order_template?: string | null
+          overstock_alert?: boolean | null
+          price_books?: Json | null
+          product_batch_expires?: Json | null
+          product_formulas?: Json | null
+          product_serials?: Json | null
+          product_shelves?: Json | null
+          product_type?: number | null
+          synced_at?: string | null
+          total_available?: number | null
+          total_on_hand?: number | null
+          total_reserved?: number | null
+          trademark_id?: number | null
+          trademark_name?: string | null
+          units?: Json | null
+          updated_at?: string | null
+          weight?: number | null
+        }
+        Relationships: []
+      }
       kiotviet_sync_logs: {
         Row: {
           completed_at: string | null

@@ -11,7 +11,7 @@ const corsHeaders = {
 
 interface KiotVietSyncRequest {
   credentialId: string;
-  syncType: 'categories' | 'products' | 'inventory' | 'all';
+  syncType: 'categories' | 'products' | 'inventory' | 'all' | 'products_full';
   options?: {
     pageSize?: number;
     dateFrom?: string;
@@ -79,6 +79,12 @@ serve(async (req) => {
         console.log('📊 Syncing inventory...');
         results.inventory = await syncInventory(accessToken, supabaseClient, credential.retailer_name);
         console.log(`✅ Inventory synced: ${results.inventory.count}`);
+      }
+
+      if (syncType === 'products_full') {
+        console.log('🚀 Syncing products (FULL - single table)...');
+        results.products_full = await syncProductsFull(accessToken, supabaseClient, options, credential.retailer_name);
+        console.log(`✅ Products (full) synced: ${results.products_full.count}`);
       }
 
       // Log successful sync
@@ -363,4 +369,204 @@ async function syncInventory(accessToken: string, supabase: any, retailerName: s
   }
 
   return { count: inventory.length };
+}
+
+async function syncProductsFull(accessToken: string, supabase: any, options: any, retailerName: string) {
+  console.log('🚀 [FULL SYNC] Starting single table sync...');
+  
+  // Step 1: Fetch Categories (for denormalization)
+  console.log('📂 Fetching categories for denormalization...');
+  const categoriesResponse = await fetch(`${KIOTVIET_BASE_URL}/categories?hierachicalData=true`, {
+    headers: {
+      'Retailer': retailerName,
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    }
+  });
+  
+  if (!categoriesResponse.ok) {
+    throw new Error(`Failed to fetch categories: ${categoriesResponse.status}`);
+  }
+  
+  const categoriesData = await categoriesResponse.json();
+  const categoriesMap = new Map();
+  
+  // Build category map with full path
+  function buildCategoryMap(cats: any[], parentPath = '') {
+    if (!Array.isArray(cats)) return;
+    for (const cat of cats) {
+      const fullPath = parentPath ? `${parentPath} > ${cat.categoryName}` : cat.categoryName;
+      categoriesMap.set(cat.categoryId, { 
+        name: cat.categoryName, 
+        path: fullPath 
+      });
+      if (cat.children && Array.isArray(cat.children)) {
+        buildCategoryMap(cat.children, fullPath);
+      }
+    }
+  }
+  
+  buildCategoryMap(categoriesData.data || categoriesData || []);
+  console.log(`📂 Loaded ${categoriesMap.size} categories`);
+  
+  // Step 2: Fetch Products with Inventory
+  let allProducts: any[] = [];
+  let currentItem = 0;
+  const pageSize = options?.pageSize || 100;
+  
+  console.log('📡 Fetching products with inventory from KiotViet...');
+  
+  while (true) {
+    const url = new URL(`${KIOTVIET_BASE_URL}/products`);
+    url.searchParams.append('pageSize', pageSize.toString());
+    url.searchParams.append('currentItem', currentItem.toString());
+    url.searchParams.append('includeInventory', 'true');
+    url.searchParams.append('includeQuantity', 'true');
+    
+    if (options?.dateFrom) {
+      url.searchParams.append('lastModifiedFrom', options.dateFrom);
+    }
+    
+    const response = await fetch(url.toString(), {
+      headers: {
+        'Retailer': retailerName,
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch products: ${response.status}`);
+    }
+    
+    const apiData = await response.json();
+    const data = apiData.data || [];
+    const total = apiData.total || data.length;
+    
+    allProducts = [...allProducts, ...data];
+    console.log(`📥 Products: ${allProducts.length}/${total}`);
+    
+    if (allProducts.length >= total || data.length === 0) break;
+    currentItem += pageSize;
+  }
+  
+  console.log(`✅ Fetched ${allProducts.length} products`);
+  
+  // Step 3: Transform & Enrich Data
+  console.log('🔄 Transforming data...');
+  
+  const enrichedProducts = allProducts.map((p: any) => {
+    // Get category info
+    const category = categoriesMap.get(p.categoryId);
+    
+    // Process inventory by branch
+    const inventories = p.inventories || [];
+    const inventoryByBranch = inventories.map((inv: any) => ({
+      branch_id: inv.branchId,
+      branch_name: inv.branchName || 'Unknown',
+      on_hand: inv.onHand || 0,
+      reserved: inv.reserved || 0,
+      available: (inv.onHand || 0) - (inv.reserved || 0),
+      min_quality: inv.minQuality || null,
+      max_quality: inv.maxQuality || null,
+      location: null // Will be filled from productShelves
+    }));
+    
+    // Aggregate inventory totals
+    const totalOnHand = inventoryByBranch.reduce((sum: number, inv: any) => sum + inv.on_hand, 0);
+    const totalReserved = inventoryByBranch.reduce((sum: number, inv: any) => sum + inv.reserved, 0);
+    
+    // Get min/max stock from first inventory record (KiotViet uses same min/max across branches)
+    const minStock = inventories[0]?.minQuality || 0;
+    const maxStock = inventories[0]?.maxQuality || 999999999;
+    
+    // Extract location from productShelves and merge into inventoryByBranch
+    if (p.productShelves && Array.isArray(p.productShelves)) {
+      p.productShelves.forEach((shelf: any) => {
+        const invIndex = inventoryByBranch.findIndex((inv: any) => inv.branch_id === shelf.branchId);
+        if (invIndex >= 0) {
+          inventoryByBranch[invIndex].location = shelf.ProductShelves || null;
+        }
+      });
+    }
+    
+    return {
+      id: p.id,
+      code: p.code,
+      barcode: p.barCode || p.barcode || null,
+      name: p.name,
+      full_name: p.fullName || p.name,
+      description: p.description || null,
+      
+      // Category (denormalized)
+      category_id: p.categoryId || null,
+      category_name: category?.name || p.categoryName || null,
+      category_path: category?.path || null,
+      
+      // Trademark/Brand (denormalized)
+      trademark_id: p.tradeMarkId || null,
+      trademark_name: p.tradeMarkName || null,
+      
+      // Pricing (NO COST)
+      base_price: p.basePrice || 0,
+      
+      // Inventory
+      total_on_hand: totalOnHand,
+      total_reserved: totalReserved,
+      total_available: totalOnHand - totalReserved,
+      inventory_by_branch: JSON.stringify(inventoryByBranch),
+      
+      // Stock Management
+      min_stock: minStock,
+      max_stock: maxStock,
+      
+      // Details
+      weight: p.weight || 0,
+      
+      // Settings
+      has_variants: p.hasVariants || false,
+      allow_sale: p.allowsSale !== false,
+      is_active: p.isActive !== false,
+      product_type: p.type || p.productType || 2,
+      is_reward_point: p.isRewardPoint !== false,
+      is_lot_serial_control: p.isLotSerialControl || false,
+      is_batch_expire_control: p.isBatchExpireControl || false,
+      
+      order_template: p.orderTemplate || null,
+      
+      // JSONB Fields
+      images: JSON.stringify(p.images || []),
+      attributes: JSON.stringify(p.attributes || []),
+      units: JSON.stringify(p.units || []),
+      price_books: JSON.stringify(p.priceBooks || []),
+      product_formulas: JSON.stringify(p.productFormulas || []),
+      product_serials: JSON.stringify(p.productSerials || []),
+      product_batch_expires: JSON.stringify(p.productBatchExpires || []),
+      product_shelves: JSON.stringify(p.productShelves || []),
+      
+      synced_at: new Date().toISOString()
+    };
+  });
+  
+  // Step 4: Upsert to Single Table
+  console.log(`💾 Upserting ${enrichedProducts.length} products to kiotviet_products_full...`);
+  
+  const batchSize = 500;
+  for (let i = 0; i < enrichedProducts.length; i += batchSize) {
+    const batch = enrichedProducts.slice(i, i + batchSize);
+    
+    const { error } = await supabase
+      .from('kiotviet_products_full')
+      .upsert(batch, { onConflict: 'id' });
+    
+    if (error) {
+      console.error(`❌ Batch ${i}-${i + batch.length} error:`, error);
+      throw error;
+    }
+    
+    console.log(`✅ Batch ${i}-${i + batch.length} done`);
+  }
+  
+  console.log('✅ [FULL SYNC] Completed!');
+  return { count: enrichedProducts.length };
 }

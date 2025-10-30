@@ -59,10 +59,13 @@ export class KiotVietService {
   /**
    * Sync data from KiotViet API to Supabase
    */
-  static async syncData(syncType: 'categories' | 'products' | 'inventory' | 'all', options?: {
-    pageSize?: number;
-    dateFrom?: string;
-  }) {
+  static async syncData(
+    syncType: 'categories' | 'products' | 'inventory' | 'all' | 'products_full',
+    options?: {
+      pageSize?: number;
+      dateFrom?: string;
+    }
+  ) {
     const credential = await this.getActiveCredential();
     if (!credential) {
       throw new Error('No active KiotViet credentials found. Please configure in Settings.');
