@@ -59,10 +59,16 @@ export class KiotVietProductsFullService {
     // Category filter - prefer path-based filtering for hierarchical categories
     if (filters?.categoryPaths && filters.categoryPaths.length > 0) {
       // Use path prefix matching to include all subcategories
-      const pathConditions = filters.categoryPaths
-        .map(path => `category_path.ilike.${path}%`)
-        .join(',');
-      query = query.or(pathConditions);
+      if (filters.categoryPaths.length === 1) {
+        // Single path - use direct ilike filter
+        query = query.ilike('category_path', `${filters.categoryPaths[0]}%`);
+      } else {
+        // Multiple paths - use OR conditions
+        const pathConditions = filters.categoryPaths
+          .map(path => `category_path.ilike.${path}%`)
+          .join(',');
+        query = query.or(pathConditions);
+      }
     } else if (filters?.categoryId) {
       query = query.eq('category_id', filters.categoryId);
     } else if (filters?.categoryIds && filters.categoryIds.length > 0) {

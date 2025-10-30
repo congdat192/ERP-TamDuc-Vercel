@@ -61,6 +61,10 @@ export function CategoryTreeSelector({ categories, selectedCategories, selectedC
     onSelectionChange(allIds, allPaths);
   };
 
+  const handleClearAll = () => {
+    onSelectionChange([], []);
+  };
+
   const getAllCategoryPaths = (nodes: CategoryNode[]): string[] => {
     let paths: string[] = [];
     nodes.forEach(node => {
@@ -205,9 +209,20 @@ export function CategoryTreeSelector({ categories, selectedCategories, selectedC
 
           {/* Footer */}
           <div className="p-4 border-t border-border flex items-center justify-between">
-            <Button variant="outline" size="sm" onClick={handleSelectAll}>
-              Chọn tất cả
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={handleSelectAll}>
+                Chọn tất cả
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleClearAll}
+                disabled={selectedCategories.length === 0}
+                className="text-destructive hover:text-destructive disabled:opacity-50"
+              >
+                Xóa chọn
+              </Button>
+            </div>
             <Button onClick={() => setOpen(false)} className="voucher-button-primary">
               Áp dụng
             </Button>
