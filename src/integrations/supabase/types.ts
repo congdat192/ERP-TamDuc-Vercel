@@ -1599,6 +1599,53 @@ export type Database = {
         }
         Relationships: []
       }
+      kiotviet_sync_schedules: {
+        Row: {
+          created_at: string
+          credential_id: string
+          custom_interval_hours: number | null
+          enabled: boolean
+          frequency: string
+          id: string
+          last_run_at: string | null
+          next_run_at: string | null
+          sync_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          credential_id: string
+          custom_interval_hours?: number | null
+          enabled?: boolean
+          frequency?: string
+          id?: string
+          last_run_at?: string | null
+          next_run_at?: string | null
+          sync_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          credential_id?: string
+          custom_interval_hours?: number | null
+          enabled?: boolean
+          frequency?: string
+          id?: string
+          last_run_at?: string | null
+          next_run_at?: string | null
+          sync_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kiotviet_sync_schedules_credential_id_fkey"
+            columns: ["credential_id"]
+            isOneToOne: false
+            referencedRelation: "kiotviet_credentials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lens_banners: {
         Row: {
           created_at: string | null
