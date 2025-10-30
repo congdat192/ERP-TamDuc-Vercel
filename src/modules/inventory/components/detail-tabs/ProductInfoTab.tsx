@@ -76,6 +76,14 @@ export function ProductInfoTab({ product }: ProductInfoTabProps) {
   const hasImages = productImages.length > 0;
   const mainImage = hasImages ? productImages[0] : null;
 
+  // DEBUG LOG
+  console.log('🖼️ ProductInfoTab - Images:', {
+    raw: product.images,
+    parsed: productImages,
+    hasImages,
+    mainImage
+  });
+
   return (
     <div className="space-y-6">
       {/* Header Section */}

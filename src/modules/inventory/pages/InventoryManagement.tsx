@@ -124,10 +124,11 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
       // Get first unit from units JSONB
       const firstUnit = Array.isArray(p.units) && p.units.length > 0 ? p.units[0].unitName : '-';
       
-      return {
-        id: p.id.toString(),
-        image: p.images?.[0] || '',
-        productCode: p.code,
+        return {
+          id: p.id.toString(),
+          image: p.images?.[0] || '',
+          images: p.images || [],
+          productCode: p.code,
         barcode: p.barcode || '-',
         name: p.name,
         category: p.category_path || p.category_name || '-',
