@@ -26,7 +26,7 @@ export function KiotVietSettings() {
 
   const [showKeyGenerator, setShowKeyGenerator] = useState(false);
   const [generatedKey, setGeneratedKey] = useState('');
-  const [syncingType, setSyncingType] = useState<'categories' | 'products' | 'inventory' | 'all' | null>(null);
+  const [syncingType, setSyncingType] = useState<'products_full' | null>(null);
 
   // Get existing credentials
   const { data: credential, isLoading: credentialLoading } = useQuery({
@@ -71,7 +71,7 @@ export function KiotVietSettings() {
 
   // Sync mutation
   const syncMutation = useMutation({
-    mutationFn: (syncType: 'categories' | 'products' | 'inventory' | 'all') => 
+    mutationFn: (syncType: 'products_full') => 
       KiotVietService.syncData(syncType),
     onSuccess: (data, syncType) => {
       queryClient.invalidateQueries({ queryKey: ['kiotviet-sync-logs'] });
@@ -79,7 +79,7 @@ export function KiotVietSettings() {
       setSyncingType(null);
       toast({
         title: 'Đồng bộ thành công',
-        description: `Đã đồng bộ ${syncType === 'all' ? 'tất cả dữ liệu' : syncType} từ KiotViet`,
+        description: 'Đã đồng bộ toàn bộ dữ liệu sản phẩm từ KiotViet',
       });
     },
     onError: (error: Error, syncType) => {
@@ -118,9 +118,9 @@ export function KiotVietSettings() {
     });
   };
 
-  const handleSync = (syncType: 'categories' | 'products' | 'inventory' | 'all') => {
-    setSyncingType(syncType);
-    syncMutation.mutate(syncType);
+  const handleSync = () => {
+    setSyncingType('products_full');
+    syncMutation.mutate('products_full');
   };
 
   const isConnected = credential?.is_active;
@@ -282,130 +282,44 @@ export function KiotVietSettings() {
                 <Alert>
                   <Info className="h-4 w-4" />
                   <AlertDescription>
-                    Đồng bộ dữ liệu từ KiotViet về hệ thống. Quá trình có thể mất vài phút tùy thuộc vào lượng dữ liệu.
+                    Đồng bộ toàn bộ dữ liệu sản phẩm (categories, products, inventory) từ KiotViet về hệ thống. 
+                    Quá trình có thể mất vài phút tùy thuộc vào lượng dữ liệu.
                   </AlertDescription>
                 </Alert>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="flex items-center gap-3 mb-4">
-                        <Database className="h-8 w-8 text-blue-500" />
-                        <div>
-                          <h4 className="font-semibold">Nhóm hàng</h4>
-                          <p className="text-xs text-muted-foreground">Categories</p>
-                        </div>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="flex-shrink-0">
+                        <RefreshCw className="h-12 w-12 text-primary" />
                       </div>
-                      <Button 
-                        onClick={() => handleSync('categories')}
-                        disabled={syncingType !== null}
-                        className="w-full"
-                        variant="outline"
-                      >
-                        {syncingType === 'categories' ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Đang đồng bộ...
-                          </>
-                        ) : (
-                          <>
-                            <RefreshCw className="h-4 w-4 mr-2" />
-                            Đồng bộ nhóm hàng
-                          </>
-                        )}
-                      </Button>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="flex items-center gap-3 mb-4">
-                        <Package className="h-8 w-8 text-green-500" />
-                        <div>
-                          <h4 className="font-semibold">Sản phẩm</h4>
-                          <p className="text-xs text-muted-foreground">Products</p>
-                        </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-lg">Đồng bộ KiotViet</h4>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Đồng bộ toàn bộ danh mục, sản phẩm và tồn kho từ KiotViet vào bảng kiotviet_products_full
+                        </p>
                       </div>
-                      <Button 
-                        onClick={() => handleSync('products')}
-                        disabled={syncingType !== null}
-                        className="w-full"
-                        variant="outline"
-                      >
-                        {syncingType === 'products' ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Đang đồng bộ...
-                          </>
-                        ) : (
-                          <>
-                            <RefreshCw className="h-4 w-4 mr-2" />
-                            Đồng bộ sản phẩm
-                          </>
-                        )}
-                      </Button>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="flex items-center gap-3 mb-4">
-                        <Boxes className="h-8 w-8 text-orange-500" />
-                        <div>
-                          <h4 className="font-semibold">Tồn kho</h4>
-                          <p className="text-xs text-muted-foreground">Inventory</p>
-                        </div>
-                      </div>
-                      <Button 
-                        onClick={() => handleSync('inventory')}
-                        disabled={syncingType !== null}
-                        className="w-full"
-                        variant="outline"
-                      >
-                        {syncingType === 'inventory' ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Đang đồng bộ...
-                          </>
-                        ) : (
-                          <>
-                            <RefreshCw className="h-4 w-4 mr-2" />
-                            Đồng bộ tồn kho
-                          </>
-                        )}
-                      </Button>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="pt-6">
-                      <div className="flex items-center gap-3 mb-4">
-                        <RefreshCw className="h-8 w-8 text-purple-500" />
-                        <div>
-                          <h4 className="font-semibold">Toàn bộ</h4>
-                          <p className="text-xs text-muted-foreground">All Data</p>
-                        </div>
-                      </div>
-                      <Button 
-                        onClick={() => handleSync('all')}
-                        disabled={syncingType !== null}
-                        className="w-full"
-                      >
-                        {syncingType === 'all' ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Đang đồng bộ...
-                          </>
-                        ) : (
-                          <>
-                            <RefreshCw className="h-4 w-4 mr-2" />
-                            Đồng bộ toàn bộ
-                          </>
-                        )}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </div>
+                    </div>
+                    <Button 
+                      onClick={handleSync}
+                      disabled={syncingType !== null}
+                      className="w-full"
+                      size="lg"
+                    >
+                      {syncingType === 'products_full' ? (
+                        <>
+                          <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                          Đang đồng bộ...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="h-5 w-5 mr-2" />
+                          Đồng bộ dữ liệu
+                        </>
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
               </TabsContent>
 
               <TabsContent value="stats" className="space-y-4">
