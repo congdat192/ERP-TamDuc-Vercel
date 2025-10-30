@@ -407,11 +407,31 @@ export const voucherService = {
 
   // ========== VOUCHER REISSUE (External API) ==========
   async reissueVoucher(voucher_code: string): Promise<VoucherReissueResponse> {
-    const { data, error } = await supabase.functions.invoke('reissue-voucher', {
-      body: { voucher_code }
-    });
+    // Get current user's session token
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session?.access_token) {
+      throw new Error('Bạn chưa đăng nhập. Vui lòng đăng nhập lại.');
+    }
 
-    if (error) throw error;
+    const response = await fetch(
+      'https://kcirpjxbjqagrqrjfldu.supabase.co/functions/v1/reissue-voucher',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ voucher_code })
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Network error' }));
+      throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
     return data;
   }
 };
