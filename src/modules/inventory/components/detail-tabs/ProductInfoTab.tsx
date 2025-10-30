@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { ImageIcon, TrendingUp } from 'lucide-react';
 
 interface ProductInfoTabProps {
@@ -22,11 +24,19 @@ const InfoRow = ({
 );
 
 export function ProductInfoTab({ product }: ProductInfoTabProps) {
+  const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [imageLoadError, setImageLoadError] = useState<Set<number>>(new Set());
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('vi-VN', { 
       style: 'currency', 
       currency: 'VND' 
     }).format(amount);
+  };
+
+  const handleImageError = (index: number) => {
+    setImageLoadError(prev => new Set(prev).add(index));
   };
 
   // Support both mock data and database fields
@@ -61,13 +71,30 @@ export function ProductInfoTab({ product }: ProductInfoTabProps) {
     product.gender
   ].filter(Boolean).join(' ');
 
+  // Parse images from database
+  const productImages = Array.isArray(product.images) ? product.images : [];
+  const hasImages = productImages.length > 0;
+  const mainImage = hasImages ? productImages[0] : null;
+
   return (
     <div className="space-y-6">
       {/* Header Section */}
       <div className="flex gap-4 items-start pb-6 border-b theme-border-primary">
-        {/* Product Image Placeholder */}
-        <div className="w-40 h-40 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
-          <ImageIcon className="w-16 h-16 theme-text-muted" />
+        {/* Product Image */}
+        <div 
+          className={`w-40 h-40 bg-muted rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden ${hasImages ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
+          onClick={() => hasImages && setIsImagePreviewOpen(true)}
+        >
+          {hasImages && !imageLoadError.has(0) ? (
+            <img 
+              src={mainImage || ''} 
+              alt={productName}
+              className="w-full h-full object-cover"
+              onError={() => handleImageError(0)}
+            />
+          ) : (
+            <ImageIcon className="w-16 h-16 theme-text-muted" />
+          )}
         </div>
         
         {/* Product Details */}
@@ -192,6 +219,63 @@ export function ProductInfoTab({ product }: ProductInfoTabProps) {
           </div>
         </div>
       </div>
+
+      {/* Image Preview Modal */}
+      <Dialog open={isImagePreviewOpen} onOpenChange={setIsImagePreviewOpen}>
+        <DialogContent className="max-w-4xl">
+          <div className="space-y-4">
+            {/* Main Image */}
+            <div className="w-full aspect-square bg-muted rounded-lg overflow-hidden flex items-center justify-center">
+              {hasImages && !imageLoadError.has(selectedImageIndex) ? (
+                <img 
+                  src={productImages[selectedImageIndex]} 
+                  alt={`${productName} - Ảnh ${selectedImageIndex + 1}`}
+                  className="max-w-full max-h-full object-contain"
+                  onError={() => handleImageError(selectedImageIndex)}
+                />
+              ) : (
+                <ImageIcon className="w-16 h-16 theme-text-muted" />
+              )}
+            </div>
+            
+            {/* Thumbnails (if multiple images) */}
+            {productImages.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {productImages.map((img, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImageIndex(index)}
+                    className={`
+                      w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all
+                      ${index === selectedImageIndex ? 'border-blue-500' : 'border-gray-200 hover:border-gray-400'}
+                    `}
+                  >
+                    {!imageLoadError.has(index) ? (
+                      <img 
+                        src={img} 
+                        alt={`Thumbnail ${index + 1}`}
+                        className="w-full h-full object-cover"
+                        onError={() => handleImageError(index)}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-muted flex items-center justify-center">
+                        <ImageIcon className="w-8 h-8 theme-text-muted" />
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+            
+            {/* Image Counter */}
+            {productImages.length > 1 && (
+              <div className="text-center text-sm theme-text-muted">
+                {selectedImageIndex + 1} / {productImages.length}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
