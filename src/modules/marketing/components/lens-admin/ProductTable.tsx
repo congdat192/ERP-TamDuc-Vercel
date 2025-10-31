@@ -28,6 +28,7 @@ interface ProductTableProps {
 }
 
 export const DEFAULT_PRODUCT_COLUMNS = [
+  { key: 'image', label: 'Ảnh', visible: true },
   { key: 'sku', label: 'Mã SKU', visible: true },
   { key: 'name', label: 'Tên sản phẩm', visible: true },
   { key: 'description', label: 'Mô tả', visible: false },
@@ -96,6 +97,7 @@ export function ProductTable({ products, onEdit, onClone, onRefetch, onSelect, c
         <Table className="min-w-max">
       <TableHeader>
         <TableRow>
+          {columnVisibility.image && <TableHead className="min-w-[80px]">Ảnh</TableHead>}
           {columnVisibility.sku && <TableHead className="min-w-[120px]">Mã SKU</TableHead>}
           {columnVisibility.name && <TableHead className="min-w-[200px]">Tên sản phẩm</TableHead>}
           {columnVisibility.description && <TableHead className="min-w-[250px]">Mô tả</TableHead>}
@@ -126,6 +128,24 @@ export function ProductTable({ products, onEdit, onClone, onRefetch, onSelect, c
             ) : (
               paginatedProducts.map((product) => (
                 <TableRow key={product.id}>
+                  {columnVisibility.image && (
+                    <TableCell>
+                      {product.image_urls && product.image_urls.length > 0 ? (
+                        <img 
+                          src={product.image_urls[0]} 
+                          alt={product.name}
+                          className="w-12 h-12 object-cover rounded border"
+                          onError={(e) => {
+                            e.currentTarget.src = 'https://placehold.co/48x48?text=No+Image';
+                          }}
+                        />
+                      ) : (
+                        <div className="w-12 h-12 bg-gray-100 rounded border flex items-center justify-center text-gray-400 text-xs">
+                          No Image
+                        </div>
+                      )}
+                    </TableCell>
+                  )}
                   {columnVisibility.sku && (
                     <TableCell>{product.sku || '-'}</TableCell>
                   )}
