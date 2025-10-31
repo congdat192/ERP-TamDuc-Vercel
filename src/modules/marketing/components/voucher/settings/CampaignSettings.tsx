@@ -3,18 +3,20 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Edit } from 'lucide-react';
+import { Plus, Edit, Trash2 } from 'lucide-react';
 import { voucherService, type VoucherCampaign } from '../../../services/voucherService';
 import { toast } from 'sonner';
 import { CampaignDialog } from './CampaignDialog';
+import { ConfirmationDialog } from '@/modules/admin/components/ConfirmationDialog';
 
 interface CampaignItemProps {
   campaign: VoucherCampaign;
   onEdit: (campaign: VoucherCampaign) => void;
   onToggle: (campaign: VoucherCampaign) => void;
+  onDelete: (campaign: VoucherCampaign) => void;
 }
 
-function CampaignItem({ campaign, onEdit, onToggle }: CampaignItemProps) {
+function CampaignItem({ campaign, onEdit, onToggle, onDelete }: CampaignItemProps) {
   return (
     <div 
       className={`flex items-center justify-between p-3 border rounded-lg transition-opacity ${
@@ -49,16 +51,25 @@ function CampaignItem({ campaign, onEdit, onToggle }: CampaignItemProps) {
         </div>
       </div>
 
-      {/* Edit Button */}
-      <Button 
-        variant="outline" 
-        size="sm"
-        onClick={() => onEdit(campaign)}
-        className="ml-4"
-      >
-        <Edit className="w-4 h-4 mr-1" />
-        Sửa
-      </Button>
+      {/* Action Buttons */}
+      <div className="flex gap-2 ml-4">
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => onEdit(campaign)}
+        >
+          <Edit className="w-4 h-4 mr-1" />
+          Sửa
+        </Button>
+        <Button 
+          variant="destructive" 
+          size="sm"
+          onClick={() => onDelete(campaign)}
+        >
+          <Trash2 className="w-4 h-4 mr-1" />
+          Xóa
+        </Button>
+      </div>
     </div>
   );
 }
@@ -69,6 +80,8 @@ export function CampaignSettings() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<VoucherCampaign | null>(null);
   const [activeTab, setActiveTab] = useState<'active' | 'inactive'>('active');
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deletingCampaign, setDeletingCampaign] = useState<VoucherCampaign | null>(null);
 
   useEffect(() => {
     loadCampaigns();
@@ -76,7 +89,7 @@ export function CampaignSettings() {
 
   const loadCampaigns = async () => {
     try {
-      const data = await voucherService.getCampaigns();
+      const data = await voucherService.getAllCampaigns();
       setCampaigns(data);
     } catch (error) {
       toast.error('Không thể tải danh sách chiến dịch');
@@ -114,6 +127,34 @@ export function CampaignSettings() {
       loadCampaigns();
     } catch (error) {
       toast.error('Không thể cập nhật trạng thái');
+    }
+  };
+
+  const handleDeleteClick = (campaign: VoucherCampaign) => {
+    setDeletingCampaign(campaign);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingCampaign) return;
+
+    try {
+      await voucherService.deleteCampaign(deletingCampaign.id);
+      
+      toast.success(`Đã xóa chiến dịch ${deletingCampaign.name}`);
+      
+      setDeleteConfirmOpen(false);
+      setDeletingCampaign(null);
+      loadCampaigns();
+    } catch (error: any) {
+      let errorMessage = 'Không thể xóa chiến dịch';
+      
+      // Check for foreign key constraint error
+      if (error.code === '23503') {
+        errorMessage = 'Không thể xóa chiến dịch này vì đã có voucher được phát hành. Vui lòng tắt chiến dịch thay vì xóa.';
+      }
+      
+      toast.error(error.message || errorMessage);
     }
   };
 
@@ -162,6 +203,7 @@ export function CampaignSettings() {
                     campaign={campaign}
                     onEdit={(c) => { setEditingCampaign(c); setDialogOpen(true); }}
                     onToggle={handleToggleActive}
+                    onDelete={handleDeleteClick}
                   />
                 ))}
               </div>
@@ -183,6 +225,7 @@ export function CampaignSettings() {
                     campaign={campaign}
                     onEdit={(c) => { setEditingCampaign(c); setDialogOpen(true); }}
                     onToggle={handleToggleActive}
+                    onDelete={handleDeleteClick}
                   />
                 ))}
               </div>
@@ -196,6 +239,20 @@ export function CampaignSettings() {
         onOpenChange={setDialogOpen}
         campaign={editingCampaign}
         onSave={handleSave}
+      />
+
+      <ConfirmationDialog
+        isOpen={deleteConfirmOpen}
+        onClose={() => {
+          setDeleteConfirmOpen(false);
+          setDeletingCampaign(null);
+        }}
+        title="Xác nhận xóa chiến dịch"
+        message={`Bạn có chắc chắn muốn xóa chiến dịch "${deletingCampaign?.name}"? Hành động này không thể hoàn tác.`}
+        onConfirm={handleDeleteConfirm}
+        confirmText="Xóa"
+        cancelText="Hủy"
+        variant="destructive"
       />
     </Card>
   );

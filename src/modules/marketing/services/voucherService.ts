@@ -127,6 +127,17 @@ export const voucherService = {
     const { data, error } = await supabase
       .from('voucher_campaigns')
       .select('*')
+      .eq('is_active', true)
+      .order('name');
+    
+    if (error) throw error;
+    return data || [];
+  },
+
+  async getAllCampaigns(): Promise<VoucherCampaign[]> {
+    const { data, error } = await supabase
+      .from('voucher_campaigns')
+      .select('*')
       .order('name');
     
     if (error) throw error;
@@ -167,6 +178,15 @@ export const voucherService = {
     const { error } = await supabase
       .from('voucher_campaigns')
       .update(updateData)
+      .eq('id', id);
+    
+    if (error) throw error;
+  },
+
+  async deleteCampaign(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('voucher_campaigns')
+      .delete()
       .eq('id', id);
     
     if (error) throw error;
