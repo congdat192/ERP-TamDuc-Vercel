@@ -53,8 +53,8 @@ serve(async (req) => {
 
     if (!voucher_code) {
       return new Response(
-        JSON.stringify({ error: 'Missing required field: voucher_code' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ success: false, message: 'Thiếu mã voucher' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -94,6 +94,7 @@ serve(async (req) => {
 
       console.error('[reissue-voucher] API error:', response.status, apiMessage);
 
+      // ✅ CRITICAL: Always return 200 so frontend can read the body
       // Return same format as external API: { success: false, message: "..." }
       return new Response(
         JSON.stringify({ 
@@ -102,7 +103,7 @@ serve(async (req) => {
           details: extBody || errorText
         }),
         {
-          status: response.status,
+          status: 200,  // ✅ Always 200 for business errors
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
       );
@@ -123,11 +124,11 @@ serve(async (req) => {
     console.error('[reissue-voucher] Exception:', error);
     return new Response(
       JSON.stringify({ 
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        success: false,
+        message: error instanceof Error ? error.message : 'Có lỗi xảy ra khi cấp lại voucher'
       }),
       {
-        status: 500,
+        status: 200,  // ✅ Always 200 for business errors
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );

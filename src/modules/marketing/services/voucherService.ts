@@ -428,11 +428,15 @@ export const voucherService = {
       const errorMessage = 
         errorBody?.message 
         || errorBody?.description 
-        || errorBody?.details
         || error.message 
-        || 'Không thể cấp lại voucher. Vui lòng thử lại.';
+        || 'Có lỗi xảy ra khi cấp lại voucher';
       
       throw new Error(errorMessage);
+    }
+
+    // ✅ Check if business logic failed (success: false)
+    if (!data?.success) {
+      throw new Error(data?.message || 'Có lỗi xảy ra khi cấp lại voucher');
     }
 
     return data;
