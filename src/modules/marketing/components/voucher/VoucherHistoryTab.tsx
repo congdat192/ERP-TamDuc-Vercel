@@ -343,8 +343,14 @@ export function VoucherHistoryTab() {
                     </TableCell>
                     <TableCell className="text-sm">{item.note || '-'}</TableCell>
                     <TableCell className="text-sm">{item.reissue_1_code || '-'}</TableCell>
-                    <TableCell className="text-sm">
-                      {item.reissue_1_status === null ? '-' : (item.reissue_1_status ? 'Đã dùng' : 'Chưa dùng')}
+                    <TableCell>
+                      {item.reissue_1_status === null ? (
+                        '-'
+                      ) : (
+                        <Badge variant={item.reissue_1_status ? 'success' : 'destructive'}>
+                          {item.reissue_1_status ? '✓ Đã dùng' : '✗ Chưa dùng'}
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell>{item.reissue_1_invoice_id || '-'}</TableCell>
                     <TableCell className="text-sm">{item.reissue_1_invoice_code || '-'}</TableCell>
@@ -355,8 +361,14 @@ export function VoucherHistoryTab() {
                       {item.reissue_1_invoice_amount ? item.reissue_1_invoice_amount.toLocaleString('vi-VN') : '-'}
                     </TableCell>
                     <TableCell className="text-sm">{item.reissue_2_code || '-'}</TableCell>
-                    <TableCell className="text-sm">
-                      {item.reissue_2_status === null ? '-' : (item.reissue_2_status ? 'Đã dùng' : 'Chưa dùng')}
+                    <TableCell>
+                      {item.reissue_2_status === null ? (
+                        '-'
+                      ) : (
+                        <Badge variant={item.reissue_2_status ? 'success' : 'destructive'}>
+                          {item.reissue_2_status ? '✓ Đã dùng' : '✗ Chưa dùng'}
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell>{item.reissue_2_invoice_id || '-'}</TableCell>
                     <TableCell className="text-sm">{item.reissue_2_invoice_code || '-'}</TableCell>
