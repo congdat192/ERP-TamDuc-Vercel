@@ -977,28 +977,34 @@ export type Database = {
           code: string
           created_at: string | null
           description: string | null
+          display_order: number | null
           feature_type: string | null
           id: number
           module_id: number
           name: string
+          parent_id: number | null
         }
         Insert: {
           code: string
           created_at?: string | null
           description?: string | null
+          display_order?: number | null
           feature_type?: string | null
           id?: number
           module_id: number
           name: string
+          parent_id?: number | null
         }
         Update: {
           code?: string
           created_at?: string | null
           description?: string | null
+          display_order?: number | null
           feature_type?: string | null
           id?: number
           module_id?: number
           name?: string
+          parent_id?: number | null
         }
         Relationships: [
           {
@@ -1006,6 +1012,13 @@ export type Database = {
             columns: ["module_id"]
             isOneToOne: false
             referencedRelation: "modules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "features_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "features"
             referencedColumns: ["id"]
           },
         ]

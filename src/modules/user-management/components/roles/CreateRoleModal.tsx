@@ -9,8 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { RoleCreationData, CustomRole, ModuleInfo, PermissionSelection } from '../../types/role-management';
 import { RoleService } from '../../services/roleService';
 import { ModuleService } from '../../services/moduleService';
-import { CreateRoleModuleSidebar } from './CreateRoleModuleSidebar';
-import { CreateRolePermissionDetail } from './CreateRolePermissionDetail';
+import { PermissionMatrixV2 } from './PermissionMatrixV2';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 
@@ -262,19 +261,11 @@ export function CreateRoleModal({ isOpen, onClose, onRoleCreated }: CreateRoleMo
                 <div className="text-gray-500">Không có modules nào được tìm thấy</div>
               </div>
             ) : (
-              <>
-                <CreateRoleModuleSidebar
-                  modules={modules}
-                  selectedModuleId={selectedModuleId}
-                  onModuleSelect={setSelectedModuleId}
-                  permissionSelections={permissionSelections}
-                />
-                <CreateRolePermissionDetail
-                  selectedModule={selectedModule}
-                  permissionSelections={permissionSelections}
-                  onPermissionChange={handlePermissionChange}
-                />
-              </>
+              <PermissionMatrixV2
+                modules={modules}
+                selections={permissionSelections}
+                onSelectionChange={handlePermissionChange}
+              />
             )}
           </div>
 

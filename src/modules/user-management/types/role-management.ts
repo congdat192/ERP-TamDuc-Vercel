@@ -35,6 +35,7 @@ export interface ModuleInfo {
   description: string;
   icon: string;
   features: FeatureInfo[];
+  featureTree: FeatureInfo[]; // Hierarchical structure for UI
   status: 'active' | 'inactive';
 }
 
@@ -44,7 +45,10 @@ export interface FeatureInfo {
   code: string;
   name: string;
   description: string;
-  type: 'view' | 'create' | 'edit' | 'delete';
+  type: 'view' | 'create' | 'edit' | 'delete' | 'parent' | 'manage';
+  parent_id?: number | null;
+  display_order?: number;
+  children?: FeatureInfo[];
 }
 
 // Permission selection state cho UI - track by feature codes
