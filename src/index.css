@@ -557,11 +557,11 @@
   }
 
   .theme-bg-primary-subtle {
-    background-color: hsl(var(--voucher-primary-500) / 0.1);
+    background-color: hsl(var(--voucher-primary-500));
   }
 
   .theme-bg-secondary-subtle {
-    background-color: hsl(var(--voucher-secondary-500) / 0.1);
+    background-color: hsl(var(--voucher-secondary-500));
   }
 
   .theme-border-primary-subtle {
