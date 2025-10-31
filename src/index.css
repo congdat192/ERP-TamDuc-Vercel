@@ -548,6 +548,14 @@
     color: hsl(var(--berry-success-600));
   }
 
+  .theme-text-warning {
+    color: hsl(var(--berry-warning-600));
+  }
+
+  .theme-text-danger {
+    color: hsl(var(--berry-error-600));
+  }
+
   .theme-border-primary {
     border-color: hsl(var(--voucher-primary-500));
   }

@@ -11,10 +11,10 @@ interface PermissionMatrixV2Props {
 }
 
 const CRUD_TYPES = [
-  { type: 'view', label: 'Xem', icon: Eye, color: 'text-blue-500 dark:text-blue-400' },
-  { type: 'create', label: 'Thêm mới', icon: Plus, color: 'text-green-500 dark:text-green-400' },
-  { type: 'edit', label: 'Sửa', icon: Edit, color: 'text-amber-500 dark:text-amber-400' },
-  { type: 'delete', label: 'Xóa', icon: Trash2, color: 'text-red-500 dark:text-red-400' }
+  { type: 'view', label: 'Xem', icon: Eye, color: 'theme-text-info' },
+  { type: 'create', label: 'Thêm mới', icon: Plus, color: 'theme-text-success' },
+  { type: 'edit', label: 'Sửa', icon: Edit, color: 'theme-text-warning' },
+  { type: 'delete', label: 'Xóa', icon: Trash2, color: 'theme-text-danger' }
 ] as const;
 
 export function PermissionMatrixV2({ modules, selections, onSelectionChange }: PermissionMatrixV2Props) {
@@ -106,7 +106,7 @@ export function PermissionMatrixV2({ modules, selections, onSelectionChange }: P
   }
 
   return (
-    <div className="w-full h-full overflow-auto">
+    <div className="w-full h-full flex-1 min-h-0 overflow-auto">
       <table className="w-full">
         <thead className="bg-muted border-b-2 border-border sticky top-0 z-10">
           <tr>

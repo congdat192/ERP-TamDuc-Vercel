@@ -312,7 +312,7 @@ export function EditRoleModal({ isOpen, onClose, role, onRoleUpdated }: EditRole
           </div>
 
           {/* Permission Selection - Sidebar Layout with scrolling */}
-          <div className="flex-1 flex border border-border rounded-lg overflow-hidden my-4" style={{ maxHeight: 'calc(95vh - 450px)' }}>
+          <div className="flex-1 flex border border-border rounded-lg my-4 min-h-0 overflow-auto" style={{ maxHeight: 'calc(95vh - 450px)' }}>
             {isLoadingModules ? (
               <div className="flex-1 flex items-center justify-center bg-card">
                 <div className="text-muted-foreground">Đang tải modules...</div>
