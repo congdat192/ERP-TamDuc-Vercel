@@ -33,7 +33,7 @@ export function PermissionMatrixV2({ modules, selections, onSelectionChange }: P
       return (
         <React.Fragment key={feature.id}>
       {/* Parent Row */}
-      <tr className="bg-muted/50 border-t-2 border-primary/30 border-b border-border">
+      <tr className="bg-muted/50 border-t-2 theme-border-primary-subtle border-b border-border">
         <td 
           colSpan={5} 
           className="p-3 font-semibold text-foreground sticky left-0 bg-muted/50 z-10"
@@ -61,7 +61,7 @@ export function PermissionMatrixV2({ modules, selections, onSelectionChange }: P
     return (
       <tr key={feature.id} className="border-b border-border hover:bg-accent/50 transition-colors">
         <td 
-          className="p-3 text-sm text-foreground sticky left-0 bg-background z-10"
+          className="p-3 text-sm text-foreground sticky left-0 bg-card z-10"
           style={{ paddingLeft: `${paddingLeft + 12}px` }}
         >
           <div className="flex items-center space-x-2">
@@ -108,9 +108,9 @@ export function PermissionMatrixV2({ modules, selections, onSelectionChange }: P
   return (
     <div className="w-full h-full flex-1 min-h-0 overflow-auto">
       <table className="w-full">
-        <thead className="bg-muted border-b-2 border-border sticky top-0 z-10">
-          <tr>
-            <th className="text-left p-4 font-medium min-w-[250px] text-foreground sticky left-0 bg-muted z-20">
+        <thead className="theme-bg-primary-subtle border-b-2 theme-border-primary-subtle sticky top-0 z-30">
+          <tr className="h-12">
+            <th className="text-left p-4 font-medium min-w-[260px] text-foreground sticky left-0 theme-bg-primary-subtle z-40">
               Tính năng
             </th>
             {CRUD_TYPES.map(({ type, label, icon: Icon, color }) => (
@@ -128,8 +128,8 @@ export function PermissionMatrixV2({ modules, selections, onSelectionChange }: P
           {modules.map(module => (
             <React.Fragment key={module.id}>
               {/* Module Header */}
-              <tr className="bg-primary/10 border-t-4 border-primary sticky top-[57px] z-[5]">
-                <td colSpan={5} className="p-4 sticky left-0 bg-primary/10">
+              <tr className="theme-bg-secondary-subtle border-t-4 theme-border-secondary-subtle sticky top-12 z-20">
+                <td colSpan={5} className="p-4 sticky left-0 theme-bg-secondary-subtle z-20">
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-bold shadow-sm">
                       {module.label.charAt(0)}

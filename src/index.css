@@ -556,6 +556,22 @@
     color: hsl(var(--berry-error-600));
   }
 
+  .theme-bg-primary-subtle {
+    background-color: hsl(var(--berry-primary-500) / 0.1);
+  }
+
+  .theme-bg-secondary-subtle {
+    background-color: hsl(var(--berry-secondary-500) / 0.1);
+  }
+
+  .theme-border-primary-subtle {
+    border-color: hsl(var(--berry-primary-500) / 0.2);
+  }
+
+  .theme-border-secondary-subtle {
+    border-color: hsl(var(--berry-secondary-500) / 0.2);
+  }
+
   .theme-border-primary {
     border-color: hsl(var(--voucher-primary-500));
   }
