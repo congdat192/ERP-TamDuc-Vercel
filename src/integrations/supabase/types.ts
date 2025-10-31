@@ -1299,6 +1299,7 @@ export type Database = {
         Row: {
           client_id: string
           created_at: string | null
+          encrypted_client_secret: string | null
           encrypted_token: string
           id: string
           is_active: boolean | null
@@ -1310,6 +1311,7 @@ export type Database = {
         Insert: {
           client_id: string
           created_at?: string | null
+          encrypted_client_secret?: string | null
           encrypted_token: string
           id?: string
           is_active?: boolean | null
@@ -1321,6 +1323,7 @@ export type Database = {
         Update: {
           client_id?: string
           created_at?: string | null
+          encrypted_client_secret?: string | null
           encrypted_token?: string
           id?: string
           is_active?: boolean | null
@@ -1598,6 +1601,53 @@ export type Database = {
           sync_type?: string
         }
         Relationships: []
+      }
+      kiotviet_sync_schedules: {
+        Row: {
+          created_at: string
+          credential_id: string
+          custom_interval_hours: number | null
+          enabled: boolean
+          frequency: string
+          id: string
+          last_run_at: string | null
+          next_run_at: string | null
+          sync_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          credential_id: string
+          custom_interval_hours?: number | null
+          enabled?: boolean
+          frequency?: string
+          id?: string
+          last_run_at?: string | null
+          next_run_at?: string | null
+          sync_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          credential_id?: string
+          custom_interval_hours?: number | null
+          enabled?: boolean
+          frequency?: string
+          id?: string
+          last_run_at?: string | null
+          next_run_at?: string | null
+          sync_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kiotviet_sync_schedules_credential_id_fkey"
+            columns: ["credential_id"]
+            isOneToOne: false
+            referencedRelation: "kiotviet_credentials"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lens_banners: {
         Row: {

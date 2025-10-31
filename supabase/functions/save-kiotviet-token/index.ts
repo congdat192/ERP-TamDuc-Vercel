@@ -101,9 +101,10 @@ serve(async (req) => {
 
     console.log('✅ KiotViet API connection test passed');
 
-    // Encrypt token
-    console.log('🔐 Encrypting access token...');
+    // Encrypt token and client secret
+    console.log('🔐 Encrypting access token and client secret...');
     const encryptedToken = await encrypt(accessToken);
+    const encryptedSecret = await encrypt(clientSecret);
 
     // Use service role client for database operations
     const supabaseAdmin = createClient(
@@ -128,6 +129,7 @@ serve(async (req) => {
         retailer_name: retailerName,
         client_id: clientId,
         encrypted_token: encryptedToken,
+        encrypted_client_secret: encryptedSecret,
         token_expires_at: tokenExpiresAt,
         is_active: true
       })

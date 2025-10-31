@@ -1,6 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { decrypt } from '../_shared/crypto.ts';
+import { decrypt, encrypt } from '../_shared/crypto.ts';
 
 const KIOTVIET_BASE_URL = 'https://public.kiotapi.com';
 
@@ -48,14 +48,80 @@ serve(async (req) => {
       throw new Error('Credentials not found');
     }
 
-    console.log('🔐 Credentials loaded, decrypting token...');
+    console.log('🔐 Credentials loaded, checking token...');
 
-    // Decrypt access token
-    const accessToken = await decrypt(credential.encrypted_token);
+    let accessToken: string;
 
-    // Check token expiry
-    if (credential.token_expires_at && new Date(credential.token_expires_at) < new Date()) {
-      throw new Error('Token expired. Please update your access token in settings.');
+    // Check if token is expired or about to expire (within 5 minutes)
+    const now = new Date();
+    const expiresAt = credential.token_expires_at ? new Date(credential.token_expires_at) : null;
+    const isExpired = !expiresAt || expiresAt <= now;
+    const expiringWithin5Min = expiresAt && expiresAt.getTime() - now.getTime() < 5 * 60 * 1000;
+
+    if (isExpired || expiringWithin5Min) {
+      console.log('⏰ Token expired or expiring soon, refreshing...');
+      
+      // Decrypt client_secret
+      if (!credential.encrypted_client_secret) {
+        throw new Error('Cannot refresh token: client_secret not found. Please re-authenticate in Settings.');
+      }
+      
+      const clientSecret = await decrypt(credential.encrypted_client_secret);
+      
+      // Request new token from KiotViet OAuth
+      console.log('🔑 Requesting new token from KiotViet OAuth...');
+      const oauthResponse = await fetch('https://id.kiotviet.vn/connect/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: new URLSearchParams({
+          scopes: 'PublicApi.Access',
+          grant_type: 'client_credentials',
+          client_id: credential.client_id,
+          client_secret: clientSecret
+        }).toString()
+      });
+      
+      if (!oauthResponse.ok) {
+        const errorText = await oauthResponse.text();
+        console.error('❌ OAuth refresh failed:', errorText);
+        throw new Error('Failed to refresh token. Please re-authenticate in Settings.');
+      }
+      
+      const oauthData = await oauthResponse.json();
+      const newAccessToken = oauthData.access_token;
+      const expiresIn = oauthData.expires_in; // seconds
+      
+      console.log(`✅ New token obtained (expires in ${expiresIn}s)`);
+      
+      // Encrypt new token
+      const newEncryptedToken = await encrypt(newAccessToken);
+      const newExpiresAt = new Date(Date.now() + expiresIn * 1000).toISOString();
+      
+      // Update database with new token
+      const { error: updateError } = await supabaseClient
+        .from('kiotviet_credentials')
+        .update({
+          encrypted_token: newEncryptedToken,
+          token_expires_at: newExpiresAt,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', credentialId);
+      
+      if (updateError) {
+        console.error('⚠️ Failed to save refreshed token:', updateError);
+        // Continue with new token anyway (will refresh again next time)
+      } else {
+        console.log('✅ Token refreshed and saved to database');
+      }
+      
+      // Use new token for sync
+      accessToken = newAccessToken;
+    } else {
+      // Token still valid, decrypt and use
+      console.log('✅ Token is still valid');
+      accessToken = await decrypt(credential.encrypted_token);
     }
 
     // Sync based on type
