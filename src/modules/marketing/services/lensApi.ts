@@ -21,27 +21,31 @@ export const lensApi = {
   // Brands - Get unique brands from products' attributes
   async getBrands(): Promise<LensBrand[]> {
     const { data } = await supabase
-      .from('lens_products')
-      .select('attributes')
-      .eq('is_active', true);
+      .from('lens_product_attributes')
+      .select('options')
+      .eq('slug', 'lens_brand')
+      .single();
     
-    const brandNames = new Set<string>();
-    (data || []).forEach(p => {
-      const attrs = p.attributes as Record<string, string[]> | null;
-      const brand = attrs?.lens_brand?.[0];
-      if (brand) brandNames.add(brand);
+    if (!data || !data.options) return [];
+    
+    // Normalize options from old format (string[]) or new format (AttributeOption[])
+    const options = Array.isArray(data.options) ? data.options : [];
+    
+    return options.map((opt: any, index: number) => {
+      const brandValue = typeof opt === 'string' ? opt : opt.value;
+      const brandLabel = typeof opt === 'string' ? opt : opt.label;
+      
+      return {
+        id: brandValue,
+        name: brandLabel || brandValue,
+        logo_url: (typeof opt === 'object' && opt.image_url) ? opt.image_url : null,
+        description: (typeof opt === 'object' && opt.short_description) ? opt.short_description : null,
+        display_order: index,
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
     });
-    
-    return Array.from(brandNames).map((name, index) => ({
-      id: name,
-      name,
-      logo_url: null,
-      description: null,
-      display_order: index,
-      is_active: true,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }));
   },
 
   // Products
