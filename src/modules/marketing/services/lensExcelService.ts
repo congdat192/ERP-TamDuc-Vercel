@@ -255,27 +255,66 @@ export class LensExcelService {
     // Filter only valid products
     const validProducts = products.filter(p => p._validation?.valid);
 
+    // ✅ Fetch existing products to preserve data on UPDATE
+    const skusToUpdate = validProducts
+      .filter(p => p._validation?.action === 'UPDATE')
+      .map(p => p.sku);
+
+    let existingProductsMap = new Map();
+    if (skusToUpdate.length > 0) {
+      const { data: existingProducts } = await supabase
+        .from('lens_products')
+        .select('sku, image_urls, attributes, view_count, related_product_ids')
+        .in('sku', skusToUpdate);
+      
+      existingProductsMap = new Map(
+        (existingProducts || []).map(p => [p.sku, p])
+      );
+    }
+
     // Process in batches
     for (let i = 0; i < validProducts.length; i += BATCH_SIZE) {
       const batch = validProducts.slice(i, i + BATCH_SIZE);
       
       try {
-        // Prepare products for upsert (remove validation metadata)
-        const productsToUpsert = batch.map(p => ({
-          sku: p.sku,
-          name: p.name,
-          price: p.price,
-          sale_price: p.sale_price,
-          discount_percent: p.discount_percent,
-          description: p.description,
-          is_promotion: p.is_promotion,
-          promotion_text: p.promotion_text,
-          attributes: p.attributes || {},
-          is_active: true,
-          image_urls: p.image_urls || [],
-          related_product_ids: p.related_product_ids || [],
-          view_count: 0,
-        }));
+        // Prepare products for upsert with intelligent merging
+        const productsToUpsert = batch.map(p => {
+          const existing = existingProductsMap.get(p.sku);
+          const isUpdate = p._validation?.action === 'UPDATE';
+          
+          return {
+            sku: p.sku,
+            name: p.name,
+            price: p.price,
+            sale_price: p.sale_price,
+            discount_percent: p.discount_percent,
+            description: p.description,
+            is_promotion: p.is_promotion,
+            promotion_text: p.promotion_text,
+            
+            // ✅ MERGE attributes: Excel data + existing data
+            attributes: isUpdate && existing 
+              ? { ...existing.attributes, ...p.attributes }  // Merge old + new
+              : (p.attributes || {}),                        // New product: use Excel only
+            
+            is_active: true,
+            
+            // ✅ PRESERVE image_urls from database on UPDATE
+            image_urls: isUpdate && existing 
+              ? existing.image_urls                          // Keep old images
+              : (p.image_urls || []),                        // New product: empty array
+            
+            // ✅ PRESERVE related_product_ids
+            related_product_ids: isUpdate && existing 
+              ? existing.related_product_ids                 // Keep old relations
+              : (p.related_product_ids || []),              // New product: empty array
+            
+            // ✅ PRESERVE view_count
+            view_count: isUpdate && existing 
+              ? existing.view_count                          // Keep old count
+              : 0,                                           // New product: start at 0
+          };
+        });
 
         const { data: upsertedProducts, error } = await supabase
           .from('lens_products')
