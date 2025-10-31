@@ -1,6 +1,5 @@
 import React from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ModuleInfo, FeatureInfo, PermissionSelection } from '../../types/role-management';
 import { Eye, Plus, Edit, Trash2, ChevronRight } from 'lucide-react';
@@ -12,10 +11,10 @@ interface PermissionMatrixV2Props {
 }
 
 const CRUD_TYPES = [
-  { type: 'view', label: 'Xem', icon: Eye, color: 'text-blue-600' },
-  { type: 'create', label: 'Thêm mới', icon: Plus, color: 'text-green-600' },
-  { type: 'edit', label: 'Sửa', icon: Edit, color: 'text-yellow-600' },
-  { type: 'delete', label: 'Xóa', icon: Trash2, color: 'text-red-600' }
+  { type: 'view', label: 'Xem', icon: Eye, color: 'text-blue-500 dark:text-blue-400' },
+  { type: 'create', label: 'Thêm mới', icon: Plus, color: 'text-green-500 dark:text-green-400' },
+  { type: 'edit', label: 'Sửa', icon: Edit, color: 'text-amber-500 dark:text-amber-400' },
+  { type: 'delete', label: 'Xóa', icon: Trash2, color: 'text-red-500 dark:text-red-400' }
 ] as const;
 
 export function PermissionMatrixV2({ modules, selections, onSelectionChange }: PermissionMatrixV2Props) {
@@ -33,22 +32,22 @@ export function PermissionMatrixV2({ modules, selections, onSelectionChange }: P
     if (isParent && feature.children && feature.children.length > 0) {
       return (
         <React.Fragment key={feature.id}>
-          {/* Parent Row */}
-          <tr className="bg-muted/50 border-t-2 border-border">
-            <td 
-              colSpan={5} 
-              className="p-3 font-medium text-foreground"
-              style={{ paddingLeft: `${paddingLeft + 12}px` }}
-            >
-              <div className="flex items-center space-x-2">
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                <span>{feature.name}</span>
-                <Badge variant="outline" className="text-xs">
-                  {feature.children.length} quyền
-                </Badge>
-              </div>
-            </td>
-          </tr>
+      {/* Parent Row */}
+      <tr className="bg-muted/50 border-t-2 border-primary/30 border-b border-border">
+        <td 
+          colSpan={5} 
+          className="p-3 font-semibold text-foreground sticky left-0 bg-muted/50 z-10"
+          style={{ paddingLeft: `${paddingLeft + 12}px` }}
+        >
+          <div className="flex items-center space-x-2">
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            <span>{feature.name}</span>
+            <Badge variant="outline" className="text-xs ml-2">
+              {feature.children.length} quyền
+            </Badge>
+          </div>
+        </td>
+      </tr>
           
           {/* Children Rows */}
           {feature.children.map(child => 
@@ -62,7 +61,7 @@ export function PermissionMatrixV2({ modules, selections, onSelectionChange }: P
     return (
       <tr key={feature.id} className="border-b border-border hover:bg-accent/50 transition-colors">
         <td 
-          className="p-3 text-sm text-foreground"
+          className="p-3 text-sm text-foreground sticky left-0 bg-background z-10"
           style={{ paddingLeft: `${paddingLeft + 12}px` }}
         >
           <div className="flex items-center space-x-2">
@@ -98,63 +97,59 @@ export function PermissionMatrixV2({ modules, selections, onSelectionChange }: P
 
   if (modules.length === 0) {
     return (
-      <Card>
-        <CardContent className="p-6 text-center text-muted-foreground">
+      <div className="w-full h-full flex items-center justify-center p-6">
+        <div className="text-center text-muted-foreground">
           Không có modules nào để cấu hình quyền
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card className="border-border">
-      <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-muted border-b-2 border-border">
-              <tr>
-                <th className="text-left p-4 font-medium min-w-[250px] text-foreground">
-                  Tính năng
-                </th>
-                {CRUD_TYPES.map(({ type, label, icon: Icon, color }) => (
-                  <th key={type} className="text-center p-4 font-medium min-w-[100px]">
-                    <div className="flex flex-col items-center space-y-1">
-                      <Icon className={`w-4 h-4 ${color}`} />
-                      <span className="text-xs text-foreground">{label}</span>
+    <div className="w-full h-full overflow-auto">
+      <table className="w-full">
+        <thead className="bg-muted border-b-2 border-border sticky top-0 z-10">
+          <tr>
+            <th className="text-left p-4 font-medium min-w-[250px] text-foreground sticky left-0 bg-muted z-20">
+              Tính năng
+            </th>
+            {CRUD_TYPES.map(({ type, label, icon: Icon, color }) => (
+              <th key={type} className="text-center p-4 font-medium min-w-[100px]">
+                <div className="flex flex-col items-center space-y-1">
+                  <Icon className={`w-4 h-4 ${color}`} />
+                  <span className="text-xs text-foreground">{label}</span>
+                </div>
+              </th>
+            ))}
+          </tr>
+        </thead>
+        
+        <tbody>
+          {modules.map(module => (
+            <React.Fragment key={module.id}>
+              {/* Module Header */}
+              <tr className="bg-primary/10 border-t-4 border-primary sticky top-[57px] z-[5]">
+                <td colSpan={5} className="p-4 sticky left-0 bg-primary/10">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-bold shadow-sm">
+                      {module.label.charAt(0)}
                     </div>
-                  </th>
-                ))}
+                    <div>
+                      <div className="font-semibold text-foreground">{module.label}</div>
+                      <div className="text-sm text-muted-foreground">{module.description}</div>
+                    </div>
+                  </div>
+                </td>
               </tr>
-            </thead>
-            
-            <tbody>
-              {modules.map(module => (
-                <React.Fragment key={module.id}>
-                  {/* Module Header */}
-                  <tr className="bg-primary/10 border-t-4 border-primary">
-                    <td colSpan={5} className="p-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-bold">
-                          {module.label.charAt(0)}
-                        </div>
-                        <div>
-                          <div className="font-semibold text-foreground">{module.label}</div>
-                          <div className="text-sm text-muted-foreground">{module.description}</div>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
                   
-                  {/* Feature Rows */}
-                  {module.featureTree.map(feature => 
-                    renderFeatureRow(module.id, feature, feature.type === 'parent', 0)
-                  )}
-                </React.Fragment>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </CardContent>
-    </Card>
+              {/* Feature Rows */}
+              {module.featureTree.map(feature => 
+                renderFeatureRow(module.id, feature, feature.type === 'parent', 0)
+              )}
+            </React.Fragment>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
