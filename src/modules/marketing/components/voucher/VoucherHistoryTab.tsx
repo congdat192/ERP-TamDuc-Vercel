@@ -122,13 +122,13 @@ export function VoucherHistoryTab() {
       'Giá trị Hóa đơn': item.invoice_amount || '',
       'Ghi chú': item.note || '',
       'Voucher Cấp lại 1': item.reissue_1_code || '',
-      'Trạng thái VC Cấp lại 1': item.reissue_1_status || '',
+      'Trạng thái VC Cấp lại 1': item.reissue_1_status === null ? '' : (item.reissue_1_status ? 'Đã dùng' : 'Chưa dùng'),
       'ID Hóa đơn Cấp lại 1': item.reissue_1_invoice_id || '',
       'Mã Hóa đơn Cấp lại 1': item.reissue_1_invoice_code || '',
       'Trạng thái HD Cấp lại 1': item.reissue_1_invoice_status || '',
       'Giá trị HD Cấp lại 1': item.reissue_1_invoice_amount || '',
       'Voucher Cấp lại 2': item.reissue_2_code || '',
-      'Trạng thái VC Cấp lại 2': item.reissue_2_status || '',
+      'Trạng thái VC Cấp lại 2': item.reissue_2_status === null ? '' : (item.reissue_2_status ? 'Đã dùng' : 'Chưa dùng'),
       'ID Hóa đơn Cấp lại 2': item.reissue_2_invoice_id || '',
       'Mã Hóa đơn Cấp lại 2': item.reissue_2_invoice_code || '',
       'Trạng thái HD Cấp lại 2': item.reissue_2_invoice_status || '',
@@ -343,7 +343,9 @@ export function VoucherHistoryTab() {
                     </TableCell>
                     <TableCell className="text-sm">{item.note || '-'}</TableCell>
                     <TableCell className="text-sm">{item.reissue_1_code || '-'}</TableCell>
-                    <TableCell className="text-sm">{item.reissue_1_status || '-'}</TableCell>
+                    <TableCell className="text-sm">
+                      {item.reissue_1_status === null ? '-' : (item.reissue_1_status ? 'Đã dùng' : 'Chưa dùng')}
+                    </TableCell>
                     <TableCell>{item.reissue_1_invoice_id || '-'}</TableCell>
                     <TableCell className="text-sm">{item.reissue_1_invoice_code || '-'}</TableCell>
                     <TableCell className={getInvoiceStatusColor(item.reissue_1_invoice_status)}>
@@ -353,7 +355,9 @@ export function VoucherHistoryTab() {
                       {item.reissue_1_invoice_amount ? item.reissue_1_invoice_amount.toLocaleString('vi-VN') : '-'}
                     </TableCell>
                     <TableCell className="text-sm">{item.reissue_2_code || '-'}</TableCell>
-                    <TableCell className="text-sm">{item.reissue_2_status || '-'}</TableCell>
+                    <TableCell className="text-sm">
+                      {item.reissue_2_status === null ? '-' : (item.reissue_2_status ? 'Đã dùng' : 'Chưa dùng')}
+                    </TableCell>
                     <TableCell>{item.reissue_2_invoice_id || '-'}</TableCell>
                     <TableCell className="text-sm">{item.reissue_2_invoice_code || '-'}</TableCell>
                     <TableCell className={getInvoiceStatusColor(item.reissue_2_invoice_status)}>
