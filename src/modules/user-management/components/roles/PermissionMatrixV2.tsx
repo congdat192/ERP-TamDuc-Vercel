@@ -106,7 +106,7 @@ export function PermissionMatrixV2({ modules, selections, onSelectionChange }: P
   }
 
   return (
-    <div className="w-full h-full flex-1 min-h-0 overflow-auto">
+    <div className="w-full h-full flex-1 min-h-0">
       <table className="w-full">
         <thead className="theme-bg-primary-subtle border-b-2 theme-border-primary-subtle sticky top-0 z-30">
           <tr className="h-12">
