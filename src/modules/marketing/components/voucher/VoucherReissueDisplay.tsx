@@ -52,41 +52,40 @@ export function VoucherReissueDisplay({
   return (
     <Card className="border-green-200 bg-green-50/50">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-green-700">
-            <CheckCircle className="h-5 w-5" />
-            Cấp lại voucher thành công
-          </CardTitle>
-          {isSecondReissue && (
-            <Badge variant="destructive" className="ml-auto">
-              Lần cấp lại 2 (lần cuối)
-            </Badge>
-          )}
-          {!isSecondReissue && (
-            <Badge variant="secondary" className="ml-auto">
-              Lần cấp lại 1
-            </Badge>
-          )}
-        </div>
+        <CardTitle className="flex items-center gap-2 text-green-700">
+          <CheckCircle className="h-5 w-5" />
+          Cấp lại voucher thành công
+        </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left: Info */}
           <div className="space-y-4">
-            <div>
-              <div className="text-sm font-medium text-muted-foreground mb-1">
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-muted-foreground">
                 Mã voucher cũ
               </div>
-              <div className="text-base font-mono text-muted-foreground line-through">
+              <div className="text-lg font-mono text-muted-foreground line-through">
                 {originalCode}
               </div>
             </div>
 
-            <div>
-              <div className="text-sm font-medium text-muted-foreground mb-1">
-                Mã voucher mới
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="text-sm font-medium text-muted-foreground">
+                  Mã voucher mới
+                </div>
+                {isSecondReissue ? (
+                  <Badge variant="destructive" className="text-xs">
+                    Lần cấp lại 2 (cuối)
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary" className="text-xs">
+                    Lần cấp lại 1
+                  </Badge>
+                )}
               </div>
-              <div className="text-3xl font-bold font-mono text-green-700 tracking-wider">
+              <div className="text-2xl sm:text-3xl font-bold font-mono text-green-700 tracking-wider break-all">
                 {newCode}
               </div>
             </div>
@@ -109,17 +108,17 @@ export function VoucherReissueDisplay({
           </div>
 
           {/* Right: QR Code */}
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center p-4 lg:p-0">
             {qrCodeUrl ? (
               <div className="border-4 border-green-500 rounded-lg p-3 bg-white shadow-lg">
                 <img
                   src={qrCodeUrl}
                   alt={`QR Code for ${newCode}`}
-                  className="w-full h-auto"
+                  className="w-48 h-48 sm:w-56 sm:h-56 lg:w-64 lg:h-64"
                 />
               </div>
             ) : (
-              <div className="w-[300px] h-[300px] border-4 border-green-300 rounded-lg flex items-center justify-center bg-white">
+              <div className="w-48 h-48 sm:w-56 sm:h-56 lg:w-64 lg:h-64 border-4 border-green-300 rounded-lg flex items-center justify-center bg-white">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
               </div>
             )}

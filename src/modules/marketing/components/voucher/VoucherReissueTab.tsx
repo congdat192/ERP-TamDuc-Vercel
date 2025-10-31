@@ -69,7 +69,7 @@ export function VoucherReissueTab() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6">
       {/* Input Form */}
       <Card>
         <CardHeader>
@@ -80,7 +80,7 @@ export function VoucherReissueTab() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Input
                 placeholder="Nhập mã voucher cũ (VD: ABC123)"
                 value={voucherCode}
@@ -96,7 +96,7 @@ export function VoucherReissueTab() {
               <Button
                 onClick={handleReissue}
                 disabled={!voucherCode.trim() || isLoading}
-                className="min-w-[140px]"
+                className="w-full sm:w-auto sm:min-w-[140px]"
               >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Cấp lại voucher
