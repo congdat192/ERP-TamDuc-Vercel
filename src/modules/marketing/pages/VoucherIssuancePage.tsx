@@ -12,7 +12,8 @@ export function VoucherIssuancePage() {
   
   // Check permissions for each main tab
   const canIssueVouchers = hasFeatureAccess('issue_vouchers');
-  const canReissueVouchers = hasFeatureAccess('reissue_vouchers');
+  const canReissueVouchers = hasFeatureAccess('view_reissue_vouchers') || 
+                            hasFeatureAccess('create_reissue_vouchers');
   const canViewHistory = hasFeatureAccess('view_voucher_history');
   const canAccessSettings = hasFeatureAccess('manage_campaigns') ||
                             hasFeatureAccess('manage_voucher_images') ||
