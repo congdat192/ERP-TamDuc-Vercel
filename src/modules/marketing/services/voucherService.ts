@@ -266,7 +266,25 @@ export const voucherService = {
     // Case 1: Supabase invoke error (network, auth, etc.)
     if (error) {
       console.error('[voucherService] Invoke error:', error);
-      throw new Error(error.message || 'Không thể kết nối đến hệ thống phát voucher');
+      
+      // Parse error.context.body (có thể là string hoặc object)
+      let errorBody = error.context?.body;
+
+      if (typeof errorBody === 'string') {
+        try { 
+          errorBody = JSON.parse(errorBody); 
+        } catch { 
+          // Keep as string if not valid JSON
+        }
+      }
+
+      const errorMessage =
+        errorBody?.description ||
+        errorBody?.message ||
+        error.message ||
+        'Không thể phát hành voucher';
+
+      throw new Error(errorMessage);
     }
 
     // Case 2: API business logic error (409, 400, etc.)
