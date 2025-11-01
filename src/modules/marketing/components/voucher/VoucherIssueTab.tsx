@@ -5,7 +5,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Search, Gift } from 'lucide-react';
+import { Loader2, Search, Gift, AlertTriangle } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogAction,
+} from '@/components/ui/alert-dialog';
 import { voucherService, type VoucherIssueResponse } from '../../services/voucherService';
 import { toast } from 'sonner';
 import { VoucherDisplay } from './VoucherDisplay';
@@ -24,6 +32,8 @@ export function VoucherIssueTab() {
   const [isValidating, setIsValidating] = useState(false);
   const [isIssuing, setIsIssuing] = useState(false);
   const [voucherResult, setVoucherResult] = useState<VoucherIssueResponse | null>(null);
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     loadData();
@@ -93,7 +103,8 @@ export function VoucherIssueTab() {
       setVoucherResult(result);
       toast.success('Phát hành voucher thành công!');
     } catch (error: any) {
-      toast.error(error.message || 'Không thể phát hành voucher');
+      setErrorMessage(error.message || 'Không thể phát hành voucher');
+      setErrorDialogOpen(true);
     } finally {
       setIsIssuing(false);
     }
@@ -213,6 +224,27 @@ export function VoucherIssueTab() {
       {voucherResult && (
         <VoucherDisplay voucherData={voucherResult} />
       )}
+
+      {/* Error Dialog */}
+      <AlertDialog open={errorDialogOpen} onOpenChange={setErrorDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="w-5 h-5" />
+              Không thể phát hành voucher
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base pt-2">
+              {errorMessage}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogAction 
+            onClick={() => setErrorDialogOpen(false)}
+            className="bg-primary hover:bg-primary/90"
+          >
+            Đóng
+          </AlertDialogAction>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
