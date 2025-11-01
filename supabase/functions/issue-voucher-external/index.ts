@@ -96,6 +96,14 @@ serve(async (req) => {
       const errorText = await response.text();
       console.error('[issue-voucher] API error:', response.status, errorText);
       
+      // Parse JSON response from third-party API
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch {
+        errorData = { success: false, description: errorText };
+      }
+      
       await supabase.from('voucher_issuance_history').insert({
         phone: recipient_phone,
         campaign_id,
@@ -103,11 +111,11 @@ serve(async (req) => {
         customer_type,
         issued_by: user.id,
         status: 'failed',
-        error_message: errorText
+        error_message: errorData.description || errorText
       });
 
       return new Response(
-        JSON.stringify({ error: 'Failed to issue voucher', details: errorText }),
+        JSON.stringify(errorData),
         {
           status: response.status,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
