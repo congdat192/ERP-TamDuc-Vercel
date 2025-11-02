@@ -18,17 +18,21 @@ interface InvoiceDetail {
   discount: number;
   discountratio: number;
   subtotal: number;
+  final_price: number;
+  total_price: number;
 }
 
 interface Invoice {
   code: string;
-  created_at_vn: string;
+  createddate: string;
   soldbyname: string;
   branchname: string;
   total: number;
   totalpayment: number;
   status: number;
   statusvalue: string;
+  description?: string;
+  eye_prescription?: string;
   details: InvoiceDetail[];
 }
 
@@ -165,7 +169,7 @@ export function CustomerSalesHistoryTab({ invoices, customer, isLoading, error }
                       </button>
                     </td>
                     <td className="px-4 py-3 text-sm theme-text-muted font-sans">
-                      {formatDate(invoice.created_at_vn)}
+                      {formatDate(invoice.createddate || (invoice as any).created_at_vn)}
                     </td>
                     <td className="px-4 py-3 text-sm theme-text font-sans">
                       {invoice.branchname}

@@ -225,8 +225,8 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
 
               <TabsContent value="images" className="mt-0">
                 <CustomerImagesTab 
-                  customerId={customer.id} 
-                  images={customer.images || []} 
+                  invoices={invoicesData}
+                  isLoading={isLoadingInvoices}
                 />
               </TabsContent>
             </Tabs>

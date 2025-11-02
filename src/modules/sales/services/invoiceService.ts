@@ -8,17 +8,21 @@ export interface InvoiceDetail {
   discount: number;
   discountratio: number;
   subtotal: number;
+  final_price: number;
+  total_price: number;
 }
 
 export interface Invoice {
   code: string;
-  created_at_vn: string;
+  createddate: string;
   soldbyname: string;
   branchname: string;
   total: number;
   totalpayment: number;
   status: number;
   statusvalue: string;
+  description?: string;
+  eye_prescription?: string;
   details: InvoiceDetail[];
 }
 
@@ -97,12 +101,14 @@ export async function fetchInvoicesByPhone(phone: string): Promise<InvoiceHistor
  * Map API response to internal sales data format
  */
 export function mapInvoiceToSalesData(invoice: Invoice, customer: Customer): any {
+  const invoiceDate = invoice.createddate || (invoice as any).created_at_vn || new Date().toISOString();
+  
   return {
     id: invoice.code,
     customerId: customer.code,
-    date: new Date(invoice.created_at_vn).toLocaleString('vi-VN'),
-    createdTime: new Date(invoice.created_at_vn).toLocaleString('vi-VN'),
-    lastUpdated: new Date(invoice.created_at_vn).toLocaleString('vi-VN'),
+    date: new Date(invoiceDate).toLocaleString('vi-VN'),
+    createdTime: new Date(invoiceDate).toLocaleString('vi-VN'),
+    lastUpdated: new Date(invoiceDate).toLocaleString('vi-VN'),
     orderCode: invoice.code,
     returnCode: '',
     customer: customer.name,
@@ -116,7 +122,7 @@ export function mapInvoiceToSalesData(invoice: Invoice, customer: Customer): any
     seller: invoice.soldbyname,
     creator: invoice.soldbyname,
     channel: '',
-    note: '',
+    note: invoice.description || '',
     totalAmount: invoice.total,
     discount: invoice.total - invoice.totalpayment,
     tax: 0,
@@ -125,6 +131,7 @@ export function mapInvoiceToSalesData(invoice: Invoice, customer: Customer): any
     paymentDiscount: 0,
     deliveryTime: '',
     status: invoice.statusvalue,
-    items: invoice.details.map(d => d.productcode)
+    items: invoice.details.map(d => d.productcode),
+    eyePrescription: invoice.eye_prescription
   };
 }
