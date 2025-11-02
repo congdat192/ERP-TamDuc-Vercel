@@ -98,7 +98,7 @@ export function PublicProductPage() {
   const images = parseImages(product.images);
   const attributes = parseAttributes(product.attributes);
 
-  // icon suggestor cho các thuộc tính phổ biến
+  // Icon gợi ý theo tên thuộc tính
   const getAttrIcon = (label: string) => {
     const key = label.toLowerCase();
     if (/(size|kích thước|cỡ)/.test(key)) return <Ruler className="w-4 h-4 text-blue-600 mr-2 shrink-0" />;
@@ -109,7 +109,7 @@ export function PublicProductPage() {
     return <Info className="w-4 h-4 text-blue-600 mr-2 shrink-0" />;
   };
 
-  // item render theo 1 hàng <icon> <label>: <value>
+  // Hàng kiểu <icon> <label>: <value>
   const RowItem = ({
     icon,
     label,
@@ -121,7 +121,7 @@ export function PublicProductPage() {
     value: string | number | null | undefined;
     valueClass?: string;
   }) => (
-    <div className="flex items-start text-gray-900">
+    <div className="flex items-center text-gray-900">
       {icon}
       <span className="text-sm font-medium whitespace-nowrap mr-1">{label}:</span>
       <span className={`${valueClass} break-words`}>{value ?? t("Chưa có thông tin", "N/A")}</span>
@@ -142,14 +142,14 @@ export function PublicProductPage() {
                 {t("Nhà phân phối chính hãng các thương hiệu mắt kính", "Authorized Eyewear Distributor")}
               </p>
             </div>
-            {/* nút ngôn ngữ đã chuyển xuống dưới */}
+            {/* Nút ngôn ngữ đã chuyển xuống dưới */}
             <div className="hidden" />
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Language switch – ngay trên card đầu tiên */}
+        {/* Language switch – ngay trên khối 1 */}
         <div className="flex justify-end mb-3">
           <Button
             variant="outline"
@@ -209,18 +209,21 @@ export function PublicProductPage() {
           </div>
         </section>
 
-        {/* === Khối 2: Chi tiết sản phẩm (attributes) === */}
+        {/* === Khối 2: Chi tiết sản phẩm (một khối, list dọc giống khối 1) === */}
         {attributes.length > 0 && (
           <section className="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
             <div className="p-6">
               <h3 className="text-xl font-bold text-gray-900 mb-4">{t("Chi tiết sản phẩm", "Product Details")}</h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-3">
                 {attributes.map((attr, index) => (
-                  <div key={index} className="flex items-start text-gray-900 bg-gray-50 rounded-lg p-3 border">
-                    {getAttrIcon(attr.attributeName)}
-                    <span className="text-sm font-medium whitespace-nowrap mr-1">{attr.attributeName}:</span>
-                    <span className="text-sm font-semibold break-words">{attr.attributeValue}</span>
+                  <div key={index} className="rounded-lg border border-gray-200 px-3 py-2">
+                    <RowItem
+                      icon={getAttrIcon(attr.attributeName)}
+                      label={attr.attributeName}
+                      value={attr.attributeValue}
+                      valueClass="text-sm font-semibold"
+                    />
                   </div>
                 ))}
               </div>
