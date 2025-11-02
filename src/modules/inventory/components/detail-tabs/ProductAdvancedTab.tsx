@@ -14,6 +14,17 @@ export function ProductAdvancedTab({ product }: ProductAdvancedTabProps) {
   const units = Array.isArray(product.units) ? product.units : [];
   const productFormulas = Array.isArray(product.product_formulas) ? product.product_formulas : [];
 
+  // Debug log
+  console.log('🔍 [ProductAdvancedTab] Product data:', {
+    productCode: product.code,
+    hasAttributes: !!product.attributes,
+    attributesType: typeof product.attributes,
+    attributesIsArray: Array.isArray(product.attributes),
+    attributesLength: attributes.length,
+    attributesRaw: product.attributes,
+    attributesParsed: attributes
+  });
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('vi-VN', { 
       style: 'currency', 
