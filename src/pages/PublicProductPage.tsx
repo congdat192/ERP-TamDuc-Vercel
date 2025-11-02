@@ -19,7 +19,6 @@ export function PublicProductPage() {
         setLoading(false);
         return;
       }
-
       try {
         setLoading(true);
         const data = await KiotVietProductsFullService.getProductByCode(code);
@@ -36,16 +35,11 @@ export function PublicProductPage() {
         setLoading(false);
       }
     };
-
     fetchProduct();
   }, [code]);
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(amount);
-  };
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(amount);
 
   const parseImages = (images: any): string[] => {
     if (Array.isArray(images)) return images;
@@ -118,8 +112,7 @@ export function PublicProductPage() {
                 {t("Nhà phân phối chính hãng các thương hiệu mắt kính", "Authorized Eyewear Distributor")}
               </p>
             </div>
-
-            {/* Nút ngôn ngữ đã được chuyển xuống dưới – bỏ khỏi header */}
+            {/* Nút ngôn ngữ đã được chuyển xuống dưới */}
             <div className="hidden" />
           </div>
         </div>
@@ -127,7 +120,7 @@ export function PublicProductPage() {
 
       {/* Body */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Language Switch – đặt ngay trên card thông tin sản phẩm */}
+        {/* Language switch – đặt ngay trên card thông tin sản phẩm */}
         <div className="flex justify-end mb-3">
           <Button
             variant="outline"
@@ -150,17 +143,17 @@ export function PublicProductPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
-                {/* Tên sản phẩm giữ nguyên */}
+                {/* Tên sản phẩm */}
                 <div>
                   <label className="text-sm font-medium text-gray-500">{t("Tên sản phẩm", "Product Name")}</label>
-                  <p className="text-lg font-semibold text-gray-900 mt-1">{product.name}</p>
+                  <p className="text-lg font-semibold text-gray-900 mt-1 break-words">{product.name}</p>
                 </div>
 
-                {/* Thương hiệu – 1 dòng: <icon><label>: <value> */}
+                {/* Thương hiệu – 1 dòng */}
                 <div className="flex items-center text-gray-900">
                   <Tag className="w-4 h-4 text-blue-600 mr-2 shrink-0" />
                   <span className="text-sm font-medium whitespace-nowrap mr-1">{t("Thương hiệu", "Brand")}:</span>
-                  <span className="text-base font-semibold">
+                  <span className="text-base font-semibold break-words">
                     {product.trademark_name || t("Chưa có thông tin", "N/A")}
                   </span>
                 </div>
@@ -171,7 +164,7 @@ export function PublicProductPage() {
                   <span className="text-sm font-medium whitespace-nowrap mr-1">
                     {t("Mã sản phẩm", "Product Code")}:
                   </span>
-                  <span className="text-base font-semibold font-mono">{product.code}</span>
+                  <span className="text-base font-semibold font-mono break-words">{product.code}</span>
                 </div>
               </div>
 
@@ -193,15 +186,18 @@ export function PublicProductPage() {
             </div>
           </div>
 
-          {/* Product Details (Attributes) */}
+          {/* Product Details (Attributes) – hiển thị <Thuộc tính>: Value */}
           {attributes.length > 0 && (
             <div className="p-6 border-b bg-gray-50">
               <h3 className="text-lg font-bold text-gray-900 mb-4">{t("Chi tiết sản phẩm", "Product Details")}</h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {attributes.map((attr, index) => (
-                  <div key={index} className="bg-white p-4 rounded-lg border border-gray-200">
-                    <label className="text-xs font-medium text-gray-500 uppercase">{attr.attributeName}</label>
-                    <p className="text-sm font-semibold text-gray-900 mt-1">{attr.attributeValue}</p>
+                  <div key={index} className="flex items-start gap-2 bg-white p-3 rounded-lg border border-gray-200">
+                    {/* Nhãn */}
+                    <span className="text-sm font-medium text-gray-600 whitespace-nowrap">{attr.attributeName}:</span>
+                    {/* Giá trị */}
+                    <span className="text-sm font-semibold text-gray-900 break-words">{attr.attributeValue}</span>
                   </div>
                 ))}
               </div>
