@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { KiotVietProductsFullService } from '@/services/kiotvietProductsFullService';
 import { CategoryTreeSelector } from './filters/CategoryTreeSelector';
+import { AttributeFilter } from './filters/AttributeFilter';
 import { supabase } from '@/integrations/supabase/client';
 
 interface InventoryFiltersProps {
@@ -15,6 +16,8 @@ interface InventoryFiltersProps {
   onCategoriesChange: (ids: number[], paths: string[]) => void;
   selectedBrands: number[];
   setSelectedBrands: (brands: number[]) => void;
+  selectedAttributes: Record<string, string[]>;
+  setSelectedAttributes: (attrs: Record<string, string[]>) => void;
   lowStockOnly: boolean;
   setLowStockOnly: (value: boolean) => void;
   overstockOnly: boolean;
@@ -30,6 +33,8 @@ export function InventoryFilters({
   onCategoriesChange,
   selectedBrands,
   setSelectedBrands,
+  selectedAttributes,
+  setSelectedAttributes,
   lowStockOnly,
   setLowStockOnly,
   overstockOnly,
@@ -47,6 +52,12 @@ export function InventoryFilters({
   const { data: brands = [] } = useQuery({
     queryKey: ['kiotviet-brands'],
     queryFn: () => KiotVietProductsFullService.getTrademarks()
+  });
+
+  // Fetch attributes
+  const { data: attributes = [] } = useQuery({
+    queryKey: ['kiotviet-attributes'],
+    queryFn: () => KiotVietProductsFullService.getAttributes()
   });
 
   // Realtime listener for product changes
@@ -73,6 +84,7 @@ export function InventoryFilters({
             console.log('Refetching categories and brands after changes...');
             queryClient.invalidateQueries({ queryKey: ['kiotviet-categories'] });
             queryClient.invalidateQueries({ queryKey: ['kiotviet-brands'] });
+            queryClient.invalidateQueries({ queryKey: ['kiotviet-attributes'] });
             queryClient.invalidateQueries({ queryKey: ['kiotviet-products-full'] });
           }, 2000);
         }
@@ -102,6 +114,21 @@ export function InventoryFilters({
         selectedCategories={selectedCategories}
         selectedCategoryPaths={selectedCategoryPaths}
         onSelectionChange={(ids, paths) => onCategoriesChange(ids, paths)}
+      />
+
+      {/* Thuộc tính sản phẩm */}
+      <AttributeFilter
+        attributes={attributes}
+        selectedAttributes={selectedAttributes}
+        onAttributeChange={(attrName, values) => {
+          const newAttrs = { ...selectedAttributes };
+          if (values.length === 0) {
+            delete newAttrs[attrName];
+          } else {
+            newAttrs[attrName] = values;
+          }
+          setSelectedAttributes(newAttrs);
+        }}
       />
 
       {/* Trạng thái tồn kho */}

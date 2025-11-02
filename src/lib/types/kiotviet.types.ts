@@ -82,6 +82,7 @@ export interface KiotVietSyncConfig {
   syncCategories: boolean;
   syncProducts: boolean;
   syncInventory: boolean;
+  syncAttributes: boolean;
   pageSize?: number;
   dateFrom?: string;
 }
@@ -138,6 +139,23 @@ export interface KiotVietInventoryDB {
   on_hand: number;
   reserved: number;
   available: number;
+  synced_at: string;
+}
+
+// Attribute types
+export interface KiotVietAttribute {
+  id: number;
+  name: string;
+  attributeValues: Array<{
+    value: string;
+    attributeId: number;
+  }>;
+}
+
+export interface KiotVietAttributeDB {
+  id: number;
+  name: string;
+  attribute_values: any; // JSONB
   synced_at: string;
 }
 

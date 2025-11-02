@@ -24,6 +24,8 @@ interface InventorySearchActionsProps {
   onCategoriesChange: (ids: number[], paths: string[]) => void;
   selectedBrands: number[];
   setSelectedBrands: (brands: number[]) => void;
+  selectedAttributes: Record<string, string[]>;
+  setSelectedAttributes: (attrs: Record<string, string[]>) => void;
   lowStockOnly: boolean;
   setLowStockOnly: (value: boolean) => void;
   overstockOnly: boolean;
@@ -46,6 +48,8 @@ export function InventorySearchActions({
   onCategoriesChange,
   selectedBrands,
   setSelectedBrands,
+  selectedAttributes,
+  setSelectedAttributes,
   lowStockOnly,
   setLowStockOnly,
   overstockOnly,
@@ -110,6 +114,8 @@ export function InventorySearchActions({
                         onCategoriesChange={onCategoriesChange}
                         selectedBrands={selectedBrands}
                         setSelectedBrands={setSelectedBrands}
+                        selectedAttributes={selectedAttributes}
+                        setSelectedAttributes={setSelectedAttributes}
                         lowStockOnly={lowStockOnly}
                         setLowStockOnly={setLowStockOnly}
                         overstockOnly={overstockOnly}

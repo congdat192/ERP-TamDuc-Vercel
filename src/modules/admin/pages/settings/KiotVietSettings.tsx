@@ -26,7 +26,7 @@ export function KiotVietSettings() {
 
   const [showKeyGenerator, setShowKeyGenerator] = useState(false);
   const [generatedKey, setGeneratedKey] = useState('');
-  const [syncingType, setSyncingType] = useState<'products_full' | null>(null);
+  const [syncingType, setSyncingType] = useState<'products_full' | 'attributes' | null>(null);
 
   // Get existing credentials
   const { data: credential, isLoading: credentialLoading } = useQuery({
@@ -71,15 +71,20 @@ export function KiotVietSettings() {
 
   // Sync mutation
   const syncMutation = useMutation({
-    mutationFn: (syncType: 'products_full') => 
+    mutationFn: (syncType: 'products_full' | 'attributes') => 
       KiotVietService.syncData(syncType),
     onSuccess: (data, syncType) => {
       queryClient.invalidateQueries({ queryKey: ['kiotviet-sync-logs'] });
       queryClient.invalidateQueries({ queryKey: ['kiotviet-stats'] });
+      if (syncType === 'attributes') {
+        queryClient.invalidateQueries({ queryKey: ['kiotviet-attributes'] });
+      }
       setSyncingType(null);
       toast({
         title: 'Đồng bộ thành công',
-        description: 'Đã đồng bộ toàn bộ dữ liệu sản phẩm từ KiotViet',
+        description: syncType === 'attributes' 
+          ? 'Đã đồng bộ thuộc tính sản phẩm từ KiotViet'
+          : 'Đã đồng bộ toàn bộ dữ liệu sản phẩm từ KiotViet',
       });
     },
     onError: (error: Error, syncType) => {
@@ -121,6 +126,11 @@ export function KiotVietSettings() {
   const handleSync = () => {
     setSyncingType('products_full');
     syncMutation.mutate('products_full');
+  };
+
+  const handleSyncAttributes = () => {
+    setSyncingType('attributes');
+    syncMutation.mutate('attributes');
   };
 
   const isConnected = credential?.is_active;
@@ -315,6 +325,42 @@ export function KiotVietSettings() {
                         <>
                           <RefreshCw className="h-5 w-5 mr-2" />
                           Đồng bộ dữ liệu
+                        </>
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Attributes Sync Card */}
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="flex-shrink-0">
+                        <Package className="h-12 w-12 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-lg">Đồng bộ Thuộc tính</h4>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Đồng bộ thuộc tính sản phẩm (màu sắc, kích cỡ, v.v.) từ KiotViet để sử dụng trong bộ lọc
+                        </p>
+                      </div>
+                    </div>
+                    <Button 
+                      onClick={handleSyncAttributes}
+                      disabled={syncingType !== null}
+                      variant="outline"
+                      className="w-full"
+                      size="lg"
+                    >
+                      {syncingType === 'attributes' ? (
+                        <>
+                          <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                          Đang đồng bộ...
+                        </>
+                      ) : (
+                        <>
+                          <Package className="h-5 w-5 mr-2" />
+                          Đồng bộ Thuộc tính
                         </>
                       )}
                     </Button>

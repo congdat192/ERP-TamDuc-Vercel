@@ -28,6 +28,7 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
   const [selectedCategoryPaths, setSelectedCategoryPaths] = useState<string[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<number[]>([]);
+  const [selectedAttributes, setSelectedAttributes] = useState<Record<string, string[]>>({});
   const [lowStockOnly, setLowStockOnly] = useState(false);
   const [overstockOnly, setOverstockOnly] = useState(false);
 
@@ -97,6 +98,7 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
       search: searchTerm,
       categoryPaths: selectedCategoryPaths,
       trademarkIds: selectedBrands,
+      attributes: selectedAttributes,
       lowStock: lowStockOnly,
       overstock: overstockOnly,
       page: currentPage,
@@ -106,6 +108,7 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
       search: searchTerm,
       categoryPaths: selectedCategoryPaths,
       trademarkIds: selectedBrands,
+      attributes: selectedAttributes,
       lowStock: lowStockOnly,
       overstock: overstockOnly,
       page: currentPage,
@@ -205,6 +208,7 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
     setSelectedCategories([]);
     setSelectedCategoryPaths([]);
     setSelectedBrands([]);
+    setSelectedAttributes({});
     setLowStockOnly(false);
     setOverstockOnly(false);
     setSearchTerm('');
@@ -256,6 +260,8 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
                   }}
                   selectedBrands={selectedBrands}
                   setSelectedBrands={setSelectedBrands}
+                  selectedAttributes={selectedAttributes}
+                  setSelectedAttributes={setSelectedAttributes}
                   lowStockOnly={lowStockOnly}
                   setLowStockOnly={setLowStockOnly}
                   overstockOnly={overstockOnly}
@@ -288,6 +294,8 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
                   }}
                   selectedBrands={selectedBrands}
                   setSelectedBrands={setSelectedBrands}
+                  selectedAttributes={selectedAttributes}
+                  setSelectedAttributes={setSelectedAttributes}
                   lowStockOnly={lowStockOnly}
                   setLowStockOnly={setLowStockOnly}
                   overstockOnly={overstockOnly}
@@ -321,6 +329,8 @@ export function InventoryManagement({ currentUser, onBackToModules }: InventoryM
               }}
               selectedBrands={selectedBrands}
               setSelectedBrands={setSelectedBrands}
+              selectedAttributes={selectedAttributes}
+              setSelectedAttributes={setSelectedAttributes}
               lowStockOnly={lowStockOnly}
               setLowStockOnly={setLowStockOnly}
               overstockOnly={overstockOnly}

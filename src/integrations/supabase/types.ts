@@ -1264,6 +1264,30 @@ export type Database = {
           },
         ]
       }
+      kiotviet_attributes: {
+        Row: {
+          attribute_values: Json | null
+          created_at: string
+          id: number
+          name: string
+          synced_at: string
+        }
+        Insert: {
+          attribute_values?: Json | null
+          created_at?: string
+          id: number
+          name: string
+          synced_at?: string
+        }
+        Update: {
+          attribute_values?: Json | null
+          created_at?: string
+          id?: number
+          name?: string
+          synced_at?: string
+        }
+        Relationships: []
+      }
       kiotviet_categories: {
         Row: {
           category_name: string

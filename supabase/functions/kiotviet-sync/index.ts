@@ -11,7 +11,7 @@ const corsHeaders = {
 
 interface KiotVietSyncRequest {
   credentialId: string;
-  syncType: 'categories' | 'products' | 'inventory' | 'all' | 'products_full';
+  syncType: 'categories' | 'products' | 'inventory' | 'all' | 'products_full' | 'attributes';
   options?: {
     pageSize?: number;
     dateFrom?: string;
@@ -151,6 +151,12 @@ serve(async (req) => {
         console.log('🚀 Syncing products (FULL - single table)...');
         results.products_full = await syncProductsFull(accessToken, supabaseClient, options, credential.retailer_name);
         console.log(`✅ Products (full) synced: ${results.products_full.count}`);
+      }
+
+      if (syncType === 'attributes' || syncType === 'all') {
+        console.log('🏷️ Syncing attributes...');
+        results.attributes = await syncAttributes(accessToken, supabaseClient, credential.retailer_name);
+        console.log(`✅ Attributes synced: ${results.attributes.count}`);
       }
 
       // Log successful sync
@@ -646,4 +652,47 @@ async function syncProductsFull(accessToken: string, supabase: any, options: any
   
   console.log('✅ [FULL SYNC] Completed!');
   return { count: enrichedProducts.length };
+}
+
+async function syncAttributes(accessToken: string, supabase: any, retailerName: string) {
+  console.log('📡 Fetching attributes from KiotViet...');
+  
+  const response = await fetch(`${KIOTVIET_BASE_URL}/attributes/allwithdistinctvalue`, {
+    headers: {
+      'Retailer': retailerName,
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to fetch attributes: ${response.status} ${errorText}`);
+  }
+
+  const attributes = await response.json();
+
+  if (!Array.isArray(attributes)) {
+    throw new Error('Invalid attributes response format');
+  }
+
+  console.log(`📥 Received ${attributes.length} attributes from KiotViet`);
+
+  // Upsert attributes to database
+  const { error } = await supabase.from('kiotviet_attributes').upsert(
+    attributes.map((attr: any) => ({
+      id: attr.id,
+      name: attr.name,
+      attribute_values: JSON.stringify(attr.attributeValues || []),
+      synced_at: new Date().toISOString()
+    })),
+    { onConflict: 'id' }
+  );
+
+  if (error) {
+    console.error('❌ Error upserting attributes:', error);
+    throw error;
+  }
+
+  return { count: attributes.length };
 }

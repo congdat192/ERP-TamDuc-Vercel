@@ -60,7 +60,7 @@ export class KiotVietService {
    * Sync data from KiotViet API to Supabase
    */
   static async syncData(
-    syncType: 'categories' | 'products' | 'inventory' | 'all' | 'products_full',
+    syncType: 'categories' | 'products' | 'inventory' | 'all' | 'products_full' | 'attributes',
     options?: {
       pageSize?: number;
       dateFrom?: string;

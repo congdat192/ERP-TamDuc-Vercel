@@ -49,6 +49,7 @@ export class KiotVietProductsFullService {
     isActive?: boolean;
     lowStock?: boolean;
     overstock?: boolean;
+    attributes?: Record<string, string[]>; // { "Màu sắc": ["Đỏ", "Xanh"], "Size": ["M", "L"] }
     page?: number;
     pageSize?: number;
   }): Promise<{ products: KiotVietProductFullDB[]; total: number }> {
@@ -99,6 +100,21 @@ export class KiotVietProductsFullService {
 
     if (filters?.overstock) {
       query = query.eq('overstock_alert', true);
+    }
+
+    // Attribute filters
+    if (filters?.attributes && Object.keys(filters.attributes).length > 0) {
+      // Filter products where attributes JSONB contains specified attribute values
+      for (const [attrName, attrValues] of Object.entries(filters.attributes)) {
+        if (attrValues.length > 0) {
+          // Use JSONB contains operator to match attribute values
+          // Format: attributes @> '[{"attributeName": "Màu sắc", "attributeValue": "Đỏ"}]'
+          const attrConditions = attrValues.map(value => 
+            `attributes.cs.[{"attributeName":"${attrName}","attributeValue":"${value}"}]`
+          );
+          query = query.or(attrConditions.join(','));
+        }
+      }
     }
 
     // Pagination
@@ -302,5 +318,29 @@ export class KiotVietProductsFullService {
     );
 
     return totalValue || 0;
+  }
+
+  /**
+   * Get all attributes with distinct values
+   */
+  static async getAttributes(): Promise<Array<{ id: number; name: string; values: string[] }>> {
+    const { data, error } = await supabase
+      .from('kiotviet_attributes')
+      .select('*')
+      .order('name', { ascending: true });
+    
+    if (error) throw error;
+    
+    return (data || []).map(attr => {
+      const values = typeof attr.attribute_values === 'string' 
+        ? JSON.parse(attr.attribute_values) 
+        : (attr.attribute_values || []);
+      
+      return {
+        id: attr.id,
+        name: attr.name,
+        values: values.map((v: any) => v.value).filter((v: string) => v) // Extract value strings
+      };
+    });
   }
 }
