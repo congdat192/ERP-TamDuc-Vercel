@@ -7,7 +7,7 @@ import { CustomerFilters } from '../components/CustomerFilters';
 import { CustomerTable } from '../components/CustomerTable';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ColumnConfig } from '../components/ColumnVisibilityFilter';
-import { mockCustomers } from '@/data/mockData';
+import { Search } from 'lucide-react';
 
 interface CustomerManagementProps {
   currentUser?: any;
@@ -24,8 +24,8 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
   const [isLoadingApi, setIsLoadingApi] = useState(false);
   const [apiCustomerData, setApiCustomerData] = useState<any[]>([]);
 
-  // Use API data if available, otherwise use mock data
-  const customers = apiCustomerData.length > 0 ? apiCustomerData : mockCustomers;
+  // Only use API data, no mockup
+  const customers = apiCustomerData;
 
   // Đầy đủ 27 cột khách hàng
   const [columns, setColumns] = useState<ColumnConfig[]>([
@@ -195,22 +195,43 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
             />
           </div>
 
-          {/* Customer Table - Takes remaining height and width */}
-          <div className="flex-1 min-h-0">
-            <CustomerTable 
-              customers={customers}
-              visibleColumns={visibleColumns}
-              selectedCustomers={selectedCustomers}
-              handleSelectCustomer={handleSelectCustomer}
-              handleSelectAll={handleSelectAll}
-              currentPage={currentPage}
-              setCurrentPage={setCurrentPage}
-              itemsPerPage={itemsPerPage}
-              setItemsPerPage={setItemsPerPage}
-              totalCustomers={totalCustomers}
-              totalPages={totalPages}
-            />
-          </div>
+          {/* Empty State when no search performed */}
+          {customers.length === 0 && !isLoadingApi && (
+            <div className="flex-1 min-h-0 flex items-center justify-center theme-card rounded-lg border theme-border-primary p-8">
+              <div className="text-center space-y-4">
+                <div className="w-16 h-16 mx-auto rounded-full bg-gray-100 flex items-center justify-center">
+                  <Search className="w-8 h-8 text-gray-400" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-lg font-semibold theme-text">
+                    Tìm kiếm khách hàng
+                  </h3>
+                  <p className="text-sm theme-text-muted max-w-md">
+                    Nhập số điện thoại khách hàng vào ô tìm kiếm để tra cứu thông tin chi tiết
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Customer Table - Only show when has data */}
+          {customers.length > 0 && (
+            <div className="flex-1 min-h-0">
+              <CustomerTable 
+                customers={customers}
+                visibleColumns={visibleColumns}
+                selectedCustomers={selectedCustomers}
+                handleSelectCustomer={handleSelectCustomer}
+                handleSelectAll={handleSelectAll}
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
+                itemsPerPage={itemsPerPage}
+                setItemsPerPage={setItemsPerPage}
+                totalCustomers={totalCustomers}
+                totalPages={totalPages}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>
