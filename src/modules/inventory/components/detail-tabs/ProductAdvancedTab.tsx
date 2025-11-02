@@ -9,7 +9,7 @@ interface ProductAdvancedTabProps {
 export function ProductAdvancedTab({ product }: ProductAdvancedTabProps) {
   // Parse JSONB fields
   const images = Array.isArray(product.images) ? product.images : [];
-  const attributes = product.attributes || {};
+  const attributes = Array.isArray(product.attributes) ? product.attributes : [];
   const priceBooks = Array.isArray(product.price_books) ? product.price_books : [];
   const units = Array.isArray(product.units) ? product.units : [];
   const productFormulas = Array.isArray(product.product_formulas) ? product.product_formulas : [];
@@ -74,12 +74,16 @@ export function ProductAdvancedTab({ product }: ProductAdvancedTabProps) {
       <div className="space-y-4">
         <h3 className="font-semibold theme-text text-lg">Thuộc tính sản phẩm</h3>
         
-        {Object.keys(attributes).length > 0 ? (
+        {attributes.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Object.entries(attributes).map(([key, value]: [string, any]) => (
-              <div key={key} className="p-4 theme-card rounded-lg border theme-border-primary">
-                <label className="text-sm font-medium theme-text-muted capitalize">{key}</label>
-                <p className="theme-text font-medium mt-1">{value?.toString() || 'Chưa có'}</p>
+            {attributes.map((attr: any, index: number) => (
+              <div key={index} className="p-4 theme-card rounded-lg border theme-border-primary">
+                <label className="text-sm font-medium theme-text-muted capitalize">
+                  {attr.attributeName || 'Chưa có tên'}
+                </label>
+                <p className="theme-text font-medium mt-1">
+                  {attr.attributeValue || 'Chưa có giá trị'}
+                </p>
               </div>
             ))}
           </div>
