@@ -38,6 +38,7 @@ import { HRPage } from "./pages/HRPage";
 import { ProductDetailPage } from "./pages/ProductDetailPage";
 import { InvoiceDetailPage } from "./pages/InvoiceDetailPage";
 import { UserProfilePage } from "./pages/UserProfilePage";
+import { PublicProductPage } from "./pages/PublicProductPage";
 import { EmployeeSelfServicePage } from "./modules/ess/pages/EmployeeSelfServicePage";
 import { Settings } from "./modules/admin/pages/Settings";
 import { UserManagementLayout, MembersPage, RolesPage, UserManagementDashboard } from "./modules/user-management";
@@ -230,6 +231,9 @@ const AppContent = () => {
             <Route path="/lens-quiz" element={<LensQuizPage />} />
             <Route path="/help/lens-admin" element={<LensAdminGuide />} />
             <Route path="/help/lens-catalog" element={<LensCatalogGuide />} />
+            
+            {/* Public Product Lookup - No login required */}
+            <Route path="/p/:code" element={<PublicProductPage />} />
                   
                   {/* Redirect /ERP to /ERP/Dashboard */}
                   <Route path="/ERP" element={<Navigate to="/ERP/Dashboard" replace />} />
