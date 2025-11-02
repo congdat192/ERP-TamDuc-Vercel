@@ -1,21 +1,21 @@
-import { useParams } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { KiotVietProductsFullService } from '@/services/kiotvietProductsFullService';
-import { KiotVietProductFullDB } from '@/lib/types/kiotviet.types';
-import { Globe, Package, Tag, DollarSign, Store, Info } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { KiotVietProductsFullService } from "@/services/kiotvietProductsFullService";
+import { KiotVietProductFullDB } from "@/lib/types/kiotviet.types";
+import { Globe, Package, Tag, DollarSign, Store, Info } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function PublicProductPage() {
   const { code } = useParams<{ code: string }>();
   const [product, setProduct] = useState<KiotVietProductFullDB | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [language, setLanguage] = useState<'vi' | 'en'>('vi');
+  const [language, setLanguage] = useState<"vi" | "en">("vi");
 
   useEffect(() => {
     const fetchProduct = async () => {
       if (!code) {
-        setError('Mã sản phẩm không hợp lệ');
+        setError("Mã sản phẩm không hợp lệ");
         setLoading(false);
         return;
       }
@@ -27,11 +27,11 @@ export function PublicProductPage() {
           setProduct(data);
           setError(null);
         } else {
-          setError('Không tìm thấy sản phẩm');
+          setError("Không tìm thấy sản phẩm");
         }
       } catch (err: any) {
-        console.error('Error fetching product:', err);
-        setError('Lỗi khi tải thông tin sản phẩm');
+        console.error("Error fetching product:", err);
+        setError("Lỗi khi tải thông tin sản phẩm");
       } finally {
         setLoading(false);
       }
@@ -41,15 +41,15 @@ export function PublicProductPage() {
   }, [code]);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
     }).format(amount);
   };
 
   const parseImages = (images: any): string[] => {
     if (Array.isArray(images)) return images;
-    if (typeof images === 'string') {
+    if (typeof images === "string") {
       try {
         return JSON.parse(images);
       } catch {
@@ -61,7 +61,7 @@ export function PublicProductPage() {
 
   const parseAttributes = (attributes: any): Array<{ attributeName: string; attributeValue: string }> => {
     if (Array.isArray(attributes)) return attributes;
-    if (typeof attributes === 'string') {
+    if (typeof attributes === "string") {
       try {
         return JSON.parse(attributes);
       } catch {
@@ -71,14 +71,14 @@ export function PublicProductPage() {
     return [];
   };
 
-  const t = (vi: string, en: string) => (language === 'vi' ? vi : en);
+  const t = (vi: string, en: string) => (language === "vi" ? vi : en);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">{t('Đang tải thông tin sản phẩm...', 'Loading product information...')}</p>
+          <p className="text-gray-600">{t("Đang tải thông tin sản phẩm...", "Loading product information...")}</p>
         </div>
       </div>
     );
@@ -89,13 +89,13 @@ export function PublicProductPage() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center px-4">
         <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
           <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
-            {t('Không tìm thấy sản phẩm', 'Product Not Found')}
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">{t("Không tìm thấy sản phẩm", "Product Not Found")}</h2>
           <p className="text-gray-600 mb-4">
-            {error || t('Mã sản phẩm không tồn tại trong hệ thống', 'Product code does not exist')}
+            {error || t("Mã sản phẩm không tồn tại trong hệ thống", "Product code does not exist")}
           </p>
-          <p className="text-sm text-gray-500">{t('Mã:', 'Code:')} {code}</p>
+          <p className="text-sm text-gray-500">
+            {t("Mã:", "Code:")} {code}
+          </p>
         </div>
       </div>
     );
@@ -112,68 +112,82 @@ export function PublicProductPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                {t('Công ty TNHH Đăng Anh Trí', 'Dang Anh Tri Co., Ltd')}
+                {t("Công ty TNHH Đăng Anh Trí", "Dang Anh Tri Co., Ltd")}
               </h1>
               <p className="text-sm text-gray-600 mt-1">
-                {t('Nhà phân phối chính hãng các thương hiệu mắt kính', 'Authorized Eyewear Distributor')}
+                {t("Nhà phân phối chính hãng các thương hiệu mắt kính", "Authorized Eyewear Distributor")}
               </p>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setLanguage(language === 'vi' ? 'en' : 'vi')}
-              className="gap-2"
-            >
-              <Globe className="w-4 h-4" />
-              {language === 'vi' ? 'English' : 'Tiếng Việt'}
-            </Button>
+
+            {/* Nút ngôn ngữ đã được chuyển xuống dưới – bỏ khỏi header */}
+            <div className="hidden" />
           </div>
         </div>
       </header>
 
       {/* Body */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Language Switch – đặt ngay trên card thông tin sản phẩm */}
+        <div className="flex justify-end mb-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setLanguage(language === "vi" ? "en" : "vi")}
+            className="gap-2"
+          >
+            <Globe className="w-4 h-4" />
+            {language === "vi" ? "English" : "Tiếng Việt"}
+          </Button>
+        </div>
+
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           {/* Product Info Section */}
           <div className="p-6 border-b">
             <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
               <Info className="w-5 h-5 text-blue-600" />
-              {t('Thông tin sản phẩm', 'Product Information')}
+              {t("Thông tin sản phẩm", "Product Information")}
             </h2>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
+                {/* Tên sản phẩm giữ nguyên */}
                 <div>
-                  <label className="text-sm font-medium text-gray-500">{t('Tên sản phẩm', 'Product Name')}</label>
+                  <label className="text-sm font-medium text-gray-500">{t("Tên sản phẩm", "Product Name")}</label>
                   <p className="text-lg font-semibold text-gray-900 mt-1">{product.name}</p>
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">{t('Thương hiệu', 'Brand')}</label>
-                  <p className="text-base text-gray-900 mt-1 flex items-center gap-2">
-                    <Tag className="w-4 h-4 text-blue-600" />
-                    {product.trademark_name || t('Chưa có thông tin', 'N/A')}
-                  </p>
+
+                {/* Thương hiệu – 1 dòng: <icon><label>: <value> */}
+                <div className="flex items-center text-gray-900">
+                  <Tag className="w-4 h-4 text-blue-600 mr-2 shrink-0" />
+                  <span className="text-sm font-medium whitespace-nowrap mr-1">{t("Thương hiệu", "Brand")}:</span>
+                  <span className="text-base font-semibold">
+                    {product.trademark_name || t("Chưa có thông tin", "N/A")}
+                  </span>
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">{t('Mã sản phẩm', 'Product Code')}</label>
-                  <p className="text-base text-gray-900 mt-1 font-mono bg-gray-100 px-3 py-2 rounded">
-                    {product.code}
-                  </p>
+
+                {/* Mã sản phẩm – 1 dòng */}
+                <div className="flex items-center text-gray-900">
+                  <Package className="w-4 h-4 text-blue-600 mr-2 shrink-0" />
+                  <span className="text-sm font-medium whitespace-nowrap mr-1">
+                    {t("Mã sản phẩm", "Product Code")}:
+                  </span>
+                  <span className="text-base font-semibold font-mono">{product.code}</span>
                 </div>
               </div>
+
               <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-500">{t('Giá bán', 'Price')}</label>
-                  <p className="text-2xl font-bold text-green-600 mt-1 flex items-center gap-2">
-                    <DollarSign className="w-6 h-6" />
-                    {formatCurrency(product.base_price)}
-                  </p>
+                {/* Giá bán – 1 dòng */}
+                <div className="flex items-center text-gray-900">
+                  <DollarSign className="w-5 h-5 text-green-600 mr-2 shrink-0" />
+                  <span className="text-sm font-medium whitespace-nowrap mr-1">{t("Giá bán", "Price")}:</span>
+                  <span className="text-2xl font-bold text-green-600">{formatCurrency(product.base_price)}</span>
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">{t('Cửa hàng', 'Store')}</label>
-                  <p className="text-base text-gray-900 mt-1 flex items-center gap-2">
-                    <Store className="w-4 h-4 text-blue-600" />
-                    {t('Mắt Kính Tâm Đức', 'Mat Kinh Tam Duc')}
-                  </p>
+
+                {/* Cửa hàng – 1 dòng */}
+                <div className="flex items-center text-gray-900">
+                  <Store className="w-4 h-4 text-blue-600 mr-2 shrink-0" />
+                  <span className="text-sm font-medium whitespace-nowrap mr-1">{t("Cửa hàng", "Store")}:</span>
+                  <span className="text-base font-semibold">{t("Mắt Kính Tâm Đức", "Mat Kinh Tam Duc")}</span>
                 </div>
               </div>
             </div>
@@ -182,18 +196,12 @@ export function PublicProductPage() {
           {/* Product Details (Attributes) */}
           {attributes.length > 0 && (
             <div className="p-6 border-b bg-gray-50">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">
-                {t('Chi tiết sản phẩm', 'Product Details')}
-              </h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">{t("Chi tiết sản phẩm", "Product Details")}</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {attributes.map((attr, index) => (
                   <div key={index} className="bg-white p-4 rounded-lg border border-gray-200">
-                    <label className="text-xs font-medium text-gray-500 uppercase">
-                      {attr.attributeName}
-                    </label>
-                    <p className="text-sm font-semibold text-gray-900 mt-1">
-                      {attr.attributeValue}
-                    </p>
+                    <label className="text-xs font-medium text-gray-500 uppercase">{attr.attributeName}</label>
+                    <p className="text-sm font-semibold text-gray-900 mt-1">{attr.attributeValue}</p>
                   </div>
                 ))}
               </div>
@@ -203,9 +211,7 @@ export function PublicProductPage() {
           {/* Product Images */}
           {images.length > 0 && (
             <div className="p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">
-                {t('Hình ảnh sản phẩm', 'Product Images')}
-              </h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">{t("Hình ảnh sản phẩm", "Product Images")}</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {images.map((image, index) => (
                   <div key={index} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200">
@@ -214,7 +220,7 @@ export function PublicProductPage() {
                       alt={`${product.name} - ${index + 1}`}
                       className="w-full h-full object-contain bg-white"
                       onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x400?text=No+Image';
+                        (e.target as HTMLImageElement).src = "https://via.placeholder.com/400x400?text=No+Image";
                       }}
                     />
                   </div>
@@ -230,12 +236,12 @@ export function PublicProductPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <p className="text-center text-gray-600">
             {t(
-              'Nhà phân phối chính hãng các thương hiệu mắt kính: POVINO, Levius, Felicity, Mercury',
-              'Authorized distributor of eyewear brands: POVINO, Levius, Felicity, Mercury'
+              "Nhà phân phối chính hãng các thương hiệu mắt kính: POVINO, Levius, Felicity, Mercury",
+              "Authorized distributor of eyewear brands: POVINO, Levius, Felicity, Mercury",
             )}
           </p>
           <p className="text-center text-sm text-gray-500 mt-2">
-            © 2025 {t('Công ty TNHH Đăng Anh Trí', 'Dang Anh Tri Co., Ltd')}
+            © 2025 {t("Công ty TNHH Đăng Anh Trí", "Dang Anh Tri Co., Ltd")}
           </p>
         </div>
       </footer>
