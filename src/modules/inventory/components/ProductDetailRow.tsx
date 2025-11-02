@@ -28,27 +28,27 @@ export function ProductDetailRow({ product, visibleColumnsCount }: ProductDetail
             </TabsList>
             
             <TabsContent value="info" className="mt-0">
-              <ProductInfoTab product={product} />
+              <ProductInfoTab product={product.fullData || product} />
             </TabsContent>
             
             <TabsContent value="description" className="mt-0">
-              <ProductDescriptionTab product={product} />
+              <ProductDescriptionTab product={product.fullData || product} />
             </TabsContent>
             
             <TabsContent value="inventory" className="mt-0">
-              <ProductInventoryTagTab product={product} />
+              <ProductInventoryTagTab product={product.fullData || product} />
             </TabsContent>
             
             <TabsContent value="stock" className="mt-0">
-              <ProductStockTab product={product} />
+              <ProductStockTab product={product.fullData || product} />
             </TabsContent>
             
             <TabsContent value="advanced" className="mt-0">
-              <ProductAdvancedTab product={product} />
+              <ProductAdvancedTab product={product.fullData || product} />
             </TabsContent>
             
             <TabsContent value="channels" className="mt-0">
-              <ProductChannelLinkTab product={product} />
+              <ProductChannelLinkTab product={product.fullData || product} />
             </TabsContent>
           </Tabs>
         </div>
