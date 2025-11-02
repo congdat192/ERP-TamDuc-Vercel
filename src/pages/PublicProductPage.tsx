@@ -2,7 +2,7 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { KiotVietProductsFullService } from "@/services/kiotvietProductsFullService";
 import { KiotVietProductFullDB } from "@/lib/types/kiotviet.types";
-import { Globe, Package, Tag, DollarSign, Store, Info } from "lucide-react";
+import { Globe, Package, Tag, DollarSign, Store, Info, Ruler, Palette, Shapes } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function PublicProductPage() {
@@ -98,6 +98,36 @@ export function PublicProductPage() {
   const images = parseImages(product.images);
   const attributes = parseAttributes(product.attributes);
 
+  // icon suggestor cho các thuộc tính phổ biến
+  const getAttrIcon = (label: string) => {
+    const key = label.toLowerCase();
+    if (/(size|kích thước|cỡ)/.test(key)) return <Ruler className="w-4 h-4 text-blue-600 mr-2 shrink-0" />;
+    if (/(màu|color)/.test(key)) return <Palette className="w-4 h-4 text-blue-600 mr-2 shrink-0" />;
+    if (/(chất liệu|material)/.test(key)) return <Shapes className="w-4 h-4 text-blue-600 mr-2 shrink-0" />;
+    if (/(kiểu dáng|style|frame)/.test(key)) return <Tag className="w-4 h-4 text-blue-600 mr-2 shrink-0" />;
+    if (/(thiết kế|design|ve mũi|nose)/.test(key)) return <Info className="w-4 h-4 text-blue-600 mr-2 shrink-0" />;
+    return <Info className="w-4 h-4 text-blue-600 mr-2 shrink-0" />;
+  };
+
+  // item render theo 1 hàng <icon> <label>: <value>
+  const RowItem = ({
+    icon,
+    label,
+    value,
+    valueClass = "text-base font-semibold",
+  }: {
+    icon: JSX.Element;
+    label: string;
+    value: string | number | null | undefined;
+    valueClass?: string;
+  }) => (
+    <div className="flex items-start text-gray-900">
+      {icon}
+      <span className="text-sm font-medium whitespace-nowrap mr-1">{label}:</span>
+      <span className={`${valueClass} break-words`}>{value ?? t("Chưa có thông tin", "N/A")}</span>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
       {/* Header */}
@@ -112,15 +142,14 @@ export function PublicProductPage() {
                 {t("Nhà phân phối chính hãng các thương hiệu mắt kính", "Authorized Eyewear Distributor")}
               </p>
             </div>
-            {/* Nút ngôn ngữ đã được chuyển xuống dưới */}
+            {/* nút ngôn ngữ đã chuyển xuống dưới */}
             <div className="hidden" />
           </div>
         </div>
       </header>
 
-      {/* Body */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Language switch – đặt ngay trên card thông tin sản phẩm */}
+        {/* Language switch – ngay trên card đầu tiên */}
         <div className="flex justify-end mb-3">
           <Button
             variant="outline"
@@ -133,9 +162,9 @@ export function PublicProductPage() {
           </Button>
         </div>
 
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          {/* Product Info Section */}
-          <div className="p-6 border-b">
+        {/* === Khối 1: Thông tin sản phẩm === */}
+        <section className="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
+          <div className="p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
               <Info className="w-5 h-5 text-blue-600" />
               {t("Thông tin sản phẩm", "Product Information")}
@@ -143,72 +172,68 @@ export function PublicProductPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
-                {/* Tên sản phẩm */}
                 <div>
                   <label className="text-sm font-medium text-gray-500">{t("Tên sản phẩm", "Product Name")}</label>
                   <p className="text-lg font-semibold text-gray-900 mt-1 break-words">{product.name}</p>
                 </div>
 
-                {/* Thương hiệu – 1 dòng */}
-                <div className="flex items-center text-gray-900">
-                  <Tag className="w-4 h-4 text-blue-600 mr-2 shrink-0" />
-                  <span className="text-sm font-medium whitespace-nowrap mr-1">{t("Thương hiệu", "Brand")}:</span>
-                  <span className="text-base font-semibold break-words">
-                    {product.trademark_name || t("Chưa có thông tin", "N/A")}
-                  </span>
-                </div>
+                <RowItem
+                  icon={<Tag className="w-4 h-4 text-blue-600 mr-2 shrink-0" />}
+                  label={t("Thương hiệu", "Brand")}
+                  value={product.trademark_name}
+                />
 
-                {/* Mã sản phẩm – 1 dòng */}
-                <div className="flex items-center text-gray-900">
-                  <Package className="w-4 h-4 text-blue-600 mr-2 shrink-0" />
-                  <span className="text-sm font-medium whitespace-nowrap mr-1">
-                    {t("Mã sản phẩm", "Product Code")}:
-                  </span>
-                  <span className="text-base font-semibold font-mono break-words">{product.code}</span>
-                </div>
+                <RowItem
+                  icon={<Package className="w-4 h-4 text-blue-600 mr-2 shrink-0" />}
+                  label={t("Mã sản phẩm", "Product Code")}
+                  value={product.code}
+                  valueClass="text-base font-semibold font-mono"
+                />
               </div>
 
               <div className="space-y-4">
-                {/* Giá bán – 1 dòng */}
-                <div className="flex items-center text-gray-900">
-                  <DollarSign className="w-5 h-5 text-green-600 mr-2 shrink-0" />
-                  <span className="text-sm font-medium whitespace-nowrap mr-1">{t("Giá bán", "Price")}:</span>
-                  <span className="text-2xl font-bold text-green-600">{formatCurrency(product.base_price)}</span>
-                </div>
+                <RowItem
+                  icon={<DollarSign className="w-5 h-5 text-green-600 mr-2 shrink-0" />}
+                  label={t("Giá bán", "Price")}
+                  value={formatCurrency(product.base_price)}
+                  valueClass="text-2xl font-bold text-green-600"
+                />
 
-                {/* Cửa hàng – 1 dòng */}
-                <div className="flex items-center text-gray-900">
-                  <Store className="w-4 h-4 text-blue-600 mr-2 shrink-0" />
-                  <span className="text-sm font-medium whitespace-nowrap mr-1">{t("Cửa hàng", "Store")}:</span>
-                  <span className="text-base font-semibold">{t("Mắt Kính Tâm Đức", "Mat Kinh Tam Duc")}</span>
-                </div>
+                <RowItem
+                  icon={<Store className="w-4 h-4 text-blue-600 mr-2 shrink-0" />}
+                  label={t("Cửa hàng", "Store")}
+                  value={t("Mắt Kính Tâm Đức", "Mat Kinh Tam Duc")}
+                />
               </div>
             </div>
           </div>
+        </section>
 
-          {/* Product Details (Attributes) – hiển thị <Thuộc tính>: Value */}
-          {attributes.length > 0 && (
-            <div className="p-6 border-b bg-gray-50">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">{t("Chi tiết sản phẩm", "Product Details")}</h3>
+        {/* === Khối 2: Chi tiết sản phẩm (attributes) === */}
+        {attributes.length > 0 && (
+          <section className="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
+            <div className="p-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">{t("Chi tiết sản phẩm", "Product Details")}</h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {attributes.map((attr, index) => (
-                  <div key={index} className="flex items-start gap-2 bg-white p-3 rounded-lg border border-gray-200">
-                    {/* Nhãn */}
-                    <span className="text-sm font-medium text-gray-600 whitespace-nowrap">{attr.attributeName}:</span>
-                    {/* Giá trị */}
-                    <span className="text-sm font-semibold text-gray-900 break-words">{attr.attributeValue}</span>
+                  <div key={index} className="flex items-start text-gray-900 bg-gray-50 rounded-lg p-3 border">
+                    {getAttrIcon(attr.attributeName)}
+                    <span className="text-sm font-medium whitespace-nowrap mr-1">{attr.attributeName}:</span>
+                    <span className="text-sm font-semibold break-words">{attr.attributeValue}</span>
                   </div>
                 ))}
               </div>
             </div>
-          )}
+          </section>
+        )}
 
-          {/* Product Images */}
-          {images.length > 0 && (
+        {/* === Khối 3: Hình ảnh sản phẩm === */}
+        {images.length > 0 && (
+          <section className="bg-white rounded-lg shadow-lg overflow-hidden">
             <div className="p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">{t("Hình ảnh sản phẩm", "Product Images")}</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">{t("Hình ảnh sản phẩm", "Product Images")}</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {images.map((image, index) => (
                   <div key={index} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200">
                     <img
@@ -223,8 +248,8 @@ export function PublicProductPage() {
                 ))}
               </div>
             </div>
-          )}
-        </div>
+          </section>
+        )}
       </main>
 
       {/* Footer */}
