@@ -187,12 +187,13 @@ export function CustomerTable({
 
   return (
     <div className="h-full flex flex-col theme-card rounded-lg border theme-border-primary overflow-hidden">
-      {/* Table Container with constrained width for proper horizontal scroll */}
-      <div className="flex-1 overflow-auto">
-        <table className="w-full" style={{ minWidth: `${(visibleColumns.length * 150) + 120}px` }}>
+      {/* Table Container with responsive scroll */}
+      <div className="flex-1 overflow-x-auto overflow-y-auto -webkit-overflow-scrolling-touch">
+        <table className="w-full border-collapse" style={{ minWidth: `${Math.max(600, visibleColumns.length * 150 + 120)}px` }}>
           <thead className="sticky top-0 bg-white z-10 border-b theme-border-primary/20">
             <tr>
-              <th className="sticky left-0 bg-white z-20 w-12 px-4 py-3 border-r theme-border-primary/10">
+              {/* Checkbox column - Hidden on mobile */}
+              <th className="hidden sm:table-cell sticky left-0 bg-white z-20 w-12 px-4 py-3 border-r theme-border-primary/10">
                 <Checkbox
                   checked={allSelected}
                   onCheckedChange={handleSelectAll}
@@ -218,7 +219,8 @@ export function CustomerTable({
                   className="hover:theme-bg-primary/5 border-b theme-border-primary/10 cursor-pointer"
                   onClick={() => handleRowClick(customer.id)}
                 >
-                  <td className="sticky left-0 bg-white z-10 w-12 px-4 py-3 border-r theme-border-primary/10">
+                  {/* Checkbox column - Hidden on mobile */}
+                  <td className="hidden sm:table-cell sticky left-0 bg-white z-10 w-12 px-4 py-3 border-r theme-border-primary/10">
                     <Checkbox
                       checked={selectedCustomers.includes(customer.id)}
                       onCheckedChange={(checked) => handleSelectCustomer(customer.id, checked as boolean)}
@@ -272,67 +274,80 @@ export function CustomerTable({
         </table>
       </div>
 
-      {/* Pagination - Fixed Outside Scroll Container */}
-      <div className="flex items-center justify-between px-4 py-3 border-t theme-border-primary/20">
-        <div className="flex items-center space-x-3">
-          <span className="text-sm theme-text-muted">Hiển thị</span>
+      {/* Pagination - Responsive */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-3 sm:px-4 py-3 gap-3 border-t theme-border-primary/20">
+        {/* Items per page - Compact on mobile */}
+        <div className="flex items-center gap-2 text-xs sm:text-sm">
+          <span className="theme-text-muted">Hiển thị</span>
           <select
             value={itemsPerPage}
             onChange={(e) => setItemsPerPage(Number(e.target.value))}
-            className="px-2 py-1 text-sm border theme-border-primary rounded theme-card theme-text"
+            className="px-2 py-1 text-xs sm:text-sm border theme-border-primary rounded theme-card theme-text"
           >
             <option value={5}>5</option>
             <option value={15}>15</option>
             <option value={25}>25</option>
             <option value={50}>50</option>
           </select>
-          <span className="text-sm theme-text-muted">
+          <span className="theme-text-muted hidden sm:inline">
             {startIndex} – {endIndex} trong {totalCustomers.toLocaleString('vi-VN')} khách hàng
+          </span>
+          {/* Mobile compact version */}
+          <span className="theme-text-muted sm:hidden">
+            {startIndex}-{endIndex}/{totalCustomers}
           </span>
         </div>
 
-        <div className="flex items-center space-x-2">
-          <div className="flex items-center space-x-1">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(1)}
-              disabled={currentPage === 1}
-              className="h-8 w-8 p-0 voucher-border-primary hover:voucher-bg-primary/10 hover:voucher-text-primary disabled:opacity-50"
-            >
-              <ChevronsLeft className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="h-8 w-8 p-0 voucher-border-primary hover:voucher-bg-primary/10 hover:voucher-text-primary disabled:opacity-50"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <span className="px-3 py-1 text-sm theme-text min-w-[80px] text-center">
-              Trang {currentPage} / {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="h-8 w-8 p-0 voucher-border-primary hover:voucher-bg-primary/10 hover:voucher-text-primary disabled:opacity-50"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(totalPages)}
-              disabled={currentPage === totalPages}
-              className="h-8 w-8 p-0 voucher-border-primary hover:voucher-bg-primary/10 hover:voucher-text-primary disabled:opacity-50"
-            >
-              <ChevronsRight className="w-4 h-4" />
-            </Button>
-          </div>
+        {/* Pagination controls - Hide first/last on mobile */}
+        <div className="flex items-center gap-1">
+          {/* First page - Hidden on mobile */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(1)}
+            disabled={currentPage === 1}
+            className="hidden sm:flex h-8 w-8 p-0 voucher-border-primary hover:voucher-bg-primary/10 hover:voucher-text-primary disabled:opacity-50"
+          >
+            <ChevronsLeft className="w-4 h-4" />
+          </Button>
+          
+          {/* Prev page */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="h-8 w-8 p-0 voucher-border-primary hover:voucher-bg-primary/10 hover:voucher-text-primary disabled:opacity-50"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          
+          {/* Page indicator - Compact on mobile */}
+          <span className="px-2 sm:px-3 py-1 text-xs sm:text-sm theme-text min-w-[60px] sm:min-w-[80px] text-center">
+            {currentPage}/{totalPages}
+          </span>
+          
+          {/* Next page */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="h-8 w-8 p-0 voucher-border-primary hover:voucher-bg-primary/10 hover:voucher-text-primary disabled:opacity-50"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+          
+          {/* Last page - Hidden on mobile */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(totalPages)}
+            disabled={currentPage === totalPages}
+            className="hidden sm:flex h-8 w-8 p-0 voucher-border-primary hover:voucher-bg-primary/10 hover:voucher-text-primary disabled:opacity-50"
+          >
+            <ChevronsRight className="w-4 h-4" />
+          </Button>
         </div>
       </div>
     </div>

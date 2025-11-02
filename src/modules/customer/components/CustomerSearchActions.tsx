@@ -50,9 +50,9 @@ export function CustomerSearchActions({
               </Button>
             )}
             
-            {/* Search Input */}
-            <div className="flex-1 relative flex items-center space-x-2">
-              <div className="flex-1 relative">
+            {/* Search Input - Responsive stacking */}
+            <div className="flex-1 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full">
+              <div className="flex-1 relative min-w-0">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 theme-text-muted w-4 h-4" />
                 <Input
                   placeholder="Theo mã, tên, số điện thoại"
@@ -63,26 +63,30 @@ export function CustomerSearchActions({
                   disabled={isLoadingApi}
                 />
               </div>
-              {onSearch && (
-                <Button 
-                  onClick={onSearch}
-                  disabled={isLoadingApi}
-                  size="sm"
-                  className="voucher-button-primary whitespace-nowrap"
-                >
-                  {isLoadingApi ? 'Đang tìm...' : 'Tìm'}
-                </Button>
-              )}
-              {onResetSearch && searchTerm && (
-                <Button 
-                  onClick={onResetSearch}
-                  variant="outline"
-                  size="sm"
-                  className="theme-border-primary hover:theme-bg-primary/10"
-                >
-                  Reset
-                </Button>
-              )}
+              
+              {/* Buttons stack horizontally on mobile, inline on desktop */}
+              <div className="flex items-center gap-2 shrink-0">
+                {onSearch && (
+                  <Button 
+                    onClick={onSearch}
+                    disabled={isLoadingApi}
+                    size="sm"
+                    className="voucher-button-primary whitespace-nowrap flex-1 sm:flex-none"
+                  >
+                    {isLoadingApi ? 'Đang tìm...' : 'Tìm'}
+                  </Button>
+                )}
+                {onResetSearch && searchTerm && (
+                  <Button 
+                    onClick={onResetSearch}
+                    variant="outline"
+                    size="sm"
+                    className="theme-border-primary hover:theme-bg-primary/10 flex-1 sm:flex-none"
+                  >
+                    Reset
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
           

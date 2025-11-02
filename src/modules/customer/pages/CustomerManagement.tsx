@@ -7,7 +7,8 @@ import { CustomerFilters } from '../components/CustomerFilters';
 import { CustomerTable } from '../components/CustomerTable';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ColumnConfig } from '../components/ColumnVisibilityFilter';
-import { Search } from 'lucide-react';
+import { Search, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface CustomerManagementProps {
   currentUser?: any;
@@ -144,7 +145,7 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
   const totalPages = Math.ceil(totalCustomers / itemsPerPage);
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden theme-background pt-6">
+    <div className="flex flex-col h-screen overflow-hidden theme-background pt-3 sm:pt-6">
       {/* Mobile overlay */}
       {isFilterOpen && isMobile && (
         <div 
@@ -154,7 +155,7 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
       )}
 
       {/* Main Content Layout - Takes remaining height */}
-      <div className="flex flex-1 min-h-0 px-6 pb-6 gap-3">
+      <div className="flex flex-1 min-h-0 px-3 sm:px-6 pb-3 sm:pb-6 gap-2 sm:gap-3">
         {/* Desktop Filter Sidebar - Fixed width with proper scroll */}
         {!isMobile && (
           <div className="w-64 flex-shrink-0 theme-card rounded-lg border theme-border-primary overflow-hidden">
@@ -166,16 +167,39 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
           </div>
         )}
 
-        {/* Mobile Filter Sidebar - Drawer Style */}
+        {/* Mobile Filter Sidebar - Full width on mobile */}
         {isMobile && (
-          <div className={`fixed left-0 top-0 h-full w-64 theme-card rounded-lg z-50 transform transition-transform duration-300 ${
+          <div className={`fixed left-0 top-0 h-full w-full sm:w-80 max-w-[90vw] theme-card z-50 transform transition-transform duration-300 ${
             isFilterOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}>
-            <ScrollArea className="h-[calc(100vh-100px)]">
+          } shadow-xl`}>
+            {/* Close button for mobile */}
+            <div className="flex items-center justify-between p-4 border-b theme-border-primary">
+              <h3 className="font-semibold theme-text">Bộ lọc</h3>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setIsFilterOpen(false)}
+                className="h-8 w-8 p-0"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            
+            <ScrollArea className="h-[calc(100vh-120px)]">
               <div className="p-4">
                 <CustomerFilters />
               </div>
             </ScrollArea>
+            
+            {/* Sticky apply button */}
+            <div className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t theme-border-primary">
+              <Button 
+                onClick={() => setIsFilterOpen(false)}
+                className="w-full voucher-button-primary"
+              >
+                Áp dụng
+              </Button>
+            </div>
           </div>
         )}
 
@@ -197,16 +221,16 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
 
           {/* Empty State when no search performed */}
           {customers.length === 0 && !isLoadingApi && (
-            <div className="flex-1 min-h-0 flex items-center justify-center theme-card rounded-lg border theme-border-primary p-8">
-              <div className="text-center space-y-4">
-                <div className="w-16 h-16 mx-auto rounded-full bg-gray-100 flex items-center justify-center">
-                  <Search className="w-8 h-8 text-gray-400" />
+            <div className="flex-1 min-h-0 flex items-center justify-center theme-card rounded-lg border theme-border-primary p-4 sm:p-8">
+              <div className="text-center space-y-3 sm:space-y-4">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto rounded-full bg-gray-100 flex items-center justify-center">
+                  <Search className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
                 </div>
-                <div className="space-y-2">
-                  <h3 className="text-lg font-semibold theme-text">
+                <div className="space-y-1 sm:space-y-2">
+                  <h3 className="text-base sm:text-lg font-semibold theme-text">
                     Tìm kiếm khách hàng
                   </h3>
-                  <p className="text-sm theme-text-muted max-w-md">
+                  <p className="text-xs sm:text-sm theme-text-muted max-w-md px-4">
                     Nhập số điện thoại khách hàng vào ô tìm kiếm để tra cứu thông tin chi tiết
                   </p>
                 </div>
