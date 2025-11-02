@@ -2,7 +2,7 @@ import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { KiotVietProductsFullService } from '@/services/kiotvietProductsFullService';
 import { KiotVietProductFullDB } from '@/lib/types/kiotviet.types';
-import { Globe, Package, Tag, DollarSign, Store, Info } from 'lucide-react';
+import { Globe, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export function PublicProductPage() {
@@ -136,64 +136,53 @@ export function PublicProductPage() {
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           {/* Product Info Section */}
           <div className="p-6 border-b">
-            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <Info className="w-5 h-5 text-blue-600" />
+            <h2 className="text-xl font-bold text-gray-900 mb-4">
               {t('Thông tin sản phẩm', 'Product Information')}
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-500">{t('Tên sản phẩm', 'Product Name')}</label>
-                  <p className="text-lg font-semibold text-gray-900 mt-1">{product.name}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">{t('Thương hiệu', 'Brand')}</label>
-                  <p className="text-base text-gray-900 mt-1 flex items-center gap-2">
-                    <Tag className="w-4 h-4 text-blue-600" />
-                    {product.trademark_name || t('Chưa có thông tin', 'N/A')}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">{t('Mã sản phẩm', 'Product Code')}</label>
-                  <p className="text-base text-gray-900 mt-1 font-mono bg-gray-100 px-3 py-2 rounded">
-                    {product.code}
-                  </p>
-                </div>
+            <div className="space-y-3">
+              {/* Tên sản phẩm - xuống hàng */}
+              <div>
+                <span className="text-sm font-medium text-gray-700">{t('Tên sản phẩm:', 'Product Name:')}</span>
+                <p className="text-base text-gray-900 mt-1">{product.name}</p>
               </div>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-500">{t('Giá bán', 'Price')}</label>
-                  <p className="text-2xl font-bold text-green-600 mt-1 flex items-center gap-2">
-                    <DollarSign className="w-6 h-6" />
-                    {formatCurrency(product.base_price)}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">{t('Cửa hàng', 'Store')}</label>
-                  <p className="text-base text-gray-900 mt-1 flex items-center gap-2">
-                    <Store className="w-4 h-4 text-blue-600" />
-                    {t('Mắt Kính Tâm Đức', 'Mat Kinh Tam Duc')}
-                  </p>
-                </div>
+
+              {/* Thương hiệu - 1 dòng */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700">{t('Thương hiệu:', 'Brand:')}</span>
+                <span className="text-base text-gray-900">{product.trademark_name || t('Chưa có thông tin', 'N/A')}</span>
+              </div>
+
+              {/* Mã sản phẩm - 1 dòng */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700">{t('Mã sản phẩm:', 'Product Code:')}</span>
+                <span className="text-base text-gray-900 font-mono bg-gray-100 px-2 py-1 rounded">{product.code}</span>
+              </div>
+
+              {/* Giá bán - 1 dòng */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700">{t('Giá bán:', 'Price:')}</span>
+                <span className="text-xl font-bold text-green-600">{formatCurrency(product.base_price)}</span>
+              </div>
+
+              {/* Cửa hàng - 1 dòng */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700">{t('Cửa hàng:', 'Store:')}</span>
+                <span className="text-base text-gray-900">{t('Mắt Kính Tâm Đức', 'Mat Kinh Tam Duc')}</span>
               </div>
             </div>
           </div>
 
-          {/* Product Details (Attributes) */}
+          {/* Product Details (Attributes) - 1 dòng */}
           {attributes.length > 0 && (
             <div className="p-6 border-b bg-gray-50">
               <h3 className="text-lg font-bold text-gray-900 mb-4">
                 {t('Chi tiết sản phẩm', 'Product Details')}
               </h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
                 {attributes.map((attr, index) => (
-                  <div key={index} className="bg-white p-4 rounded-lg border border-gray-200">
-                    <label className="text-xs font-medium text-gray-500 uppercase">
-                      {attr.attributeName}
-                    </label>
-                    <p className="text-sm font-semibold text-gray-900 mt-1">
-                      {attr.attributeValue}
-                    </p>
+                  <div key={index} className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-gray-700 uppercase">{attr.attributeName}:</span>
+                    <span className="text-sm text-gray-900">{attr.attributeValue}</span>
                   </div>
                 ))}
               </div>
