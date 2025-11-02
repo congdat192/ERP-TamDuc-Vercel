@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { KiotVietProductsFullService } from '@/services/kiotvietProductsFullService';
 import { KiotVietProductFullDB } from '@/lib/types/kiotviet.types';
 import { Globe, Package } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 export function PublicProductPage() {
   const { code } = useParams<{ code: string }>();
@@ -75,10 +74,10 @@ export function PublicProductPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#F5F5F0] flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">{t('Đang tải thông tin sản phẩm...', 'Loading product information...')}</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#E8D88E] border-t-transparent mx-auto mb-4"></div>
+          <p className="text-gray-700 text-lg">{t('Đang tải thông tin sản phẩm...', 'Loading product information...')}</p>
         </div>
       </div>
     );
@@ -86,16 +85,18 @@ export function PublicProductPage() {
 
   if (error || !product) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
-          <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
+      <div className="min-h-screen bg-[#F5F5F0] flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-10 text-center border-2 border-gray-200">
+          <Package className="w-20 h-20 text-gray-400 mx-auto mb-6" />
+          <h2 className="text-3xl font-bold text-gray-900 mb-3">
             {t('Không tìm thấy sản phẩm', 'Product Not Found')}
           </h2>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-600 mb-4 text-lg">
             {error || t('Mã sản phẩm không tồn tại trong hệ thống', 'Product code does not exist')}
           </p>
-          <p className="text-sm text-gray-500">{t('Mã:', 'Code:')} {code}</p>
+          <p className="text-sm text-gray-500 font-mono bg-gray-100 inline-block px-4 py-2 rounded-lg">
+            {t('Mã:', 'Code:')} {code}
+          </p>
         </div>
       </div>
     );
@@ -105,103 +106,139 @@ export function PublicProductPage() {
   const attributes = parseAttributes(product.attributes);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+    <div className="min-h-screen bg-[#F5F5F0]">
+      {/* Header - Yellow Brand Bar */}
+      <div className="bg-gradient-to-r from-[#E8D88E] to-[#F4E896] border-b-4 border-[#D4C17A]">
+        <div className="max-w-5xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="text-center sm:text-left">
+              <h1 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
                 {t('Công ty TNHH Đăng Anh Trí', 'Dang Anh Tri Co., Ltd')}
               </h1>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-base sm:text-lg text-gray-800 mt-2 font-medium">
                 {t('Nhà phân phối chính hãng các thương hiệu mắt kính', 'Authorized Eyewear Distributor')}
               </p>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
+            <button
               onClick={() => setLanguage(language === 'vi' ? 'en' : 'vi')}
-              className="gap-2"
+              className="flex items-center justify-center gap-2 bg-white text-gray-900 px-5 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 border-2 border-gray-200 hover:border-gray-300"
             >
-              <Globe className="w-4 h-4" />
+              <Globe className="w-5 h-5" />
               {language === 'vi' ? 'English' : 'Tiếng Việt'}
-            </Button>
+            </button>
           </div>
         </div>
-      </header>
+      </div>
 
       {/* Body */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          {/* Product Info Section */}
-          <div className="p-6 border-b">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
-              {t('Thông tin sản phẩm', 'Product Information')}
+      <main className="max-w-5xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        {/* Product Info Card */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-gray-200 mb-6">
+          <div className="bg-gradient-to-r from-[#E8D88E] to-[#F4E896] px-6 py-4 border-b-2 border-[#D4C17A]">
+            <h2 className="text-2xl font-bold text-gray-900">
+              {t('THÔNG TIN SẢN PHẨM', 'PRODUCT INFORMATION')}
             </h2>
+          </div>
+          
+          <div className="p-6 sm:p-8 space-y-5">
+            {/* Tên sản phẩm - Special styling */}
+            <div className="bg-gradient-to-r from-[#FFF9E6] to-white p-4 rounded-xl border-l-4 border-[#E8D88E]">
+              <p className="text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">
+                {t('Tên sản phẩm:', 'Product Name:')}
+              </p>
+              <p className="text-2xl font-bold text-gray-900 leading-tight">
+                {product.name}
+              </p>
+            </div>
+
+            {/* Other fields - Single line */}
             <div className="space-y-3">
-              {/* Tên sản phẩm - xuống hàng */}
-              <div>
-                <span className="text-sm font-medium text-gray-700">{t('Tên sản phẩm:', 'Product Name:')}</span>
-                <p className="text-base text-gray-900 mt-1">{product.name}</p>
+              <div className="flex flex-wrap items-baseline gap-2 py-2 border-b border-gray-100">
+                <span className="text-sm font-bold text-gray-700 min-w-[120px]">
+                  {t('Thương hiệu:', 'Brand:')}
+                </span>
+                <span className="text-lg font-semibold text-gray-900">
+                  {product.trademark_name || t('Chưa có thông tin', 'N/A')}
+                </span>
               </div>
 
-              {/* Thương hiệu - 1 dòng */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">{t('Thương hiệu:', 'Brand:')}</span>
-                <span className="text-base text-gray-900">{product.trademark_name || t('Chưa có thông tin', 'N/A')}</span>
+              <div className="flex flex-wrap items-baseline gap-2 py-2 border-b border-gray-100">
+                <span className="text-sm font-bold text-gray-700 min-w-[120px]">
+                  {t('Mã sản phẩm:', 'Product Code:')}
+                </span>
+                <span className="text-lg font-mono font-bold text-gray-900 bg-gray-100 px-3 py-1 rounded-lg">
+                  {product.code}
+                </span>
               </div>
 
-              {/* Mã sản phẩm - 1 dòng */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">{t('Mã sản phẩm:', 'Product Code:')}</span>
-                <span className="text-base text-gray-900 font-mono bg-gray-100 px-2 py-1 rounded">{product.code}</span>
+              <div className="flex flex-wrap items-baseline gap-2 py-2 border-b border-gray-100">
+                <span className="text-sm font-bold text-gray-700 min-w-[120px]">
+                  {t('Giá bán:', 'Price:')}
+                </span>
+                <span className="text-3xl font-black text-green-600">
+                  {formatCurrency(product.base_price)}
+                </span>
               </div>
 
-              {/* Giá bán - 1 dòng */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">{t('Giá bán:', 'Price:')}</span>
-                <span className="text-xl font-bold text-green-600">{formatCurrency(product.base_price)}</span>
-              </div>
-
-              {/* Cửa hàng - 1 dòng */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">{t('Cửa hàng:', 'Store:')}</span>
-                <span className="text-base text-gray-900">{t('Mắt Kính Tâm Đức', 'Mat Kinh Tam Duc')}</span>
+              <div className="flex flex-wrap items-baseline gap-2 py-2">
+                <span className="text-sm font-bold text-gray-700 min-w-[120px]">
+                  {t('Cửa hàng:', 'Store:')}
+                </span>
+                <span className="text-lg font-semibold text-gray-900">
+                  {t('Mắt Kính Tâm Đức', 'Mat Kinh Tam Duc')}
+                </span>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Product Details (Attributes) - 1 dòng */}
-          {attributes.length > 0 && (
-            <div className="p-6 border-b bg-gray-50">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">
-                {t('Chi tiết sản phẩm', 'Product Details')}
+        {/* Product Details (Attributes) */}
+        {attributes.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-gray-200 mb-6">
+            <div className="bg-gradient-to-r from-[#E8D88E] to-[#F4E896] px-6 py-4 border-b-2 border-[#D4C17A]">
+              <h3 className="text-2xl font-bold text-gray-900">
+                {t('CHI TIẾT SẢN PHẨM', 'PRODUCT DETAILS')}
               </h3>
-              <div className="space-y-2">
-                {attributes.map((attr, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-700 uppercase">{attr.attributeName}:</span>
-                    <span className="text-sm text-gray-900">{attr.attributeValue}</span>
-                  </div>
-                ))}
-              </div>
             </div>
-          )}
+            
+            <div className="p-6 sm:p-8 space-y-3">
+              {attributes.map((attr, index) => (
+                <div 
+                  key={index} 
+                  className="flex flex-wrap items-baseline gap-2 py-3 border-b border-gray-100 last:border-b-0"
+                >
+                  <span className="text-sm font-bold text-gray-700 uppercase min-w-[140px]">
+                    {attr.attributeName}:
+                  </span>
+                  <span className="text-lg font-semibold text-gray-900">
+                    {attr.attributeValue}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-          {/* Product Images */}
-          {images.length > 0 && (
-            <div className="p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">
-                {t('Hình ảnh sản phẩm', 'Product Images')}
+        {/* Product Images */}
+        {images.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-gray-200">
+            <div className="bg-gradient-to-r from-[#E8D88E] to-[#F4E896] px-6 py-4 border-b-2 border-[#D4C17A]">
+              <h3 className="text-2xl font-bold text-gray-900">
+                {t('HÌNH ẢNH SẢN PHẨM', 'PRODUCT IMAGES')}
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            </div>
+            
+            <div className="p-6 sm:p-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {images.map((image, index) => (
-                  <div key={index} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200">
+                  <div 
+                    key={index} 
+                    className="relative aspect-square rounded-xl overflow-hidden border-2 border-gray-200 shadow-md hover:shadow-xl transition-shadow duration-200 bg-white"
+                  >
                     <img
                       src={image}
                       alt={`${product.name} - ${index + 1}`}
-                      className="w-full h-full object-contain bg-white"
+                      className="w-full h-full object-contain p-4"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = 'https://via.placeholder.com/400x400?text=No+Image';
                       }}
@@ -210,20 +247,20 @@ export function PublicProductPage() {
                 ))}
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t mt-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <p className="text-center text-gray-600">
+      <footer className="bg-gradient-to-r from-[#E8D88E] to-[#F4E896] border-t-4 border-[#D4C17A] mt-12">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <p className="text-center text-gray-900 font-semibold text-base mb-2">
             {t(
               'Nhà phân phối chính hãng các thương hiệu mắt kính: POVINO, Levius, Felicity, Mercury',
               'Authorized distributor of eyewear brands: POVINO, Levius, Felicity, Mercury'
             )}
           </p>
-          <p className="text-center text-sm text-gray-500 mt-2">
+          <p className="text-center text-sm text-gray-700 font-medium">
             © 2025 {t('Công ty TNHH Đăng Anh Trí', 'Dang Anh Tri Co., Ltd')}
           </p>
         </div>
