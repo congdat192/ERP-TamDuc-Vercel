@@ -5,26 +5,34 @@ export interface CustomerData {
   code: string;
   name: string;
   gender: boolean;
-  birthDate: string;
-  contactNumber: string;
+  birthdate: string;
+  contactnumber: string;
+  identificationnumber: string;
   address: string | null;
-  locationName: string | null;
-  wardName: string | null;
+  retailerid: number;
+  branchid: number;
+  locationname: string | null;
+  wardname: string | null;
   email: string | null;
+  avatar: string;
   organization: string | null;
   comments: string | null;
-  taxCode: string | null;
-  retailerId: number;
+  taxcode: string | null;
   debt: number;
-  totalInvoiced: number;
-  totalPoint: number;
-  totalRevenue: number;
-  modifiedDate: string;
-  createdDate: string;
+  modifieddate: string;
+  createddate: string;
+  rewardpoint: number;
+  type: number;
+  totalinvoiced: number;
+  totalpoint: number;
+  totalrevenue: number;
   groups: string | null;
-  rewardPoint: number;
-  psidFacebook: number;
-  avatarkiotviet: string;
+  psidfacebook: string | null;
+  totalinvoice: number;
+  avatar_history: Array<{
+    avatar: string;
+    createddate: string;
+  }>;
 }
 
 export interface CustomerResponse {
@@ -82,39 +90,41 @@ export function mapCustomerData(customer: CustomerData): any {
     customerCode: customer.code || '',
     customerName: customer.name || '',
     customerType: 'Cá nhân',
-    phone: customer.contactNumber || '',
+    phone: customer.contactnumber || '',
+    idNumber: customer.identificationnumber || '',
     customerGroup: customer.groups || 'Khách lẻ',
     gender: customer.gender ? 'Nam' : 'Nữ',
-    birthDate: customer.birthDate ? new Date(customer.birthDate).toLocaleDateString('vi-VN') : '',
+    birthDate: customer.birthdate ? new Date(customer.birthdate).toLocaleDateString('vi-VN') : '',
     email: customer.email || '',
     facebook: '',
     company: customer.organization || '',
-    taxCode: customer.taxCode || '',
-    idNumber: '',
+    taxCode: customer.taxcode || '',
     address: customer.address || '',
-    deliveryArea: customer.locationName || '',
-    ward: customer.wardName || '',
+    deliveryArea: customer.locationname || '',
+    ward: customer.wardname || '',
     creator: '',
-    createDate: customer.createdDate ? new Date(customer.createdDate).toLocaleDateString('vi-VN') : '',
+    createDate: customer.createddate ? new Date(customer.createddate).toLocaleDateString('vi-VN') : '',
     notes: customer.comments || '',
-    lastTransactionDate: customer.modifiedDate ? new Date(customer.modifiedDate).toLocaleDateString('vi-VN') : '',
+    lastTransactionDate: customer.modifieddate ? new Date(customer.modifieddate).toLocaleDateString('vi-VN') : '',
     createBranch: '',
     currentDebt: customer.debt || 0,
     debtDays: 0,
-    totalSales: customer.totalRevenue || 0,
-    currentPoints: customer.rewardPoint || 0,
-    totalPoints: customer.totalPoint || 0,
-    totalSalesMinusReturns: customer.totalRevenue || 0,
+    totalSales: customer.totalrevenue || 0,
+    currentPoints: customer.rewardpoint || 0,
+    totalPoints: customer.totalpoint || 0,
+    totalSalesMinusReturns: customer.totalrevenue || 0,
+    totalInvoices: customer.totalinvoice || 0,
     status: 'Hoạt động',
     // For CustomerInfoTab and CustomerDetailRow
     name: customer.name || '',
     group: customer.groups || 'Khách lẻ',
-    birthday: customer.birthDate ? new Date(customer.birthDate).toLocaleDateString('vi-VN') : '',
-    createdDate: customer.createdDate ? new Date(customer.createdDate).toLocaleDateString('vi-VN') : '',
+    birthday: customer.birthdate ? new Date(customer.birthdate).toLocaleDateString('vi-VN') : '',
+    createdDate: customer.createddate ? new Date(customer.createddate).toLocaleDateString('vi-VN') : '',
     note: customer.comments || '',
-    points: customer.rewardPoint || 0,
-    totalSpent: customer.totalRevenue || 0,
+    points: customer.rewardpoint || 0,
+    totalSpent: customer.totalrevenue || 0,
     totalDebt: customer.debt || 0,
-    avatarUrl: customer.avatarkiotviet || null
+    avatarUrl: customer.avatar || null,
+    avatarHistory: customer.avatar_history || []
   };
 }

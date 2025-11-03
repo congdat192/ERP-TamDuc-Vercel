@@ -47,6 +47,7 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
   const [activeTab, setActiveTab] = useState('info');
   const [invoicesData, setInvoicesData] = useState<any[]>([]);
   const [customerData, setCustomerData] = useState<any>(null);
+  const [avatarHistory, setAvatarHistory] = useState<Array<{ avatar: string; createddate: string }>>([]);
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(false);
   const [invoicesError, setInvoicesError] = useState<string | null>(null);
   const [voucherEligibilityData, setVoucherEligibilityData] = useState<any>(null);
@@ -109,9 +110,30 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
     }
   };
 
+  const fetchCustomerData = async () => {
+    if (!customer.phone) return;
+
+    try {
+      const { data, error } = await supabase.functions.invoke('get-customer-by-phone', {
+        body: { phone: customer.phone }
+      });
+
+      if (error) throw error;
+
+      // Parse nested structure: data.data.data.avatar_history
+      if (data?.data?.data?.avatar_history) {
+        setAvatarHistory(data.data.data.avatar_history);
+      }
+    } catch (err) {
+      console.error('Error fetching customer avatar history:', err);
+      setAvatarHistory([]);
+    }
+  };
+
   useEffect(() => {
     fetchInvoicesData();
     fetchVoucherEligibility();
+    fetchCustomerData();
   }, [customer.phone]);
 
   return (
@@ -226,6 +248,7 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
               <TabsContent value="images" className="mt-0">
                 <CustomerImagesTab 
                   invoices={invoicesData}
+                  avatarHistory={avatarHistory}
                   isLoading={isLoadingInvoices}
                 />
               </TabsContent>

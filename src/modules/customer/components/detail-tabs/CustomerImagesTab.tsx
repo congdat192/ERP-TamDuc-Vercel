@@ -8,36 +8,57 @@ interface Invoice {
   eye_prescription?: string;
 }
 
+interface AvatarHistoryItem {
+  avatar: string;
+  createddate: string;
+}
+
 interface CustomerImagesTabProps {
   invoices: Invoice[] | null;
+  avatarHistory?: AvatarHistoryItem[];
   isLoading: boolean;
 }
 
-export function CustomerImagesTab({ invoices, isLoading }: CustomerImagesTabProps) {
+export function CustomerImagesTab({ invoices, avatarHistory, isLoading }: CustomerImagesTabProps) {
   const [selectedImage, setSelectedImage] = useState<{ url: string; date: string; code: string } | null>(null);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
 
-  // Get 10 most recent images with eye_prescription
+  // Priority: avatarHistory > eye_prescription
   const imageSlots = useMemo(() => {
-    if (!invoices) return Array(10).fill(null);
-    
-    const imagesWithDates = invoices
-      .filter(inv => inv.eye_prescription)
-      .map(inv => ({
-        url: inv.eye_prescription!,
-        date: inv.createddate,
-        code: inv.code
-      }))
+    let images: { url: string; date: string; code: string }[] = [];
+
+    // Priority 1: Use avatar_history if available
+    if (avatarHistory && avatarHistory.length > 0) {
+      images = avatarHistory.map(item => ({
+        url: item.avatar,
+        date: item.createddate,
+        code: 'Avatar'
+      }));
+    } 
+    // Priority 2: Fallback to eye_prescription
+    else if (invoices && invoices.length > 0) {
+      images = invoices
+        .filter(inv => inv.eye_prescription)
+        .map(inv => ({
+          url: inv.eye_prescription!,
+          date: inv.createddate,
+          code: inv.code
+        }));
+    }
+
+    // Sort by date (newest first) and take latest 10
+    const sortedImages = images
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, 10);
 
-    const slots = [...imagesWithDates];
+    // Fill remaining slots with null
+    const slots = [...sortedImages];
     while (slots.length < 10) {
       slots.push(null);
     }
     
     return slots;
-  }, [invoices]);
+  }, [avatarHistory, invoices]);
 
   const formatDate = (dateString: string) => {
     try {
