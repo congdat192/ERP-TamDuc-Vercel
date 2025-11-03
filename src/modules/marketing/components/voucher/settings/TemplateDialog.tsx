@@ -17,7 +17,7 @@ interface TemplateDialogProps {
 }
 
 export function TemplateDialog({ open, onOpenChange, template, onSave }: TemplateDialogProps) {
-  const { register, handleSubmit, reset, watch } = useForm<VoucherTemplate>();
+  const { register, handleSubmit, reset, watch, setValue } = useForm<VoucherTemplate>();
 
   useEffect(() => {
     if (open) {
@@ -85,7 +85,10 @@ export function TemplateDialog({ open, onOpenChange, template, onSave }: Templat
           </div>
 
           <div className="flex items-center space-x-2">
-            <Switch {...register('is_default')} />
+            <Switch 
+              checked={watch('is_default') || false}
+              onCheckedChange={(checked) => setValue('is_default', checked)}
+            />
             <Label>Đặt làm template mặc định</Label>
           </div>
 

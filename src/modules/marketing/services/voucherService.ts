@@ -354,6 +354,14 @@ export const voucherService = {
   },
 
   async createTemplate(data: { name: string; template_text: string; template_html?: string; is_default: boolean }) {
+    // If setting this as default, unset all other templates first
+    if (data.is_default) {
+      await supabase
+        .from('voucher_templates')
+        .update({ is_default: false })
+        .eq('is_default', true);
+    }
+    
     const { data: result, error } = await supabase
       .from('voucher_templates')
       .insert(data)
@@ -365,6 +373,15 @@ export const voucherService = {
   },
 
   async updateTemplate(id: string, updates: Partial<VoucherTemplate>) {
+    // If setting this as default, unset all other templates first (except the one being updated)
+    if (updates.is_default) {
+      await supabase
+        .from('voucher_templates')
+        .update({ is_default: false })
+        .eq('is_default', true)
+        .neq('id', id);
+    }
+    
     const { error } = await supabase
       .from('voucher_templates')
       .update(updates)

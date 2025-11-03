@@ -5,6 +5,7 @@ import { Copy, Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import QRCode from "qrcode";
 import { supabase } from "@/integrations/supabase/client";
+import { voucherService } from "../../services/voucherService";
 
 interface VoucherDisplayProps {
   voucherData: {
@@ -31,6 +32,7 @@ export function VoucherDisplay({ voucherData }: VoucherDisplayProps) {
   const voucherRef = useRef<HTMLDivElement>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [templateText, setTemplateText] = useState<string | null>(null);
 
   const generateVoucherImage = async (): Promise<Blob> => {
     // 1. Get campaign template image URL
@@ -113,12 +115,20 @@ export function VoucherDisplay({ voucherData }: VoucherDisplayProps) {
   };
 
   useEffect(() => {
-    const loadPreview = async () => {
+    const loadData = async () => {
       try {
         setIsGenerating(true);
+        
+        // Load preview image
         const blob = await generateVoucherImage();
         const url = URL.createObjectURL(blob);
         setPreviewImage(url);
+        
+        // Load default template text
+        const template = await voucherService.getDefaultTemplate();
+        if (template?.template_text) {
+          setTemplateText(template.template_text);
+        }
       } catch (error) {
         console.error("Preview generation error:", error);
         // Silent fail - keep showing placeholder
@@ -127,7 +137,7 @@ export function VoucherDisplay({ voucherData }: VoucherDisplayProps) {
       }
     };
 
-    loadPreview();
+    loadData();
 
     // Cleanup
     return () => {
@@ -138,7 +148,19 @@ export function VoucherDisplay({ voucherData }: VoucherDisplayProps) {
   }, [voucherData.campaign_id, voucherData.code]);
 
   const handleCopyText = () => {
-    const text = `
+    let text: string;
+    
+    if (templateText) {
+      // Replace template variables with actual data
+      text = templateText
+        .replace(/\{\{voucher_code\}\}/g, voucherData.code)
+        .replace(/\{\{campaign_name\}\}/g, voucherData.campaign_code)
+        .replace(/\{\{discount_display\}\}/g, '50K') // TODO: Get from campaign
+        .replace(/\{\{expires_at\}\}/g, new Date(voucherData.expired_at).toLocaleString("vi-VN"))
+        .replace(/\{\{recipient_phone\}\}/g, voucherData.recipient_phone);
+    } else {
+      // Fallback to hardcoded if no template
+      text = `
 🎁 MÃ VOUCHER: ${voucherData.code}
 📋 Mã chiến dịch: ${voucherData.campaign_code}
 📞 SĐT khách hàng: ${voucherData.recipient_phone}
@@ -146,7 +168,8 @@ export function VoucherDisplay({ voucherData }: VoucherDisplayProps) {
 📍 Nguồn: ${voucherData.customer_source}
 ⏰ Hết hạn: ${new Date(voucherData.expired_at).toLocaleString("vi-VN")}
 📞 Hotline: 1900-xxx-xxx
-    `.trim();
+      `.trim();
+    }
 
     navigator.clipboard.writeText(text);
     toast.success("Đã copy nội dung voucher!");
