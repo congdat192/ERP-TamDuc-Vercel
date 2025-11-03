@@ -20,17 +20,19 @@ export function TemplateDialog({ open, onOpenChange, template, onSave }: Templat
   const { register, handleSubmit, reset, watch } = useForm<VoucherTemplate>();
 
   useEffect(() => {
-    if (template) {
-      reset(template);
-    } else {
-      reset({ 
-        name: '', 
-        template_text: '', 
-        template_html: '', 
-        is_default: false 
-      } as any);
+    if (open) {
+      if (template) {
+        reset(template);
+      } else {
+        reset({ 
+          name: '', 
+          template_text: '', 
+          template_html: '', 
+          is_default: false 
+        } as any);
+      }
     }
-  }, [template, reset]);
+  }, [open, template, reset]);
 
   const onSubmit = async (data: VoucherTemplate) => {
     try {

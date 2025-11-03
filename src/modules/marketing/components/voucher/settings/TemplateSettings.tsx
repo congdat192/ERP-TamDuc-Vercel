@@ -38,7 +38,10 @@ export function TemplateSettings() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Quản lý Template Voucher</CardTitle>
-        <Button onClick={() => setDialogOpen(true)} size="sm">
+        <Button onClick={() => {
+          setEditingTemplate(null);
+          setDialogOpen(true);
+        }} size="sm">
           <Plus className="w-4 h-4 mr-2" />
           Tạo template
         </Button>
@@ -79,7 +82,12 @@ export function TemplateSettings() {
 
       <TemplateDialog 
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) {
+            setEditingTemplate(null);
+          }
+        }}
         template={editingTemplate}
         onSave={handleSave}
       />
