@@ -66,10 +66,10 @@ export function TemplateDialog({ open, onOpenChange, template, onSave }: Templat
             <Textarea 
               {...register('template_text', { required: true })} 
               rows={6}
-              placeholder="Sử dụng {{voucher_code}}, {{campaign_name}}, {{discount_display}}, {{expires_at}}"
+              placeholder="Sử dụng {{voucher_code}}, {{campaign_name}}, {{discount_display}}, {{expires_at}}, {{recipient_phone}}"
             />
             <p className="text-xs text-muted-foreground">
-              Biến khả dụng: {`{{voucher_code}}, {{campaign_name}}, {{discount_display}}, {{expires_at}}`}
+              Biến khả dụng: {`{{voucher_code}}, {{campaign_name}}, {{discount_display}}, {{expires_at}}, {{recipient_phone}}`}
             </p>
           </div>
 
@@ -92,10 +92,11 @@ export function TemplateDialog({ open, onOpenChange, template, onSave }: Templat
               <Label className="text-sm font-semibold">Preview:</Label>
               <div className="text-sm whitespace-pre-wrap mt-2">
                 {templateText
-                  .replace('{{voucher_code}}', 'SAMPLE123')
-                  .replace('{{campaign_name}}', 'Chiến dịch mẫu')
-                  .replace('{{discount_display}}', '20%')
-                  .replace('{{expires_at}}', '31/12/2024')}
+                  .replace(/\{\{voucher_code\}\}/g, 'SAMPLE123')
+                  .replace(/\{\{campaign_name\}\}/g, 'Chiến dịch mẫu')
+                  .replace(/\{\{discount_display\}\}/g, '20%')
+                  .replace(/\{\{expires_at\}\}/g, '31/12/2024')
+                  .replace(/\{\{recipient_phone\}\}/g, '0901234567')}
               </div>
             </div>
           )}
