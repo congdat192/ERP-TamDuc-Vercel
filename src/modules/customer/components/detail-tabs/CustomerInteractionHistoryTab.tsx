@@ -24,102 +24,62 @@ interface Interaction {
 
 interface CustomerInteractionHistoryTabProps {
   customerId: string;
+  interactionHistory?: Array<{
+    cost: number;
+    date: string;
+    type: string;
+    title: string;
+    status: string;
+    channel: string;
+    message: string;
+    batch_id: string;
+    metadata: {
+      error: string | null;
+      sms_id: string;
+      provider: string;
+      sender_name: string;
+    };
+    delivery_status: string;
+  }>;
 }
 
-// Move mock data outside component to avoid re-creation on every render
-const mockInteractionHistory: Interaction[] = [
-  {
-    id: '1',
-    type: 'call',
-    date: '2024-06-24',
-    time: '14:30',
-    title: 'Cuộc gọi tư vấn sản phẩm',
-    description: 'Khách hàng hỏi về voucher và chương trình khuyến mãi tháng 6. Đã tư vấn chi tiết và gửi thông tin qua email.',
-    channel: 'phone',
-    performer: 'Nguyễn Văn A',
-    status: 'completed',
-    hasRecording: true,
-    recordingUrl: '/recordings/call_001.mp3'
-  },
-  {
-    id: '2',
-    type: 'message',
-    date: '2024-06-24',
-    time: '10:15',
-    title: 'Tin nhắn Zalo về đơn hàng',
-    description: 'Khách hàng hỏi về tình trạng đơn hàng HD001234. Đã phản hồi thông tin chi tiết về tiến độ giao hàng.',
-    channel: 'zalo',
-    performer: 'Trần Thị B',
-    status: 'completed'
-  },
-  {
-    id: '3',
-    type: 'support',
-    date: '2024-06-23',
-    time: '16:45',
-    title: 'Hỗ trợ kỹ thuật',
-    description: 'Khách hàng gặp sự cố khi sử dụng voucher trên website. Đã hướng dẫn cách sử dụng và kiểm tra lại hệ thống.',
-    performer: 'Lê Văn C',
-    status: 'resolved',
-    priority: 'medium',
-    category: 'Kỹ thuật'
-  },
-  {
-    id: '4',
-    type: 'call',
-    date: '2024-06-23',
-    time: '09:20',
-    title: 'Cuộc gọi nhỡ',
-    description: 'Khách hàng gọi nhưng không kết nối được. Đã gọi lại nhưng máy bận.',
-    channel: 'phone',
-    performer: 'Phạm Thị D',
-    status: 'missed',
-    hasRecording: false
-  },
-  {
-    id: '5',
-    type: 'message',
-    date: '2024-06-22',
-    time: '20:30',
-    title: 'Tin nhắn Facebook về khiếu nại',
-    description: 'Khách hàng không hài lòng về chất lượng sản phẩm. Đã tiếp nhận và chuyển cho bộ phận chất lượng xử lý.',
-    channel: 'facebook',
-    performer: 'Hoàng Văn E',
-    status: 'pending',
-    priority: 'high',
-    category: 'Khiếu nại'
-  },
-  {
-    id: '6',
-    type: 'message',
-    date: '2024-06-22',
-    time: '14:15',
-    title: 'SMS xác nhận đơn hàng',
-    description: 'Gửi SMS xác nhận đơn hàng HD001235 đã được tạo thành công.',
-    channel: 'sms',
-    performer: 'Hệ thống',
-    status: 'completed'
-  },
-  {
-    id: '7',
-    type: 'support',
-    date: '2024-06-21',
-    time: '11:00',
-    title: 'Hỗ trợ đổi trả sản phẩm',
-    description: 'Khách hàng yêu cầu đổi sản phẩm do không đúng size. Đã hướng dẫn quy trình đổi trả và tạo phiếu đổi.',
-    performer: 'Nguyễn Thị F',
-    status: 'resolved',
-    priority: 'low',
-    category: 'Đổi trả'
-  }
-];
+export function CustomerInteractionHistoryTab({ 
+  customerId, 
+  interactionHistory = [] 
+}: CustomerInteractionHistoryTabProps) {
+  const [loading, setLoading] = useState(false);
 
-export function CustomerInteractionHistoryTab({ customerId }: CustomerInteractionHistoryTabProps) {
-  const [loading, setLoading] = useState(false); // Remove initial loading state
+  // Transform API data to UI format
+  const transformedInteractions: Interaction[] = useMemo(() => {
+    return interactionHistory.map((item, index) => {
+      const dateObj = new Date(item.date);
+      const dateStr = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD
+      const timeStr = dateObj.toLocaleTimeString('vi-VN', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      }); // HH:mm
 
-  // Memoize grouped interactions to avoid re-computation on every render
+      return {
+        id: item.batch_id || `interaction-${index}`,
+        type: 'message' as const, // All SMS are messages
+        date: dateStr,
+        time: timeStr,
+        title: item.title,
+        description: item.message,
+        channel: item.channel as 'sms',
+        performer: item.metadata?.sender_name || 'Hệ thống',
+        status: (item.delivery_status === 'delivered' ? 'completed' : 
+                item.delivery_status === 'failed' ? 'missed' : 
+                'pending') as 'completed' | 'missed' | 'pending',
+        hasRecording: false,
+        category: item.type === 'sms_birthday' ? 'SMS sinh nhật' : 'SMS',
+      };
+    });
+  }, [interactionHistory]);
+
+  // Group by date
   const groupedInteractions = useMemo(() => {
-    return mockInteractionHistory.reduce((groups, interaction) => {
+    return transformedInteractions.reduce((groups, interaction) => {
       const date = interaction.date;
       if (!groups[date]) {
         groups[date] = [];
@@ -127,7 +87,7 @@ export function CustomerInteractionHistoryTab({ customerId }: CustomerInteractio
       groups[date].push(interaction);
       return groups;
     }, {} as Record<string, Interaction[]>);
-  }, []);
+  }, [transformedInteractions]);
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -195,6 +155,21 @@ export function CustomerInteractionHistoryTab({ customerId }: CustomerInteractio
             </div>
           ))}
         </div>
+      </div>
+    );
+  }
+
+  // Empty state
+  if (transformedInteractions.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <MessageCircle className="w-16 h-16 text-gray-300 mb-4" />
+        <h3 className="text-lg font-semibold text-gray-700 mb-2">
+          Chưa có lịch sử tương tác
+        </h3>
+        <p className="text-sm text-gray-500 max-w-md">
+          Các tương tác với khách hàng (SMS, cuộc gọi, tin nhắn) sẽ được hiển thị tại đây.
+        </p>
       </div>
     );
   }

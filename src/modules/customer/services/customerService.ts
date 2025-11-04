@@ -33,6 +33,23 @@ export interface CustomerData {
     avatar: string;
     createddate: string;
   }>;
+  customer_interaction_history?: Array<{
+    cost: number;
+    date: string;
+    type: string;
+    title: string;
+    status: string;
+    channel: string;
+    message: string;
+    batch_id: string;
+    metadata: {
+      error: string | null;
+      sms_id: string;
+      provider: string;
+      sender_name: string;
+    };
+    delivery_status: string;
+  }>;
 }
 
 export interface CustomerResponse {
@@ -125,6 +142,7 @@ export function mapCustomerData(customer: CustomerData): any {
     totalSpent: customer.totalrevenue || 0,
     totalDebt: customer.debt || 0,
     avatarUrl: customer.avatar || null,
-    avatarHistory: customer.avatar_history || []
+    avatarHistory: customer.avatar_history || [],
+    interactionHistory: customer.customer_interaction_history || []
   };
 }

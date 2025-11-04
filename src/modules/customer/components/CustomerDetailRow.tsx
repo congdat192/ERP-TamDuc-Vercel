@@ -48,6 +48,7 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
   const [invoicesData, setInvoicesData] = useState<any[]>([]);
   const [customerData, setCustomerData] = useState<any>(null);
   const [avatarHistory, setAvatarHistory] = useState<Array<{ avatar: string; createddate: string }>>([]);
+  const [interactionHistory, setInteractionHistory] = useState<Array<any>>([]);
   const [isLoadingInvoices, setIsLoadingInvoices] = useState(false);
   const [invoicesError, setInvoicesError] = useState<string | null>(null);
   const [voucherEligibilityData, setVoucherEligibilityData] = useState<any>(null);
@@ -120,13 +121,16 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
 
       if (error) throw error;
 
-      // Parse nested structure: data.data.data.avatar_history
-      if (data?.data?.data?.avatar_history) {
-        setAvatarHistory(data.data.data.avatar_history);
+      // Parse nested structure
+      const customerData = data?.data?.data;
+      if (customerData) {
+        setAvatarHistory(customerData.avatar_history || []);
+        setInteractionHistory(customerData.customer_interaction_history || []);
       }
     } catch (err) {
-      console.error('Error fetching customer avatar history:', err);
+      console.error('Error fetching customer data:', err);
       setAvatarHistory([]);
+      setInteractionHistory([]);
     }
   };
 
@@ -242,7 +246,10 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
               </TabsContent>
 
               <TabsContent value="interaction-history" className="mt-0">
-                <CustomerInteractionHistoryTab customerId={customer.id} />
+                <CustomerInteractionHistoryTab 
+                  customerId={customer.id}
+                  interactionHistory={interactionHistory}
+                />
               </TabsContent>
 
               <TabsContent value="images" className="mt-0">
