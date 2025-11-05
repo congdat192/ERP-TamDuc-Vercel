@@ -13,9 +13,13 @@ import {
   UploadAvatarResponse,
   extractCustomerInfo
 } from '../types/relatedCustomer.types';
+import { MockRelatedCustomerAPI } from './relatedCustomerService.mockup';
 
 // TODO: Replace with actual External Supabase API base URL
 const EXTERNAL_API_BASE = import.meta.env.VITE_EXTERNAL_SUPABASE_API || 'https://your-external-supabase.com/api/v1';
+
+// 🎭 MOCKUP MODE - Set to false when backend is ready
+const USE_MOCKUP = true;
 
 export class RelatedCustomerService {
   // ========== CRUD Operations ==========
@@ -24,6 +28,12 @@ export class RelatedCustomerService {
    * Get all related customers by main customer phone
    */
   static async getRelatedByCustomerPhone(customerPhone: string): Promise<RelatedCustomer[]> {
+    // 🎭 MOCKUP MODE
+    if (USE_MOCKUP) {
+      return MockRelatedCustomerAPI.getByCustomerPhone(customerPhone);
+    }
+
+    // 🔴 REAL API MODE
     try {
       const response = await fetch(
         `${EXTERNAL_API_BASE}/related-customers?customer_phone=${encodeURIComponent(customerPhone)}`
@@ -83,16 +93,35 @@ export class RelatedCustomerService {
   ): Promise<{ related_id: string; related_code: string }> {
     const customerInfo = extractCustomerInfo(customer);
     
-    return this.createRelated({
+    const payload = {
       ...customerInfo,
       ...relatedData
-    });
+    };
+
+    // 🎭 MOCKUP MODE
+    if (USE_MOCKUP) {
+      const result = await MockRelatedCustomerAPI.create(payload);
+      return { 
+        related_id: result.id, 
+        related_code: result.related_code 
+      };
+    }
+
+    // 🔴 REAL API MODE
+    return this.createRelated(payload);
   }
 
   /**
    * Update a related customer
    */
   static async updateRelated(relatedId: string, updates: UpdateRelatedCustomerData): Promise<void> {
+    // 🎭 MOCKUP MODE
+    if (USE_MOCKUP) {
+      await MockRelatedCustomerAPI.update(relatedId, updates);
+      return;
+    }
+
+    // 🔴 REAL API MODE
     try {
       const response = await fetch(`${EXTERNAL_API_BASE}/related-customers/${relatedId}`, {
         method: 'PUT',
@@ -119,6 +148,13 @@ export class RelatedCustomerService {
    * Delete a related customer (soft delete)
    */
   static async deleteRelated(relatedId: string): Promise<void> {
+    // 🎭 MOCKUP MODE
+    if (USE_MOCKUP) {
+      await MockRelatedCustomerAPI.delete(relatedId);
+      return;
+    }
+
+    // 🔴 REAL API MODE
     try {
       const response = await fetch(`${EXTERNAL_API_BASE}/related-customers/${relatedId}`, {
         method: 'DELETE'
