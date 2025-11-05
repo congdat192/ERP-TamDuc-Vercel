@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Upload, Star, Trash2, Image as ImageIcon } from 'lucide-react';
+import { Upload, Star, Trash2, Image as ImageIcon, Camera } from 'lucide-react';
 import { RelatedCustomer, RelatedAvatar } from '../../types/relatedCustomer.types';
 import { RelatedCustomerService } from '../../services/relatedCustomerService';
 import { toast } from '@/components/ui/use-toast';
@@ -127,27 +127,53 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
   return (
     <div className="space-y-4">
       {/* Upload Area */}
-      <Card className="border-2 border-dashed hover:border-primary/50 transition-colors">
-        <label className="flex flex-col items-center justify-center p-8 cursor-pointer">
-          <input
-            type="file"
-            multiple
-            accept="image/jpeg,image/png,image/webp"
-            onChange={handleUpload}
-            disabled={isUploading}
-            className="hidden"
-          />
-          <Upload className="w-12 h-12 mb-4 text-muted-foreground" />
-          <div className="text-center">
-            <div className="font-medium mb-1">
-              {isUploading ? 'Đang upload...' : 'Kéo thả hoặc click để upload ảnh'}
+      <div className="grid grid-cols-2 gap-3">
+        {/* Upload từ thư viện */}
+        <Card className="border-2 border-dashed hover:border-primary/50 transition-colors">
+          <label className="flex flex-col items-center justify-center p-4 cursor-pointer">
+            <input
+              type="file"
+              multiple
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleUpload}
+              disabled={isUploading}
+              className="hidden"
+            />
+            <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
+            <div className="text-center text-sm theme-text font-medium">
+              {isUploading ? 'Đang upload...' : '📁 Chọn từ thư viện'}
             </div>
-            <div className="text-sm text-muted-foreground">
-              Hỗ trợ: JPG, PNG, WEBP (Max 5MB/ảnh)
+            <div className="text-xs text-muted-foreground mt-1">
+              Chọn nhiều ảnh
             </div>
-          </div>
-        </label>
-      </Card>
+          </label>
+        </Card>
+
+        {/* Chụp bằng camera */}
+        <Card className="border-2 border-dashed hover:border-primary/50 transition-colors">
+          <label className="flex flex-col items-center justify-center p-4 cursor-pointer">
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleUpload}
+              disabled={isUploading}
+              className="hidden"
+            />
+            <Camera className="w-8 h-8 mb-2 text-muted-foreground" />
+            <div className="text-center text-sm theme-text font-medium">
+              {isUploading ? 'Đang upload...' : '📸 Chụp ảnh'}
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">
+              Mở camera
+            </div>
+          </label>
+        </Card>
+      </div>
+
+      <div className="text-xs text-muted-foreground text-center mt-2">
+        Hỗ trợ: JPG, PNG, WEBP (Max 5MB/ảnh)
+      </div>
 
       {/* Avatar Grid */}
       {avatars.length === 0 ? (

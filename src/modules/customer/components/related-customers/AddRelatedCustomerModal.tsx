@@ -10,7 +10,7 @@ import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { RelatedCustomerService } from '../../services/relatedCustomerService';
 import { extractCustomerInfo, RelationshipType, RELATIONSHIP_LABELS } from '../../types/relatedCustomer.types';
-import { Loader2, Upload, Trash2, Star } from 'lucide-react';
+import { Loader2, Upload, Trash2, Star, Camera } from 'lucide-react';
 
 interface AddRelatedCustomerModalProps {
   open: boolean;
@@ -323,24 +323,52 @@ export function AddRelatedCustomerModal({
             <h3 className="font-semibold theme-text">📸 HÌNH ẢNH</h3>
             
             {/* Upload Area */}
-            <Card className="border-2 border-dashed hover:border-primary/50 transition-colors">
-              <label className="flex flex-col items-center justify-center p-6 cursor-pointer">
-                <input
-                  type="file"
-                  multiple
-                  accept="image/jpeg,image/png,image/webp"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
-                <Upload className="w-10 h-10 mb-2 text-muted-foreground" />
-                <div className="text-center">
-                  <div className="font-medium theme-text">Upload ảnh (tùy chọn)</div>
-                  <div className="text-xs text-muted-foreground">
-                    Ảnh đầu tiên sẽ là ảnh đại diện • JPG, PNG, WEBP • Max 5MB/ảnh
+            <div className="grid grid-cols-2 gap-3">
+              {/* Upload từ thư viện */}
+              <Card className="border-2 border-dashed hover:border-primary/50 transition-colors">
+                <label className="flex flex-col items-center justify-center p-4 cursor-pointer">
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
+                  <div className="text-center text-sm theme-text font-medium">
+                    📁 Chọn từ thư viện
                   </div>
-                </div>
-              </label>
-            </Card>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    JPG, PNG, WEBP
+                  </div>
+                </label>
+              </Card>
+
+              {/* Chụp bằng camera */}
+              <Card className="border-2 border-dashed hover:border-primary/50 transition-colors">
+                <label className="flex flex-col items-center justify-center p-4 cursor-pointer">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  <Camera className="w-8 h-8 mb-2 text-muted-foreground" />
+                  <div className="text-center text-sm theme-text font-medium">
+                    📸 Chụp ảnh
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Mở camera
+                  </div>
+                </label>
+              </Card>
+            </div>
+
+            {/* Hướng dẫn */}
+            <div className="text-xs text-muted-foreground text-center">
+              Ảnh đầu tiên sẽ là ảnh đại diện • Max 5MB/ảnh
+            </div>
             
             {/* Preview Grid */}
             {previewUrls.length > 0 && (
