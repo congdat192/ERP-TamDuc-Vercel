@@ -1,25 +1,25 @@
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Gift, History, RefreshCw, AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
-import { VoucherCard } from '../voucher/VoucherCard';
-import { AvailableCampaignCard } from '../voucher/AvailableCampaignCard';
-import { VoucherDetailDialog } from '../voucher/VoucherDetailDialog';
-import { ClaimVoucherDialog } from '../voucher/ClaimVoucherDialog';
-import { toast } from 'sonner';
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Gift, History, RefreshCw, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
+import { VoucherCard } from "../voucher/VoucherCard";
+import { AvailableCampaignCard } from "../voucher/AvailableCampaignCard";
+import { VoucherDetailDialog } from "../voucher/VoucherDetailDialog";
+import { ClaimVoucherDialog } from "../voucher/ClaimVoucherDialog";
+import { toast } from "sonner";
 import {
   VoucherEligibilityResponse,
   ReceivedVoucher,
   AvailableCampaign,
   VoucherHistoryResponse,
   VoucherHistoryItem,
-  voucherService
-} from '../../services/voucherService';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+  voucherService,
+} from "../../services/voucherService";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Pagination,
   PaginationContent,
@@ -27,7 +27,7 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from '@/components/ui/pagination';
+} from "@/components/ui/pagination";
 
 interface CustomerVoucherTabProps {
   customerPhone: string;
@@ -42,7 +42,7 @@ export function CustomerVoucherTab({
   voucherData,
   isLoading,
   error,
-  onRefresh
+  onRefresh,
 }: CustomerVoucherTabProps) {
   const [selectedVoucher, setSelectedVoucher] = useState<ReceivedVoucher | null>(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
@@ -55,7 +55,7 @@ export function CustomerVoucherTab({
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   // Fetch history
   useEffect(() => {
@@ -70,12 +70,12 @@ export function CustomerVoucherTab({
           customerPhone,
           currentPage,
           20,
-          statusFilter === 'all' ? undefined : statusFilter
+          statusFilter === "all" ? undefined : statusFilter,
         );
         setHistoryData(data);
       } catch (err) {
-        console.error('Error fetching voucher history:', err);
-        setHistoryError(err instanceof Error ? err.message : 'Lỗi khi tải lịch sử voucher');
+        console.error("Error fetching voucher history:", err);
+        setHistoryError(err instanceof Error ? err.message : "Lỗi khi tải lịch sử voucher");
       } finally {
         setIsLoadingHistory(false);
       }
@@ -100,7 +100,7 @@ export function CustomerVoucherTab({
     setIsClaiming(true);
     try {
       const result = await voucherService.claimVoucher(customerPhone, selectedCampaign.campaign_id);
-      
+
       if (result.success) {
         toast.success(`Đã nhận voucher ${result.voucher.code} thành công!`);
         setIsClaimDialogOpen(false);
@@ -108,11 +108,11 @@ export function CustomerVoucherTab({
         // Refresh voucher data
         onRefresh();
       } else {
-        toast.error('Không thể nhận voucher');
+        toast.error("Không thể nhận voucher");
       }
     } catch (err) {
-      console.error('Error claiming voucher:', err);
-      toast.error(err instanceof Error ? err.message : 'Lỗi khi nhận voucher');
+      console.error("Error claiming voucher:", err);
+      toast.error(err instanceof Error ? err.message : "Lỗi khi nhận voucher");
     } finally {
       setIsClaiming(false);
     }
@@ -120,23 +120,23 @@ export function CustomerVoucherTab({
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { variant: any; label: string }> = {
-      da_kich_hoat: { variant: 'default', label: 'Đã kích hoạt' },
-      da_su_dung: { variant: 'secondary', label: 'Đã sử dụng' },
-      het_han: { variant: 'destructive', label: 'Hết hạn' },
-      da_huy: { variant: 'outline', label: 'Đã hủy' }
+      da_kich_hoat: { variant: "default", label: "Đã kích hoạt" },
+      da_su_dung: { variant: "secondary", label: "Đã sử dụng" },
+      het_han: { variant: "destructive", label: "Hết hạn" },
+      da_huy: { variant: "outline", label: "Đã hủy" },
     };
-    const config = statusConfig[status] || { variant: 'outline', label: status };
+    const config = statusConfig[status] || { variant: "outline", label: status };
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
   const formatDate = (dateString: string) => {
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString('vi-VN', {
-        timeZone: 'Asia/Ho_Chi_Minh',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
+      return date.toLocaleDateString("vi-VN", {
+        timeZone: "Asia/Ho_Chi_Minh",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
       });
     } catch {
       return dateString;
@@ -148,7 +148,7 @@ export function CustomerVoucherTab({
       <div className="space-y-6">
         <div className="space-y-4">
           <Skeleton className="h-8 w-48" />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
             {[...Array(3)].map((_, i) => (
               <Skeleton key={i} className="h-48" />
             ))}
@@ -176,12 +176,7 @@ export function CustomerVoucherTab({
             <Gift className="w-5 h-5 theme-text-primary" />
             <h3 className="text-lg font-semibold theme-text">Voucher Khả Dụng</h3>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onRefresh}
-            className="gap-2"
-          >
+          <Button variant="outline" size="sm" onClick={onRefresh} className="gap-2">
             <RefreshCw className="w-4 h-4" />
             Làm mới
           </Button>
@@ -195,11 +190,7 @@ export function CustomerVoucherTab({
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {voucherData.received_vouchers.map((voucher) => (
-                <VoucherCard
-                  key={voucher.id}
-                  voucher={voucher}
-                  onClick={() => handleVoucherClick(voucher)}
-                />
+                <VoucherCard key={voucher.id} voucher={voucher} onClick={() => handleVoucherClick(voucher)} />
               ))}
             </div>
           </div>
@@ -225,14 +216,14 @@ export function CustomerVoucherTab({
         )}
 
         {(!voucherData?.received_vouchers || voucherData.received_vouchers.length === 0) &&
-         (!voucherData?.available_campaigns || voucherData.available_campaigns.length === 0) && (
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Khách hàng chưa có voucher nào hoặc không đủ điều kiện nhận voucher mới.
-            </AlertDescription>
-          </Alert>
-        )}
+          (!voucherData?.available_campaigns || voucherData.available_campaigns.length === 0) && (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Khách hàng chưa có voucher nào hoặc không đủ điều kiện nhận voucher mới.
+              </AlertDescription>
+            </Alert>
+          )}
       </div>
 
       <Separator />
@@ -259,12 +250,8 @@ export function CustomerVoucherTab({
             </SelectContent>
           </Select>
 
-          {statusFilter && statusFilter !== 'all' && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setStatusFilter('all')}
-            >
+          {statusFilter && statusFilter !== "all" && (
+            <Button variant="outline" size="sm" onClick={() => setStatusFilter("all")}>
               Xóa bộ lọc
             </Button>
           )}
@@ -305,8 +292,8 @@ export function CustomerVoucherTab({
                       <TableCell>{getStatusBadge(item.status)}</TableCell>
                       <TableCell>{formatDate(item.received_at)}</TableCell>
                       <TableCell>{formatDate(item.expires_at)}</TableCell>
-                      <TableCell>{item.used_at ? formatDate(item.used_at) : '-'}</TableCell>
-                      <TableCell>{item.invoice_used_voucher || '-'}</TableCell>
+                      <TableCell>{item.used_at ? formatDate(item.used_at) : "-"}</TableCell>
+                      <TableCell>{item.invoice_used_voucher || "-"}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -317,16 +304,17 @@ export function CustomerVoucherTab({
             {historyData.data.pagination && historyData.data.pagination.total_pages > 1 && (
               <div className="flex items-center justify-between">
                 <p className="text-sm theme-text-muted">
-                  Hiển thị {((currentPage - 1) * 20) + 1}-
-                  {Math.min(currentPage * 20, historyData.data.pagination.total)} 
-                  {' '}trong tổng số {historyData.data.pagination.total} voucher
+                  Hiển thị {(currentPage - 1) * 20 + 1}-{Math.min(currentPage * 20, historyData.data.pagination.total)}{" "}
+                  trong tổng số {historyData.data.pagination.total} voucher
                 </p>
                 <Pagination>
                   <PaginationContent>
                     <PaginationItem>
                       <PaginationPrevious
-                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                        className={!historyData.data.pagination.has_prev ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                        className={
+                          !historyData.data.pagination.has_prev ? "pointer-events-none opacity-50" : "cursor-pointer"
+                        }
                       />
                     </PaginationItem>
                     {[...Array(historyData.data.pagination.total_pages)].map((_, i) => (
@@ -342,8 +330,10 @@ export function CustomerVoucherTab({
                     ))}
                     <PaginationItem>
                       <PaginationNext
-                        onClick={() => setCurrentPage(p => Math.min(historyData.data.pagination.total_pages, p + 1))}
-                        className={!historyData.data.pagination.has_next ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                        onClick={() => setCurrentPage((p) => Math.min(historyData.data.pagination.total_pages, p + 1))}
+                        className={
+                          !historyData.data.pagination.has_next ? "pointer-events-none opacity-50" : "cursor-pointer"
+                        }
                       />
                     </PaginationItem>
                   </PaginationContent>
@@ -360,11 +350,7 @@ export function CustomerVoucherTab({
       </div>
 
       {/* Dialogs */}
-      <VoucherDetailDialog
-        voucher={selectedVoucher}
-        open={isDetailDialogOpen}
-        onOpenChange={setIsDetailDialogOpen}
-      />
+      <VoucherDetailDialog voucher={selectedVoucher} open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen} />
 
       <ClaimVoucherDialog
         campaign={selectedCampaign}
