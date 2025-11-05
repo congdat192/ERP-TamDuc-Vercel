@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,10 +6,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { RelatedCustomerService } from '../../services/relatedCustomerService';
 import { extractCustomerInfo, RelationshipType, RELATIONSHIP_LABELS } from '../../types/relatedCustomer.types';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Upload, Trash2, Star } from 'lucide-react';
 
 interface AddRelatedCustomerModalProps {
   open: boolean;
@@ -36,6 +37,75 @@ export function AddRelatedCustomerModal({
   const [birthDate, setBirthDate] = useState('');
   const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
+  
+  // Image upload state
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+
+  // Cleanup preview URLs on unmount
+  useEffect(() => {
+    return () => {
+      previewUrls.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, []);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    
+    const validFiles: File[] = [];
+    const validUrls: string[] = [];
+    
+    Array.from(files).forEach(file => {
+      // Validate
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      
+      if (!allowedTypes.includes(file.type)) {
+        toast({
+          title: '❌ File không hợp lệ',
+          description: `${file.name}: Chỉ chấp nhận JPG, PNG, WEBP`,
+          variant: 'destructive'
+        });
+        return;
+      }
+      
+      if (file.size > maxSize) {
+        toast({
+          title: '❌ File quá lớn',
+          description: `${file.name}: Vượt quá 5MB`,
+          variant: 'destructive'
+        });
+        return;
+      }
+      
+      validFiles.push(file);
+      validUrls.push(URL.createObjectURL(file));
+    });
+    
+    setSelectedFiles(prev => [...prev, ...validFiles]);
+    setPreviewUrls(prev => [...prev, ...validUrls]);
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    setPreviewUrls(prev => {
+      URL.revokeObjectURL(prev[index]); // Cleanup
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  const resetForm = () => {
+    setRelatedName('');
+    setRelationshipType('con_cai');
+    setGender('Nam');
+    setBirthDate('');
+    setPhone('');
+    setNotes('');
+    previewUrls.forEach(url => URL.revokeObjectURL(url));
+    setSelectedFiles([]);
+    setPreviewUrls([]);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,7 +132,8 @@ export function AddRelatedCustomerModal({
     setIsLoading(true);
 
     try {
-      await RelatedCustomerService.createRelatedFromCustomer(customer, {
+      // 1. Create related customer
+      const result = await RelatedCustomerService.createRelatedFromCustomer(customer, {
         related_name: relatedName.trim(),
         relationship_type: relationshipType,
         gender,
@@ -72,19 +143,29 @@ export function AddRelatedCustomerModal({
         created_by: currentUser?.email || 'system'
       });
 
-      toast({
-        title: 'Thành công',
-        description: 'Đã thêm người thân thành công'
-      });
+      // 2. Upload avatars if any (first image will be primary automatically)
+      if (selectedFiles.length > 0) {
+        for (let i = 0; i < selectedFiles.length; i++) {
+          await RelatedCustomerService.uploadAvatar(
+            result.related_id,
+            selectedFiles[i],
+            currentUser?.id || 'system'
+          );
+        }
+        
+        toast({
+          title: '✅ Thành công',
+          description: `Đã thêm người thân với ${selectedFiles.length} ảnh`
+        });
+      } else {
+        toast({
+          title: '✅ Thành công',
+          description: 'Đã thêm người thân thành công'
+        });
+      }
 
-      // Reset form
-      setRelatedName('');
-      setRelationshipType('con_cai');
-      setGender('Nam');
-      setBirthDate('');
-      setPhone('');
-      setNotes('');
-
+      // 3. Cleanup & close
+      resetForm();
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
@@ -235,6 +316,58 @@ export function AddRelatedCustomerModal({
                 className="voucher-input"
               />
             </div>
+          </div>
+
+          {/* Upload Avatar Section */}
+          <div className="space-y-4">
+            <h3 className="font-semibold theme-text">📸 HÌNH ẢNH</h3>
+            
+            {/* Upload Area */}
+            <Card className="border-2 border-dashed hover:border-primary/50 transition-colors">
+              <label className="flex flex-col items-center justify-center p-6 cursor-pointer">
+                <input
+                  type="file"
+                  multiple
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                <Upload className="w-10 h-10 mb-2 text-muted-foreground" />
+                <div className="text-center">
+                  <div className="font-medium theme-text">Upload ảnh (tùy chọn)</div>
+                  <div className="text-xs text-muted-foreground">
+                    Ảnh đầu tiên sẽ là ảnh đại diện • JPG, PNG, WEBP • Max 5MB/ảnh
+                  </div>
+                </div>
+              </label>
+            </Card>
+            
+            {/* Preview Grid */}
+            {previewUrls.length > 0 && (
+              <div className="grid grid-cols-4 gap-2">
+                {previewUrls.map((url, index) => (
+                  <div key={index} className="relative group">
+                    <div className={`aspect-square rounded-lg overflow-hidden border-2 ${index === 0 ? 'border-primary' : 'border-border'}`}>
+                      <img src={url} alt={`Preview ${index + 1}`} className="w-full h-full object-cover" />
+                    </div>
+                    {index === 0 && (
+                      <div className="absolute top-1 right-1 bg-primary text-primary-foreground rounded-full p-1">
+                        <Star className="w-3 h-3 fill-current" />
+                      </div>
+                    )}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="destructive"
+                      className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0"
+                      onClick={() => handleRemoveFile(index)}
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Actions */}

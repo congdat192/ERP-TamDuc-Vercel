@@ -254,9 +254,10 @@ export class MockRelatedCustomerAPI {
   /**
    * Avatar operations (mockup)
    */
-  static async uploadAvatar(relatedId: string, file: File): Promise<{ avatar_id: string; public_url: string }> {
+  static async uploadAvatar(relatedId: string, file: File): Promise<{ avatar_id: string; public_url: string; storage_path: string }> {
     await new Promise(resolve => setTimeout(resolve, 800));
     const avatarId = `avatar_${Date.now()}`;
+    const storagePath = `${relatedId}/${file.name}`;
     const publicUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${avatarId}`;
     
     // Add to related customer's avatars
@@ -267,7 +268,7 @@ export class MockRelatedCustomerAPI {
         id: avatarId,
         related_id: relatedId,
         storage_bucket: 'related-avatars',
-        storage_path: `${relatedId}/${file.name}`,
+        storage_path: storagePath,
         file_name: file.name,
         file_size: file.size,
         mime_type: file.type,
@@ -278,7 +279,7 @@ export class MockRelatedCustomerAPI {
       });
     }
     
-    return { avatar_id: avatarId, public_url: publicUrl };
+    return { avatar_id: avatarId, public_url: publicUrl, storage_path: storagePath };
   }
 
   static async deleteAvatar(relatedId: string, avatarId: string): Promise<void> {

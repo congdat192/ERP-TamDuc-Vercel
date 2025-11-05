@@ -6,8 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Separator } from '@/components/ui/separator';
 import { RelatedCustomer, UpdateRelatedCustomerData, RELATIONSHIP_LABELS, RelationshipType } from '../../types/relatedCustomer.types';
 import { RelatedCustomerService } from '../../services/relatedCustomerService';
+import { RelatedAvatarGallery } from './RelatedAvatarGallery';
 import { toast } from '@/components/ui/use-toast';
 
 interface EditRelatedCustomerModalProps {
@@ -81,7 +83,7 @@ export function EditRelatedCustomerModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>✏️ Sửa thông tin: {related.related_name}</DialogTitle>
         </DialogHeader>
@@ -173,6 +175,15 @@ export function EditRelatedCustomerModal({
               placeholder="Ghi chú về người thân..."
               rows={3}
             />
+          </div>
+
+          {/* Separator */}
+          <Separator className="my-6" />
+
+          {/* Avatar Management Section */}
+          <div className="space-y-4">
+            <h3 className="font-semibold theme-text">📸 QUẢN LÝ HÌNH ẢNH</h3>
+            <RelatedAvatarGallery related={related} />
           </div>
 
           <DialogFooter>

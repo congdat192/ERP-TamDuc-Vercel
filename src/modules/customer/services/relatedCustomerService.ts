@@ -112,6 +112,81 @@ export class RelatedCustomerService {
   }
 
   /**
+   * Upload avatar (supports MOCKUP mode)
+   */
+  static async uploadAvatar(
+    relatedId: string, 
+    file: File,
+    uploadedBy: string
+  ): Promise<UploadAvatarResponse> {
+    // 🎭 MOCKUP MODE
+    if (USE_MOCKUP) {
+      return MockRelatedCustomerAPI.uploadAvatar(relatedId, file);
+    }
+
+    // 🔴 REAL API MODE
+    try {
+      // Validate file
+      const validation = this.validateAvatarFile(file);
+      if (!validation.isValid) {
+        throw new Error(validation.error);
+      }
+
+      // Create FormData
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('uploaded_by', uploadedBy);
+
+      // Upload via API
+      const response = await fetch(
+        `${EXTERNAL_API_BASE}/related-customers/${relatedId}/avatars/upload`,
+        {
+          method: 'POST',
+          body: formData
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to upload avatar');
+      }
+
+      return data.data;
+    } catch (error) {
+      console.error('[RelatedCustomerService] Error uploading avatar:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Validate avatar file
+   */
+  private static validateAvatarFile(file: File): { isValid: boolean; error?: string } {
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      return {
+        isValid: false,
+        error: 'Chỉ hỗ trợ file JPG, PNG hoặc WEBP'
+      };
+    }
+
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      return {
+        isValid: false,
+        error: 'Kích thước file không được vượt quá 5MB'
+      };
+    }
+
+    return { isValid: true };
+  }
+
+  /**
    * Update a related customer
    */
   static async updateRelated(relatedId: string, updates: UpdateRelatedCustomerData): Promise<void> {
@@ -176,57 +251,18 @@ export class RelatedCustomerService {
   }
 
   // ========== Avatar Storage Operations ==========
-  
-  /**
-   * Upload avatar to External Supabase Storage
-   */
-  static async uploadAvatar(
-    relatedId: string, 
-    file: File,
-    uploadedBy: string
-  ): Promise<UploadAvatarResponse> {
-    try {
-      // Validate file
-      const validation = this.validateAvatarFile(file);
-      if (!validation.isValid) {
-        throw new Error(validation.error);
-      }
-
-      // Create FormData
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('uploaded_by', uploadedBy);
-
-      // Upload via API
-      const response = await fetch(
-        `${EXTERNAL_API_BASE}/related-customers/${relatedId}/avatars/upload`,
-        {
-          method: 'POST',
-          body: formData
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      if (!data.success) {
-        throw new Error(data.message || 'Failed to upload avatar');
-      }
-
-      return data.data;
-    } catch (error) {
-      console.error('[RelatedCustomerService] Error uploading avatar:', error);
-      throw error;
-    }
-  }
 
   /**
-   * Delete avatar from Storage
+   * Delete avatar from Storage (supports MOCKUP mode)
    */
   static async deleteAvatar(relatedId: string, avatarId: string): Promise<void> {
+    // 🎭 MOCKUP MODE
+    if (USE_MOCKUP) {
+      await MockRelatedCustomerAPI.deleteAvatar(relatedId, avatarId);
+      return;
+    }
+
+    // 🔴 REAL API MODE
     try {
       const response = await fetch(
         `${EXTERNAL_API_BASE}/related-customers/${relatedId}/avatars/${avatarId}`,
@@ -249,9 +285,16 @@ export class RelatedCustomerService {
   }
 
   /**
-   * Set primary avatar
+   * Set primary avatar (supports MOCKUP mode)
    */
   static async setPrimaryAvatar(relatedId: string, avatarId: string): Promise<void> {
+    // 🎭 MOCKUP MODE
+    if (USE_MOCKUP) {
+      await MockRelatedCustomerAPI.setPrimaryAvatar(relatedId, avatarId);
+      return;
+    }
+
+    // 🔴 REAL API MODE
     try {
       const response = await fetch(
         `${EXTERNAL_API_BASE}/related-customers/${relatedId}/avatars/${avatarId}/set-primary`,
@@ -274,9 +317,15 @@ export class RelatedCustomerService {
   }
 
   /**
-   * Get all avatars of a related customer
+   * Get all avatars of a related customer (supports MOCKUP mode)
    */
   static async getAvatars(relatedId: string): Promise<RelatedAvatar[]> {
+    // 🎭 MOCKUP MODE
+    if (USE_MOCKUP) {
+      return MockRelatedCustomerAPI.getAvatars(relatedId);
+    }
+
+    // 🔴 REAL API MODE
     try {
       const response = await fetch(
         `${EXTERNAL_API_BASE}/related-customers/${relatedId}/avatars`
@@ -299,33 +348,10 @@ export class RelatedCustomerService {
     }
   }
 
-  /**
-   * Validate avatar file
-   */
-  private static validateAvatarFile(file: File): { isValid: boolean; error?: string } {
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      return {
-        isValid: false,
-        error: 'Chỉ hỗ trợ file JPG, PNG hoặc WEBP'
-      };
-    }
-
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxSize) {
-      return {
-        isValid: false,
-        error: 'Kích thước file không được vượt quá 5MB'
-      };
-    }
-
-    return { isValid: true };
-  }
-
   // ========== Invoice Assignment Operations ==========
   
   /**
-   * Assign invoice to related customer
+   * Assign invoice to related customer (supports MOCKUP mode)
    */
   static async assignInvoice(
     relatedId: string,
@@ -337,6 +363,13 @@ export class RelatedCustomerService {
       notes?: string;
     }
   ): Promise<void> {
+    // 🎭 MOCKUP MODE
+    if (USE_MOCKUP) {
+      await MockRelatedCustomerAPI.assignInvoice(relatedId, invoiceData);
+      return;
+    }
+
+    // 🔴 REAL API MODE
     try {
       const response = await fetch(
         `${EXTERNAL_API_BASE}/related-customers/${relatedId}/invoices`,
@@ -363,9 +396,16 @@ export class RelatedCustomerService {
   }
 
   /**
-   * Unassign invoice from related customer
+   * Unassign invoice from related customer (supports MOCKUP mode)
    */
   static async unassignInvoice(relatedId: string, invoiceCode: string): Promise<void> {
+    // 🎭 MOCKUP MODE
+    if (USE_MOCKUP) {
+      await MockRelatedCustomerAPI.unassignInvoice(relatedId, invoiceCode);
+      return;
+    }
+
+    // 🔴 REAL API MODE
     try {
       const response = await fetch(
         `${EXTERNAL_API_BASE}/related-customers/${relatedId}/invoices/${invoiceCode}`,
@@ -388,9 +428,15 @@ export class RelatedCustomerService {
   }
 
   /**
-   * Get all invoices of a related customer
+   * Get all invoices of a related customer (supports MOCKUP mode)
    */
   static async getInvoices(relatedId: string): Promise<RelatedInvoice[]> {
+    // 🎭 MOCKUP MODE
+    if (USE_MOCKUP) {
+      return MockRelatedCustomerAPI.getInvoices(relatedId);
+    }
+
+    // 🔴 REAL API MODE
     try {
       const response = await fetch(
         `${EXTERNAL_API_BASE}/related-customers/${relatedId}/invoices`
