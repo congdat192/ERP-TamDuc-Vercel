@@ -8,17 +8,17 @@ import { Phone, MessageCircle, Headphones, Play, Calendar, User, Clock } from 'l
 
 interface Interaction {
   id: string;
-  type: 'call' | 'message' | 'support';
+  type: string;
   date: string;
   time: string;
   title: string;
   description: string;
-  channel?: 'zalo' | 'facebook' | 'sms' | 'phone' | 'email';
+  channel?: string;
   performer: string;
-  status?: 'completed' | 'missed' | 'pending' | 'resolved';
+  status?: string;
   hasRecording?: boolean;
   recordingUrl?: string;
-  priority?: 'low' | 'medium' | 'high';
+  priority?: string;
   category?: string;
 }
 
@@ -49,32 +49,70 @@ export function CustomerInteractionHistoryTab({
 }: CustomerInteractionHistoryTabProps) {
   const [loading, setLoading] = useState(false);
 
+  // Helper: Generate category label from type and channel
+  const getCategoryLabel = (type: string, channel: string): string => {
+    const categoryMap: Record<string, string> = {
+      'sms_birthday': 'SMS sinh nhật',
+      'sms_invoice': 'SMS hóa đơn',
+      'zns_invoice': 'ZNS hóa đơn',
+      'zns_order': 'ZNS đơn hàng',
+      'voucher_sent': 'Voucher',
+      'call_support': 'Cuộc gọi hỗ trợ',
+      'messenger_chat': 'Messenger',
+      'email_marketing': 'Email marketing',
+    };
+    
+    if (categoryMap[type]) return categoryMap[type];
+    
+    // Fallback: Capitalize type + channel
+    const channelLabel = channel.toUpperCase();
+    const typeLabel = type.split('_').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+    return `${channelLabel} ${typeLabel}`;
+  };
+
   // Transform API data to UI format
   const transformedInteractions: Interaction[] = useMemo(() => {
-    return interactionHistory.map((item, index) => {
-      const dateObj = new Date(item.date);
-      const dateStr = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD
-      const timeStr = dateObj.toLocaleTimeString('vi-VN', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      }); // HH:mm
+    return interactionHistory
+      .filter(item => item.date) // Filter out null dates
+      .map((item, index) => {
+        try {
+          const dateObj = new Date(item.date);
+          
+          // Check if date is valid
+          if (isNaN(dateObj.getTime())) {
+            console.warn('[CustomerInteractionHistoryTab] Invalid date:', item);
+            return null;
+          }
+          
+          const dateStr = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD
+          const timeStr = dateObj.toLocaleTimeString('vi-VN', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          }); // HH:mm
 
-      return {
-        id: item.batch_id || `interaction-${index}`,
-        type: 'message' as const, // All SMS are messages
-        date: dateStr,
-        time: timeStr,
-        title: item.title,
-        description: item.message,
-        channel: item.channel as 'sms',
-        performer: item.metadata?.sender_name || 'Hệ thống',
-        status: (item.delivery_status === 'delivered' ? 'completed' : 
-                item.delivery_status === 'failed' ? 'missed' : 
-                'pending') as 'completed' | 'missed' | 'pending',
-        hasRecording: false,
-        category: item.type === 'sms_birthday' ? 'SMS sinh nhật' : 'SMS',
-      };
-    });
+          return {
+            id: item.batch_id || `interaction-${index}`,
+            type: item.type || 'message',
+            date: dateStr,
+            time: timeStr,
+            title: item.title || 'Không có tiêu đề',
+            description: item.message || '',
+            channel: item.channel,
+            performer: item.metadata?.sender_name || 'Hệ thống',
+            status: item.delivery_status === 'delivered' ? 'completed' : 
+                    item.delivery_status === 'failed' ? 'failed' : 
+                    item.delivery_status,
+            hasRecording: false,
+            category: getCategoryLabel(item.type, item.channel),
+          };
+        } catch (error) {
+          console.error('[CustomerInteractionHistoryTab] Error transforming:', item, error);
+          return null;
+        }
+      })
+      .filter(Boolean) as Interaction[];
   }, [interactionHistory]);
 
   // Group by date
@@ -98,29 +136,74 @@ export function CustomerInteractionHistoryTab({
     }
   };
 
+  // Helper: Generate consistent color from string
+  const generateColorFromString = (str: string): { bg: string; text: string } => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = Math.abs(hash % 360);
+    return {
+      bg: `hsl(${hue}, 70%, 90%)`,
+      text: `hsl(${hue}, 70%, 30%)`,
+    };
+  };
+
   const getChannelBadge = (channel?: string) => {
     if (!channel) return null;
-    const channelConfig = {
-      zalo: { className: "bg-blue-100 text-blue-800", label: "Zalo" },
-      facebook: { className: "bg-blue-100 text-blue-800", label: "Facebook" },
+    
+    // Known channels with predefined styling
+    const knownChannels: Record<string, { className: string; label: string }> = {
       sms: { className: "bg-green-100 text-green-800", label: "SMS" },
+      zns: { className: "bg-blue-100 text-blue-800", label: "ZNS" },
+      zalo: { className: "bg-blue-100 text-blue-800", label: "Zalo" },
+      messenger: { className: "bg-blue-100 text-blue-800", label: "Messenger" },
+      facebook: { className: "bg-blue-100 text-blue-800", label: "Facebook" },
       phone: { className: "bg-orange-100 text-orange-800", label: "Điện thoại" },
-      email: { className: "bg-purple-100 text-purple-800", label: "Email" }
+      email: { className: "bg-purple-100 text-purple-800", label: "Email" },
+      voucher: { className: "bg-pink-100 text-pink-800", label: "Voucher" },
     };
-    const config = channelConfig[channel as keyof typeof channelConfig];
-    return <Badge className={config.className}>{config.label}</Badge>;
+    
+    const channelLower = channel.toLowerCase();
+    const config = knownChannels[channelLower];
+    
+    if (config) {
+      return <Badge className={config.className}>{config.label}</Badge>;
+    }
+    
+    // Fallback: Generate color for unknown channels
+    const colors = generateColorFromString(channel);
+    return (
+      <Badge style={{ backgroundColor: colors.bg, color: colors.text }}>
+        {channel.toUpperCase()}
+      </Badge>
+    );
   };
 
   const getStatusBadge = (status?: string) => {
     if (!status) return null;
-    const statusConfig = {
+    
+    // Known statuses with predefined styling
+    const knownStatuses: Record<string, { className: string; label: string }> = {
       completed: { className: "bg-green-100 text-green-800", label: "Hoàn thành" },
+      delivered: { className: "bg-green-100 text-green-800", label: "Đã gửi" },
+      failed: { className: "bg-red-100 text-red-800", label: "Thất bại" },
       missed: { className: "bg-red-100 text-red-800", label: "Nhỡ" },
       pending: { className: "bg-yellow-100 text-yellow-800", label: "Đang xử lý" },
-      resolved: { className: "bg-blue-100 text-blue-800", label: "Đã giải quyết" }
+      queued: { className: "bg-yellow-100 text-yellow-800", label: "Đang chờ" },
+      resolved: { className: "bg-blue-100 text-blue-800", label: "Đã giải quyết" },
+      sent: { className: "bg-green-100 text-green-800", label: "Đã gửi" },
     };
-    const config = statusConfig[status as keyof typeof statusConfig];
-    return <Badge className={config.className}>{config.label}</Badge>;
+    
+    const statusLower = status.toLowerCase();
+    const config = knownStatuses[statusLower];
+    
+    if (config) {
+      return <Badge className={config.className}>{config.label}</Badge>;
+    }
+    
+    // Fallback: Use outline variant for unknown statuses
+    return <Badge variant="outline">{status.toUpperCase()}</Badge>;
   };
 
   const getPriorityBadge = (priority?: string) => {
