@@ -26,8 +26,8 @@ export interface CachedAuth {
 
 export class PermissionCache {
   private static KEY = 'tam_duc_erp_auth';
-  private static TTL = 2 * 60 * 60 * 1000; // 2 hours
-  private static VERSION = '2.2'; // Bump to invalidate cache with features field
+  private static TTL = 24 * 60 * 60 * 1000; // 24 hours
+  private static VERSION = '2.3'; // Bumped for 24h TTL
 
   static save(data: CachedAuth): void {
     try {
@@ -81,16 +81,4 @@ export class PermissionCache {
     }
   }
 
-  static isExpiringSoon(): boolean {
-    try {
-      const item = localStorage.getItem(this.KEY);
-      if (!item) return true;
-
-      const { ts } = JSON.parse(item);
-      const timeRemaining = this.TTL - (Date.now() - ts);
-      return timeRemaining < 5 * 60 * 1000; // < 5 minutes
-    } catch {
-      return true;
-    }
-  }
 }

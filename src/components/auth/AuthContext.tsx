@@ -190,63 +190,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else if (event === "SIGNED_OUT") {
         await clearAuthState();
       } else if (event === "TOKEN_REFRESHED") {
-        console.log("🔄 [AuthContext] Token refreshed, syncing user profile");
-        
-        // Check if cache is expiring soon
-        if (PermissionCache.isExpiringSoon()) {
-          console.log("⚠️ [AuthContext] Cache expiring soon, refreshing profile");
-          try {
-            if (session?.user && mounted) {
-              PermissionCache.clear(); // Force fresh fetch
-              const user = await fetchUserSimple(session.user.id);
-              if (mounted) {
-                setCurrentUser(user);
-                console.log("✅ [AuthContext] Profile refreshed after token refresh");
-              }
-            }
-          } catch (error) {
-            console.error("❌ [AuthContext] Error refreshing profile after token refresh:", error);
-          }
-        }
+        console.log("🔄 [AuthContext] Token refreshed");
+        // ✅ DO NOTHING - Supabase handles token refresh automatically
+        // Cache still valid for 24h, permissions sync via Realtime
       }
     });
-
-    // Periodic session health check (every 5 minutes)
-    const healthCheckInterval = setInterval(async () => {
-      if (!mounted) return;
-      
-      console.log("🏥 [AuthContext] Running session health check");
-      
-      try {
-        const session = await checkSession();
-        
-        if (!session) {
-          console.warn("⚠️ [AuthContext] Session lost during health check");
-          await clearAuthState();
-          toast({
-            title: "Phiên đăng nhập đã hết hạn",
-            description: "Vui lòng đăng nhập lại",
-            variant: "destructive"
-          });
-          window.location.href = "/login";
-        } else if (currentUser && PermissionCache.isExpiringSoon()) {
-          // Proactively refresh cache if expiring soon
-          console.log("🔄 [AuthContext] Proactively refreshing cache");
-          PermissionCache.clear();
-          const user = await fetchUserSimple(session.user.id);
-          if (mounted) {
-            setCurrentUser(user);
-          }
-        }
-      } catch (error) {
-        console.error("❌ [AuthContext] Health check error:", error);
-      }
-    }, 5 * 60 * 1000); // Every 5 minutes
 
     return () => {
       console.log("🧹 [AuthContext] Cleaning up auth state listener");
       subscription.unsubscribe();
-      clearInterval(healthCheckInterval);
       mounted = false;
     };
   }, []);
