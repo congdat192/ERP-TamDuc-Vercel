@@ -1,7 +1,7 @@
 /**
  * Ultra-Simple Permission Cache Service
  * - Caches user profile + role (level) only
- * - TTL: 2 hours
+ * - TTL: 24 hours
  * - No complex permissions, just role level for Owner/Admin check
  */
 

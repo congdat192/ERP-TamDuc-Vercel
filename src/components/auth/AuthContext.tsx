@@ -2,7 +2,7 @@
  * Ultra-Simplified AuthContext
  * - No RLS in app logic, only role level check
  * - Single RPC call: get_user_profile_simple()
- * - Cache 2 hours in localStorage
+ * - Cache 24 hours in localStorage
  * - Owner/Admin bypass all checks (role level <= 2)
  */
 
@@ -104,7 +104,7 @@ const fetchUserSimple = async (userId: string): Promise<User> => {
     throw new Error("User profile not found");
   }
 
-  // 3. Cache for 2 hours
+  // 3. Cache for 24 hours
   const cachedData = data as unknown as CachedAuth;
   PermissionCache.save(cachedData);
   console.log("✅ [AuthContext] Fetched and cached profile");
