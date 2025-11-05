@@ -250,4 +250,93 @@ export class MockRelatedCustomerAPI {
     mockIdCounter = 100;
     mockCodeCounter = 100;
   }
+
+  /**
+   * Avatar operations (mockup)
+   */
+  static async uploadAvatar(relatedId: string, file: File): Promise<{ avatar_id: string; public_url: string }> {
+    await new Promise(resolve => setTimeout(resolve, 800));
+    const avatarId = `avatar_${Date.now()}`;
+    const publicUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${avatarId}`;
+    
+    // Add to related customer's avatars
+    const related = this.data.find(r => r.id === relatedId);
+    if (related) {
+      if (!related.avatars) related.avatars = [];
+      related.avatars.push({
+        id: avatarId,
+        related_id: relatedId,
+        storage_bucket: 'related-avatars',
+        storage_path: `${relatedId}/${file.name}`,
+        file_name: file.name,
+        file_size: file.size,
+        mime_type: file.type,
+        public_url: publicUrl,
+        uploaded_at: new Date().toISOString(),
+        uploaded_by: 'current-user-id',
+        is_primary: related.avatars.length === 0
+      });
+    }
+    
+    return { avatar_id: avatarId, public_url: publicUrl };
+  }
+
+  static async deleteAvatar(relatedId: string, avatarId: string): Promise<void> {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const related = this.data.find(r => r.id === relatedId);
+    if (related && related.avatars) {
+      related.avatars = related.avatars.filter(a => a.id !== avatarId);
+    }
+  }
+
+  static async setPrimaryAvatar(relatedId: string, avatarId: string): Promise<void> {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const related = this.data.find(r => r.id === relatedId);
+    if (related && related.avatars) {
+      related.avatars.forEach(a => {
+        a.is_primary = a.id === avatarId;
+      });
+    }
+  }
+
+  static async getAvatars(relatedId: string): Promise<any[]> {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const related = this.data.find(r => r.id === relatedId);
+    return related?.avatars || [];
+  }
+
+  /**
+   * Invoice operations (mockup)
+   */
+  static async assignInvoice(relatedId: string, invoiceData: any): Promise<void> {
+    await new Promise(resolve => setTimeout(resolve, 600));
+    const related = this.data.find(r => r.id === relatedId);
+    if (related) {
+      if (!related.invoices) related.invoices = [];
+      related.invoices.push({
+        id: `inv_${Date.now()}`,
+        related_id: relatedId,
+        invoice_code: invoiceData.invoice_code,
+        invoice_date: invoiceData.invoice_date,
+        total_amount: invoiceData.total_amount,
+        assigned_by: invoiceData.assigned_by,
+        assigned_at: new Date().toISOString(),
+        notes: invoiceData.notes || null
+      });
+    }
+  }
+
+  static async unassignInvoice(relatedId: string, invoiceCode: string): Promise<void> {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const related = this.data.find(r => r.id === relatedId);
+    if (related && related.invoices) {
+      related.invoices = related.invoices.filter(i => i.invoice_code !== invoiceCode);
+    }
+  }
+
+  static async getInvoices(relatedId: string): Promise<any[]> {
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const related = this.data.find(r => r.id === relatedId);
+    return related?.invoices || [];
+  }
 }

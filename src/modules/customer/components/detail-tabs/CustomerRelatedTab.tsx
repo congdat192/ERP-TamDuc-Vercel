@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, Loader2, AlertCircle } from 'lucide-react';
 import { RelatedCustomerCard } from '../related-customers/RelatedCustomerCard';
 import { AddRelatedCustomerModal } from '../related-customers/AddRelatedCustomerModal';
+import { RelatedCustomerDetailDialog } from '../related-customers/RelatedCustomerDetailDialog';
 import { RelatedCustomerService } from '../../services/relatedCustomerService';
 import { RelatedCustomer } from '../../types/relatedCustomer.types';
 import { useToast } from '@/hooks/use-toast';
@@ -18,6 +19,8 @@ export function CustomerRelatedTab({ customer, currentUser }: CustomerRelatedTab
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [selectedRelated, setSelectedRelated] = useState<RelatedCustomer | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   const fetchRelatedCustomers = async () => {
     if (!customer?.phone) {
@@ -45,11 +48,13 @@ export function CustomerRelatedTab({ customer, currentUser }: CustomerRelatedTab
   }, [customer?.phone]);
 
   const handleViewRelated = (related: RelatedCustomer) => {
-    // TODO: Implement view/edit modal
-    toast({
-      title: 'Chi tiết người thân',
-      description: `Xem chi tiết: ${related.related_name}`
-    });
+    setSelectedRelated(related);
+    setIsDetailOpen(true);
+  };
+
+  const handleAddSuccess = () => {
+    setIsAddModalOpen(false);
+    fetchRelatedCustomers();
   };
 
   return (
@@ -112,7 +117,17 @@ export function CustomerRelatedTab({ customer, currentUser }: CustomerRelatedTab
         onOpenChange={setIsAddModalOpen}
         customer={customer}
         currentUser={currentUser}
-        onSuccess={fetchRelatedCustomers}
+        onSuccess={handleAddSuccess}
+      />
+
+      {/* Detail Dialog */}
+      <RelatedCustomerDetailDialog
+        open={isDetailOpen}
+        onOpenChange={setIsDetailOpen}
+        related={selectedRelated}
+        customer={customer}
+        currentUser={currentUser}
+        onUpdate={fetchRelatedCustomers}
       />
     </div>
   );
