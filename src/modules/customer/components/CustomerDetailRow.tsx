@@ -8,9 +8,11 @@ import { CustomerPointsHistoryTab } from './detail-tabs/CustomerPointsHistoryTab
 import { CustomerVoucherTab } from './detail-tabs/CustomerVoucherTab';
 import { CustomerInteractionHistoryTab } from './detail-tabs/CustomerInteractionHistoryTab';
 import { CustomerImagesTab } from './detail-tabs/CustomerImagesTab';
+import { CustomerRelatedTab } from './detail-tabs/CustomerRelatedTab';
 import { supabase } from '@/integrations/supabase/client';
 import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/components/auth/AuthContext';
 
 interface Customer {
   id: string;
@@ -44,6 +46,7 @@ interface CustomerDetailRowProps {
 }
 
 export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDetailRowProps) {
+  const { currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState('info');
   const [invoicesData, setInvoicesData] = useState<any[]>([]);
   const [customerData, setCustomerData] = useState<any>(null);
@@ -162,7 +165,7 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
 
             {/* Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-7 max-w-5xl mb-6">
+              <TabsList className="grid w-full grid-cols-8 max-w-6xl mb-6">
                 <TabsTrigger 
                   value="info"
                   className="data-[state=active]:theme-bg-primary data-[state=active]:text-white"
@@ -204,6 +207,12 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
                   className="data-[state=active]:theme-bg-primary data-[state=active]:text-white"
                 >
                   Hình ảnh
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="related"
+                  className="data-[state=active]:theme-bg-primary data-[state=active]:text-white"
+                >
+                  Người thân
                 </TabsTrigger>
               </TabsList>
 
@@ -257,6 +266,13 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
                   invoices={invoicesData}
                   avatarHistory={avatarHistory}
                   isLoading={isLoadingInvoices}
+                />
+              </TabsContent>
+
+              <TabsContent value="related" className="mt-0">
+                <CustomerRelatedTab 
+                  customer={customer}
+                  currentUser={currentUser}
                 />
               </TabsContent>
             </Tabs>
