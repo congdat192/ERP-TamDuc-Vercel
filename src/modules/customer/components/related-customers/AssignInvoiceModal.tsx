@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RelatedCustomer } from '../../types/relatedCustomer.types';
-import { RelatedCustomerService } from '../../services/relatedCustomerService';
-import { toast } from '@/components/ui/use-toast';
+import { FamilyMemberService } from '../../services/familyMemberService';
+import { fetchInvoicesByPhone, Invoice } from '@/modules/sales/services/invoiceService';
+import { toast } from '@/hooks/use-toast';
 import { Search } from 'lucide-react';
 
 interface AssignInvoiceModalProps {
@@ -18,22 +18,6 @@ interface AssignInvoiceModalProps {
   onSuccess: () => void;
 }
 
-// Mock invoice data - will be replaced with real KiotViet API
-interface MockInvoice {
-  code: string;
-  date: string;
-  total: number;
-  items: string;
-}
-
-const MOCK_INVOICES: MockInvoice[] = [
-  { code: 'HD001', date: '2024-01-15', total: 1500000, items: 'Gọng kính Rayban RB001' },
-  { code: 'HD002', date: '2024-02-20', total: 2800000, items: 'Tròng kính chống ánh sáng xanh' },
-  { code: 'HD003', date: '2024-03-10', total: 950000, items: 'Kính mát UV400' },
-  { code: 'HD004', date: '2024-04-05', total: 3200000, items: 'Gọng kính Gucci GG001' },
-  { code: 'HD005', date: '2024-05-12', total: 1200000, items: 'Dung dịch ngâm kính' },
-];
-
 export function AssignInvoiceModal({ 
   open, 
   onOpenChange, 
@@ -44,13 +28,59 @@ export function AssignInvoiceModal({
 }: AssignInvoiceModalProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedInvoices, setSelectedInvoices] = useState<string[]>([]);
-  const [notes, setNotes] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [invoices] = useState<MockInvoice[]>(MOCK_INVOICES);
+  const [allInvoices, setAllInvoices] = useState<Invoice[]>([]);
+  const [availableInvoices, setAvailableInvoices] = useState<Invoice[]>([]);
+  const [isLoadingInvoices, setIsLoadingInvoices] = useState(false);
 
-  const filteredInvoices = invoices.filter(invoice => 
+  // Load invoices when modal opens
+  useEffect(() => {
+    if (open && customer?.phone) {
+      loadInvoices();
+    }
+  }, [open, customer?.phone]);
+
+  const loadInvoices = async () => {
+    setIsLoadingInvoices(true);
+    try {
+      // 1. Fetch all invoices from customer's history
+      const response = await fetchInvoicesByPhone(customer.phone);
+      if (!response?.data?.invoices) {
+        setAllInvoices([]);
+        setAvailableInvoices([]);
+        return;
+      }
+
+      const invoices = response.data.invoices;
+      setAllInvoices(invoices);
+
+      // 2. Get list of all assigned bill codes from ANY family member
+      const assignedBillCodes = (customer.familyMembers || [])
+        .flatMap((fm: any) => (fm.bills || []).map((bill: any) => bill.invoice_code || bill.code));
+
+      console.log('[AssignInvoiceModal] Assigned bill codes:', assignedBillCodes);
+
+      // 3. Filter: Only show invoices NOT YET assigned
+      const available = invoices.filter((inv: Invoice) => !assignedBillCodes.includes(inv.code));
+      setAvailableInvoices(available);
+
+      console.log('[AssignInvoiceModal] Available invoices:', available.length, '/', invoices.length);
+    } catch (error) {
+      console.error('[AssignInvoiceModal] Error loading invoices:', error);
+      toast({
+        title: '❌ Lỗi',
+        description: 'Không thể tải danh sách hóa đơn',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoadingInvoices(false);
+    }
+  };
+
+  const filteredInvoices = availableInvoices.filter(invoice => 
     invoice.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    invoice.items.toLowerCase().includes(searchTerm.toLowerCase())
+    invoice.branchname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    invoice.details.some(d => d.productname.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const toggleInvoice = (code: string) => {
@@ -84,18 +114,12 @@ export function AssignInvoiceModal({
 
     setIsLoading(true);
     try {
-      for (const invoiceCode of selectedInvoices) {
-        const invoice = invoices.find(inv => inv.code === invoiceCode);
-        if (!invoice) continue;
-
-        await RelatedCustomerService.assignInvoice(related.id, {
-          invoice_code: invoiceCode,
-          invoice_date: invoice.date,
-          total_amount: invoice.total,
-          assigned_by: currentUser?.id || 'current-user-id',
-          notes: notes.trim() || undefined
-        });
-      }
+      // Call API with array of invoice codes (strings)
+      await FamilyMemberService.assignBills(
+        customer.phone,
+        related.related_name,
+        selectedInvoices
+      );
 
       toast({
         title: '✅ Thành công',
@@ -104,12 +128,14 @@ export function AssignInvoiceModal({
 
       // Reset form
       setSelectedInvoices([]);
-      setNotes('');
+      setSearchTerm('');
       onSuccess();
+      onOpenChange(false);
     } catch (error: any) {
+      console.error('[AssignInvoiceModal] Error assigning bills:', error);
       toast({
         title: '❌ Lỗi',
-        description: error.message,
+        description: error.message || 'Không thể gán hóa đơn',
         variant: 'destructive'
       });
     } finally {
@@ -117,7 +143,7 @@ export function AssignInvoiceModal({
     }
   };
 
-  const totalSelected = invoices
+  const totalSelected = allInvoices
     .filter(inv => selectedInvoices.includes(inv.code))
     .reduce((sum, inv) => sum + inv.total, 0);
 
@@ -142,9 +168,15 @@ export function AssignInvoiceModal({
 
           {/* Invoice List */}
           <div className="space-y-2 max-h-[400px] overflow-y-auto border rounded-lg p-4">
-            {filteredInvoices.length === 0 ? (
+            {isLoadingInvoices ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : filteredInvoices.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                Không tìm thấy hóa đơn nào
+                {searchTerm 
+                  ? 'Không tìm thấy hóa đơn nào' 
+                  : 'Tất cả hóa đơn đã được gán cho người thân'}
               </div>
             ) : (
               filteredInvoices.map((invoice) => (
@@ -160,26 +192,21 @@ export function AssignInvoiceModal({
                   <div className="flex-1">
                     <div className="font-medium">{invoice.code}</div>
                     <div className="text-sm text-muted-foreground">
-                      {formatDate(invoice.date)} • {formatCurrency(invoice.total)}
+                      {formatDate(invoice.createddate)} • {formatCurrency(invoice.total)}
                     </div>
-                    <div className="text-sm text-muted-foreground mt-1">
-                      {invoice.items}
+                    <div className="text-xs text-muted-foreground mt-1">
+                      🏪 {invoice.branchname} • 👤 {invoice.soldbyname}
                     </div>
+                    {invoice.details.length > 0 && (
+                      <div className="text-xs text-muted-foreground mt-1">
+                        📦 {invoice.details.slice(0, 2).map(d => d.productname).join(', ')}
+                        {invoice.details.length > 2 && ` +${invoice.details.length - 2} sản phẩm`}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))
             )}
-          </div>
-
-          {/* Notes */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Ghi chú (tùy chọn)</label>
-            <Textarea
-              placeholder="Ghi chú về việc gán hóa đơn..."
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={3}
-            />
           </div>
 
           {/* Summary */}

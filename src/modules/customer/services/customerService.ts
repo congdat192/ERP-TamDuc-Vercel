@@ -210,16 +210,20 @@ export function mapFamilyMembersToRelated(
         uploaded_by: 'external_api'
       })),
       
-      // Invoices (map từ bills array)
-      invoices: (member.bills || []).map((bill: any, billIdx: number) => ({
-        id: `bill-${Date.now()}-${billIdx}`,
+      // Invoices (map từ bills array - format from API response)
+      invoices: (member.bills || []).map((bill: any) => ({
+        id: `bill-${bill.invoice_code || bill.code}`,
         related_id: `family-${member.sdt}-${index}`,
-        invoice_code: bill.invoice_code || '',
-        invoice_date: bill.invoice_date || '',
-        total_amount: bill.total_amount || 0,
+        invoice_code: bill.invoice_code || bill.code,
+        invoice_date: bill.invoice_date || bill.createddate,
+        total_amount: bill.total || 0,
         assigned_at: member.created_at,
         assigned_by: 'external_api',
-        notes: bill.notes || null
+        notes: bill.description || null,
+        // Extra fields for display
+        branchname: bill.branchname || '',
+        soldbyname: bill.soldbyname || '',
+        details: bill.details || []
       })),
       
       // Metadata (giữ timezone UTC+7 như API response)

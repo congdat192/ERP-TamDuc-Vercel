@@ -3,38 +3,29 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Trash2, FileText } from 'lucide-react';
 import { RelatedInvoice } from '../../types/relatedCustomer.types';
-import { RelatedCustomerService } from '../../services/relatedCustomerService';
-import { toast } from '@/components/ui/use-toast';
+import { FamilyMemberService } from '../../services/familyMemberService';
+import { toast } from '@/hooks/use-toast';
 
 interface RelatedInvoicesListProps {
-  relatedId: string;
+  relatedCustomer: any;
+  customer: any;
   onUpdate?: () => void;
 }
 
-export function RelatedInvoicesList({ relatedId, onUpdate }: RelatedInvoicesListProps) {
+export function RelatedInvoicesList({ 
+  relatedCustomer,
+  customer,
+  onUpdate 
+}: RelatedInvoicesListProps) {
   const [invoices, setInvoices] = useState<RelatedInvoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadInvoices();
-  }, [relatedId]);
-
-  const loadInvoices = async () => {
-    setIsLoading(true);
-    try {
-      const data = await RelatedCustomerService.getInvoices(relatedId);
-      setInvoices(data);
-    } catch (error: any) {
-      console.error('Load invoices error:', error);
-      toast({
-        title: '❌ Lỗi',
-        description: 'Không thể tải danh sách hóa đơn',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    // Invoices already mapped from bills in RelatedCustomer object
+    const invoices = relatedCustomer.invoices || [];
+    setInvoices(invoices);
+    setIsLoading(false);
+  }, [relatedCustomer]);
 
   const handleUnassign = async (invoiceCode: string) => {
     const confirmed = window.confirm(
@@ -43,17 +34,24 @@ export function RelatedInvoicesList({ relatedId, onUpdate }: RelatedInvoicesList
     if (!confirmed) return;
 
     try {
-      await RelatedCustomerService.unassignInvoice(relatedId, invoiceCode);
+      // Call API with invoice code (string)
+      await FamilyMemberService.unassignBill(
+        customer.phone,
+        relatedCustomer.related_name,
+        invoiceCode
+      );
+
       toast({
         title: '✅ Thành công',
         description: 'Đã bỏ gán hóa đơn'
       });
-      loadInvoices();
+      
       onUpdate?.();
     } catch (error: any) {
+      console.error('[RelatedInvoicesList] Error unassigning bill:', error);
       toast({
         title: '❌ Lỗi',
-        description: error.message,
+        description: error.message || 'Không thể bỏ gán hóa đơn',
         variant: 'destructive'
       });
     }

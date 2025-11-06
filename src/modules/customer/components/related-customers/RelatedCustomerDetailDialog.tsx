@@ -205,7 +205,11 @@ export function RelatedCustomerDetailDialog({
                   ➕ Gán hóa đơn mới
                 </Button>
               </div>
-              <RelatedInvoicesList relatedId={related.id} onUpdate={onUpdate} />
+              <RelatedInvoicesList 
+                relatedCustomer={related}
+                customer={customer}
+                onUpdate={onUpdate} 
+              />
             </TabsContent>
           </Tabs>
         </DialogContent>
