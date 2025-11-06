@@ -7,6 +7,7 @@ import { RelatedCustomerDetailDialog } from '../related-customers/RelatedCustome
 import { RelatedCustomerService } from '../../services/relatedCustomerService';
 import { RelatedCustomer } from '../../types/relatedCustomer.types';
 import { useToast } from '@/hooks/use-toast';
+import { mapFamilyMembersToRelated } from '../../services/customerService';
 
 interface CustomerRelatedTabProps {
   customer: any;
@@ -33,6 +34,25 @@ export function CustomerRelatedTab({ customer, currentUser }: CustomerRelatedTab
     setError(null);
 
     try {
+      // ✅ Ưu tiên hiển thị family_members từ API response
+      if (customer.familyMembers && customer.familyMembers.length > 0) {
+        console.log('[CustomerRelatedTab] Using family_members from API:', customer.familyMembers.length);
+        
+        // Map family_members sang RelatedCustomer format
+        const mappedData = mapFamilyMembersToRelated(customer.familyMembers, {
+          contactnumber: customer.phone,
+          code: customer.customerCode || customer.id,
+          name: customer.customerName || customer.name,
+          groups: customer.group || customer.customerGroup
+        });
+        
+        setRelatedCustomers(mappedData);
+        setIsLoading(false);
+        return;
+      }
+      
+      // ⚠️ Fallback: Nếu không có family_members, fetch từ Supabase (như cũ)
+      console.log('[CustomerRelatedTab] No family_members, fetching from Supabase');
       const data = await RelatedCustomerService.getRelatedByCustomerPhone(customer.phone);
       setRelatedCustomers(data);
     } catch (err: any) {
@@ -45,7 +65,7 @@ export function CustomerRelatedTab({ customer, currentUser }: CustomerRelatedTab
 
   useEffect(() => {
     fetchRelatedCustomers();
-  }, [customer?.phone]);
+  }, [customer?.phone, customer?.familyMembers]);
 
   const handleViewRelated = (related: RelatedCustomer) => {
     setSelectedRelated(related);

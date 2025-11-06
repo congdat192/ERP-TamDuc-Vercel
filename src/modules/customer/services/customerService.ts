@@ -1,5 +1,18 @@
 import { supabase } from '@/integrations/supabase/client';
 
+export interface FamilyMember {
+  sdt: string;
+  ten: string;
+  bills: any[];
+  ghi_chu: string | null;
+  hinh_anh: string[];
+  gioi_tinh: 'nam' | 'nu' | 'khac';
+  ngay_sinh: string; // YYYY-MM-DD
+  created_at: string; // ISO 8601 with timezone (UTC+7)
+  updated_at: string; // ISO 8601 with timezone (UTC+7)
+  moi_quan_he: string; // "con_cai", "vo_chong", etc.
+}
+
 export interface CustomerData {
   id: number;
   code: string;
@@ -50,6 +63,7 @@ export interface CustomerData {
     };
     delivery_status: string;
   }>;
+  family_members?: FamilyMember[];
 }
 
 export interface CustomerResponse {
@@ -143,6 +157,79 @@ export function mapCustomerData(customer: CustomerData): any {
     totalDebt: customer.debt || 0,
     avatarUrl: customer.avatar || null,
     avatarHistory: customer.avatar_history || [],
-    interactionHistory: customer.customer_interaction_history || []
+    interactionHistory: customer.customer_interaction_history || [],
+    familyMembers: customer.family_members || []
   };
+}
+
+/**
+ * Map family_members từ API response sang RelatedCustomer format
+ * Chỉ để hiển thị (READ-ONLY) - không dùng cho CRUD
+ */
+export function mapFamilyMembersToRelated(
+  familyMembers: FamilyMember[],
+  customerData: { contactnumber: string; code: string; name: string; groups: string | null }
+): any[] {
+  if (!familyMembers || familyMembers.length === 0) {
+    return [];
+  }
+
+  return familyMembers.map((member, index) => {
+    // Map giới tính
+    let gender: "Nam" | "Nữ" | null = null;
+    if (member.gioi_tinh === 'nam') gender = "Nam";
+    else if (member.gioi_tinh === 'nu') gender = "Nữ";
+
+    return {
+      // IDs (temporary - dùng sdt + index)
+      id: `family-${member.sdt}-${index}`,
+      related_code: `FM-${member.sdt.slice(-4)}`,
+      
+      // Main customer info
+      customer_phone: customerData.contactnumber,
+      customer_code: customerData.code,
+      customer_name: customerData.name,
+      customer_group: customerData.groups || 'Khách lẻ',
+      
+      // Related customer info
+      related_name: member.ten,
+      relationship_type: member.moi_quan_he,
+      gender: gender,
+      birth_date: member.ngay_sinh, // Already YYYY-MM-DD format
+      phone: member.sdt || null,
+      notes: member.ghi_chu || null,
+      
+      // Avatars (map từ hinh_anh array)
+      avatars: member.hinh_anh.map((url, idx) => ({
+        id: `avatar-${idx}`,
+        related_id: `family-${member.sdt}-${index}`,
+        avatar_url: url,
+        public_url: url,
+        is_primary: idx === 0,
+        uploaded_at: member.created_at,
+        uploaded_by: 'external_api'
+      })),
+      
+      // Invoices (map từ bills array)
+      invoices: (member.bills || []).map((bill: any, billIdx: number) => ({
+        id: `bill-${Date.now()}-${billIdx}`,
+        related_id: `family-${member.sdt}-${index}`,
+        invoice_code: bill.invoice_code || '',
+        invoice_date: bill.invoice_date || '',
+        total_amount: bill.total_amount || 0,
+        assigned_at: member.created_at,
+        assigned_by: 'external_api',
+        notes: bill.notes || null
+      })),
+      
+      // Metadata (giữ timezone UTC+7 như API response)
+      created_at: member.created_at,
+      updated_at: member.updated_at,
+      created_by: 'external_api',
+      deleted_at: null,
+      
+      // Flag để biết data từ API
+      _source: 'external_api'
+    };
+  });
 }
