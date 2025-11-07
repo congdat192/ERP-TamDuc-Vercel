@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Edit2, Trash2, Calendar, Phone, User, Hash } from 'lucide-react';
 import { RelatedCustomer } from '../../types/relatedCustomer.types';
 import { RELATIONSHIP_LABELS, RELATIONSHIP_ICONS } from '../../types/relatedCustomer.types';
-import { RelatedCustomerService } from '../../services/relatedCustomerService';
+import { FamilyMemberService } from '../../services/familyMemberService';
 import { RelatedAvatarGallery } from './RelatedAvatarGallery';
 import { EditRelatedCustomerModal } from './EditRelatedCustomerModal';
 import { AssignInvoiceModal } from './AssignInvoiceModal';
@@ -44,24 +44,28 @@ export function RelatedCustomerDetailDialog({
 
   const handleDelete = async () => {
     const confirmed = window.confirm(
-      `Bạn có chắc chắn muốn xóa người thân "${related.related_name}"?\n\nHành động này không thể hoàn tác.`
+      `Bạn có chắc chắn muốn xóa người thân "${related.related_name}"?\n\n` +
+      `⚠️ Cảnh báo: Tất cả ảnh và hóa đơn của người thân này cũng sẽ bị xóa!`
     );
     
     if (!confirmed) return;
     
     setIsDeleting(true);
     try {
-      await RelatedCustomerService.deleteRelated(related.id);
+      await FamilyMemberService.deleteFamilyMember(customer.phone, related.related_name);
+      
       toast({ 
         title: '✅ Thành công', 
-        description: 'Đã xóa người thân' 
+        description: 'Đã xóa người thân khỏi hệ thống' 
       });
+      
       onUpdate();
       onOpenChange(false);
     } catch (error: any) {
+      console.error('Error deleting family member:', error);
       toast({ 
         title: '❌ Lỗi', 
-        description: error.message, 
+        description: error.message || 'Không thể xóa người thân', 
         variant: 'destructive' 
       });
     } finally {

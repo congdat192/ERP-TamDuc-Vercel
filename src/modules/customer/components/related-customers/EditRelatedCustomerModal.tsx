@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
 import { RelatedCustomer, UpdateRelatedCustomerData, RELATIONSHIP_LABELS, RelationshipType } from '../../types/relatedCustomer.types';
-import { RelatedCustomerService } from '../../services/relatedCustomerService';
+import { FamilyMemberService } from '../../services/familyMemberService';
 import { RelatedAvatarGallery } from './RelatedAvatarGallery';
 import { toast } from '@/components/ui/use-toast';
 
@@ -34,6 +34,7 @@ export function EditRelatedCustomerModal({
     notes: related.notes || ''
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [originalName] = useState(related.related_name);
 
   // Reset form when related changes
   useEffect(() => {
@@ -50,7 +51,6 @@ export function EditRelatedCustomerModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validation
     if (!formData.related_name?.trim()) {
       toast({
         title: '⚠️ Thiếu thông tin',
@@ -62,18 +62,56 @@ export function EditRelatedCustomerModal({
 
     setIsLoading(true);
     try {
-      await RelatedCustomerService.updateRelated(related.id, formData);
+      const customerPhone = related.customer_phone;
+      const newName = formData.related_name.trim();
+
+      // Step 1: Nếu đổi tên → Call RENAME trước
+      if (newName !== originalName) {
+        await FamilyMemberService.renameFamilyMember(customerPhone, originalName, newName);
+      }
+
+      // Step 2: Cập nhật các field khác (chỉ gửi field đã thay đổi)
+      const updates: any = {};
       
+      if (formData.relationship_type !== related.relationship_type) {
+        updates.moi_quan_he = formData.relationship_type;
+      }
+      
+      const apiGender = formData.gender === 'Nam' ? 'nam' : 'nu';
+      const currentGender = related.gender === 'Nam' ? 'nam' : 'nu';
+      if (apiGender !== currentGender) {
+        updates.gioi_tinh = apiGender;
+      }
+      
+      if (formData.birth_date !== related.birth_date) {
+        updates.ngay_sinh = formData.birth_date || '';
+      }
+      
+      if (formData.phone !== related.phone) {
+        updates.sdt = formData.phone || '';
+      }
+      
+      if (formData.notes !== related.notes) {
+        updates.ghi_chu = formData.notes || '';
+      }
+
+      // Chỉ call UPDATE nếu có thay đổi
+      if (Object.keys(updates).length > 0) {
+        await FamilyMemberService.updateFamilyMember(customerPhone, newName, updates);
+      }
+
       toast({
         title: '✅ Thành công',
         description: 'Đã cập nhật thông tin người thân'
       });
       
       onSuccess();
+      onOpenChange(false);
     } catch (error: any) {
+      console.error('Error updating family member:', error);
       toast({
         title: '❌ Lỗi',
-        description: error.message,
+        description: error.message || 'Không thể cập nhật thông tin',
         variant: 'destructive'
       });
     } finally {

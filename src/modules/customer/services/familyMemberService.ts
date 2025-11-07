@@ -29,7 +29,9 @@ export class FamilyMemberService {
       moi_quan_he: string;
       gioi_tinh?: 'nam' | 'nu' | 'khac';
       ngay_sinh?: string; // YYYY-MM-DD
+      sdt?: string; // Phone number
       ghi_chu?: string;
+      hinh_anh?: string[]; // Array of image URLs
     }
   ): Promise<FamilyMember> {
     const { data: result, error } = await supabase.functions.invoke(this.ENDPOINT, {
@@ -41,7 +43,9 @@ export class FamilyMemberService {
           moi_quan_he: memberData.moi_quan_he,
           gioi_tinh: memberData.gioi_tinh,
           ngay_sinh: memberData.ngay_sinh,
-          ghi_chu: memberData.ghi_chu
+          sdt: memberData.sdt,
+          ghi_chu: memberData.ghi_chu,
+          hinh_anh: memberData.hinh_anh
         }
       }
     });
@@ -60,6 +64,7 @@ export class FamilyMemberService {
       moi_quan_he?: string;
       gioi_tinh?: 'nam' | 'nu' | 'khac';
       ngay_sinh?: string;
+      sdt?: string;
       ghi_chu?: string;
     }
   ): Promise<FamilyMember> {

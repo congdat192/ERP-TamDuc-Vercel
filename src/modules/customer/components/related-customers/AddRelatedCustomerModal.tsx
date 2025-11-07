@@ -8,9 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { RelatedCustomerService } from '../../services/relatedCustomerService';
+import { FamilyMemberService } from '../../services/familyMemberService';
 import { extractCustomerInfo, RelationshipType, RELATIONSHIP_LABELS } from '../../types/relatedCustomer.types';
 import { Loader2, Upload, Trash2, Star, Camera } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AddRelatedCustomerModalProps {
   open: boolean;
@@ -110,66 +111,64 @@ export function AddRelatedCustomerModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validation
     if (!relatedName.trim()) {
-      toast({
-        title: 'Lỗi',
-        description: 'Vui lòng nhập tên người thân',
-        variant: 'destructive'
-      });
+      toast({ title: 'Lỗi', description: 'Vui lòng nhập tên người thân', variant: 'destructive' });
       return;
     }
-
+    
     if (!birthDate) {
-      toast({
-        title: 'Lỗi',
-        description: 'Vui lòng chọn ngày sinh',
-        variant: 'destructive'
-      });
+      toast({ title: 'Lỗi', description: 'Vui lòng chọn ngày sinh', variant: 'destructive' });
       return;
     }
 
     setIsLoading(true);
 
     try {
-      // 1. Create related customer
-      const result = await RelatedCustomerService.createRelatedFromCustomer(customer, {
-        related_name: relatedName.trim(),
-        relationship_type: relationshipType,
-        gender,
-        birth_date: birthDate,
-        phone: phone.trim() || undefined,
-        notes: notes.trim() || undefined,
-        created_by: currentUser?.email || 'system'
-      });
-
-      // 2. Upload avatars if any (first image will be primary automatically)
+      // 1. Upload avatars to Storage FIRST (if any)
+      const uploadedUrls: string[] = [];
+      
       if (selectedFiles.length > 0) {
-        for (let i = 0; i < selectedFiles.length; i++) {
-          await RelatedCustomerService.uploadAvatar(
-            result.related_id,
-            selectedFiles[i],
-            currentUser?.id || 'system'
-          );
+        for (const file of selectedFiles) {
+          const fileName = `${customer.phone}_${relatedName.trim()}_${Date.now()}.jpg`;
+          const filePath = `family/${new Date().getFullYear()}/${new Date().getMonth() + 1}/${fileName}`;
+          
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('avatar_customers')
+            .upload(filePath, file);
+
+          if (uploadError) throw uploadError;
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('avatar_customers')
+            .getPublicUrl(filePath);
+          
+          uploadedUrls.push(publicUrl);
         }
-        
-        toast({
-          title: '✅ Thành công',
-          description: `Đã thêm người thân với ${selectedFiles.length} ảnh`
-        });
-      } else {
-        toast({
-          title: '✅ Thành công',
-          description: 'Đã thêm người thân thành công'
-        });
       }
 
-      // 3. Cleanup & close
+      // 2. Call External API to add family member (with images)
+      await FamilyMemberService.addFamilyMember(customer.phone, {
+        ten: relatedName.trim(),
+        moi_quan_he: relationshipType,
+        gioi_tinh: gender === 'Nam' ? 'nam' : 'nu',
+        ngay_sinh: birthDate,
+        sdt: phone.trim() || undefined,
+        ghi_chu: notes.trim() || undefined,
+        hinh_anh: uploadedUrls
+      });
+
+      toast({
+        title: '✅ Thành công',
+        description: uploadedUrls.length > 0 
+          ? `Đã thêm người thân với ${uploadedUrls.length} ảnh`
+          : 'Đã thêm người thân thành công'
+      });
+
       resetForm();
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
-      console.error('Error creating related customer:', error);
+      console.error('Error creating family member:', error);
       toast({
         title: 'Lỗi',
         description: error.message || 'Không thể thêm người thân',

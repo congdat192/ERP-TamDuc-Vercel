@@ -7,7 +7,7 @@ import { RelatedCustomerDetailDialog } from '../related-customers/RelatedCustome
 import { RelatedCustomerService } from '../../services/relatedCustomerService';
 import { RelatedCustomer } from '../../types/relatedCustomer.types';
 import { useToast } from '@/hooks/use-toast';
-import { mapFamilyMembersToRelated } from '../../services/customerService';
+import { mapFamilyMembersToRelated, fetchCustomerByPhone } from '../../services/customerService';
 
 interface CustomerRelatedTabProps {
   customer: any;
@@ -63,6 +63,44 @@ export function CustomerRelatedTab({ customer, currentUser }: CustomerRelatedTab
     }
   };
 
+  const refreshCustomerData = async () => {
+    if (!customer?.phone) return;
+
+    setIsLoading(true);
+    try {
+      console.log('[CustomerRelatedTab] Refreshing customer data from API...');
+      
+      // Re-fetch customer data từ External API
+      const response = await fetchCustomerByPhone(customer.phone);
+      
+      if (!response?.success || !response.data) {
+        throw new Error('Không thể tải dữ liệu khách hàng');
+      }
+
+      // Map family_members mới nhất
+      const familyMembers = response.data.family_members || [];
+      console.log('[CustomerRelatedTab] Refreshed family members:', familyMembers.length);
+      
+      const mappedData = mapFamilyMembersToRelated(familyMembers, {
+        contactnumber: customer.phone,
+        code: customer.customerCode || customer.id,
+        name: customer.customerName || customer.name,
+        groups: customer.group || customer.customerGroup
+      });
+      
+      setRelatedCustomers(mappedData);
+    } catch (error: any) {
+      console.error('Error refreshing customer data:', error);
+      toast({
+        title: '❌ Lỗi',
+        description: error.message || 'Không thể refresh dữ liệu',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchRelatedCustomers();
   }, [customer?.phone, customer?.familyMembers]);
@@ -74,7 +112,7 @@ export function CustomerRelatedTab({ customer, currentUser }: CustomerRelatedTab
 
   const handleAddSuccess = () => {
     setIsAddModalOpen(false);
-    fetchRelatedCustomers();
+    refreshCustomerData();
   };
 
   return (
@@ -147,7 +185,7 @@ export function CustomerRelatedTab({ customer, currentUser }: CustomerRelatedTab
         related={selectedRelated}
         customer={customer}
         currentUser={currentUser}
-        onUpdate={fetchRelatedCustomers}
+        onUpdate={refreshCustomerData}
       />
     </div>
   );

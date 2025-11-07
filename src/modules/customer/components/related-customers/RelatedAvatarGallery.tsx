@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Upload, Star, Trash2, Image as ImageIcon, Camera } from 'lucide-react';
 import { RelatedCustomer, RelatedAvatar } from '../../types/relatedCustomer.types';
-import { RelatedCustomerService } from '../../services/relatedCustomerService';
+import { FamilyMemberService } from '../../services/familyMemberService';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 
 interface RelatedAvatarGalleryProps {
@@ -22,8 +23,7 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
 
   const loadAvatars = async () => {
     try {
-      const data = await RelatedCustomerService.getAvatars(related.id);
-      setAvatars(data);
+      setAvatars(related.avatars || []);
     } catch (error: any) {
       console.error('Load avatars error:', error);
     }
@@ -37,6 +37,8 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
     let successCount = 0;
 
     try {
+      const uploadedUrls: string[] = [];
+
       for (const file of Array.from(files)) {
         // Validate file
         const maxSize = 5 * 1024 * 1024; // 5MB
@@ -45,7 +47,7 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
         if (!allowedTypes.includes(file.type)) {
           toast({
             title: '❌ File không hợp lệ',
-            description: 'Chỉ chấp nhận file JPG, PNG, WEBP',
+            description: `${file.name}: Chỉ chấp nhận JPG, PNG, WEBP`,
             variant: 'destructive'
           });
           continue;
@@ -54,29 +56,54 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
         if (file.size > maxSize) {
           toast({
             title: '❌ File quá lớn',
-            description: 'Kích thước file không được vượt quá 5MB',
+            description: `${file.name}: Vượt quá 5MB`,
             variant: 'destructive'
           });
           continue;
         }
 
-        // Upload
-        await RelatedCustomerService.uploadAvatar(related.id, file, 'current-user-id');
+        // 1. Upload to Supabase Storage
+        const fileName = `${related.customer_phone}_${related.related_name}_${Date.now()}.jpg`;
+        const filePath = `family/${new Date().getFullYear()}/${new Date().getMonth() + 1}/${fileName}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('avatar_customers')
+          .upload(filePath, file);
+
+        if (uploadError) {
+          console.error('Upload error:', uploadError);
+          continue;
+        }
+
+        // 2. Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('avatar_customers')
+          .getPublicUrl(filePath);
+        
+        uploadedUrls.push(publicUrl);
         successCount++;
       }
 
-      if (successCount > 0) {
+      // 3. Call External API to add all images at once
+      if (uploadedUrls.length > 0) {
+        await FamilyMemberService.addImages(
+          related.customer_phone,
+          related.related_name,
+          uploadedUrls
+        );
+
         toast({
           title: '✅ Thành công',
-          description: `Đã upload ${successCount} ảnh`
+          description: `Đã thêm ${successCount} ảnh`
         });
-        loadAvatars();
+        
         onUpdate?.();
       }
     } catch (error: any) {
+      console.error('Error uploading images:', error);
       toast({
         title: '❌ Lỗi',
-        description: error.message,
+        description: error.message || 'Không thể upload ảnh',
         variant: 'destructive'
       });
     } finally {
@@ -85,40 +112,39 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
     }
   };
 
-  const handleSetPrimary = async (avatarId: string) => {
-    try {
-      await RelatedCustomerService.setPrimaryAvatar(related.id, avatarId);
-      toast({
-        title: '✅ Thành công',
-        description: 'Đã đặt làm ảnh chính'
-      });
-      loadAvatars();
-      onUpdate?.();
-    } catch (error: any) {
-      toast({
-        title: '❌ Lỗi',
-        description: error.message,
-        variant: 'destructive'
-      });
-    }
-  };
-
   const handleDelete = async (avatarId: string) => {
     const confirmed = window.confirm('Bạn có chắc chắn muốn xóa ảnh này?');
     if (!confirmed) return;
 
     try {
-      await RelatedCustomerService.deleteAvatar(related.id, avatarId);
+      // Find avatar by ID
+      const avatar = avatars.find(a => a.id === avatarId);
+      if (!avatar) throw new Error('Không tìm thấy ảnh');
+
+      // 1. Call External API to remove image
+      await FamilyMemberService.deleteImage(
+        related.customer_phone,
+        related.related_name,
+        avatar.public_url
+      );
+
+      // 2. Delete from Supabase Storage (optional, but recommended)
+      const filePath = avatar.public_url.split('/').slice(-4).join('/');
+      await supabase.storage
+        .from('avatar_customers')
+        .remove([filePath]);
+
       toast({
         title: '✅ Thành công',
         description: 'Đã xóa ảnh'
       });
-      loadAvatars();
+      
       onUpdate?.();
     } catch (error: any) {
+      console.error('Error deleting image:', error);
       toast({
         title: '❌ Lỗi',
-        description: error.message,
+        description: error.message || 'Không thể xóa ảnh',
         variant: 'destructive'
       });
     }
@@ -206,17 +232,6 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
 
               {/* Hover Actions */}
               <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
-                {!avatar.is_primary && (
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => handleSetPrimary(avatar.id)}
-                    className="gap-1"
-                  >
-                    <Star className="w-3 h-3" />
-                    Đặt chính
-                  </Button>
-                )}
                 <Button
                   size="sm"
                   variant="destructive"
