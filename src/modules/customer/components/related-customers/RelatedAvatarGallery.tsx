@@ -5,6 +5,7 @@ import { Upload, Star, Trash2, Image as ImageIcon, Camera } from 'lucide-react';
 import { RelatedCustomer, RelatedAvatar } from '../../types/relatedCustomer.types';
 import { FamilyMemberService } from '../../services/familyMemberService';
 import { supabase } from '@/integrations/supabase/client';
+import { externalStorageClient } from '@/integrations/supabase/externalStorageClient';
 import { toast } from '@/components/ui/use-toast';
 
 interface RelatedAvatarGalleryProps {
@@ -62,23 +63,31 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
           continue;
         }
 
-        // 1. Upload to Supabase Storage
+        // 1. Upload to External Supabase Storage
         const fileName = `${related.customer_phone}_${related.related_name}_${Date.now()}.jpg`;
         const filePath = `family/${new Date().getFullYear()}/${new Date().getMonth() + 1}/${fileName}`;
         
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        // ✅ Dùng External Storage Client
+        const { data: uploadData, error: uploadError } = await externalStorageClient.storage
           .from('avatar_customers')
           .upload(filePath, file);
 
         if (uploadError) {
-          console.error('Upload error:', uploadError);
+          console.error('[RelatedAvatarGallery] Upload error:', uploadError);
+          toast({
+            title: '❌ Upload thất bại',
+            description: uploadError.message,
+            variant: 'destructive'
+          });
           continue;
         }
 
-        // 2. Get public URL
-        const { data: { publicUrl } } = supabase.storage
+        // 2. Get public URL from External Supabase
+        const { data: { publicUrl } } = externalStorageClient.storage
           .from('avatar_customers')
           .getPublicUrl(filePath);
+        
+        console.log('[RelatedAvatarGallery] Uploaded:', publicUrl);
         
         uploadedUrls.push(publicUrl);
         successCount++;
@@ -128,11 +137,20 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
         avatar.public_url
       );
 
-      // 2. Delete from Supabase Storage (optional, but recommended)
+      // 2. Delete from External Supabase Storage
       const filePath = avatar.public_url.split('/').slice(-4).join('/');
-      await supabase.storage
+      
+      // ✅ Dùng External Storage Client để xóa
+      const { error: deleteError } = await externalStorageClient.storage
         .from('avatar_customers')
         .remove([filePath]);
+
+      if (deleteError) {
+        console.error('[RelatedAvatarGallery] Delete error:', deleteError);
+        throw new Error(`Delete failed: ${deleteError.message}`);
+      }
+      
+      console.log('[RelatedAvatarGallery] Deleted from External Storage:', filePath);
 
       toast({
         title: '✅ Thành công',

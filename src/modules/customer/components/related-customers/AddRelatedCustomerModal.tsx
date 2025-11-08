@@ -12,6 +12,7 @@ import { FamilyMemberService } from '../../services/familyMemberService';
 import { extractCustomerInfo, RelationshipType, RELATIONSHIP_LABELS } from '../../types/relatedCustomer.types';
 import { Loader2, Upload, Trash2, Star, Camera } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { externalStorageClient } from '@/integrations/supabase/externalStorageClient';
 
 interface AddRelatedCustomerModalProps {
   open: boolean;
@@ -132,15 +133,22 @@ export function AddRelatedCustomerModal({
           const fileName = `${customer.phone}_${relatedName.trim()}_${Date.now()}.jpg`;
           const filePath = `family/${new Date().getFullYear()}/${new Date().getMonth() + 1}/${fileName}`;
           
-          const { data: uploadData, error: uploadError } = await supabase.storage
+          // ✅ Upload to External Supabase Storage
+          const { data: uploadData, error: uploadError } = await externalStorageClient.storage
             .from('avatar_customers')
             .upload(filePath, file);
 
-          if (uploadError) throw uploadError;
+          if (uploadError) {
+            console.error('[AddRelatedCustomerModal] Upload error:', uploadError);
+            throw new Error(`Upload failed: ${uploadError.message}`);
+          }
 
-          const { data: { publicUrl } } = supabase.storage
+          // ✅ Get public URL from External Supabase
+          const { data: { publicUrl } } = externalStorageClient.storage
             .from('avatar_customers')
             .getPublicUrl(filePath);
+          
+          console.log('[AddRelatedCustomerModal] Uploaded to External Storage:', publicUrl);
           
           uploadedUrls.push(publicUrl);
         }
