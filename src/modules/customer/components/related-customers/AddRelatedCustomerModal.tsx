@@ -125,6 +125,17 @@ export function AddRelatedCustomerModal({
     setIsLoading(true);
 
     try {
+      // 🔐 Phase 4: Get auth token from Lovable Cloud and set to External Storage
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.access_token) {
+        await externalStorageClient.auth.setSession({
+          access_token: session.access_token,
+          refresh_token: session.refresh_token || ''
+        });
+        console.log('[AddRelatedCustomerModal] ✅ Auth token set for External Storage');
+      }
+
       // 1. Upload avatars to Storage FIRST (if any)
       const uploadedUrls: string[] = [];
       

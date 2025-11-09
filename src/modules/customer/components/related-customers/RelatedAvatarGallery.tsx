@@ -22,6 +22,18 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
     loadAvatars();
   }, [related.id]);
 
+  // 🔐 Phase 4: Helper to set auth token for External Storage
+  const setAuthToken = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      await externalStorageClient.auth.setSession({
+        access_token: session.access_token,
+        refresh_token: session.refresh_token || ''
+      });
+      console.log('[RelatedAvatarGallery] ✅ Auth token set for External Storage');
+    }
+  };
+
   const loadAvatars = async () => {
     try {
       setAvatars(related.avatars || []);
@@ -38,6 +50,9 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
     let successCount = 0;
 
     try {
+      // 🔐 Set auth token trước khi upload
+      await setAuthToken();
+
       const uploadedUrls: string[] = [];
 
       for (const file of Array.from(files)) {
@@ -126,6 +141,9 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
     if (!confirmed) return;
 
     try {
+      // 🔐 Set auth token trước khi delete
+      await setAuthToken();
+
       // Find avatar by ID
       const avatar = avatars.find(a => a.id === avatarId);
       if (!avatar) throw new Error('Không tìm thấy ảnh');
