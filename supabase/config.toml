@@ -1,5 +1,8 @@
 project_id = "dtdtwhrqvkrymtyqbatn"
 
+[functions.customer-family-members]
+verify_jwt = false
+
 [functions.reissue-voucher-external]
 verify_jwt = true
 

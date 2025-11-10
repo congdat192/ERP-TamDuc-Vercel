@@ -9,7 +9,8 @@ export const externalStorageClient = createClient(
   EXTERNAL_SUPABASE_ANON_KEY,
   {
     auth: {
-      persistSession: false, // Auth vẫn dùng Lovable Cloud
+      storage: undefined, // Disable auth storage to avoid multiple GoTrueClient instances warning
+      persistSession: false,
       autoRefreshToken: false
     }
   }
