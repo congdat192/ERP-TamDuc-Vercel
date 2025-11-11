@@ -26,15 +26,27 @@ export class FamilyMemberService {
    * Extracts detailed error information for better user feedback
    */
   private static parseError(error: any, result: any, action: string): string {
-    console.error(`[FamilyMemberService] ${action} error:`, { error, result });
+    console.error(`[FamilyMemberService] ${action} ERROR FULL DUMP:`, {
+      error,
+      result,
+      errorKeys: error ? Object.keys(error) : [],
+      errorName: error?.name,
+      errorMessage: error?.message,
+      errorContext: error?.context,
+      errorDetails: error?.details,
+      resultKeys: result ? Object.keys(result) : []
+    });
 
     // 1. Check if result has error details (from API response)
     if (result) {
       if (!result.success && result.error_description) {
+        console.log(`[FamilyMemberService] Using result.error_description:`, result.error_description);
         return result.error_description;
       }
       if (!result.success && result.error) {
-        return typeof result.error === 'string' ? result.error : JSON.stringify(result.error);
+        const errorMsg = typeof result.error === 'string' ? result.error : JSON.stringify(result.error);
+        console.log(`[FamilyMemberService] Using result.error:`, errorMsg);
+        return errorMsg;
       }
       if (result.details) {
         console.error(`[FamilyMemberService] ${action} details:`, result.details);
@@ -43,12 +55,23 @@ export class FamilyMemberService {
 
     // 2. Parse FunctionInvokeError (from Supabase SDK)
     if (error) {
+      // Log all error properties
+      console.log(`[FamilyMemberService] Error object inspection:`, {
+        hasContext: !!error.context,
+        hasDetails: !!error.details,
+        hasMessage: !!error.message,
+        constructor: error.constructor?.name,
+        stringified: JSON.stringify(error, null, 2)
+      });
+
       // Check if error.context contains response body
       if (error.context) {
         try {
           const contextData = typeof error.context === 'string'
             ? JSON.parse(error.context)
             : error.context;
+
+          console.log(`[FamilyMemberService] Parsed error.context:`, contextData);
 
           if (contextData.error_description) {
             return contextData.error_description;
@@ -64,7 +87,7 @@ export class FamilyMemberService {
       }
 
       // Return error message directly
-      if (error.message) {
+      if (error.message && error.message !== 'Edge Function returned a non-2xx status code') {
         return error.message;
       }
     }
