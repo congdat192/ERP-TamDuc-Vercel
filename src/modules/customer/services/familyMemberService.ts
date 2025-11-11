@@ -21,6 +21,58 @@ export class FamilyMemberService {
     };
   }
 
+  /**
+   * Helper: Parse error from Supabase Functions response
+   * Extracts detailed error information for better user feedback
+   */
+  private static parseError(error: any, result: any, action: string): string {
+    console.error(`[FamilyMemberService] ${action} error:`, { error, result });
+
+    // 1. Check if result has error details (from API response)
+    if (result) {
+      if (!result.success && result.error_description) {
+        return result.error_description;
+      }
+      if (!result.success && result.error) {
+        return typeof result.error === 'string' ? result.error : JSON.stringify(result.error);
+      }
+      if (result.details) {
+        console.error(`[FamilyMemberService] ${action} details:`, result.details);
+      }
+    }
+
+    // 2. Parse FunctionInvokeError (from Supabase SDK)
+    if (error) {
+      // Check if error.context contains response body
+      if (error.context) {
+        try {
+          const contextData = typeof error.context === 'string'
+            ? JSON.parse(error.context)
+            : error.context;
+
+          if (contextData.error_description) {
+            return contextData.error_description;
+          }
+          if (contextData.error) {
+            return typeof contextData.error === 'string'
+              ? contextData.error
+              : JSON.stringify(contextData.error);
+          }
+        } catch (e) {
+          console.error('[FamilyMemberService] Failed to parse error.context:', e);
+        }
+      }
+
+      // Return error message directly
+      if (error.message) {
+        return error.message;
+      }
+    }
+
+    // 3. Fallback to generic message
+    return `Không thể thực hiện ${action}. Vui lòng thử lại hoặc liên hệ quản trị viên.`;
+  }
+
   // ========== 1. ADD - Thêm người thân mới ==========
   static async addFamilyMember(
     customerPhone: string,
@@ -50,9 +102,10 @@ export class FamilyMemberService {
       }
     });
 
-    if (error) throw new Error(error.message);
-    if (!result.success) throw new Error(result.error_description || 'Failed to add family member');
-    
+    if (error || !result?.success) {
+      throw new Error(this.parseError(error, result, 'ADD'));
+    }
+
     return result.data.family_member;
   }
 
@@ -79,9 +132,10 @@ export class FamilyMemberService {
       }
     });
 
-    if (error) throw new Error(error.message);
-    if (!result.success) throw new Error(result.error_description || 'Failed to update family member');
-    
+    if (error || !result?.success) {
+      throw new Error(this.parseError(error, result, 'UPDATE'));
+    }
+
     return result.data.family_member;
   }
 
@@ -100,8 +154,9 @@ export class FamilyMemberService {
       }
     });
 
-    if (error) throw new Error(error.message);
-    if (!result.success) throw new Error(result.error_description || 'Failed to rename family member');
+    if (error || !result?.success) {
+      throw new Error(this.parseError(error, result, 'RENAME'));
+    }
 
     return result.data.family_member;
   }
@@ -121,8 +176,9 @@ export class FamilyMemberService {
       }
     });
 
-    if (error) throw new Error(error.message);
-    if (!result.success) throw new Error(result.error_description || 'Failed to delete family member');
+    if (error || !result?.success) {
+      throw new Error(this.parseError(error, result, 'DELETE'));
+    }
   }
 
   // ========== 5. ADD_IMAGE - Thêm hình ảnh ==========
@@ -142,9 +198,10 @@ export class FamilyMemberService {
       }
     });
 
-    if (error) throw new Error(error.message);
-    if (!result.success) throw new Error(result.error_description || 'Failed to add images');
-    
+    if (error || !result?.success) {
+      throw new Error(this.parseError(error, result, 'ADD_IMAGE'));
+    }
+
     return result.data.family_member;
   }
 
@@ -165,9 +222,10 @@ export class FamilyMemberService {
       }
     });
 
-    if (error) throw new Error(error.message);
-    if (!result.success) throw new Error(result.error_description || 'Failed to delete image');
-    
+    if (error || !result?.success) {
+      throw new Error(this.parseError(error, result, 'DELETE_IMAGE'));
+    }
+
     return result.data.family_member;
   }
 
@@ -188,8 +246,9 @@ export class FamilyMemberService {
       }
     });
 
-    if (error) throw new Error(error.message);
-    if (!result.success) throw new Error(result.error_description || 'Failed to assign bills');
+    if (error || !result?.success) {
+      throw new Error(this.parseError(error, result, 'ASSIGN_BILLS'));
+    }
 
     return result.data.family_member;
   }
@@ -211,8 +270,9 @@ export class FamilyMemberService {
       }
     });
 
-    if (error) throw new Error(error.message);
-    if (!result.success) throw new Error(result.error_description || 'Failed to unassign bill');
+    if (error || !result?.success) {
+      throw new Error(this.parseError(error, result, 'UNASSIGN_BILL'));
+    }
 
     return result.data.family_member;
   }
