@@ -23,37 +23,60 @@ export class FamilyMemberService {
 
   /**
    * Helper: Parse error from Supabase Functions response
-   * Edge function always returns 200 OK with success: false on errors
-   * This ensures response body is parsed into result, not swallowed by SDK
+   * When edge function returns non-2xx status, SDK throws FunctionsHttpError
+   * We need to extract error_description from the error object
    */
-  private static parseError(error: any, result: any, action: string): string {
-    // Log for debugging
-    console.error(`[FamilyMemberService] ${action} failed:`, { error, result });
+  private static async parseError(error: any, result: any, action: string): Promise<string> {
+    // Log full error object for debugging
+    console.error(`[FamilyMemberService] ${action} failed:`, {
+      error,
+      result,
+      errorType: error?.constructor?.name,
+      errorKeys: error ? Object.keys(error) : []
+    });
 
-    // 1. Extract error message from result (edge function always returns 200 with success: false)
-    if (result) {
-      // Prioritize error_description (Vietnamese message)
+    // 1. If result has data (success: false with 200 OK)
+    if (result && !result.success) {
       if (result.error_description) {
         return result.error_description;
       }
-
-      // Fallback to error field
       if (result.error) {
         return typeof result.error === 'string' ? result.error : JSON.stringify(result.error);
       }
-
-      // Log additional details if available
-      if (result.details) {
-        console.error(`[FamilyMemberService] ${action} details:`, result.details);
-      }
     }
 
-    // 2. Handle SDK-level errors (network, timeout, etc.)
+    // 2. Handle FunctionsHttpError (non-2xx status from edge function)
+    // SDK throws error but response body might be in error.context or need to be fetched
     if (error) {
-      console.error(`[FamilyMemberService] ${action} SDK error:`, error);
-      if (error.message) {
-        return `Lỗi kết nối: ${error.message}`;
+      // Try to parse error.context (SDK might put response body here)
+      if (error.context) {
+        try {
+          const contextData = typeof error.context === 'string'
+            ? JSON.parse(error.context)
+            : error.context;
+
+          console.log(`[FamilyMemberService] Found error.context:`, contextData);
+
+          if (contextData.error_description) {
+            return contextData.error_description;
+          }
+          if (contextData.error) {
+            return typeof contextData.error === 'string'
+              ? contextData.error
+              : JSON.stringify(contextData.error);
+          }
+        } catch (e) {
+          console.error('[FamilyMemberService] Failed to parse error.context:', e);
+        }
       }
+
+      // Try error message (but filter out generic SDK message)
+      if (error.message && error.message !== 'Edge Function returned a non-2xx status code') {
+        return error.message;
+      }
+
+      // Last resort: Generic message with action
+      return `Không thể thực hiện ${action}. Vui lòng thử lại.`;
     }
 
     // 3. Fallback to generic message
@@ -90,7 +113,7 @@ export class FamilyMemberService {
     });
 
     if (error || !result?.success) {
-      throw new Error(this.parseError(error, result, 'ADD'));
+      throw new Error(await this.parseError(error, result, 'ADD'));
     }
 
     return result.data.family_member;
@@ -120,7 +143,7 @@ export class FamilyMemberService {
     });
 
     if (error || !result?.success) {
-      throw new Error(this.parseError(error, result, 'UPDATE'));
+      throw new Error(await this.parseError(error, result, 'UPDATE'));
     }
 
     return result.data.family_member;
@@ -142,7 +165,7 @@ export class FamilyMemberService {
     });
 
     if (error || !result?.success) {
-      throw new Error(this.parseError(error, result, 'RENAME'));
+      throw new Error(await this.parseError(error, result, 'RENAME'));
     }
 
     return result.data.family_member;
@@ -164,7 +187,7 @@ export class FamilyMemberService {
     });
 
     if (error || !result?.success) {
-      throw new Error(this.parseError(error, result, 'DELETE'));
+      throw new Error(await this.parseError(error, result, 'DELETE'));
     }
   }
 
@@ -186,7 +209,7 @@ export class FamilyMemberService {
     });
 
     if (error || !result?.success) {
-      throw new Error(this.parseError(error, result, 'ADD_IMAGE'));
+      throw new Error(await this.parseError(error, result, 'ADD_IMAGE'));
     }
 
     return result.data.family_member;
@@ -210,7 +233,7 @@ export class FamilyMemberService {
     });
 
     if (error || !result?.success) {
-      throw new Error(this.parseError(error, result, 'DELETE_IMAGE'));
+      throw new Error(await this.parseError(error, result, 'DELETE_IMAGE'));
     }
 
     return result.data.family_member;
@@ -234,7 +257,7 @@ export class FamilyMemberService {
     });
 
     if (error || !result?.success) {
-      throw new Error(this.parseError(error, result, 'ASSIGN_BILLS'));
+      throw new Error(await this.parseError(error, result, 'ASSIGN_BILLS'));
     }
 
     return result.data.family_member;
@@ -258,7 +281,7 @@ export class FamilyMemberService {
     });
 
     if (error || !result?.success) {
-      throw new Error(this.parseError(error, result, 'UNASSIGN_BILL'));
+      throw new Error(await this.parseError(error, result, 'UNASSIGN_BILL'));
     }
 
     return result.data.family_member;
