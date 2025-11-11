@@ -142,8 +142,11 @@ export function AddRelatedCustomerModal({
       if (selectedFiles.length > 0) {
         for (const file of selectedFiles) {
           const fileName = `${customer.phone}_${relatedName.trim()}_${Date.now()}.jpg`;
-          const filePath = `family/${new Date().getFullYear()}/${new Date().getMonth() + 1}/${fileName}`;
-          
+          const year = new Date().getFullYear();
+          const month = String(new Date().getMonth() + 1).padStart(2, '0');
+          const day = String(new Date().getDate()).padStart(2, '0');
+          const filePath = `${year}/${month}/${day}/${fileName}`; // ✅ Fixed: removed 'family/' prefix
+
           // ✅ Upload to External Supabase Storage
           const { data: uploadData, error: uploadError } = await externalStorageClient.storage
             .from('avatar_customers')

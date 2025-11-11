@@ -80,7 +80,10 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
 
         // 1. Upload to External Supabase Storage
         const fileName = `${related.customer_phone}_${related.related_name}_${Date.now()}.jpg`;
-        const filePath = `family/${new Date().getFullYear()}/${new Date().getMonth() + 1}/${fileName}`;
+        const year = new Date().getFullYear();
+        const month = String(new Date().getMonth() + 1).padStart(2, '0');
+        const day = String(new Date().getDate()).padStart(2, '0');
+        const filePath = `${year}/${month}/${day}/${fileName}`; // ✅ Fixed: removed 'family/' prefix
         
         // ✅ Dùng External Storage Client
         const { data: uploadData, error: uploadError } = await externalStorageClient.storage
