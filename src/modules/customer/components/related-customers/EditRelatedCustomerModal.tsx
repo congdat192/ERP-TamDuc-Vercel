@@ -108,11 +108,18 @@ export function EditRelatedCustomerModal({
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
-      console.error('Error updating family member:', error);
+      console.error('[EditRelatedCustomerModal] Error updating family member:', error);
+      console.error('[EditRelatedCustomerModal] Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+
       toast({
         title: '❌ Lỗi',
-        description: error.message || 'Không thể cập nhật thông tin',
-        variant: 'destructive'
+        description: error.message || 'Không thể cập nhật thông tin. Vui lòng thử lại.',
+        variant: 'destructive',
+        duration: 5000 // Show error longer for user to read
       });
     } finally {
       setIsLoading(false);

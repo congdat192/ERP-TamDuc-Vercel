@@ -190,11 +190,18 @@ export function AddRelatedCustomerModal({
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
-      console.error('Error creating family member:', error);
+      console.error('[AddRelatedCustomerModal] Error creating family member:', error);
+      console.error('[AddRelatedCustomerModal] Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+
       toast({
-        title: 'Lỗi',
-        description: error.message || 'Không thể thêm người thân',
-        variant: 'destructive'
+        title: '❌ Lỗi',
+        description: error.message || 'Không thể thêm người thân. Vui lòng thử lại.',
+        variant: 'destructive',
+        duration: 5000 // Show error longer for user to read
       });
     } finally {
       setIsLoading(false);

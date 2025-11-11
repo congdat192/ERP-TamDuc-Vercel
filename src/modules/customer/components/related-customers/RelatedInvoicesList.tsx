@@ -49,10 +49,17 @@ export function RelatedInvoicesList({
       onUpdate?.();
     } catch (error: any) {
       console.error('[RelatedInvoicesList] Error unassigning bill:', error);
+      console.error('[RelatedInvoicesList] Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+
       toast({
         title: '❌ Lỗi',
-        description: error.message || 'Không thể bỏ gán hóa đơn',
-        variant: 'destructive'
+        description: error.message || 'Không thể bỏ gán hóa đơn. Vui lòng thử lại.',
+        variant: 'destructive',
+        duration: 5000 // Show error longer for user to read
       });
     }
   };

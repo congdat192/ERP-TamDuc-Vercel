@@ -65,12 +65,19 @@ export function AssignInvoiceModal({
       setAvailableInvoices(available);
 
       console.log('[AssignInvoiceModal] Available invoices:', available.length, '/', invoices.length);
-    } catch (error) {
+    } catch (error: any) {
       console.error('[AssignInvoiceModal] Error loading invoices:', error);
+      console.error('[AssignInvoiceModal] Error details:', {
+        message: error?.message,
+        stack: error?.stack,
+        name: error?.name
+      });
+
       toast({
         title: '❌ Lỗi',
-        description: 'Không thể tải danh sách hóa đơn',
-        variant: 'destructive'
+        description: error?.message || 'Không thể tải danh sách hóa đơn. Vui lòng thử lại.',
+        variant: 'destructive',
+        duration: 5000
       });
     } finally {
       setIsLoadingInvoices(false);
@@ -133,10 +140,17 @@ export function AssignInvoiceModal({
       onOpenChange(false);
     } catch (error: any) {
       console.error('[AssignInvoiceModal] Error assigning bills:', error);
+      console.error('[AssignInvoiceModal] Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+
       toast({
         title: '❌ Lỗi',
-        description: error.message || 'Không thể gán hóa đơn',
-        variant: 'destructive'
+        description: error.message || 'Không thể gán hóa đơn. Vui lòng thử lại.',
+        variant: 'destructive',
+        duration: 5000 // Show error longer for user to read
       });
     } finally {
       setIsLoading(false);

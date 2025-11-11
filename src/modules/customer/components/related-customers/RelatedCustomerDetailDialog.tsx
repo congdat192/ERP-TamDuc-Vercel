@@ -62,11 +62,18 @@ export function RelatedCustomerDetailDialog({
       onUpdate();
       onOpenChange(false);
     } catch (error: any) {
-      console.error('Error deleting family member:', error);
-      toast({ 
-        title: '❌ Lỗi', 
-        description: error.message || 'Không thể xóa người thân', 
-        variant: 'destructive' 
+      console.error('[RelatedCustomerDetailDialog] Error deleting family member:', error);
+      console.error('[RelatedCustomerDetailDialog] Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+
+      toast({
+        title: '❌ Lỗi',
+        description: error.message || 'Không thể xóa người thân. Vui lòng thử lại.',
+        variant: 'destructive',
+        duration: 5000 // Show error longer for user to read
       });
     } finally {
       setIsDeleting(false);
