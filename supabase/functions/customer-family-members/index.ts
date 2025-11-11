@@ -49,29 +49,29 @@ serve(async (req) => {
   try {
     console.log('[customer-family-members] Request received');
 
-    // Parse request body
-    const body = await req.json();
-    const { customer_phone, action, data } = body;
+    // Parse request body (keep original structure)
+    const requestBody = await req.json();
 
-    if (!customer_phone || !action) {
+    // Validate required fields according to API spec
+    if (!requestBody.action || !requestBody.customer_sdt) {
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Missing required fields: customer_phone and action' 
+        JSON.stringify({
+          success: false,
+          error: 'Missing required fields: action and customer_sdt'
         }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
 
-    console.log('[customer-family-members] Action:', action, 'Phone:', customer_phone);
+    console.log('[customer-family-members] Action:', requestBody.action, 'Phone:', requestBody.customer_sdt);
 
     // Get OAuth token
     const accessToken = await getOAuthToken();
 
-    // Forward request to External Supabase
+    // Forward entire request body to External Supabase (preserve API spec structure)
     const externalResponse = await fetch(
       'https://kcirpjxbjqagrqrjfldu.supabase.co/functions/v1/customer-family-members',
       {
@@ -80,11 +80,7 @@ serve(async (req) => {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          customer_phone,
-          action,
-          data,
-        }),
+        body: JSON.stringify(requestBody),
       }
     );
 
@@ -93,19 +89,20 @@ serve(async (req) => {
     if (!externalResponse.ok) {
       console.error('[customer-family-members] External API error:', responseData);
       return new Response(
-        JSON.stringify({ 
-          success: false, 
+        JSON.stringify({
+          success: false,
           error: responseData.error || 'External API error',
+          error_description: responseData.error_description,
           details: responseData
         }),
-        { 
-          status: externalResponse.status, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        {
+          status: externalResponse.status,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
 
-    console.log('[customer-family-members] Success:', action);
+    console.log('[customer-family-members] Success:', requestBody.action);
 
     return new Response(
       JSON.stringify(responseData),

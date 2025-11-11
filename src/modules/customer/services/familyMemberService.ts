@@ -95,16 +95,14 @@ export class FamilyMemberService {
       body: {
         action: 'rename',
         customer_sdt: customerPhone,
-        nguoi_than: {
-          ten_cu,
-          ten_moi
-        }
+        ten_cu,      // ✅ Root level (not inside nguoi_than)
+        ten_moi      // ✅ Root level (not inside nguoi_than)
       }
     });
 
     if (error) throw new Error(error.message);
     if (!result.success) throw new Error(result.error_description || 'Failed to rename family member');
-    
+
     return result.data.family_member;
   }
 
@@ -177,7 +175,7 @@ export class FamilyMemberService {
   static async assignBills(
     customerPhone: string,
     ten: string,
-    billCodes: string[] // Array of invoice codes ["HD265426", "HD265411"]
+    billIds: number[] // ✅ Array of invoice IDs (numbers) [12345, 67890]
   ): Promise<FamilyMember> {
     const { data: result, error } = await supabase.functions.invoke(this.ENDPOINT, {
       body: {
@@ -185,14 +183,14 @@ export class FamilyMemberService {
         customer_sdt: customerPhone,
         nguoi_than: {
           ten,
-          hoadon_ids: billCodes // API expects "hoadon_ids" as string array
+          hoadon_ids: billIds // ✅ API expects array of numbers
         }
       }
     });
 
     if (error) throw new Error(error.message);
     if (!result.success) throw new Error(result.error_description || 'Failed to assign bills');
-    
+
     return result.data.family_member;
   }
 
@@ -200,7 +198,7 @@ export class FamilyMemberService {
   static async unassignBill(
     customerPhone: string,
     ten: string,
-    billCode: string // Single invoice code "HD265426"
+    billId: number // ✅ Single invoice ID (number) 12345
   ): Promise<FamilyMember> {
     const { data: result, error } = await supabase.functions.invoke(this.ENDPOINT, {
       body: {
@@ -208,14 +206,14 @@ export class FamilyMemberService {
         customer_sdt: customerPhone,
         nguoi_than: {
           ten,
-          hoadon_id: billCode // API expects "hoadon_id" as string (not array)
+          hoadon_id: billId // ✅ API expects number
         }
       }
     });
 
     if (error) throw new Error(error.message);
     if (!result.success) throw new Error(result.error_description || 'Failed to unassign bill');
-    
+
     return result.data.family_member;
   }
 }

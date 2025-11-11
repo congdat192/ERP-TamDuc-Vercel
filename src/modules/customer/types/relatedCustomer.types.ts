@@ -73,6 +73,7 @@ export interface RelatedAvatar {
 export interface RelatedInvoice {
   id: string;
   related_id: string;
+  invoice_id: number;      // ✅ Invoice ID from External API (hoadon_id)
   invoice_code: string;
   invoice_date: string;
   total_amount: number;
