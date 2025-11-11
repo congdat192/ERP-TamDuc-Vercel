@@ -27,18 +27,18 @@ export function RelatedInvoicesList({
     setIsLoading(false);
   }, [relatedCustomer]);
 
-  const handleUnassign = async (invoiceCode: string) => {
+  const handleUnassign = async (invoiceId: number, invoiceCode: string) => {
     const confirmed = window.confirm(
       `Bạn có chắc chắn muốn bỏ gán hóa đơn "${invoiceCode}"?`
     );
     if (!confirmed) return;
 
     try {
-      // Call API with invoice code (string)
+      // ✅ Call API with invoice ID (number)
       await FamilyMemberService.unassignBill(
         customer.phone,
         relatedCustomer.related_name,
-        invoiceCode
+        invoiceId
       );
 
       toast({
@@ -142,7 +142,7 @@ export function RelatedInvoicesList({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleUnassign(invoice.invoice_code)}
+                  onClick={() => handleUnassign(invoice.invoice_id, invoice.invoice_code)}
                   className="text-destructive hover:text-destructive hover:bg-destructive/10"
                 >
                   <Trash2 className="w-4 h-4" />

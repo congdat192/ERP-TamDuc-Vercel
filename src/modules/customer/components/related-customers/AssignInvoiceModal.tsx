@@ -27,7 +27,7 @@ export function AssignInvoiceModal({
   onSuccess 
 }: AssignInvoiceModalProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedInvoices, setSelectedInvoices] = useState<string[]>([]);
+  const [selectedInvoiceIds, setSelectedInvoiceIds] = useState<number[]>([]); // ✅ Use IDs (numbers)
   const [isLoading, setIsLoading] = useState(false);
   const [allInvoices, setAllInvoices] = useState<Invoice[]>([]);
   const [availableInvoices, setAvailableInvoices] = useState<Invoice[]>([]);
@@ -83,11 +83,11 @@ export function AssignInvoiceModal({
     invoice.details.some(d => d.productname.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const toggleInvoice = (code: string) => {
-    setSelectedInvoices(prev => 
-      prev.includes(code) 
-        ? prev.filter(c => c !== code)
-        : [...prev, code]
+  const toggleInvoice = (id: number) => {
+    setSelectedInvoiceIds(prev =>
+      prev.includes(id)
+        ? prev.filter(i => i !== id)
+        : [...prev, id]
     );
   };
 
@@ -103,7 +103,7 @@ export function AssignInvoiceModal({
   };
 
   const handleAssign = async () => {
-    if (selectedInvoices.length === 0) {
+    if (selectedInvoiceIds.length === 0) {
       toast({
         title: '⚠️ Chưa chọn hóa đơn',
         description: 'Vui lòng chọn ít nhất 1 hóa đơn',
@@ -114,20 +114,20 @@ export function AssignInvoiceModal({
 
     setIsLoading(true);
     try {
-      // Call API with array of invoice codes (strings)
+      // ✅ Call API with array of invoice IDs (numbers)
       await FamilyMemberService.assignBills(
         customer.phone,
         related.related_name,
-        selectedInvoices
+        selectedInvoiceIds
       );
 
       toast({
         title: '✅ Thành công',
-        description: `Đã gán ${selectedInvoices.length} hóa đơn cho ${related.related_name}`
+        description: `Đã gán ${selectedInvoiceIds.length} hóa đơn cho ${related.related_name}`
       });
 
       // Reset form
-      setSelectedInvoices([]);
+      setSelectedInvoiceIds([]);
       setSearchTerm('');
       onSuccess();
       onOpenChange(false);
@@ -144,7 +144,7 @@ export function AssignInvoiceModal({
   };
 
   const totalSelected = allInvoices
-    .filter(inv => selectedInvoices.includes(inv.code))
+    .filter(inv => selectedInvoiceIds.includes(inv.id))
     .reduce((sum, inv) => sum + inv.total, 0);
 
   return (
@@ -180,14 +180,14 @@ export function AssignInvoiceModal({
               </div>
             ) : (
               filteredInvoices.map((invoice) => (
-                <div 
-                  key={invoice.code}
+                <div
+                  key={invoice.id}
                   className="flex items-start gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-                  onClick={() => toggleInvoice(invoice.code)}
+                  onClick={() => toggleInvoice(invoice.id)}
                 >
-                  <Checkbox 
-                    checked={selectedInvoices.includes(invoice.code)}
-                    onCheckedChange={() => toggleInvoice(invoice.code)}
+                  <Checkbox
+                    checked={selectedInvoiceIds.includes(invoice.id)}
+                    onCheckedChange={() => toggleInvoice(invoice.id)}
                   />
                   <div className="flex-1">
                     <div className="font-medium">{invoice.code}</div>
@@ -210,11 +210,11 @@ export function AssignInvoiceModal({
           </div>
 
           {/* Summary */}
-          {selectedInvoices.length > 0 && (
+          {selectedInvoiceIds.length > 0 && (
             <div className="border-t pt-3 space-y-1">
               <div className="flex justify-between text-sm">
                 <span>Đã chọn:</span>
-                <span className="font-medium">{selectedInvoices.length} hóa đơn</span>
+                <span className="font-medium">{selectedInvoiceIds.length} hóa đơn</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>Tổng giá trị:</span>
@@ -225,19 +225,19 @@ export function AssignInvoiceModal({
         </div>
 
         <DialogFooter>
-          <Button 
-            type="button" 
-            variant="outline" 
+          <Button
+            type="button"
+            variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
           >
             Hủy
           </Button>
-          <Button 
+          <Button
             onClick={handleAssign}
-            disabled={isLoading || selectedInvoices.length === 0}
+            disabled={isLoading || selectedInvoiceIds.length === 0}
           >
-            {isLoading ? 'Đang gán...' : `💾 Gán ${selectedInvoices.length} hóa đơn`}
+            {isLoading ? 'Đang gán...' : `💾 Gán ${selectedInvoiceIds.length} hóa đơn`}
           </Button>
         </DialogFooter>
       </DialogContent>

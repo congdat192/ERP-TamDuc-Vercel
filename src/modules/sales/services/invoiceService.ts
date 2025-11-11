@@ -13,6 +13,7 @@ export interface InvoiceDetail {
 }
 
 export interface Invoice {
+  id: number;          // ✅ Invoice ID (required for assign_bills API)
   code: string;
   createddate: string;
   soldbyname: string;
