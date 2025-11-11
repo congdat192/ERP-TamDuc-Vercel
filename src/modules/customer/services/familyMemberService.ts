@@ -23,72 +23,36 @@ export class FamilyMemberService {
 
   /**
    * Helper: Parse error from Supabase Functions response
-   * Extracts detailed error information for better user feedback
+   * Edge function always returns 200 OK with success: false on errors
+   * This ensures response body is parsed into result, not swallowed by SDK
    */
   private static parseError(error: any, result: any, action: string): string {
-    console.error(`[FamilyMemberService] ${action} ERROR FULL DUMP:`, {
-      error,
-      result,
-      errorKeys: error ? Object.keys(error) : [],
-      errorName: error?.name,
-      errorMessage: error?.message,
-      errorContext: error?.context,
-      errorDetails: error?.details,
-      resultKeys: result ? Object.keys(result) : []
-    });
+    // Log for debugging
+    console.error(`[FamilyMemberService] ${action} failed:`, { error, result });
 
-    // 1. Check if result has error details (from API response)
+    // 1. Extract error message from result (edge function always returns 200 with success: false)
     if (result) {
-      if (!result.success && result.error_description) {
-        console.log(`[FamilyMemberService] Using result.error_description:`, result.error_description);
+      // Prioritize error_description (Vietnamese message)
+      if (result.error_description) {
         return result.error_description;
       }
-      if (!result.success && result.error) {
-        const errorMsg = typeof result.error === 'string' ? result.error : JSON.stringify(result.error);
-        console.log(`[FamilyMemberService] Using result.error:`, errorMsg);
-        return errorMsg;
+
+      // Fallback to error field
+      if (result.error) {
+        return typeof result.error === 'string' ? result.error : JSON.stringify(result.error);
       }
+
+      // Log additional details if available
       if (result.details) {
         console.error(`[FamilyMemberService] ${action} details:`, result.details);
       }
     }
 
-    // 2. Parse FunctionInvokeError (from Supabase SDK)
+    // 2. Handle SDK-level errors (network, timeout, etc.)
     if (error) {
-      // Log all error properties
-      console.log(`[FamilyMemberService] Error object inspection:`, {
-        hasContext: !!error.context,
-        hasDetails: !!error.details,
-        hasMessage: !!error.message,
-        constructor: error.constructor?.name,
-        stringified: JSON.stringify(error, null, 2)
-      });
-
-      // Check if error.context contains response body
-      if (error.context) {
-        try {
-          const contextData = typeof error.context === 'string'
-            ? JSON.parse(error.context)
-            : error.context;
-
-          console.log(`[FamilyMemberService] Parsed error.context:`, contextData);
-
-          if (contextData.error_description) {
-            return contextData.error_description;
-          }
-          if (contextData.error) {
-            return typeof contextData.error === 'string'
-              ? contextData.error
-              : JSON.stringify(contextData.error);
-          }
-        } catch (e) {
-          console.error('[FamilyMemberService] Failed to parse error.context:', e);
-        }
-      }
-
-      // Return error message directly
-      if (error.message && error.message !== 'Edge Function returned a non-2xx status code') {
-        return error.message;
+      console.error(`[FamilyMemberService] ${action} SDK error:`, error);
+      if (error.message) {
+        return `Lỗi kết nối: ${error.message}`;
       }
     }
 

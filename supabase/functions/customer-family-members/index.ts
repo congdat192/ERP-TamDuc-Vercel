@@ -54,13 +54,15 @@ serve(async (req) => {
 
     // Validate required fields according to API spec
     if (!requestBody.action || !requestBody.customer_sdt) {
+      // ⚠️ IMPORTANT: Return 200 OK with success: false to avoid SDK swallowing response
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'Missing required fields: action and customer_sdt'
+          error: 'Missing required fields: action and customer_sdt',
+          error_description: 'Thiếu trường bắt buộc: action và customer_sdt'
         }),
         {
-          status: 400,
+          status: 200, // ✅ Changed from 400 to 200
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
@@ -88,6 +90,8 @@ serve(async (req) => {
 
     if (!externalResponse.ok) {
       console.error('[customer-family-members] External API error:', responseData);
+      // ⚠️ IMPORTANT: Always return 200 OK to avoid Supabase SDK swallowing response body
+      // Frontend will check success: false to determine error
       return new Response(
         JSON.stringify({
           success: false,
@@ -96,7 +100,7 @@ serve(async (req) => {
           details: responseData
         }),
         {
-          status: externalResponse.status,
+          status: 200, // ✅ Changed from externalResponse.status to 200
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
@@ -113,14 +117,16 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('[customer-family-members] Error:', error);
+    // ⚠️ IMPORTANT: Return 200 OK with success: false to avoid SDK swallowing response
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error.message 
+      JSON.stringify({
+        success: false,
+        error: error.message,
+        error_description: error.message
       }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      {
+        status: 200, // ✅ Changed from 500 to 200
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }
