@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Trash2, FileText } from 'lucide-react';
 import { RelatedInvoice } from '../../types/relatedCustomer.types';
-import { FamilyMemberService } from '../../services/familyMemberService';
+import { FamilyMemberService, APIResponse } from '../../services/familyMemberService';
 import { toast } from '@/hooks/use-toast';
 
 interface RelatedInvoicesListProps {
@@ -35,31 +35,45 @@ export function RelatedInvoicesList({
 
     try {
       // ✅ Call API with invoice ID (number)
-      await FamilyMemberService.unassignBill(
+      const response: APIResponse = await FamilyMemberService.unassignBill(
         customer.phone,
         relatedCustomer.related_name,
         invoiceId
       );
 
+      // ✅ CHECK response.success FIELD FIRST
+      if (!response.success) {
+        console.error('[RelatedInvoicesList] Unassign bill failed:', response);
+        console.error('[RelatedInvoicesList] Request ID:', response.meta.request_id);
+
+        toast({
+          title: '❌ Lỗi',
+          description: response.error_description,
+          variant: 'destructive',
+          duration: 5000
+        });
+        return;
+      }
+
+      // ✅ SUCCESS: Display message NGUYÊN VĂN
+      console.log('[RelatedInvoicesList] Success:', response);
+      console.log('[RelatedInvoicesList] Request ID:', response.meta.request_id);
+
       toast({
         title: '✅ Thành công',
-        description: 'Đã bỏ gán hóa đơn'
+        description: response.message
       });
-      
+
       onUpdate?.();
     } catch (error: any) {
-      console.error('[RelatedInvoicesList] Error unassigning bill:', error);
-      console.error('[RelatedInvoicesList] Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
+      // Network error hoặc unexpected error
+      console.error('[RelatedInvoicesList] Unexpected error:', error);
 
       toast({
         title: '❌ Lỗi',
-        description: error.message || 'Không thể bỏ gán hóa đơn. Vui lòng thử lại.',
+        description: 'Không thể kết nối đến server. Vui lòng thử lại.',
         variant: 'destructive',
-        duration: 5000 // Show error longer for user to read
+        duration: 5000
       });
     }
   };

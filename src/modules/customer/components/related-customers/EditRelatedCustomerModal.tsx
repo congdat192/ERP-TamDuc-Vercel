@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
 import { RelatedCustomer, UpdateRelatedCustomerData, RELATIONSHIP_LABELS, RelationshipType } from '../../types/relatedCustomer.types';
-import { FamilyMemberService } from '../../services/familyMemberService';
+import { FamilyMemberService, APIResponse } from '../../services/familyMemberService';
 import { RelatedAvatarGallery } from './RelatedAvatarGallery';
 import { toast } from '@/components/ui/use-toast';
 
@@ -64,62 +64,95 @@ export function EditRelatedCustomerModal({
     try {
       const customerPhone = related.customer_phone;
       const newName = formData.related_name.trim();
+      let lastResponse: APIResponse | null = null;
 
       // Step 1: Nếu đổi tên → Call RENAME trước
       if (newName !== originalName) {
-        await FamilyMemberService.renameFamilyMember(customerPhone, originalName, newName);
+        const renameResponse = await FamilyMemberService.renameFamilyMember(customerPhone, originalName, newName);
+
+        if (!renameResponse.success) {
+          console.error('[EditRelatedCustomerModal] Rename failed:', renameResponse);
+          console.error('[EditRelatedCustomerModal] Request ID:', renameResponse.meta.request_id);
+
+          toast({
+            title: '❌ Lỗi',
+            description: renameResponse.error_description,
+            variant: 'destructive',
+            duration: 5000
+          });
+          return;
+        }
+
+        lastResponse = renameResponse;
       }
 
       // Step 2: Cập nhật các field khác (chỉ gửi field đã thay đổi)
       const updates: any = {};
-      
+
       if (formData.relationship_type !== related.relationship_type) {
         updates.moi_quan_he = formData.relationship_type;
       }
-      
+
       const apiGender = formData.gender === 'Nam' ? 'nam' : 'nu';
       const currentGender = related.gender === 'Nam' ? 'nam' : 'nu';
       if (apiGender !== currentGender) {
         updates.gioi_tinh = apiGender;
       }
-      
+
       if (formData.birth_date !== related.birth_date) {
         updates.ngay_sinh = formData.birth_date || '';
       }
-      
+
       if (formData.phone !== related.phone) {
         updates.sdt = formData.phone || '';
       }
-      
+
       if (formData.notes !== related.notes) {
         updates.ghi_chu = formData.notes || '';
       }
 
       // Chỉ call UPDATE nếu có thay đổi
       if (Object.keys(updates).length > 0) {
-        await FamilyMemberService.updateFamilyMember(customerPhone, newName, updates);
+        const updateResponse = await FamilyMemberService.updateFamilyMember(customerPhone, newName, updates);
+
+        if (!updateResponse.success) {
+          console.error('[EditRelatedCustomerModal] Update failed:', updateResponse);
+          console.error('[EditRelatedCustomerModal] Request ID:', updateResponse.meta.request_id);
+
+          toast({
+            title: '❌ Lỗi',
+            description: updateResponse.error_description,
+            variant: 'destructive',
+            duration: 5000
+          });
+          return;
+        }
+
+        lastResponse = updateResponse;
+      }
+
+      // ✅ SUCCESS: Hiển thị message từ response cuối cùng
+      console.log('[EditRelatedCustomerModal] Success:', lastResponse);
+      if (lastResponse) {
+        console.log('[EditRelatedCustomerModal] Request ID:', lastResponse.meta.request_id);
       }
 
       toast({
         title: '✅ Thành công',
-        description: 'Đã cập nhật thông tin người thân'
+        description: lastResponse?.success ? lastResponse.message : 'Đã cập nhật thông tin người thân'
       });
-      
+
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
-      console.error('[EditRelatedCustomerModal] Error updating family member:', error);
-      console.error('[EditRelatedCustomerModal] Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
+      // Network error hoặc unexpected error
+      console.error('[EditRelatedCustomerModal] Unexpected error:', error);
 
       toast({
         title: '❌ Lỗi',
-        description: error.message || 'Không thể cập nhật thông tin. Vui lòng thử lại.',
+        description: 'Không thể kết nối đến server. Vui lòng thử lại.',
         variant: 'destructive',
-        duration: 5000 // Show error longer for user to read
+        duration: 5000
       });
     } finally {
       setIsLoading(false);

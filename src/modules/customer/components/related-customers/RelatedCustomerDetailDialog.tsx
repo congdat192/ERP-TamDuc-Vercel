@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Edit2, Trash2, Calendar, Phone, User, Hash } from 'lucide-react';
 import { RelatedCustomer } from '../../types/relatedCustomer.types';
 import { RELATIONSHIP_LABELS, RELATIONSHIP_ICONS } from '../../types/relatedCustomer.types';
-import { FamilyMemberService } from '../../services/familyMemberService';
+import { FamilyMemberService, APIResponse } from '../../services/familyMemberService';
 import { RelatedAvatarGallery } from './RelatedAvatarGallery';
 import { EditRelatedCustomerModal } from './EditRelatedCustomerModal';
 import { AssignInvoiceModal } from './AssignInvoiceModal';
@@ -47,33 +47,47 @@ export function RelatedCustomerDetailDialog({
       `Bạn có chắc chắn muốn xóa người thân "${related.related_name}"?\n\n` +
       `⚠️ Cảnh báo: Tất cả ảnh và hóa đơn của người thân này cũng sẽ bị xóa!`
     );
-    
+
     if (!confirmed) return;
-    
+
     setIsDeleting(true);
     try {
-      await FamilyMemberService.deleteFamilyMember(customer.phone, related.related_name);
-      
-      toast({ 
-        title: '✅ Thành công', 
-        description: 'Đã xóa người thân khỏi hệ thống' 
+      const response: APIResponse = await FamilyMemberService.deleteFamilyMember(customer.phone, related.related_name);
+
+      // ✅ CHECK response.success FIELD FIRST
+      if (!response.success) {
+        console.error('[RelatedCustomerDetailDialog] Delete failed:', response);
+        console.error('[RelatedCustomerDetailDialog] Request ID:', response.meta.request_id);
+
+        toast({
+          title: '❌ Lỗi',
+          description: response.error_description,
+          variant: 'destructive',
+          duration: 5000
+        });
+        return;
+      }
+
+      // ✅ SUCCESS: Display message NGUYÊN VĂN
+      console.log('[RelatedCustomerDetailDialog] Success:', response);
+      console.log('[RelatedCustomerDetailDialog] Request ID:', response.meta.request_id);
+
+      toast({
+        title: '✅ Thành công',
+        description: response.message
       });
-      
+
       onUpdate();
       onOpenChange(false);
     } catch (error: any) {
-      console.error('[RelatedCustomerDetailDialog] Error deleting family member:', error);
-      console.error('[RelatedCustomerDetailDialog] Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
+      // Network error hoặc unexpected error
+      console.error('[RelatedCustomerDetailDialog] Unexpected error:', error);
 
       toast({
         title: '❌ Lỗi',
-        description: error.message || 'Không thể xóa người thân. Vui lòng thử lại.',
+        description: 'Không thể kết nối đến server. Vui lòng thử lại.',
         variant: 'destructive',
-        duration: 5000 // Show error longer for user to read
+        duration: 5000
       });
     } finally {
       setIsDeleting(false);
