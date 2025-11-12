@@ -114,11 +114,20 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('[customer-family-members] Error:', error);
+    
+    const errorMessage = error instanceof Error 
+      ? error.message 
+      : 'An unexpected error occurred';
+    
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
-        error_description: error.message
+        error: 'Internal server error',
+        error_description: errorMessage,
+        meta: {
+          request_id: crypto.randomUUID(),
+          duration_ms: 0
+        }
       }),
       {
         status: 500,

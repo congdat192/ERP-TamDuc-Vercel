@@ -317,6 +317,7 @@ export class MockRelatedCustomerAPI {
       related.invoices.push({
         id: `inv_${Date.now()}`,
         related_id: relatedId,
+        invoice_id: Math.floor(Math.random() * 100000),
         invoice_code: invoiceData.invoice_code,
         invoice_date: invoiceData.invoice_date,
         total_amount: invoiceData.total_amount,
