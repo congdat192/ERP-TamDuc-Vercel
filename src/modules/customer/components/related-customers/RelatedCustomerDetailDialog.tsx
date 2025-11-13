@@ -57,7 +57,7 @@ export function RelatedCustomerDetailDialog({
       // ✅ CHECK response.success FIELD FIRST
       if (!response.success) {
         console.error('[RelatedCustomerDetailDialog] Delete failed:', response);
-        console.error('[RelatedCustomerDetailDialog] Request ID:', response.meta.request_id);
+        console.error('[RelatedCustomerDetailDialog] Request ID:', response.meta?.request_id);
 
         toast({
           title: '❌ Lỗi',
@@ -70,7 +70,7 @@ export function RelatedCustomerDetailDialog({
 
       // ✅ SUCCESS: Display message NGUYÊN VĂN
       console.log('[RelatedCustomerDetailDialog] Success:', response);
-      console.log('[RelatedCustomerDetailDialog] Request ID:', response.meta.request_id);
+      console.log('[RelatedCustomerDetailDialog] Request ID:', response.meta?.request_id);
 
       toast({
         title: '✅ Thành công',

@@ -63,7 +63,7 @@ export class FamilyMemberService {
    * When edge function returns non-2xx status, SDK throws FunctionsHttpError with response in error.context
    * We need to extract the full response body from error.context
    */
-  private static parseResponse(data: any, error: any): APIResponse {
+  private static async parseResponse(data: any, error: any): Promise<APIResponse> {
     // Case 1: No error from SDK - response is in data (status 200)
     if (!error && data) {
       console.log('[FamilyMemberService] Success response:', data);
@@ -75,12 +75,23 @@ export class FamilyMemberService {
     if (error?.context) {
       console.log('[FamilyMemberService] Error response from context:', error.context);
       try {
-        const errorResponse = typeof error.context === 'string'
-          ? JSON.parse(error.context)
-          : error.context;
+        let errorResponse;
+
+        // Check if context is a Response object (needs to be parsed)
+        if (error.context instanceof Response) {
+          console.log('[FamilyMemberService] Context is Response object, parsing...');
+          const text = await error.context.text();
+          errorResponse = JSON.parse(text);
+        } else if (typeof error.context === 'string') {
+          errorResponse = JSON.parse(error.context);
+        } else {
+          errorResponse = error.context;
+        }
+
+        console.log('[FamilyMemberService] Parsed error response:', errorResponse);
         return errorResponse as APIErrorResponse;
       } catch (e) {
-        console.error('[FamilyMemberService] Failed to parse error.context:', e);
+        console.error('[FamilyMemberService] Failed to parse error.context:', e, error.context);
       }
     }
 

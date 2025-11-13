@@ -44,7 +44,7 @@ export function RelatedInvoicesList({
       // ✅ CHECK response.success FIELD FIRST
       if (!response.success) {
         console.error('[RelatedInvoicesList] Unassign bill failed:', response);
-        console.error('[RelatedInvoicesList] Request ID:', response.meta.request_id);
+        console.error('[RelatedInvoicesList] Request ID:', response.meta?.request_id);
 
         toast({
           title: '❌ Lỗi',
@@ -57,7 +57,7 @@ export function RelatedInvoicesList({
 
       // ✅ SUCCESS: Display message NGUYÊN VĂN
       console.log('[RelatedInvoicesList] Success:', response);
-      console.log('[RelatedInvoicesList] Request ID:', response.meta.request_id);
+      console.log('[RelatedInvoicesList] Request ID:', response.meta?.request_id);
 
       toast({
         title: '✅ Thành công',

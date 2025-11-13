@@ -72,7 +72,7 @@ export function EditRelatedCustomerModal({
 
         if (!renameResponse.success) {
           console.error('[EditRelatedCustomerModal] Rename failed:', renameResponse);
-          console.error('[EditRelatedCustomerModal] Request ID:', renameResponse.meta.request_id);
+          console.error('[EditRelatedCustomerModal] Request ID:', renameResponse.meta?.request_id);
 
           toast({
             title: '❌ Lỗi',
@@ -117,7 +117,7 @@ export function EditRelatedCustomerModal({
 
         if (!updateResponse.success) {
           console.error('[EditRelatedCustomerModal] Update failed:', updateResponse);
-          console.error('[EditRelatedCustomerModal] Request ID:', updateResponse.meta.request_id);
+          console.error('[EditRelatedCustomerModal] Request ID:', updateResponse.meta?.request_id);
 
           toast({
             title: '❌ Lỗi',
@@ -134,7 +134,7 @@ export function EditRelatedCustomerModal({
       // ✅ SUCCESS: Hiển thị message từ response cuối cùng
       console.log('[EditRelatedCustomerModal] Success:', lastResponse);
       if (lastResponse) {
-        console.log('[EditRelatedCustomerModal] Request ID:', lastResponse.meta.request_id);
+        console.log('[EditRelatedCustomerModal] Request ID:', lastResponse.meta?.request_id);
       }
 
       toast({

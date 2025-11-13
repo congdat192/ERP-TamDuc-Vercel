@@ -183,7 +183,7 @@ export function AddRelatedCustomerModal({
       if (!response.success) {
         // ❌ ERROR: Display error_description NGUYÊN VĂN
         console.error('[AddRelatedCustomerModal] API Error:', response);
-        console.error('[AddRelatedCustomerModal] Request ID:', response.meta.request_id);
+        console.error('[AddRelatedCustomerModal] Request ID:', response.meta?.request_id);
 
         toast({
           title: '❌ Lỗi',
@@ -196,7 +196,7 @@ export function AddRelatedCustomerModal({
 
       // ✅ SUCCESS: Display message NGUYÊN VĂN
       console.log('[AddRelatedCustomerModal] Success:', response);
-      console.log('[AddRelatedCustomerModal] Request ID:', response.meta.request_id);
+      console.log('[AddRelatedCustomerModal] Request ID:', response.meta?.request_id);
 
       toast({
         title: '✅ Thành công',
