@@ -122,7 +122,7 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
         // ✅ CHECK response.success FIELD FIRST
         if (!response.success) {
           console.error('[RelatedAvatarGallery] Add images failed:', response);
-          console.error('[RelatedAvatarGallery] Request ID:', response.meta.request_id);
+          console.error('[RelatedAvatarGallery] Request ID:', response.meta?.request_id);
 
           toast({
             title: '❌ Lỗi',
@@ -135,7 +135,7 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
 
         // ✅ SUCCESS: Display message NGUYÊN VĂN
         console.log('[RelatedAvatarGallery] Success:', response);
-        console.log('[RelatedAvatarGallery] Request ID:', response.meta.request_id);
+        console.log('[RelatedAvatarGallery] Request ID:', response.meta?.request_id);
 
         toast({
           title: '✅ Thành công',
@@ -182,7 +182,7 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
       // ✅ CHECK response.success FIELD FIRST
       if (!response.success) {
         console.error('[RelatedAvatarGallery] Delete image failed:', response);
-        console.error('[RelatedAvatarGallery] Request ID:', response.meta.request_id);
+        console.error('[RelatedAvatarGallery] Request ID:', response.meta?.request_id);
 
         toast({
           title: '❌ Lỗi',
@@ -210,7 +210,7 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
 
       // ✅ SUCCESS: Display message NGUYÊN VĂN
       console.log('[RelatedAvatarGallery] Success:', response);
-      console.log('[RelatedAvatarGallery] Request ID:', response.meta.request_id);
+      console.log('[RelatedAvatarGallery] Request ID:', response.meta?.request_id);
 
       toast({
         title: '✅ Thành công',

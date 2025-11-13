@@ -131,7 +131,7 @@ export function AssignInvoiceModal({
       // ✅ CHECK response.success FIELD FIRST
       if (!response.success) {
         console.error('[AssignInvoiceModal] Assign bills failed:', response);
-        console.error('[AssignInvoiceModal] Request ID:', response.meta.request_id);
+        console.error('[AssignInvoiceModal] Request ID:', response.meta?.request_id);
 
         toast({
           title: '❌ Lỗi',
@@ -144,7 +144,7 @@ export function AssignInvoiceModal({
 
       // ✅ SUCCESS: Display message NGUYÊN VĂN
       console.log('[AssignInvoiceModal] Success:', response);
-      console.log('[AssignInvoiceModal] Request ID:', response.meta.request_id);
+      console.log('[AssignInvoiceModal] Request ID:', response.meta?.request_id);
 
       toast({
         title: '✅ Thành công',
