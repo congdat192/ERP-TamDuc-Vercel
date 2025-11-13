@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RelatedCustomer } from '../../types/relatedCustomer.types';
-import { FamilyMemberService } from '../../services/familyMemberService';
+import { FamilyMemberService, APIResponse } from '../../services/familyMemberService';
 import { fetchInvoicesByPhone, Invoice } from '@/modules/sales/services/invoiceService';
 import { toast } from '@/hooks/use-toast';
 import { Search } from 'lucide-react';
@@ -122,15 +122,33 @@ export function AssignInvoiceModal({
     setIsLoading(true);
     try {
       // ✅ Call API with array of invoice IDs (numbers)
-      await FamilyMemberService.assignBills(
+      const response: APIResponse = await FamilyMemberService.assignBills(
         customer.phone,
         related.related_name,
         selectedInvoiceIds
       );
 
+      // ✅ CHECK response.success FIELD FIRST
+      if (!response.success) {
+        console.error('[AssignInvoiceModal] Assign bills failed:', response);
+        console.error('[AssignInvoiceModal] Request ID:', response.meta.request_id);
+
+        toast({
+          title: '❌ Lỗi',
+          description: response.error_description,
+          variant: 'destructive',
+          duration: 5000
+        });
+        return;
+      }
+
+      // ✅ SUCCESS: Display message NGUYÊN VĂN
+      console.log('[AssignInvoiceModal] Success:', response);
+      console.log('[AssignInvoiceModal] Request ID:', response.meta.request_id);
+
       toast({
         title: '✅ Thành công',
-        description: `Đã gán ${selectedInvoiceIds.length} hóa đơn cho ${related.related_name}`
+        description: response.message
       });
 
       // Reset form
@@ -139,18 +157,14 @@ export function AssignInvoiceModal({
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
-      console.error('[AssignInvoiceModal] Error assigning bills:', error);
-      console.error('[AssignInvoiceModal] Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
+      // Network error hoặc unexpected error
+      console.error('[AssignInvoiceModal] Unexpected error:', error);
 
       toast({
         title: '❌ Lỗi',
-        description: error.message || 'Không thể gán hóa đơn. Vui lòng thử lại.',
+        description: 'Không thể kết nối đến server. Vui lòng thử lại.',
         variant: 'destructive',
-        duration: 5000 // Show error longer for user to read
+        duration: 5000
       });
     } finally {
       setIsLoading(false);

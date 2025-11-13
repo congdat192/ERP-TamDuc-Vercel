@@ -7,80 +7,94 @@
 import { supabase } from '@/integrations/supabase/client';
 import { FamilyMember } from './customerService';
 
+// ============================================================
+// TypeScript Types - MUST MATCH API SPEC EXACTLY
+// ============================================================
+
+export type MoiQuanHe = "con_cai" | "vo_chong" | "anh_chi_em" | "ong_ba" | "khac";
+export type GioiTinh = "nam" | "nu";
+
+export interface APIFamilyMember {
+  ten: string;
+  moi_quan_he: MoiQuanHe;
+  gioi_tinh: GioiTinh;
+  ngay_sinh: string | null;
+  sdt: string | null;
+  ghi_chu: string | null;
+  hinh_anh: string[];
+  bills: Array<{ hoadon_id: number; code: string }>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface APISuccessResponse {
+  success: true;
+  message: string;
+  data: {
+    customer_sdt: string;
+    customer_code: string;
+    family_member: APIFamilyMember;
+  };
+  meta: {
+    request_id: string;
+    duration_ms: number;
+    permission_type: "rbac" | "legacy";
+  };
+}
+
+export interface APIErrorResponse {
+  success: false;
+  error: string;
+  error_description: string;
+  meta: {
+    request_id: string;
+    duration_ms: number;
+  };
+}
+
+export type APIResponse = APISuccessResponse | APIErrorResponse;
+
 export class FamilyMemberService {
   // Base endpoint
   private static readonly ENDPOINT = 'customer-family-members';
 
   /**
-   * Helper: Get OAuth token (reuse existing pattern from other edge functions)
+   * Helper: Parse response from Supabase SDK
+   * When edge function returns non-2xx status, SDK throws FunctionsHttpError with response in error.context
+   * We need to extract the full response body from error.context
    */
-  private static async getAuthHeaders(): Promise<HeadersInit> {
-    // Token is handled automatically by supabase.functions.invoke
+  private static parseResponse(data: any, error: any): APIResponse {
+    // Case 1: No error from SDK - response is in data (status 200)
+    if (!error && data) {
+      console.log('[FamilyMemberService] Success response:', data);
+      return data as APIResponse;
+    }
+
+    // Case 2: SDK threw error (non-2xx status)
+    // Response body is in error.context
+    if (error?.context) {
+      console.log('[FamilyMemberService] Error response from context:', error.context);
+      try {
+        const errorResponse = typeof error.context === 'string'
+          ? JSON.parse(error.context)
+          : error.context;
+        return errorResponse as APIErrorResponse;
+      } catch (e) {
+        console.error('[FamilyMemberService] Failed to parse error.context:', e);
+      }
+    }
+
+    // Case 3: Network error or unexpected error
+    console.error('[FamilyMemberService] Unexpected error:', error);
     return {
-      'Content-Type': 'application/json'
+      success: false,
+      error: 'Network error',
+      error_description: error?.message || 'Không thể kết nối đến server',
+      meta: {
+        request_id: 'unknown',
+        duration_ms: 0
+      }
     };
-  }
-
-  /**
-   * Helper: Parse error from Supabase Functions response
-   * When edge function returns non-2xx status, SDK throws FunctionsHttpError
-   * We need to extract error_description from the error object
-   */
-  private static async parseError(error: any, result: any, action: string): Promise<string> {
-    // Log full error object for debugging
-    console.error(`[FamilyMemberService] ${action} failed:`, {
-      error,
-      result,
-      errorType: error?.constructor?.name,
-      errorKeys: error ? Object.keys(error) : []
-    });
-
-    // 1. If result has data (success: false with 200 OK)
-    if (result && !result.success) {
-      if (result.error_description) {
-        return result.error_description;
-      }
-      if (result.error) {
-        return typeof result.error === 'string' ? result.error : JSON.stringify(result.error);
-      }
-    }
-
-    // 2. Handle FunctionsHttpError (non-2xx status from edge function)
-    // SDK throws error but response body might be in error.context or need to be fetched
-    if (error) {
-      // Try to parse error.context (SDK might put response body here)
-      if (error.context) {
-        try {
-          const contextData = typeof error.context === 'string'
-            ? JSON.parse(error.context)
-            : error.context;
-
-          console.log(`[FamilyMemberService] Found error.context:`, contextData);
-
-          if (contextData.error_description) {
-            return contextData.error_description;
-          }
-          if (contextData.error) {
-            return typeof contextData.error === 'string'
-              ? contextData.error
-              : JSON.stringify(contextData.error);
-          }
-        } catch (e) {
-          console.error('[FamilyMemberService] Failed to parse error.context:', e);
-        }
-      }
-
-      // Try error message (but filter out generic SDK message)
-      if (error.message && error.message !== 'Edge Function returned a non-2xx status code') {
-        return error.message;
-      }
-
-      // Last resort: Generic message with action
-      return `Không thể thực hiện ${action}. Vui lòng thử lại.`;
-    }
-
-    // 3. Fallback to generic message
-    return `Không thể thực hiện ${action}. Vui lòng thử lại hoặc liên hệ quản trị viên.`;
   }
 
   // ========== 1. ADD - Thêm người thân mới ==========
@@ -95,8 +109,8 @@ export class FamilyMemberService {
       ghi_chu?: string;
       hinh_anh?: string[]; // Array of image URLs
     }
-  ): Promise<FamilyMember> {
-    const { data: result, error } = await supabase.functions.invoke(this.ENDPOINT, {
+  ): Promise<APIResponse> {
+    const { data, error } = await supabase.functions.invoke(this.ENDPOINT, {
       body: {
         action: 'add',
         customer_sdt: customerPhone,
@@ -112,11 +126,7 @@ export class FamilyMemberService {
       }
     });
 
-    if (error || !result?.success) {
-      throw new Error(await this.parseError(error, result, 'ADD'));
-    }
-
-    return result.data.family_member;
+    return this.parseResponse(data, error);
   }
 
   // ========== 2. UPDATE - Cập nhật thông tin người thân ==========
@@ -130,8 +140,8 @@ export class FamilyMemberService {
       sdt?: string;
       ghi_chu?: string;
     }
-  ): Promise<FamilyMember> {
-    const { data: result, error } = await supabase.functions.invoke(this.ENDPOINT, {
+  ): Promise<APIResponse> {
+    const { data, error } = await supabase.functions.invoke(this.ENDPOINT, {
       body: {
         action: 'update',
         customer_sdt: customerPhone,
@@ -142,11 +152,7 @@ export class FamilyMemberService {
       }
     });
 
-    if (error || !result?.success) {
-      throw new Error(await this.parseError(error, result, 'UPDATE'));
-    }
-
-    return result.data.family_member;
+    return this.parseResponse(data, error);
   }
 
   // ========== 3. RENAME - Đổi tên người thân ==========
@@ -154,8 +160,8 @@ export class FamilyMemberService {
     customerPhone: string,
     ten_cu: string,
     ten_moi: string
-  ): Promise<FamilyMember> {
-    const { data: result, error } = await supabase.functions.invoke(this.ENDPOINT, {
+  ): Promise<APIResponse> {
+    const { data, error } = await supabase.functions.invoke(this.ENDPOINT, {
       body: {
         action: 'rename',
         customer_sdt: customerPhone,
@@ -164,19 +170,15 @@ export class FamilyMemberService {
       }
     });
 
-    if (error || !result?.success) {
-      throw new Error(await this.parseError(error, result, 'RENAME'));
-    }
-
-    return result.data.family_member;
+    return this.parseResponse(data, error);
   }
 
   // ========== 4. DELETE - Xóa người thân ==========
   static async deleteFamilyMember(
     customerPhone: string,
     ten: string
-  ): Promise<void> {
-    const { data: result, error } = await supabase.functions.invoke(this.ENDPOINT, {
+  ): Promise<APIResponse> {
+    const { data, error } = await supabase.functions.invoke(this.ENDPOINT, {
       body: {
         action: 'delete',
         customer_sdt: customerPhone,
@@ -186,9 +188,7 @@ export class FamilyMemberService {
       }
     });
 
-    if (error || !result?.success) {
-      throw new Error(await this.parseError(error, result, 'DELETE'));
-    }
+    return this.parseResponse(data, error);
   }
 
   // ========== 5. ADD_IMAGE - Thêm hình ảnh ==========
@@ -196,8 +196,8 @@ export class FamilyMemberService {
     customerPhone: string,
     ten: string,
     hinh_anh_moi: string[] // Array of URLs
-  ): Promise<FamilyMember> {
-    const { data: result, error } = await supabase.functions.invoke(this.ENDPOINT, {
+  ): Promise<APIResponse> {
+    const { data, error } = await supabase.functions.invoke(this.ENDPOINT, {
       body: {
         action: 'add_image',
         customer_sdt: customerPhone,
@@ -208,11 +208,7 @@ export class FamilyMemberService {
       }
     });
 
-    if (error || !result?.success) {
-      throw new Error(await this.parseError(error, result, 'ADD_IMAGE'));
-    }
-
-    return result.data.family_member;
+    return this.parseResponse(data, error);
   }
 
   // ========== 6. DELETE_IMAGE - Xóa hình ảnh ==========
@@ -220,8 +216,8 @@ export class FamilyMemberService {
     customerPhone: string,
     ten: string,
     image_url: string // Single URL
-  ): Promise<FamilyMember> {
-    const { data: result, error } = await supabase.functions.invoke(this.ENDPOINT, {
+  ): Promise<APIResponse> {
+    const { data, error } = await supabase.functions.invoke(this.ENDPOINT, {
       body: {
         action: 'delete_image',
         customer_sdt: customerPhone,
@@ -232,11 +228,7 @@ export class FamilyMemberService {
       }
     });
 
-    if (error || !result?.success) {
-      throw new Error(await this.parseError(error, result, 'DELETE_IMAGE'));
-    }
-
-    return result.data.family_member;
+    return this.parseResponse(data, error);
   }
 
   // ========== 7. ASSIGN_BILLS - Gán hóa đơn (nhiều hóa đơn) ==========
@@ -244,8 +236,8 @@ export class FamilyMemberService {
     customerPhone: string,
     ten: string,
     billIds: number[] // ✅ Array of invoice IDs (numbers) [12345, 67890]
-  ): Promise<FamilyMember> {
-    const { data: result, error } = await supabase.functions.invoke(this.ENDPOINT, {
+  ): Promise<APIResponse> {
+    const { data, error } = await supabase.functions.invoke(this.ENDPOINT, {
       body: {
         action: 'assign_bills',
         customer_sdt: customerPhone,
@@ -256,11 +248,7 @@ export class FamilyMemberService {
       }
     });
 
-    if (error || !result?.success) {
-      throw new Error(await this.parseError(error, result, 'ASSIGN_BILLS'));
-    }
-
-    return result.data.family_member;
+    return this.parseResponse(data, error);
   }
 
   // ========== 8. UNASSIGN_BILL - Bỏ gán 1 hóa đơn ==========
@@ -268,8 +256,8 @@ export class FamilyMemberService {
     customerPhone: string,
     ten: string,
     billId: number // ✅ Single invoice ID (number) 12345
-  ): Promise<FamilyMember> {
-    const { data: result, error } = await supabase.functions.invoke(this.ENDPOINT, {
+  ): Promise<APIResponse> {
+    const { data, error } = await supabase.functions.invoke(this.ENDPOINT, {
       body: {
         action: 'unassign_bill',
         customer_sdt: customerPhone,
@@ -280,10 +268,6 @@ export class FamilyMemberService {
       }
     });
 
-    if (error || !result?.success) {
-      throw new Error(await this.parseError(error, result, 'UNASSIGN_BILL'));
-    }
-
-    return result.data.family_member;
+    return this.parseResponse(data, error);
   }
 }

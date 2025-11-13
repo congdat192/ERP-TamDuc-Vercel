@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Upload, Star, Trash2, Image as ImageIcon, Camera } from 'lucide-react';
 import { RelatedCustomer, RelatedAvatar } from '../../types/relatedCustomer.types';
-import { FamilyMemberService } from '../../services/familyMemberService';
+import { FamilyMemberService, APIResponse } from '../../services/familyMemberService';
 import { supabase } from '@/integrations/supabase/client';
 import { externalStorageClient } from '@/integrations/supabase/externalStorageClient';
 import { toast } from '@/components/ui/use-toast';
@@ -113,32 +113,46 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
 
       // 3. Call External API to add all images at once
       if (uploadedUrls.length > 0) {
-        await FamilyMemberService.addImages(
+        const response: APIResponse = await FamilyMemberService.addImages(
           related.customer_phone,
           related.related_name,
           uploadedUrls
         );
 
+        // ✅ CHECK response.success FIELD FIRST
+        if (!response.success) {
+          console.error('[RelatedAvatarGallery] Add images failed:', response);
+          console.error('[RelatedAvatarGallery] Request ID:', response.meta.request_id);
+
+          toast({
+            title: '❌ Lỗi',
+            description: response.error_description,
+            variant: 'destructive',
+            duration: 5000
+          });
+          return;
+        }
+
+        // ✅ SUCCESS: Display message NGUYÊN VĂN
+        console.log('[RelatedAvatarGallery] Success:', response);
+        console.log('[RelatedAvatarGallery] Request ID:', response.meta.request_id);
+
         toast({
           title: '✅ Thành công',
-          description: `Đã thêm ${successCount} ảnh`
+          description: response.message
         });
-        
+
         onUpdate?.();
       }
     } catch (error: any) {
-      console.error('[RelatedAvatarGallery] Error uploading images:', error);
-      console.error('[RelatedAvatarGallery] Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
+      // Network error hoặc unexpected error
+      console.error('[RelatedAvatarGallery] Unexpected error:', error);
 
       toast({
         title: '❌ Lỗi',
-        description: error.message || 'Không thể upload ảnh. Vui lòng thử lại.',
+        description: 'Không thể kết nối đến server. Vui lòng thử lại.',
         variant: 'destructive',
-        duration: 5000 // Show error longer for user to read
+        duration: 5000
       });
     } finally {
       setIsUploading(false);
@@ -159,46 +173,60 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
       if (!avatar) throw new Error('Không tìm thấy ảnh');
 
       // 1. Call External API to remove image
-      await FamilyMemberService.deleteImage(
+      const response: APIResponse = await FamilyMemberService.deleteImage(
         related.customer_phone,
         related.related_name,
         avatar.public_url
       );
 
-      // 2. Delete from External Supabase Storage
+      // ✅ CHECK response.success FIELD FIRST
+      if (!response.success) {
+        console.error('[RelatedAvatarGallery] Delete image failed:', response);
+        console.error('[RelatedAvatarGallery] Request ID:', response.meta.request_id);
+
+        toast({
+          title: '❌ Lỗi',
+          description: response.error_description,
+          variant: 'destructive',
+          duration: 5000
+        });
+        return;
+      }
+
+      // 2. Delete from External Supabase Storage (API đã xóa rồi, nhưng đảm bảo clean up)
       const filePath = avatar.public_url.split('/').slice(-4).join('/');
-      
+
       // ✅ Dùng External Storage Client để xóa
       const { error: deleteError } = await externalStorageClient.storage
         .from('avatar_customers')
         .remove([filePath]);
 
       if (deleteError) {
-        console.error('[RelatedAvatarGallery] Delete error:', deleteError);
-        throw new Error(`Delete failed: ${deleteError.message}`);
+        console.warn('[RelatedAvatarGallery] Storage cleanup warning:', deleteError);
+        // Không throw error vì API đã xóa thành công
       }
-      
+
       console.log('[RelatedAvatarGallery] Deleted from External Storage:', filePath);
+
+      // ✅ SUCCESS: Display message NGUYÊN VĂN
+      console.log('[RelatedAvatarGallery] Success:', response);
+      console.log('[RelatedAvatarGallery] Request ID:', response.meta.request_id);
 
       toast({
         title: '✅ Thành công',
-        description: 'Đã xóa ảnh'
+        description: response.message
       });
-      
+
       onUpdate?.();
     } catch (error: any) {
-      console.error('[RelatedAvatarGallery] Error deleting image:', error);
-      console.error('[RelatedAvatarGallery] Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
+      // Network error hoặc unexpected error
+      console.error('[RelatedAvatarGallery] Unexpected error:', error);
 
       toast({
         title: '❌ Lỗi',
-        description: error.message || 'Không thể xóa ảnh. Vui lòng thử lại.',
+        description: 'Không thể kết nối đến server. Vui lòng thử lại.',
         variant: 'destructive',
-        duration: 5000 // Show error longer for user to read
+        duration: 5000
       });
     }
   };

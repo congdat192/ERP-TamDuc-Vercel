@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { FamilyMemberService } from '../../services/familyMemberService';
+import { FamilyMemberService, APIResponse } from '../../services/familyMemberService';
 import { extractCustomerInfo, RelationshipType, RELATIONSHIP_LABELS } from '../../types/relatedCustomer.types';
 import { Loader2, Upload, Trash2, Star, Camera } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -169,7 +169,7 @@ export function AddRelatedCustomerModal({
       }
 
       // 2. Call External API to add family member (with images)
-      await FamilyMemberService.addFamilyMember(customer.phone, {
+      const response: APIResponse = await FamilyMemberService.addFamilyMember(customer.phone, {
         ten: relatedName.trim(),
         moi_quan_he: relationshipType,
         gioi_tinh: gender === 'Nam' ? 'nam' : 'nu',
@@ -179,29 +179,42 @@ export function AddRelatedCustomerModal({
         hinh_anh: uploadedUrls
       });
 
+      // ✅ CHECK response.success FIELD FIRST
+      if (!response.success) {
+        // ❌ ERROR: Display error_description NGUYÊN VĂN
+        console.error('[AddRelatedCustomerModal] API Error:', response);
+        console.error('[AddRelatedCustomerModal] Request ID:', response.meta.request_id);
+
+        toast({
+          title: '❌ Lỗi',
+          description: response.error_description, // ✅ NGUYÊN VĂN từ API
+          variant: 'destructive',
+          duration: 5000
+        });
+        return; // ✅ STOP here, không reset form
+      }
+
+      // ✅ SUCCESS: Display message NGUYÊN VĂN
+      console.log('[AddRelatedCustomerModal] Success:', response);
+      console.log('[AddRelatedCustomerModal] Request ID:', response.meta.request_id);
+
       toast({
         title: '✅ Thành công',
-        description: uploadedUrls.length > 0 
-          ? `Đã thêm người thân với ${uploadedUrls.length} ảnh`
-          : 'Đã thêm người thân thành công'
+        description: response.message // ✅ NGUYÊN VĂN từ API
       });
 
       resetForm();
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
-      console.error('[AddRelatedCustomerModal] Error creating family member:', error);
-      console.error('[AddRelatedCustomerModal] Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      });
+      // Network error hoặc unexpected error
+      console.error('[AddRelatedCustomerModal] Unexpected error:', error);
 
       toast({
         title: '❌ Lỗi',
-        description: error.message || 'Không thể thêm người thân. Vui lòng thử lại.',
+        description: 'Không thể kết nối đến server. Vui lòng thử lại.',
         variant: 'destructive',
-        duration: 5000 // Show error longer for user to read
+        duration: 5000
       });
     } finally {
       setIsLoading(false);
