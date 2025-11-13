@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const EXTERNAL_API_BASE = Deno.env.get('EXTERNAL_API_BASE');
+const EXTERNAL_API_BASE = 'https://kcirpjxbjqagrqrjfldu.supabase.co/functions/v1';
 
 interface OAuthTokenResponse {
   access_token: string;
