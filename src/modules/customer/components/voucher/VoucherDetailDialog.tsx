@@ -15,10 +15,17 @@ interface VoucherDetailDialogProps {
 
 export function VoucherDetailDialog({ voucher, open, onOpenChange }: VoucherDetailDialogProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [qrGenerated, setQrGenerated] = useState(false);
 
   useEffect(() => {
-    if (voucher && open && canvasRef.current && !qrGenerated) {
+    if (voucher && open && canvasRef.current) {
+      // Clear canvas trước khi render QR mới
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      
+      // Generate QR code
       QRCode.toCanvas(
         canvasRef.current,
         voucher.voucher_code,
@@ -34,17 +41,11 @@ export function VoucherDetailDialog({ voucher, open, onOpenChange }: VoucherDeta
           if (error) {
             console.error('QR Code generation error:', error);
             toast.error('Không thể tạo mã QR');
-          } else {
-            setQrGenerated(true);
           }
         }
       );
     }
-
-    if (!open) {
-      setQrGenerated(false);
-    }
-  }, [voucher, open, qrGenerated]);
+  }, [voucher, open]);
 
   const handleCopyCode = () => {
     if (voucher) {
@@ -132,7 +133,12 @@ export function VoucherDetailDialog({ voucher, open, onOpenChange }: VoucherDeta
         <div className="space-y-6">
           {/* QR Code Section */}
           <div className="flex flex-col items-center gap-3 p-4 bg-muted/30 rounded-lg">
-            <canvas ref={canvasRef} className="border-4 border-background rounded-lg" />
+            <canvas 
+              ref={canvasRef} 
+              width={200} 
+              height={200}
+              className="border-4 border-background rounded-lg" 
+            />
             <div className="flex items-center gap-2">
               <code className="px-3 py-1 bg-background rounded font-mono font-bold text-lg">
                 {voucher.voucher_code}
