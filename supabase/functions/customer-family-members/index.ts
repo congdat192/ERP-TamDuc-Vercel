@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const EXTERNAL_API_BASE = 'https://kcirpjxbjqagrqrjfldu.supabase.co/functions/v1';
+const EXTERNAL_API_BASE = Deno.env.get('EXTERNAL_API_BASE') || 'https://kcirpjxbjqagrqrjfldu.supabase.co/functions/v1';
 
 async function getOAuthToken(): Promise<string> {
   const clientId = Deno.env.get('EXTERNAL_API_CLIENT_ID');

@@ -40,6 +40,8 @@ export interface APISuccessResponse {
     duration_ms: number;
     permission_type: "rbac" | "legacy";
   };
+  // Optional for convenience in UI code that reads error_description on unions
+  error_description?: string;
 }
 
 export interface APIErrorResponse {
