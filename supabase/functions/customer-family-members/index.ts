@@ -7,12 +7,6 @@ const corsHeaders = {
 
 const EXTERNAL_API_BASE = 'https://kcirpjxbjqagrqrjfldu.supabase.co/functions/v1';
 
-interface OAuthTokenResponse {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-}
-
 async function getOAuthToken(): Promise<string> {
   const clientId = Deno.env.get('EXTERNAL_API_CLIENT_ID');
   const clientSecret = Deno.env.get('EXTERNAL_API_CLIENT_SECRET');
@@ -33,11 +27,30 @@ async function getOAuthToken(): Promise<string> {
   });
 
   if (!tokenResponse.ok) {
+    const errorText = await tokenResponse.text();
+    console.error('[customer-family-members] Failed to get OAuth token:', errorText);
     throw new Error(`Failed to get OAuth token: ${tokenResponse.statusText}`);
   }
 
-  const tokenData: OAuthTokenResponse = await tokenResponse.json();
-  return tokenData.access_token;
+  const tokenData = await tokenResponse.json();
+
+  // Parse response from External API (support both formats)
+  let oauthToken: string;
+
+  if (tokenData.success && tokenData.data?.access_token) {
+    // Format from External API: { success: true, data: { access_token, ... } }
+    oauthToken = tokenData.data.access_token;
+  } else if (tokenData.access_token) {
+    // Fallback for flat format: { access_token, token_type, expires_in }
+    oauthToken = tokenData.access_token;
+  } else {
+    console.error('[customer-family-members] Invalid token response structure:', tokenData);
+    throw new Error('Invalid token response structure');
+  }
+
+  console.log('[customer-family-members] OAuth token obtained, token preview:', oauthToken.substring(0, 20) + '...');
+
+  return oauthToken;
 }
 
 serve(async (req) => {
