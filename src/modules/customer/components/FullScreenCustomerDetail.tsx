@@ -158,7 +158,7 @@ export function FullScreenCustomerDetail({ customer, onClose }: FullScreenCustom
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
       {/* Header with Gradient */}
-      <div className="flex-shrink-0 bg-gradient-to-r from-primary to-purple-600 text-primary-foreground">
+      <div className="flex-shrink-0 bg-gradient-to-r from-[hsl(var(--berry-primary-500))] to-[hsl(var(--berry-primary-700))] text-primary-foreground">
         {/* Compact Header (when showing tab content) */}
         {activeTab ? (
           <div className="px-4 py-3 flex items-center gap-3">
@@ -179,7 +179,7 @@ export function FullScreenCustomerDetail({ customer, onClose }: FullScreenCustom
             
             <div className="flex-1 min-w-0">
               <div className="font-semibold truncate">{customer.customerName}</div>
-              <div className="text-xs opacity-90 truncate">{customer.customerCode}</div>
+              <div className="text-xs opacity-90 truncate">{customer.customerCode} • 📱 {customer.phone}</div>
             </div>
             
             <Button
@@ -193,32 +193,27 @@ export function FullScreenCustomerDetail({ customer, onClose }: FullScreenCustom
           </div>
         ) : (
           // Full Header (when showing tabs list)
-          <div className="px-4 py-4">
+          <div className="px-4 py-3">
             <Button
               variant="ghost"
               size="icon"
               onClick={handleBack}
-              className="text-primary-foreground hover:bg-primary-foreground/20 mb-4"
+              className="text-primary-foreground hover:bg-primary-foreground/20 mb-3"
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
             
-            <div className="flex items-center gap-4 mb-3">
-              <Avatar className="w-16 h-16 border-3 border-primary-foreground shadow-lg">
-                <AvatarFallback className="text-xl font-bold bg-primary-foreground text-primary">
+            <div className="flex items-center gap-3 mb-2">
+              <Avatar className="w-14 h-14 border-2 border-primary-foreground shadow-lg">
+                <AvatarFallback className="text-lg font-bold bg-primary-foreground text-primary">
                   {getInitials(customer.customerName || "KH")}
                 </AvatarFallback>
               </Avatar>
               
               <div className="flex-1">
-                <h1 className="text-2xl font-bold mb-1">{customer.customerName}</h1>
-                <p className="text-sm opacity-90">{customer.customerCode}</p>
+                <h1 className="text-xl font-bold mb-1">{customer.customerName}</h1>
+                <p className="text-sm opacity-90">{customer.customerCode} • 📱 {customer.phone}</p>
               </div>
-            </div>
-            
-            <div className="text-sm opacity-90 flex items-center gap-2">
-              <span>📱</span>
-              <span>{customer.phone}</span>
             </div>
           </div>
         )}

@@ -228,18 +228,6 @@ export function CustomerSalesHistoryTab({ invoices, customer, isLoading, error }
                   </span>
                 </div>
               </div>
-
-              {/* Separator */}
-              <div className="h-px bg-gray-200 my-3" />
-
-              {/* Action Button */}
-              <Button 
-                className="w-full h-11 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold rounded-lg flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
-                onClick={() => handleInvoiceClick(invoice)}
-              >
-                Xem chi tiết
-                <ChevronRight className="w-5 h-5" />
-              </Button>
             </div>
           ))}
         </div>
