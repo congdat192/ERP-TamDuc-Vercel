@@ -1,19 +1,12 @@
 import * as React from "react"
+import { useIsMobileDevice } from "./use-device-type"
 
 const MOBILE_BREAKPOINT = 1024
 
 export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
-
-  React.useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
-    const onChange = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    }
-    mql.addEventListener("change", onChange)
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    return () => mql.removeEventListener("change", onChange)
-  }, [])
-
-  return !!isMobile
+  // Use device detection instead of width-only check
+  // This ensures iPad in landscape (1024px+) is treated as mobile device
+  const isMobileDevice = useIsMobileDevice()
+  
+  return isMobileDevice
 }
