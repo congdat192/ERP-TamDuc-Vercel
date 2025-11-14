@@ -2,12 +2,15 @@ import { useState } from "react";
 import { fetchCustomerByPhone, mapCustomerData } from "../services/customerService";
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobileDevice } from "@/hooks/use-device-type";
 import { CustomerSearchActions } from "../components/CustomerSearchActions";
 import { CustomerFilters } from "../components/CustomerFilters";
 import { CustomerTable } from "../components/CustomerTable";
+import { CustomerSummaryCard } from "../components/CustomerSummaryCard";
+import { FullScreenCustomerDetail } from "../components/FullScreenCustomerDetail";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ColumnConfig } from "../components/ColumnVisibilityFilter";
-import { Search, X } from "lucide-react";
+import { Search, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface CustomerManagementProps {
@@ -24,6 +27,8 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [isLoadingApi, setIsLoadingApi] = useState(false);
   const [apiCustomerData, setApiCustomerData] = useState<any[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+  const [showFullScreenDetail, setShowFullScreenDetail] = useState(false);
 
   // Only use API data, no mockup
   const customers = apiCustomerData;
@@ -60,6 +65,7 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
   ]);
 
   const isMobile = useIsMobile();
+  const isMobileDevice = useIsMobileDevice();
 
   // Get visible columns
   const visibleColumns = columns.filter((col) => col.visible);
@@ -137,6 +143,16 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
     setIsFilterOpen(false);
   };
 
+  const handleCustomerClick = (customer: any) => {
+    setSelectedCustomer(customer);
+    setShowFullScreenDetail(true);
+  };
+
+  const handleCloseDetail = () => {
+    setShowFullScreenDetail(false);
+    setSelectedCustomer(null);
+  };
+
   const totalCustomers = customers.length;
   const totalPages = Math.ceil(totalCustomers / itemsPerPage);
 
@@ -177,8 +193,56 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
             </div>
           )}
 
-          {/* Customer Table - Only show when has data */}
-          {customers.length > 0 && (
+          {/* Mobile/Tablet: Summary Cards */}
+          {customers.length > 0 && isMobileDevice && (
+            <div className="flex-1 min-h-0">
+              <ScrollArea className="h-full">
+                <div className="space-y-3 pb-4">
+                  {customers
+                    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                    .map((customer) => (
+                      <CustomerSummaryCard
+                        key={customer.id}
+                        customer={customer}
+                        onClick={handleCustomerClick}
+                      />
+                    ))}
+                </div>
+                
+                {/* Mobile Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between mt-4 px-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="w-4 h-4 mr-1" />
+                      Trước
+                    </Button>
+                    
+                    <span className="text-sm text-muted-foreground">
+                      {currentPage} / {totalPages}
+                    </span>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                    >
+                      Sau
+                      <ChevronRight className="w-4 h-4 ml-1" />
+                    </Button>
+                  </div>
+                )}
+              </ScrollArea>
+            </div>
+          )}
+
+          {/* Desktop: Customer Table */}
+          {customers.length > 0 && !isMobileDevice && (
             <div className="flex-1 min-h-0">
               <CustomerTable
                 customers={customers}
@@ -197,6 +261,14 @@ export function CustomerManagement({ currentUser, onBackToModules }: CustomerMan
           )}
         </div>
       </div>
+
+      {/* Full-Screen Customer Detail Modal (Mobile/Tablet Only) */}
+      {showFullScreenDetail && selectedCustomer && isMobileDevice && (
+        <FullScreenCustomerDetail
+          customer={selectedCustomer}
+          onClose={handleCloseDetail}
+        />
+      )}
     </div>
   );
 }
