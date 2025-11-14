@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Calendar, Building2, DollarSign, ChevronRight } from 'lucide-react';
 import { InvoiceDetailDialog } from '../InvoiceDetailDialog';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 interface CustomerSalesHistoryTabProps {
   invoices: Invoice[] | null;
@@ -47,6 +50,7 @@ interface Customer {
 export function CustomerSalesHistoryTab({ invoices, customer, isLoading, error }: CustomerSalesHistoryTabProps) {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   const handleInvoiceClick = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
@@ -92,20 +96,34 @@ export function CustomerSalesHistoryTab({ invoices, customer, isLoading, error }
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
+      <div className="flex flex-col items-center justify-center py-12 gap-3">
         <Loader2 className="w-8 h-8 animate-spin theme-text-primary" />
-        <span className="ml-2 theme-text">Đang tải...</span>
+        <span className="text-sm theme-text-muted">Đang tải dữ liệu...</span>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center py-12">
-        <p className="text-red-600">{error}</p>
+      <div className="text-center py-12 px-4">
+        <p className="text-red-600 mb-2">{error}</p>
+        <p className="text-sm theme-text-muted">Vui lòng thử lại sau</p>
       </div>
     );
   }
+
+  if (!invoices || invoices.length === 0) {
+    return (
+      <div className="text-center py-12 px-4">
+        <p className="theme-text-muted mb-2">Chưa có giao dịch nào</p>
+        <p className="text-sm theme-text-muted">Lịch sử mua hàng sẽ xuất hiện ở đây</p>
+      </div>
+    );
+  }
+
+  const totalSpent = invoices.reduce((sum, inv) => sum + inv.total, 0);
+  const totalPaid = invoices.reduce((sum, inv) => sum + inv.totalpayment, 0);
+  const totalDebt = totalSpent - totalPaid;
 
   return (
     <>
@@ -117,18 +135,116 @@ export function CustomerSalesHistoryTab({ invoices, customer, isLoading, error }
       />
       
       <div className="space-y-4 font-sans">
-        <div className="flex items-center justify-between">
-          <h4 className="text-lg font-semibold theme-text font-sans">Lịch sử bán hàng</h4>
-          <div className="text-sm theme-text-muted font-sans">
-            Tổng {invoices?.length || 0} giao dịch
+        {/* Summary Stats Cards */}
+        <div className={cn(
+          "grid gap-4",
+          isMobile ? "grid-cols-2 min-[400px]:grid-cols-3" : "grid-cols-3"
+        )}>
+          <div className="theme-card rounded-lg border theme-border-primary p-3 sm:p-4">
+            <div className={cn(
+              "font-bold theme-text-primary",
+              isMobile ? "text-xl" : "text-2xl"
+            )}>
+              {invoices.length}
+            </div>
+            <div className="text-xs theme-text-muted mt-1">Tổng đơn hàng</div>
+          </div>
+          <div className="theme-card rounded-lg border theme-border-primary p-3 sm:p-4">
+            <div className={cn(
+              "font-bold text-green-600",
+              isMobile ? "text-xl" : "text-2xl"
+            )}>
+              {formatCurrency(totalPaid)}
+            </div>
+            <div className="text-xs theme-text-muted mt-1">Đã thanh toán</div>
+          </div>
+          <div className={cn(
+            "theme-card rounded-lg border theme-border-primary p-3 sm:p-4",
+            isMobile && "col-span-2 min-[400px]:col-span-1"
+          )}>
+            <div className={cn(
+              "font-bold text-red-600",
+              isMobile ? "text-xl" : "text-2xl"
+            )}>
+              {formatCurrency(totalDebt)}
+            </div>
+            <div className="text-xs theme-text-muted mt-1">Công nợ</div>
           </div>
         </div>
 
-      {!invoices || invoices.length === 0 ? (
-        <div className="text-center py-12 theme-text-muted">
-          Chưa có giao dịch nào
+        <div className="flex items-center justify-between px-1">
+          <h4 className="text-base sm:text-lg font-semibold theme-text font-sans">Danh sách giao dịch</h4>
+          <div className="text-sm theme-text-muted font-sans">
+            {invoices.length} giao dịch
+          </div>
+        </div>
+
+      {isMobile ? (
+        // Mobile: Card-based layout
+        <div className="space-y-3">
+          {invoices.map((invoice) => (
+            <div
+              key={invoice.code}
+              className="bg-white rounded-xl border theme-border-primary shadow-sm p-4 hover:shadow-md transition-all active:scale-[0.99]"
+              onClick={() => handleInvoiceClick(invoice)}
+            >
+              {/* Card Header */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="font-bold text-base text-gray-900">
+                  {invoice.code}
+                </div>
+                {getStatusBadge(invoice.statusvalue)}
+              </div>
+
+              {/* Card Content */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="flex items-center gap-2 text-gray-600">
+                    <Calendar className="w-4 h-4 flex-shrink-0" />
+                    Ngày
+                  </span>
+                  <span className="font-semibold text-gray-900 text-right">
+                    {formatDate(invoice.createddate)}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-sm">
+                  <span className="flex items-center gap-2 text-gray-600">
+                    <Building2 className="w-4 h-4 flex-shrink-0" />
+                    Chi nhánh
+                  </span>
+                  <span className="font-semibold text-gray-900 text-right">
+                    {invoice.branchname}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-sm">
+                  <span className="flex items-center gap-2 text-gray-600">
+                    <DollarSign className="w-4 h-4 flex-shrink-0" />
+                    Tổng tiền
+                  </span>
+                  <span className="font-bold text-primary text-base">
+                    {formatCurrency(invoice.total)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Separator */}
+              <div className="h-px bg-gray-200 my-3" />
+
+              {/* Action Button */}
+              <Button 
+                className="w-full h-11 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold rounded-lg flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                onClick={() => handleInvoiceClick(invoice)}
+              >
+                Xem chi tiết
+                <ChevronRight className="w-5 h-5" />
+              </Button>
+            </div>
+          ))}
         </div>
       ) : (
+        // Desktop: Table layout
         <div className="theme-card rounded-lg border theme-border-primary overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full font-sans">
