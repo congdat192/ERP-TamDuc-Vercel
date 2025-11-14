@@ -57,7 +57,10 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
   );
 
   return (
-    <div className="theme-card rounded-lg border-2 theme-border-primary p-4 sm:p-6 shadow-md hover:shadow-lg transition-all duration-200">
+    <div className={cn(
+      "theme-card rounded-lg border-2 theme-border-primary shadow-md hover:shadow-lg transition-all duration-200",
+      isMobile ? "p-3 max-w-full overflow-x-hidden" : "p-4 sm:p-6"
+    )}>
       <div className={cn(
         "grid gap-4",
         isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-4"
@@ -98,7 +101,7 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
             id="customer-code"
             value={customer.id} 
             readOnly 
-            className={cn("voucher-input bg-muted", isMobile && "min-h-[44px] text-[15px]")}
+            className={cn("voucher-input bg-muted", isMobile && "min-h-[44px] text-[15px] max-w-full")}
           />
         </div>
         <div className="space-y-2">
@@ -106,7 +109,7 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
           <Input 
             id="customer-name"
             value={customer.name} 
-            className={cn("voucher-input", isMobile && "min-h-[44px] text-[15px]")}
+            className={cn("voucher-input", isMobile && "min-h-[44px] text-[15px] max-w-full")}
           />
         </div>
         <div className="space-y-2">
@@ -142,7 +145,7 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
           <Input 
             id="phone"
             value={customer.phone} 
-            className={cn("voucher-input", isMobile && "min-h-[44px] text-[15px]")}
+            className={cn("voucher-input", isMobile && "min-h-[44px] text-[15px] max-w-full")}
           />
         </div>
         <div className="space-y-2">
@@ -150,7 +153,7 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
           <Input 
             id="email"
             value={customer.email} 
-            className={cn("voucher-input", isMobile && "min-h-[44px] text-[15px]")}
+            className={cn("voucher-input", isMobile && "min-h-[44px] text-[15px] max-w-full")}
           />
         </div>
         <div className="space-y-2">
@@ -158,7 +161,7 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
           <Input 
             id="facebook"
             value={customer.facebook} 
-            className={cn("voucher-input", isMobile && "min-h-[44px] text-[15px]")}
+            className={cn("voucher-input", isMobile && "min-h-[44px] text-[15px] max-w-full")}
           />
         </div>
 
@@ -168,7 +171,7 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
           <Input 
             id="birthday"
             value={customer.birthday} 
-            className={cn("voucher-input", isMobile && "min-h-[44px] text-[15px]")}
+            className={cn("voucher-input", isMobile && "min-h-[44px] text-[15px] max-w-full")}
           />
         </div>
         <div className="space-y-2">
@@ -177,7 +180,7 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
             id="created-date"
             value={customer.createdDate} 
             readOnly
-            className={cn("voucher-input bg-muted", isMobile && "min-h-[44px] text-[15px]")}
+            className={cn("voucher-input bg-muted", isMobile && "min-h-[44px] text-[15px] max-w-full")}
           />
         </div>
         <div className="space-y-2">
@@ -186,7 +189,7 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
             id="creator"
             value={customer.creator} 
             readOnly
-            className={cn("voucher-input bg-muted", isMobile && "min-h-[44px] text-[15px]")}
+            className={cn("voucher-input bg-muted", isMobile && "min-h-[44px] text-[15px] max-w-full")}
           />
         </div>
         <div className="space-y-2">
@@ -215,7 +218,7 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
           <Input 
             id="address"
             value={customer.address} 
-            className={cn("voucher-input", isMobile && "min-h-[44px] text-[15px]")}
+            className={cn("voucher-input", isMobile && "min-h-[44px] text-[15px] max-w-full")}
           />
         </div>
 
@@ -231,7 +234,7 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
           <Input 
             id="company"
             value={customer.company} 
-            className={cn("voucher-input", isMobile && "min-h-[44px] text-[15px]")}
+            className={cn("voucher-input", isMobile && "min-h-[44px] text-[15px] max-w-full")}
           />
         </div>
         <div className="space-y-2">
@@ -239,7 +242,7 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
           <Input 
             id="tax-code"
             value={customer.taxCode} 
-            className={cn("voucher-input", isMobile && "min-h-[44px] text-[15px]")}
+            className={cn("voucher-input", isMobile && "min-h-[44px] text-[15px] max-w-full")}
           />
         </div>
         <div className="space-y-2">
@@ -248,7 +251,7 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
             id="branch"
             value="Chi nhánh HCM" 
             readOnly
-            className={cn("voucher-input bg-muted", isMobile && "min-h-[44px] text-[15px]")}
+            className={cn("voucher-input bg-muted", isMobile && "min-h-[44px] text-[15px] max-w-full")}
           />
         </div>
         {!isMobile && (
@@ -264,7 +267,7 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
             id="note"
             value={customer.note} 
             rows={3}
-            className="voucher-input"
+            className={cn("voucher-input resize-none", isMobile && "min-h-[88px] max-w-full")}
           />
         </div>
       </div>
