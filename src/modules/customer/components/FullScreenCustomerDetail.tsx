@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, ChevronRight, RefreshCw } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/components/auth/AuthContext";
 import { CustomerInfoTab } from "./detail-tabs/CustomerInfoTab";
 import { CustomerSalesHistoryTab } from "./detail-tabs/CustomerSalesHistoryTab";
 import { CustomerDebtTab } from "./detail-tabs/CustomerDebtTab";
@@ -37,7 +39,23 @@ const TABS: TabConfig[] = [
 ];
 
 export function FullScreenCustomerDetail({ customer, onClose }: FullScreenCustomerDetailProps) {
+  const { currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState<TabKey | null>(null);
+
+  // API data
+  const [invoicesData, setInvoicesData] = useState<any[]>([]);
+  const [customerData, setCustomerData] = useState<any>(null);
+  const [avatarHistory, setAvatarHistory] = useState<Array<{ avatar: string; createddate: string }>>([]);
+  const [interactionHistory, setInteractionHistory] = useState<Array<any>>([]);
+  const [voucherEligibilityData, setVoucherEligibilityData] = useState<any>(null);
+
+  // Loading states
+  const [isLoadingInvoices, setIsLoadingInvoices] = useState(false);
+  const [isLoadingVouchers, setIsLoadingVouchers] = useState(false);
+
+  // Error states
+  const [invoicesError, setInvoicesError] = useState<string | null>(null);
+  const [vouchersError, setVouchersError] = useState<string | null>(null);
 
   const getInitials = (name: string) => {
     return name
@@ -48,6 +66,87 @@ export function FullScreenCustomerDetail({ customer, onClose }: FullScreenCustom
       .slice(0, 2);
   };
 
+  // Data fetching functions
+  const fetchInvoicesData = async () => {
+    if (!customer.phone) return;
+
+    setIsLoadingInvoices(true);
+    setInvoicesError(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('get-invoices-by-phone', {
+        body: { phone: customer.phone }
+      });
+
+      if (error) throw error;
+
+      if (data?.data?.data) {
+        setInvoicesData(data.data.data.invoices || []);
+        setCustomerData(data.data.data.customer || null);
+      }
+    } catch (err) {
+      console.error('Error fetching invoices:', err);
+      setInvoicesError(err instanceof Error ? err.message : 'Lỗi khi tải dữ liệu hóa đơn');
+    } finally {
+      setIsLoadingInvoices(false);
+    }
+  };
+
+  const fetchVoucherEligibility = async () => {
+    if (!customer.phone) return;
+
+    setIsLoadingVouchers(true);
+    setVouchersError(null);
+
+    try {
+      const params = new URLSearchParams({ phone: customer.phone });
+      const { data, error } = await supabase.functions.invoke(
+        `check-voucher-eligibility?${params.toString()}`
+      );
+
+      if (error) throw error;
+      setVoucherEligibilityData(data);
+    } catch (err) {
+      console.error('Error fetching voucher eligibility:', err);
+      setVouchersError(err instanceof Error ? err.message : 'Lỗi khi tải dữ liệu voucher');
+    } finally {
+      setIsLoadingVouchers(false);
+    }
+  };
+
+  const fetchCustomerData = async () => {
+    if (!customer.phone) return;
+
+    try {
+      const { data, error } = await supabase.functions.invoke('get-customer-by-phone', {
+        body: { phone: customer.phone }
+      });
+
+      if (error) throw error;
+
+      const customerData = data?.data?.data;
+      if (customerData) {
+        setAvatarHistory(customerData.avatar_history || []);
+        setInteractionHistory(customerData.customer_interaction_history || []);
+      }
+    } catch (err) {
+      console.error('Error fetching customer data:', err);
+    }
+  };
+
+  const handleRefresh = () => {
+    fetchInvoicesData();
+    fetchVoucherEligibility();
+    fetchCustomerData();
+  };
+
+  // Fetch data on mount
+  useEffect(() => {
+    fetchInvoicesData();
+    fetchVoucherEligibility();
+    fetchCustomerData();
+  }, [customer.phone]);
+
   const handleBack = () => {
     if (activeTab) {
       setActiveTab(null);
@@ -55,9 +154,6 @@ export function FullScreenCustomerDetail({ customer, onClose }: FullScreenCustom
       onClose();
     }
   };
-
-  const activeTabConfig = TABS.find(t => t.key === activeTab);
-  const ActiveTabComponent = activeTabConfig?.component;
 
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col">
@@ -85,6 +181,15 @@ export function FullScreenCustomerDetail({ customer, onClose }: FullScreenCustom
               <div className="font-semibold truncate">{customer.customerName}</div>
               <div className="text-xs opacity-90 truncate">{customer.customerCode}</div>
             </div>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleRefresh}
+              className="text-primary-foreground hover:bg-primary-foreground/20 flex-shrink-0"
+            >
+              <RefreshCw className="w-5 h-5" />
+            </Button>
           </div>
         ) : (
           // Full Header (when showing tabs list)
@@ -121,10 +226,68 @@ export function FullScreenCustomerDetail({ customer, onClose }: FullScreenCustom
 
       {/* Content Area */}
       <div className="flex-1 overflow-y-auto">
-        {activeTab && ActiveTabComponent ? (
+        {activeTab ? (
           // Tab Content View
           <div className="p-4">
-            <ActiveTabComponent customer={customer} />
+            {activeTab === 'info' && (
+              <CustomerInfoTab customer={customer} />
+            )}
+            
+            {activeTab === 'sales' && (
+              <CustomerSalesHistoryTab 
+                invoices={invoicesData}
+                customer={customerData}
+                isLoading={isLoadingInvoices}
+                error={invoicesError}
+              />
+            )}
+            
+            {activeTab === 'debt' && (
+              <CustomerDebtTab 
+                customerId={customer.id}
+                customerDebt={customer.totalDebt}
+              />
+            )}
+            
+            {activeTab === 'points' && (
+              <CustomerPointsHistoryTab 
+                customerId={customer.id}
+                currentPoints={customer.points}
+                totalPoints={customer.totalPoints}
+              />
+            )}
+            
+            {activeTab === 'voucher' && (
+              <CustomerVoucherTab 
+                customerPhone={customer.phone}
+                voucherData={voucherEligibilityData}
+                isLoading={isLoadingVouchers}
+                error={vouchersError}
+                onRefresh={fetchVoucherEligibility}
+              />
+            )}
+            
+            {activeTab === 'interaction' && (
+              <CustomerInteractionHistoryTab 
+                customerId={customer.id}
+                interactionHistory={interactionHistory}
+              />
+            )}
+            
+            {activeTab === 'images' && (
+              <CustomerImagesTab 
+                invoices={invoicesData}
+                avatarHistory={avatarHistory}
+                isLoading={isLoadingInvoices}
+              />
+            )}
+            
+            {activeTab === 'related' && (
+              <CustomerRelatedTab 
+                customer={customer}
+                currentUser={currentUser}
+              />
+            )}
           </div>
         ) : (
           // Tabs List View
