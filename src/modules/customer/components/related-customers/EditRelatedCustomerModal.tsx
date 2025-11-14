@@ -64,30 +64,14 @@ export function EditRelatedCustomerModal({
     try {
       const customerPhone = related.customer_phone;
       const newName = formData.related_name.trim();
-      let lastResponse: APIResponse | null = null;
 
-      // Step 1: Nếu đổi tên → Call RENAME trước
-      if (newName !== originalName) {
-        const renameResponse = await FamilyMemberService.renameFamilyMember(customerPhone, originalName, newName);
-
-        if (!renameResponse.success) {
-          console.error('[EditRelatedCustomerModal] Rename failed:', renameResponse);
-          console.error('[EditRelatedCustomerModal] Request ID:', renameResponse.meta?.request_id);
-
-          toast({
-            title: '❌ Lỗi',
-            description: renameResponse.error_description,
-            variant: 'destructive',
-            duration: 5000
-          });
-          return;
-        }
-
-        lastResponse = renameResponse;
-      }
-
-      // Step 2: Cập nhật các field khác (chỉ gửi field đã thay đổi)
+      // ✅ API v2: UPDATE bao gồm cả rename - gửi tất cả updates cùng lúc
       const updates: any = {};
+
+      // Include name if changed (rename)
+      if (newName !== originalName) {
+        updates.ten = newName;
+      }
 
       if (formData.relationship_type !== related.relationship_type) {
         updates.moi_quan_he = formData.relationship_type;
@@ -111,9 +95,13 @@ export function EditRelatedCustomerModal({
         updates.ghi_chu = formData.notes || '';
       }
 
-      // Chỉ call UPDATE nếu có thay đổi
+      // ✅ Call UPDATE API once with all changes (including rename if needed)
       if (Object.keys(updates).length > 0) {
-        const updateResponse = await FamilyMemberService.updateFamilyMember(customerPhone, newName, updates);
+        const updateResponse = await FamilyMemberService.updateFamilyMember(
+          customerPhone,
+          related.id, // ✅ Use ID instead of name
+          updates
+        );
 
         if (!updateResponse.success) {
           console.error('[EditRelatedCustomerModal] Update failed:', updateResponse);
@@ -128,19 +116,15 @@ export function EditRelatedCustomerModal({
           return;
         }
 
-        lastResponse = updateResponse;
-      }
+        // ✅ SUCCESS
+        console.log('[EditRelatedCustomerModal] Success:', updateResponse);
+        console.log('[EditRelatedCustomerModal] Request ID:', updateResponse.meta?.request_id);
 
-      // ✅ SUCCESS: Hiển thị message từ response cuối cùng
-      console.log('[EditRelatedCustomerModal] Success:', lastResponse);
-      if (lastResponse) {
-        console.log('[EditRelatedCustomerModal] Request ID:', lastResponse.meta?.request_id);
+        toast({
+          title: '✅ Thành công',
+          description: updateResponse.message
+        });
       }
-
-      toast({
-        title: '✅ Thành công',
-        description: lastResponse?.success ? lastResponse.message : 'Đã cập nhật thông tin người thân'
-      });
 
       onSuccess();
       onOpenChange(false);

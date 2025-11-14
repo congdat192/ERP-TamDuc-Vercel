@@ -52,7 +52,7 @@ export function RelatedCustomerDetailDialog({
 
     setIsDeleting(true);
     try {
-      const response: APIResponse = await FamilyMemberService.deleteFamilyMember(customer.phone, related.related_name);
+      const response: APIResponse = await FamilyMemberService.deleteFamilyMember(customer.phone, related.id); // ✅ Use ID instead of name
 
       // ✅ CHECK response.success FIELD FIRST
       if (!response.success) {

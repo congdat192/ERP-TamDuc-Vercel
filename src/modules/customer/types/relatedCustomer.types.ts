@@ -28,7 +28,8 @@ export const RELATIONSHIP_ICONS: Record<RelationshipType, string> = {
 };
 
 export interface RelatedCustomer {
-  id: string;
+  // Basic identity
+  id: string; // 10-char identifier from API v2
   
   // Main customer info (from KiotViet API)
   customer_phone: string;

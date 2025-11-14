@@ -123,8 +123,8 @@ export function AssignInvoiceModal({
     try {
       // ✅ Call API with array of invoice IDs (numbers)
       const response: APIResponse = await FamilyMemberService.assignBills(
-        customer.phone,
-        related.related_name,
+        related.phone,
+        related.id, // ✅ Use ID instead of name
         selectedInvoiceIds
       );
 

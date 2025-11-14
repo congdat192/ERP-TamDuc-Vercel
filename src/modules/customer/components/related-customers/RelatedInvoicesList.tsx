@@ -37,7 +37,7 @@ export function RelatedInvoicesList({
       // ✅ Call API with invoice ID (number)
       const response: APIResponse = await FamilyMemberService.unassignBill(
         customer.phone,
-        relatedCustomer.related_name,
+        relatedCustomer.id, // ✅ Use ID instead of name
         invoiceId
       );
 

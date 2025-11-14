@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 
 export interface FamilyMember {
+  id: string; // 10-char identifier from API v2
   sdt: string;
   ten: string;
   bills: any[];
@@ -181,9 +182,9 @@ export function mapFamilyMembersToRelated(
     else if (member.gioi_tinh === 'nu') gender = "Nữ";
 
     return {
-      // IDs (temporary - dùng sdt + index)
-      id: `family-${member.sdt}-${index}`,
-      related_code: `FM-${member.sdt.slice(-4)}`,
+      // IDs - use API id as primary identifier
+      id: member.id, // ✅ Use API's 10-char id
+      related_code: `FM-${member.sdt?.slice(-4) || 'XXXX'}`,
       
       // Main customer info
       customer_phone: customerData.contactnumber,
