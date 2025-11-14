@@ -7,6 +7,7 @@ import { FamilyMemberService, APIResponse } from '../../services/familyMemberSer
 import { supabase } from '@/integrations/supabase/client';
 import { externalStorageClient } from '@/integrations/supabase/externalStorageClient';
 import { toast } from '@/components/ui/use-toast';
+import { buildFamilyAvatarFilePath } from '../../utils/avatarUpload';
 
 interface RelatedAvatarGalleryProps {
   related: RelatedCustomer;
@@ -78,12 +79,8 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
           continue;
         }
 
-        // 1. Upload to External Supabase Storage
-        const fileName = `${related.customer_phone}_${related.related_name}_${Date.now()}.jpg`;
-        const year = new Date().getFullYear();
-        const month = String(new Date().getMonth() + 1).padStart(2, '0');
-        const day = String(new Date().getDate()).padStart(2, '0');
-        const filePath = `${year}/${month}/${day}/${fileName}`; // ✅ Fixed: removed 'family/' prefix
+        // ✅ Build safe filePath (no Unicode, correct extension)
+        const filePath = buildFamilyAvatarFilePath(related.customer_phone, related.related_name, file);
         
         // ✅ Dùng External Storage Client
         const { data: uploadData, error: uploadError } = await externalStorageClient.storage

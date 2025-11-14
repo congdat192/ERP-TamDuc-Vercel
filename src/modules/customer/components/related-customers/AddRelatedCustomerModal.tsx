@@ -13,6 +13,7 @@ import { extractCustomerInfo, RelationshipType, RELATIONSHIP_LABELS } from '../.
 import { Loader2, Upload, Trash2, Star, Camera } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { externalStorageClient } from '@/integrations/supabase/externalStorageClient';
+import { buildFamilyAvatarFilePath } from '../../utils/avatarUpload';
 
 interface AddRelatedCustomerModalProps {
   open: boolean;
@@ -141,11 +142,8 @@ export function AddRelatedCustomerModal({
       
       if (selectedFiles.length > 0) {
         for (const file of selectedFiles) {
-          const fileName = `${customer.phone}_${relatedName.trim()}_${Date.now()}.jpg`;
-          const year = new Date().getFullYear();
-          const month = String(new Date().getMonth() + 1).padStart(2, '0');
-          const day = String(new Date().getDate()).padStart(2, '0');
-          const filePath = `${year}/${month}/${day}/${fileName}`; // ✅ Fixed: removed 'family/' prefix
+          // ✅ Build safe filePath (no Unicode, correct extension)
+          const filePath = buildFamilyAvatarFilePath(customer.phone, relatedName.trim(), file);
 
           // ✅ Upload to External Supabase Storage
           const { data: uploadData, error: uploadError } = await externalStorageClient.storage
