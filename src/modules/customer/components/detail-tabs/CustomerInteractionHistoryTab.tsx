@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Phone, MessageCircle, Headphones, Play, Calendar, User, Clock } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Interaction {
   id: string;
@@ -47,6 +48,7 @@ export function CustomerInteractionHistoryTab({
   customerId, 
   interactionHistory = [] 
 }: CustomerInteractionHistoryTabProps) {
+  const isMobile = useIsMobile();
   const [loading, setLoading] = useState(false);
 
   // Helper: Generate category label from type and channel

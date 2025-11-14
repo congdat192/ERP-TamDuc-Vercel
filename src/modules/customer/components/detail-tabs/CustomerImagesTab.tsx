@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Image as ImageIcon } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Invoice {
   code: string;
@@ -20,6 +21,7 @@ interface CustomerImagesTabProps {
 }
 
 export function CustomerImagesTab({ invoices, avatarHistory, isLoading }: CustomerImagesTabProps) {
+  const isMobile = useIsMobile();
   const [selectedImage, setSelectedImage] = useState<{ url: string; date: string; code: string } | null>(null);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
 
@@ -106,15 +108,15 @@ export function CustomerImagesTab({ invoices, avatarHistory, isLoading }: Custom
         </div>
 
         {/* Gallery Grid */}
-        <div className="grid grid-cols-5 gap-4">
+        <div className={`grid gap-4 ${isMobile ? "grid-cols-2" : "grid-cols-5"}`}>
           {imageSlots.map((slot, index) => (
             <div 
               key={index}
               className={`relative aspect-square border-2 rounded-lg overflow-hidden ${
                 slot 
-                  ? 'cursor-pointer hover:border-blue-500 transition-all hover:shadow-lg' 
+                  ? 'cursor-pointer hover:border-blue-500 transition-all hover:shadow-lg touch-manipulation' 
                   : 'border-dashed border-gray-300 bg-gray-50'
-              }`}
+              } ${isMobile ? 'min-h-[120px]' : ''}`}
               onClick={() => handleImageClick(slot)}
             >
               {/* Slot Number */}
