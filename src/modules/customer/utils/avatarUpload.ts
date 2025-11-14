@@ -14,8 +14,8 @@ export function toSafeName(name: string): string {
 
 /**
  * Build file path for family member avatar
- * Format: {year}/{month}/{day}/{customerPhone}_{safeRelatedName}_{timestamp}.{ext}
- * Example: 2025/11/14/0933430866_do-ngoc-tuyet-nhi_1763103435019.jpg
+ * Format: family/{year}/{month}/{day}/{customerPhone}_{safeRelatedName}_{timestamp}.{ext}
+ * Example: family/2025/11/14/0933430866_do-ngoc-tuyet-nhi_1763103435019.jpg
  */
 export function buildFamilyAvatarFilePath(
   customerPhone: string,
@@ -36,7 +36,7 @@ export function buildFamilyAvatarFilePath(
   const safeName = toSafeName(relatedName);
   
   // Build path
-  const filePath = `${year}/${month}/${day}/${customerPhone}_${safeName}_${timestamp}.${ext}`;
+  const filePath = `family/${year}/${month}/${day}/${customerPhone}_${safeName}_${timestamp}.${ext}`;
 
   return filePath;
 }
