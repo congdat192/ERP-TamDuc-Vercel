@@ -1,6 +1,7 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface CustomerDebtTabProps {
   customerId: string;
@@ -19,6 +20,8 @@ interface DebtRecord {
 }
 
 export function CustomerDebtTab({ customerId, customerDebt = 0 }: CustomerDebtTabProps) {
+  const isMobile = useIsMobile();
+  
   // Mock debt data
   const debtRecords: DebtRecord[] = [
     {
@@ -81,7 +84,7 @@ export function CustomerDebtTab({ customerId, customerDebt = 0 }: CustomerDebtTa
   return (
     <div className="space-y-6">
       {/* Tổng quan nợ */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className={`grid gap-4 ${isMobile ? "grid-cols-2 min-[400px]:grid-cols-3" : "grid-cols-3"}`}>
         <div className="theme-card rounded-lg border theme-border-primary p-4">
           <div className="text-sm theme-text-muted mb-1">Tổng nợ hiện tại (từ API)</div>
           <div className="text-2xl font-bold theme-text-primary">{formatCurrency(customerDebt)}</div>
@@ -100,84 +103,134 @@ export function CustomerDebtTab({ customerId, customerDebt = 0 }: CustomerDebtTa
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h4 className="text-lg font-semibold theme-text">Chi tiết công nợ</h4>
-          <Button 
-            size="sm" 
-            className="theme-bg-primary hover:theme-bg-secondary text-white"
-          >
-            Thu nợ
-          </Button>
         </div>
 
-        <div className="theme-card rounded-lg border theme-border-primary overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b theme-border-primary/20">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider">
-                    Mã hóa đơn
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider">
-                    Ngày bán
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider">
-                    Tổng tiền
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider">
-                    Đã trả
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider">
-                    Còn nợ
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider">
-                    Hạn trả
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider">
-                    Trạng thái
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider">
-                    Thao tác
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y theme-border-primary/10">
-                {debtRecords.map((record) => (
-                  <tr key={record.id} className="hover:theme-bg-primary/5">
-                    <td className="px-4 py-3 text-sm theme-text-primary font-medium">
-                      {record.invoiceCode}
-                    </td>
-                    <td className="px-4 py-3 text-sm theme-text-muted">
-                      {record.date}
-                    </td>
-                    <td className="px-4 py-3 text-sm theme-text">
-                      {formatCurrency(record.originalAmount)}
-                    </td>
-                    <td className="px-4 py-3 text-sm theme-text">
-                      {formatCurrency(record.paidAmount)}
-                    </td>
-                    <td className="px-4 py-3 text-sm font-medium theme-text">
-                      {formatCurrency(record.remainingAmount)}
-                    </td>
-                    <td className="px-4 py-3 text-sm theme-text-muted">
-                      {record.dueDate}
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      {getStatusBadge(record.status)}
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        className="theme-border-primary hover:theme-bg-primary/10"
-                      >
-                        Thu nợ
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {isMobile ? (
+          <div className="space-y-3">
+            {debtRecords.map((record) => (
+              <div key={record.id} className="theme-card rounded-lg border theme-border-primary overflow-hidden">
+                <div className="p-4 space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="font-semibold text-base">{record.invoiceCode}</div>
+                      <div className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
+                        <span className="text-base">📅</span> {record.date}
+                      </div>
+                    </div>
+                    {getStatusBadge(record.status)}
+                  </div>
+                  
+                  <div className="space-y-2 pt-2 border-t">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground flex items-center gap-1">
+                        <span className="text-base">💳</span> Số tiền nợ
+                      </span>
+                      <span className="font-medium">{formatCurrency(record.originalAmount)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground flex items-center gap-1">
+                        <span className="text-base">✅</span> Đã trả
+                      </span>
+                      <span className="font-medium">{formatCurrency(record.paidAmount)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground flex items-center gap-1">
+                        <span className="text-base">⏳</span> Còn lại
+                      </span>
+                      <span className="font-semibold text-destructive">{formatCurrency(record.remainingAmount)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground flex items-center gap-1">
+                        <span className="text-base">📆</span> Hạn thanh toán
+                      </span>
+                      <span>{record.dueDate}</span>
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    variant="outline" 
+                    className="w-full min-h-[44px] touch-manipulation"
+                  >
+                    Thu nợ
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
+        ) : (
+          <div className="theme-card rounded-lg border theme-border-primary overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b theme-border-primary/20">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider">
+                      Mã HĐ
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider">
+                      Ngày
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium theme-text uppercase tracking-wider">
+                      Tổng tiền
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium theme-text uppercase tracking-wider">
+                      Đã trả
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium theme-text uppercase tracking-wider">
+                      Còn lại
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider">
+                      Hạn TT
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider">
+                      Trạng thái
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider">
+                      Hành động
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {debtRecords.map((record) => (
+                    <tr key={record.id} className="border-b theme-border-primary/10 hover:bg-gray-50">
+                      <td className="px-4 py-3">
+                        <span className="font-medium theme-text">{record.invoiceCode}</span>
+                      </td>
+                      <td className="px-4 py-3 theme-text-muted">
+                        {record.date}
+                      </td>
+                      <td className="px-4 py-3 text-right theme-text">
+                        {formatCurrency(record.originalAmount)}
+                      </td>
+                      <td className="px-4 py-3 text-right theme-text">
+                        {formatCurrency(record.paidAmount)}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span className="font-semibold text-red-600">
+                          {formatCurrency(record.remainingAmount)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 theme-text-muted">
+                        {record.dueDate}
+                      </td>
+                      <td className="px-4 py-3">
+                        {getStatusBadge(record.status)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="theme-border-primary hover:theme-bg-primary hover:text-white"
+                        >
+                          Thu nợ
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 
 import { Badge } from '@/components/ui/badge';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface CustomerPointsHistoryTabProps {
   customerId: string;
@@ -18,6 +19,8 @@ interface PointsRecord {
 }
 
 export function CustomerPointsHistoryTab({ customerId, currentPoints = 0, totalPoints = 0 }: CustomerPointsHistoryTabProps) {
+  const isMobile = useIsMobile();
+  
   // Mock points history data
   const pointsHistory: PointsRecord[] = [
     {
@@ -87,7 +90,7 @@ export function CustomerPointsHistoryTab({ customerId, currentPoints = 0, totalP
   return (
     <div className="space-y-6">
       {/* Tổng quan điểm */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className={`grid gap-4 ${isMobile ? "grid-cols-2" : "grid-cols-2"}`}>
         <div className="theme-card rounded-lg border theme-border-primary p-4">
           <div className="text-sm theme-text-muted mb-1">Tổng điểm tích lũy</div>
           <div className="text-2xl font-bold theme-text-primary">
@@ -108,54 +111,100 @@ export function CustomerPointsHistoryTab({ customerId, currentPoints = 0, totalP
       <div className="space-y-4">
         <h4 className="text-lg font-semibold theme-text">Lịch sử tích điểm</h4>
 
-        <div className="theme-card rounded-lg border theme-border-primary overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b theme-border-primary/20">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider">
-                    Ngày
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider">
-                    Loại giao dịch
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider">
-                    Mô tả
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider">
-                    Điểm thay đổi
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider">
-                    Số dư
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y theme-border-primary/10">
-                {pointsHistory.map((record) => (
-                  <tr key={record.id} className="hover:theme-bg-primary/5">
-                    <td className="px-4 py-3 text-sm theme-text-muted">
-                      {record.date}
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      {getTypeBadge(record.type)}
-                    </td>
-                    <td className="px-4 py-3 text-sm theme-text">
-                      {record.description}
-                    </td>
-                    <td className="px-4 py-3 text-sm font-medium">
-                      <span className={record.points > 0 ? 'text-green-600' : 'text-red-600'}>
+        {isMobile ? (
+          <div className="space-y-3">
+            {pointsHistory.map((record) => (
+              <div key={record.id} className="theme-card rounded-lg border theme-border-primary overflow-hidden">
+                <div className="p-4">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <div className="text-sm text-muted-foreground flex items-center gap-1">
+                        <span className="text-base">🕒</span> {record.date}
+                      </div>
+                      <div className="mt-1">{getTypeBadge(record.type)}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className={`text-lg font-bold ${record.points >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                         {formatPoints(record.points)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm theme-text font-medium">
-                      {record.balance.toLocaleString('vi-VN')}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        Số dư: {record.balance.toLocaleString('vi-VN')}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-2 border-t">
+                    <div className="text-sm flex items-start gap-1">
+                      <span className="text-base">📋</span>
+                      <span className="text-muted-foreground">{record.description}</span>
+                    </div>
+                    {record.invoiceCode && (
+                      <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                        <span className="text-sm">🧾</span> {record.invoiceCode}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
+        ) : (
+          <div className="theme-card rounded-lg border theme-border-primary overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b theme-border-primary/20">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider">
+                      Ngày
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider">
+                      Loại
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase tracking-wider">
+                      Mô tả
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium theme-text uppercase tracking-wider">
+                      Điểm thay đổi
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium theme-text uppercase tracking-wider">
+                      Số dư
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pointsHistory.map((record) => (
+                    <tr key={record.id} className="border-b theme-border-primary/10 hover:bg-gray-50">
+                      <td className="px-4 py-3 theme-text-muted">
+                        {record.date}
+                      </td>
+                      <td className="px-4 py-3">
+                        {getTypeBadge(record.type)}
+                      </td>
+                      <td className="px-4 py-3 theme-text">
+                        {record.description}
+                        {record.invoiceCode && (
+                          <div className="text-xs theme-text-muted mt-1">
+                            HD: {record.invoiceCode}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span className={`font-semibold ${record.points >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {formatPoints(record.points)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span className="font-semibold theme-text">
+                          {record.balance.toLocaleString('vi-VN')}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -8,6 +8,7 @@ import { RelatedCustomerService } from '../../services/relatedCustomerService';
 import { RelatedCustomer } from '../../types/relatedCustomer.types';
 import { useToast } from '@/hooks/use-toast';
 import { mapFamilyMembersToRelated, fetchCustomerByPhone } from '../../services/customerService';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface CustomerRelatedTabProps {
   customer: any;
@@ -16,6 +17,7 @@ interface CustomerRelatedTabProps {
 
 export function CustomerRelatedTab({ customer, currentUser }: CustomerRelatedTabProps) {
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [relatedCustomers, setRelatedCustomers] = useState<RelatedCustomer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -124,7 +126,7 @@ export function CustomerRelatedTab({ customer, currentUser }: CustomerRelatedTab
         </h3>
         <Button
           onClick={() => setIsAddModalOpen(true)}
-          className="gap-2"
+          className={`gap-2 ${isMobile ? "min-h-[44px] touch-manipulation" : ""}`}
           size="sm"
         >
           <Plus className="w-4 h-4" />
@@ -158,7 +160,7 @@ export function CustomerRelatedTab({ customer, currentUser }: CustomerRelatedTab
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className={`grid gap-4 ${isMobile ? "grid-cols-1" : "grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"}`}>
           {relatedCustomers.map((related) => (
             <RelatedCustomerCard
               key={related.id}

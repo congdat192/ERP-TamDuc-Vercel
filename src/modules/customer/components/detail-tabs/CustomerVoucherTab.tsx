@@ -9,6 +9,7 @@ import { AvailableCampaignCard } from "../voucher/AvailableCampaignCard";
 import { VoucherDetailDialog } from "../voucher/VoucherDetailDialog";
 import { ClaimVoucherDialog } from "../voucher/ClaimVoucherDialog";
 import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   VoucherEligibilityResponse,
   ReceivedVoucher,
@@ -17,7 +18,6 @@ import {
   VoucherHistoryItem,
   voucherService,
 } from "../../services/voucherService";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
@@ -44,6 +44,7 @@ export function CustomerVoucherTab({
   error,
   onRefresh,
 }: CustomerVoucherTabProps) {
+  const isMobile = useIsMobile();
   const [selectedVoucher, setSelectedVoucher] = useState<ReceivedVoucher | null>(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<AvailableCampaign | null>(null);
@@ -188,7 +189,7 @@ export function CustomerVoucherTab({
             <h4 className="text-sm font-medium theme-text-muted">
               Voucher Đã Nhận ({voucherData.received_vouchers.length})
             </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className={`grid gap-4 ${isMobile ? "grid-cols-1" : "grid-cols-2 lg:grid-cols-3"}`}>
               {voucherData.received_vouchers.map((voucher) => (
                 <VoucherCard key={voucher.id} voucher={voucher} onClick={() => handleVoucherClick(voucher)} />
               ))}
@@ -202,7 +203,7 @@ export function CustomerVoucherTab({
             <h4 className="text-sm font-medium theme-text-muted">
               Chiến Dịch Có Thể Nhận ({voucherData.available_campaigns.length})
             </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className={`grid gap-4 ${isMobile ? "grid-cols-1" : "grid-cols-2 lg:grid-cols-3"}`}>
               {voucherData.available_campaigns.map((campaign) => (
                 <AvailableCampaignCard
                   key={campaign.campaign_id}
@@ -238,7 +239,7 @@ export function CustomerVoucherTab({
         {/* Filters */}
         <div className="flex gap-4">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className={`w-[200px] ${isMobile ? "min-h-[44px] touch-manipulation" : ""}`}>
               <SelectValue placeholder="Tất cả trạng thái" />
             </SelectTrigger>
             <SelectContent>
@@ -251,7 +252,12 @@ export function CustomerVoucherTab({
           </Select>
 
           {statusFilter && statusFilter !== "all" && (
-            <Button variant="outline" size="sm" onClick={() => setStatusFilter("all")}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setStatusFilter("all")}
+              className={isMobile ? "min-h-[44px] touch-manipulation" : ""}
+            >
               Xóa bộ lọc
             </Button>
           )}
@@ -271,34 +277,87 @@ export function CustomerVoucherTab({
           </Alert>
         ) : historyData?.data?.vouchers && historyData.data.vouchers.length > 0 ? (
           <>
-            <div className="border rounded-lg overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Mã Voucher</TableHead>
-                    <TableHead>Chiến dịch</TableHead>
-                    <TableHead>Trạng thái</TableHead>
-                    <TableHead>Ngày nhận</TableHead>
-                    <TableHead>Hạn dùng</TableHead>
-                    <TableHead>Ngày dùng</TableHead>
-                    <TableHead>Hóa đơn</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {historyData.data.vouchers.map((item: VoucherHistoryItem) => (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-mono font-medium">{item.voucher_code}</TableCell>
-                      <TableCell>{item.campaign_name}</TableCell>
-                      <TableCell>{getStatusBadge(item.status)}</TableCell>
-                      <TableCell>{formatDate(item.received_at)}</TableCell>
-                      <TableCell>{formatDate(item.expires_at)}</TableCell>
-                      <TableCell>{item.used_at ? formatDate(item.used_at) : "-"}</TableCell>
-                      <TableCell>{item.invoice_used_voucher || "-"}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            {isMobile ? (
+              <div className="space-y-3">
+                {historyData.data.vouchers.map((item: VoucherHistoryItem) => (
+                  <div key={item.id} className="theme-card rounded-lg border theme-border-primary overflow-hidden">
+                    <div className="p-4 space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <div className="font-mono font-semibold text-base">{item.voucher_code}</div>
+                          <div className="text-sm text-muted-foreground mt-1">
+                            {item.campaign_name}
+                          </div>
+                        </div>
+                        {getStatusBadge(item.status)}
+                      </div>
+                      
+                      <div className="space-y-2 pt-2 border-t">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground flex items-center gap-1">
+                            <span className="text-base">📅</span> Ngày nhận
+                          </span>
+                          <span>{formatDate(item.received_at)}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground flex items-center gap-1">
+                            <span className="text-base">⏰</span> Hạn dùng
+                          </span>
+                          <span>{formatDate(item.expires_at)}</span>
+                        </div>
+                        {item.used_at && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground flex items-center gap-1">
+                              <span className="text-base">✅</span> Ngày dùng
+                            </span>
+                            <span>{formatDate(item.used_at)}</span>
+                          </div>
+                        )}
+                        {item.invoice_used_voucher && (
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground flex items-center gap-1">
+                              <span className="text-base">🧾</span> Hóa đơn
+                            </span>
+                            <span className="font-mono text-xs">{item.invoice_used_voucher}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="border rounded-lg overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b theme-border-primary/20">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase">Mã Voucher</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase">Chiến dịch</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase">Trạng thái</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase">Ngày nhận</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase">Hạn dùng</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase">Ngày dùng</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium theme-text uppercase">Hóa đơn</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {historyData.data.vouchers.map((item: VoucherHistoryItem) => (
+                        <tr key={item.id} className="border-b theme-border-primary/10 hover:bg-gray-50">
+                          <td className="px-4 py-3 font-mono font-medium">{item.voucher_code}</td>
+                          <td className="px-4 py-3">{item.campaign_name}</td>
+                          <td className="px-4 py-3">{getStatusBadge(item.status)}</td>
+                          <td className="px-4 py-3">{formatDate(item.received_at)}</td>
+                          <td className="px-4 py-3">{formatDate(item.expires_at)}</td>
+                          <td className="px-4 py-3">{item.used_at ? formatDate(item.used_at) : "-"}</td>
+                          <td className="px-4 py-3">{item.invoice_used_voucher || "-"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
 
             {/* Pagination */}
             {historyData.data.pagination && historyData.data.pagination.total_pages > 1 && (
