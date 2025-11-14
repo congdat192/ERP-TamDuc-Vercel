@@ -184,7 +184,7 @@ export function mapFamilyMembersToRelated(
     return {
       // IDs - use API id as primary identifier
       id: member.id, // ✅ Use API's 10-char id
-      related_code: `FM-${member.sdt?.slice(-4) || 'XXXX'}`,
+      related_code: `FM-${member.id.toUpperCase()}`,
       
       // Main customer info
       customer_phone: customerData.contactnumber,
