@@ -437,11 +437,18 @@ export const voucherService = {
   },
 
   // ========== VOUCHER TRACKING (External API) ==========
+  /**
+   * Get voucher tracking with filters according to API V1.1 specification
+   */
   async getVoucherTracking(filters: {
+    voucher_code?: string;        // Searches across code + reissue_1_code + reissue_2_code
     recipient_phone?: string;
-    activation_status?: string;
-    created_at_from?: string;
-    created_at_to?: string;
+    creator_name?: string;
+    voucher_used?: boolean;       // Boolean filter
+    created_at_from?: string;     // Format: YYYY-MM-DD
+    created_at_to?: string;       // Format: YYYY-MM-DD
+    expired_at_from?: string;     // Format: YYYY-MM-DD
+    expired_at_to?: string;       // Format: YYYY-MM-DD
     page_size?: number;
     offset?: number;
   }): Promise<VoucherTrackingResponse> {

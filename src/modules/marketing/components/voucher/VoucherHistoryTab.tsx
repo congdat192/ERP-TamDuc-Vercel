@@ -21,13 +21,14 @@ export function VoucherHistoryTab() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState({
+    voucher_code: '',        // Renamed from "code" - searches across 3 columns
     recipient_phone: '',
-    code: '',
     creator_name: '',
-    activation_status: 'all',
-    date_filter_type: 'created_at',
+    voucher_used: 'all',     // 'all' | 'true' | 'false'
     created_at_from: '',
-    created_at_to: ''
+    created_at_to: '',
+    expired_at_from: '',
+    expired_at_to: ''
   });
 
   useEffect(() => {
@@ -71,20 +72,21 @@ export function VoucherHistoryTab() {
         offset: pagination.offset
       };
       
+      // Only send params that have values (API V1.1 spec)
+      if (filters.voucher_code) filterParams.voucher_code = filters.voucher_code;
       if (filters.recipient_phone) filterParams.recipient_phone = filters.recipient_phone;
-      if (filters.code) filterParams.code = filters.code;
       if (filters.creator_name) filterParams.creator_name = filters.creator_name;
-      if (filters.activation_status !== 'all') filterParams.activation_status = filters.activation_status;
       
-      // Dynamic date filter based on date_filter_type
-      if (filters.created_at_from) {
-        const fromField = `${filters.date_filter_type}_from`;
-        filterParams[fromField] = new Date(filters.created_at_from + 'T00:00:00').toISOString();
+      // voucher_used: only send when selected true/false, don't send when "all"
+      if (filters.voucher_used !== 'all') {
+        filterParams.voucher_used = filters.voucher_used === 'true';
       }
-      if (filters.created_at_to) {
-        const toField = `${filters.date_filter_type}_to`;
-        filterParams[toField] = new Date(filters.created_at_to + 'T23:59:59').toISOString();
-      }
+      
+      // Dates: send YYYY-MM-DD format, NOT ISO timestamp
+      if (filters.created_at_from) filterParams.created_at_from = filters.created_at_from;
+      if (filters.created_at_to) filterParams.created_at_to = filters.created_at_to;
+      if (filters.expired_at_from) filterParams.expired_at_from = filters.expired_at_from;
+      if (filters.expired_at_to) filterParams.expired_at_to = filters.expired_at_to;
 
       const response = await voucherService.getVoucherTracking(filterParams);
       setHistory(response.data);
@@ -159,7 +161,7 @@ export function VoucherHistoryTab() {
   return (
     <div className="space-y-3">
       {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-7 gap-3 p-3 bg-muted/50 rounded-lg">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 bg-muted/50 rounded-lg">
           <div className="space-y-2">
             <Label>Số điện thoại</Label>
             <Input
@@ -172,10 +174,13 @@ export function VoucherHistoryTab() {
           <div className="space-y-2">
             <Label>Mã voucher</Label>
             <Input
-              placeholder="VOU-001"
-              value={filters.code}
-              onChange={(e) => setFilters(prev => ({ ...prev, code: e.target.value }))}
+              placeholder="Tìm mã gốc hoặc mã cấp lại"
+              value={filters.voucher_code}
+              onChange={(e) => setFilters(prev => ({ ...prev, voucher_code: e.target.value }))}
             />
+            <p className="text-xs text-muted-foreground">
+              Tìm trong code, reissue_1_code, reissue_2_code
+            </p>
           </div>
 
           <div className="space-y-2">
@@ -188,35 +193,21 @@ export function VoucherHistoryTab() {
           </div>
 
           <div className="space-y-2">
-            <Label>Trạng thái</Label>
-            <Select value={filters.activation_status} onValueChange={(val) => setFilters(prev => ({ ...prev, activation_status: val }))}>
+            <Label>Trạng thái sử dụng</Label>
+            <Select value={filters.voucher_used} onValueChange={(val) => setFilters(prev => ({ ...prev, voucher_used: val }))}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tất cả</SelectItem>
-                <SelectItem value="Đã kích hoạt">Đã kích hoạt</SelectItem>
-                <SelectItem value="Chưa kích hoạt">Chưa kích hoạt</SelectItem>
+                <SelectItem value="true">Đã sử dụng</SelectItem>
+                <SelectItem value="false">Chưa sử dụng</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label>Lọc theo ngày</Label>
-            <Select value={filters.date_filter_type} onValueChange={(val) => setFilters(prev => ({ ...prev, date_filter_type: val }))}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="created_at">Ngày tạo</SelectItem>
-                <SelectItem value="activated_at">Ngày kích hoạt</SelectItem>
-                <SelectItem value="expired_at">Ngày hết hạn</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Từ ngày</Label>
+            <Label>Ngày tạo từ</Label>
             <Input
               type="date"
               value={filters.created_at_from}
@@ -225,28 +216,45 @@ export function VoucherHistoryTab() {
           </div>
 
           <div className="space-y-2">
-            <Label>Đến ngày</Label>
+            <Label>Ngày tạo đến</Label>
             <Input
               type="date"
               value={filters.created_at_to}
               onChange={(e) => setFilters(prev => ({ ...prev, created_at_to: e.target.value }))}
             />
           </div>
-        </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-2">
-          <Button onClick={handleSearch} disabled={isLoading}>
-            <Search className="w-4 h-4 mr-2" />
-            Tìm kiếm
-          </Button>
-          <Button variant="outline" onClick={handleExportExcel} disabled={history.length === 0}>
-            <Download className="w-4 h-4 mr-2" />
-            Xuất Excel
-          </Button>
-        </div>
+          <div className="space-y-2">
+            <Label>Ngày hết hạn từ</Label>
+            <Input
+              type="date"
+              value={filters.expired_at_from}
+              onChange={(e) => setFilters(prev => ({ ...prev, expired_at_from: e.target.value }))}
+            />
+          </div>
 
-        {/* Table with sticky header and vertical scroll */}
+          <div className="space-y-2">
+            <Label>Ngày hết hạn đến</Label>
+            <Input
+              type="date"
+              value={filters.expired_at_to}
+              onChange={(e) => setFilters(prev => ({ ...prev, expired_at_to: e.target.value }))}
+            />
+          </div>
+
+          <div className="flex items-end space-x-2">
+            <Button onClick={handleSearch} className="flex-1">
+              <Search className="w-4 h-4 mr-2" />
+              Tìm kiếm
+            </Button>
+            <Button onClick={handleExportExcel} variant="outline" className="flex-1">
+              <Download className="w-4 h-4 mr-2" />
+              Xuất Excel
+            </Button>
+          </div>
+      </div>
+
+      {/* Table with sticky header and vertical scroll */}
         <div className="border rounded-lg overflow-hidden">
           <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
             <Table>

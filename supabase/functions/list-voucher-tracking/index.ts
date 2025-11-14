@@ -75,26 +75,24 @@ serve(async (req) => {
 
     const url = new URL(req.url);
 
-    // Extract ALL possible filters (không require phone)
+    // Extract filters according to API V1.1 specification
     const params = new URLSearchParams();
     const allowedParams = [
-      'code', 'campaign_id', 'campaign_code', 'activation_status',
-      'recipient_phone', 'creator_phone', 'creator_name',
-      'customer_type', 'customer_source', 'voucher_used',
-      'invoice_id', 'invoice_code', 'invoice_status', 'invoice_amount',
-      'created_at_from', 'created_at_to', 
-      'activated_at_from', 'activated_at_to',
-      'expired_at_from', 'expired_at_to',
-      'page_size', 'offset', 'order_by', 'sort',
-      'note',
-      // Reissue 1
-      'reissue_1_code', 'reissue_1_status',
-      'reissue_1_invoice_id', 'reissue_1_invoice_code',
-      'reissue_1_invoice_status', 'reissue_1_invoice_amount',
-      // Reissue 2
-      'reissue_2_code', 'reissue_2_status',
-      'reissue_2_invoice_id', 'reissue_2_invoice_code',
-      'reissue_2_invoice_status', 'reissue_2_invoice_amount'
+      // Core filters
+      'voucher_code',      // Searches across code + reissue_1_code + reissue_2_code
+      'recipient_phone',
+      'creator_name',
+      'voucher_used',      // Boolean filter
+      
+      // Date range filters
+      'created_at_from',
+      'created_at_to',
+      'expired_at_from',
+      'expired_at_to',
+      
+      // Pagination
+      'page_size',
+      'offset'
     ];
 
     allowedParams.forEach(key => {
