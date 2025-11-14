@@ -6,7 +6,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { ZoomIn } from 'lucide-react';
+import { ZoomIn, User, Phone, MapPin, Building2 } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 interface Customer {
   id: string;
@@ -37,17 +39,34 @@ interface CustomerInfoTabProps {
 
 export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
   const [isZoomOpen, setIsZoomOpen] = useState(false);
+  const isMobile = useIsMobile();
   
   const getInitials = (name: string) => {
     if (!name || typeof name !== 'string') return 'NA';
     return name.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2);
   };
 
+  const SectionHeader = ({ icon: Icon, title }: { icon: any; title: string }) => (
+    <div className="col-span-full pt-6 first:pt-0">
+      <h3 className="text-sm font-bold uppercase tracking-wider text-primary mb-3 flex items-center gap-2">
+        <Icon className="w-5 h-5" />
+        {title}
+      </h3>
+      <div className="h-px bg-gradient-to-r from-primary/50 to-transparent mb-4" />
+    </div>
+  );
+
   return (
-    <div className="theme-card rounded-lg border-2 theme-border-primary p-6 shadow-md hover:shadow-lg transition-all duration-200">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="theme-card rounded-lg border-2 theme-border-primary p-4 sm:p-6 shadow-md hover:shadow-lg transition-all duration-200">
+      <div className={cn(
+        "grid gap-4",
+        isMobile ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-4"
+      )}>
+        {/* Section: Thông tin cơ bản */}
+        {isMobile && <SectionHeader icon={User} title="Thông tin cơ bản" />}
+
         {/* Dòng 1: Avatar, Mã khách hàng, Tên khách hàng, Loại khách hàng */}
-        <div className="space-y-2 flex flex-col items-center">
+        <div className="space-y-2 flex flex-col items-center sm:items-start">
           <div 
             className="relative group cursor-pointer"
             onClick={() => customer.avatarUrl && setIsZoomOpen(true)}
@@ -74,26 +93,26 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
           <Label className="theme-text text-sm font-medium text-center">Ảnh đại diện</Label>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="customer-code" className="theme-text text-sm font-medium">Mã khách hàng</Label>
+          <Label htmlFor="customer-code" className="theme-text text-sm font-semibold">Mã khách hàng</Label>
           <Input 
             id="customer-code"
             value={customer.id} 
             readOnly 
-            className="voucher-input h-9"
+            className={cn("voucher-input bg-muted", isMobile && "min-h-[44px] text-[15px]")}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="customer-name" className="theme-text text-sm font-medium">Tên khách hàng</Label>
+          <Label htmlFor="customer-name" className="theme-text text-sm font-semibold">Tên khách hàng</Label>
           <Input 
             id="customer-name"
             value={customer.name} 
-            className="voucher-input h-9"
+            className={cn("voucher-input", isMobile && "min-h-[44px] text-[15px]")}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="customer-type" className="theme-text text-sm font-medium">Loại khách hàng</Label>
+          <Label htmlFor="customer-type" className="theme-text text-sm font-semibold">Loại khách hàng</Label>
           <Select defaultValue="individual">
-            <SelectTrigger className="voucher-input h-9">
+            <SelectTrigger className={cn("voucher-input", isMobile && "min-h-[44px] text-[15px]")}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -107,7 +126,7 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
         <div className="space-y-2">
           <Label htmlFor="customer-group" className="theme-text text-sm font-medium">Nhóm khách hàng</Label>
           <Select defaultValue={customer.group}>
-            <SelectTrigger className="voucher-input h-9">
+            <SelectTrigger className={cn("voucher-input", isMobile && "min-h-[44px] text-[15px]")}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -119,61 +138,61 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
           </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="phone" className="theme-text text-sm font-medium">Điện thoại</Label>
+          <Label htmlFor="phone" className="theme-text text-sm font-semibold">Điện thoại</Label>
           <Input 
             id="phone"
             value={customer.phone} 
-            className="voucher-input h-9"
+            className={cn("voucher-input", isMobile && "min-h-[44px] text-[15px]")}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="email" className="theme-text text-sm font-medium">Email</Label>
+          <Label htmlFor="email" className="theme-text text-sm font-semibold">Email</Label>
           <Input 
             id="email"
             value={customer.email} 
-            className="voucher-input h-9"
+            className={cn("voucher-input", isMobile && "min-h-[44px] text-[15px]")}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="facebook" className="theme-text text-sm font-medium">Facebook</Label>
+          <Label htmlFor="facebook" className="theme-text text-sm font-semibold">Facebook</Label>
           <Input 
             id="facebook"
             value={customer.facebook} 
-            className="voucher-input h-9"
+            className={cn("voucher-input", isMobile && "min-h-[44px] text-[15px]")}
           />
         </div>
 
         {/* Dòng 3: Ngày sinh, Ngày tạo, Người tạo, Giới tính */}
         <div className="space-y-2">
-          <Label htmlFor="birthday" className="theme-text text-sm font-medium">Ngày sinh</Label>
+          <Label htmlFor="birthday" className="theme-text text-sm font-semibold">Ngày sinh</Label>
           <Input 
             id="birthday"
             value={customer.birthday} 
-            className="voucher-input h-9"
+            className={cn("voucher-input", isMobile && "min-h-[44px] text-[15px]")}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="created-date" className="theme-text text-sm font-medium">Ngày tạo</Label>
+          <Label htmlFor="created-date" className="theme-text text-sm font-semibold">Ngày tạo</Label>
           <Input 
             id="created-date"
             value={customer.createdDate} 
             readOnly
-            className="voucher-input h-9"
+            className={cn("voucher-input bg-muted", isMobile && "min-h-[44px] text-[15px]")}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="creator" className="theme-text text-sm font-medium">Người tạo</Label>
+          <Label htmlFor="creator" className="theme-text text-sm font-semibold">Người tạo</Label>
           <Input 
             id="creator"
             value={customer.creator} 
             readOnly
-            className="voucher-input h-9"
+            className={cn("voucher-input bg-muted", isMobile && "min-h-[44px] text-[15px]")}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="gender" className="theme-text text-sm font-medium">Giới tính</Label>
+          <Label htmlFor="gender" className="theme-text text-sm font-semibold">Giới tính</Label>
           <Select defaultValue={customer.gender}>
-            <SelectTrigger className="voucher-input h-9">
+            <SelectTrigger className={cn("voucher-input", isMobile && "min-h-[44px] text-[15px]")}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -184,45 +203,59 @@ export function CustomerInfoTab({ customer }: CustomerInfoTabProps) {
           </Select>
         </div>
 
+        {/* Separator for mobile */}
+        {isMobile && <div className="col-span-full h-px bg-gray-200 my-2" />}
+
+        {/* Section: Địa chỉ */}
+        {isMobile && <SectionHeader icon={MapPin} title="Địa chỉ" />}
+
         {/* Dòng 4: Địa chỉ (span 4 cột) */}
-        <div className="space-y-2 md:col-span-2 lg:col-span-4">
-          <Label htmlFor="address" className="theme-text text-sm font-medium">Địa chỉ</Label>
+        <div className={cn("space-y-2", !isMobile && "md:col-span-2 lg:col-span-4")}>
+          <Label htmlFor="address" className="theme-text text-sm font-semibold">Địa chỉ</Label>
           <Input 
             id="address"
             value={customer.address} 
-            className="voucher-input h-9"
+            className={cn("voucher-input", isMobile && "min-h-[44px] text-[15px]")}
           />
         </div>
 
+        {/* Separator for mobile */}
+        {isMobile && <div className="col-span-full h-px bg-gray-200 my-2" />}
+
+        {/* Section: Thông tin công ty */}
+        {isMobile && <SectionHeader icon={Building2} title="Thông tin công ty" />}
+
         {/* Dòng 5: Tên công ty, Mã số thuế, Chi nhánh, (1 cột trống) */}
         <div className="space-y-2">
-          <Label htmlFor="company" className="theme-text text-sm font-medium">Tên công ty</Label>
+          <Label htmlFor="company" className="theme-text text-sm font-semibold">Tên công ty</Label>
           <Input 
             id="company"
             value={customer.company} 
-            className="voucher-input h-9"
+            className={cn("voucher-input", isMobile && "min-h-[44px] text-[15px]")}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="tax-code" className="theme-text text-sm font-medium">Mã số thuế</Label>
+          <Label htmlFor="tax-code" className="theme-text text-sm font-semibold">Mã số thuế</Label>
           <Input 
             id="tax-code"
             value={customer.taxCode} 
-            className="voucher-input h-9"
+            className={cn("voucher-input", isMobile && "min-h-[44px] text-[15px]")}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="branch" className="theme-text text-sm font-medium">Chi nhánh</Label>
+          <Label htmlFor="branch" className="theme-text text-sm font-semibold">Chi nhánh</Label>
           <Input 
             id="branch"
             value="Chi nhánh HCM" 
             readOnly
-            className="voucher-input h-9"
+            className={cn("voucher-input bg-muted", isMobile && "min-h-[44px] text-[15px]")}
           />
         </div>
-        <div className="space-y-2">
-          {/* Cột trống */}
-        </div>
+        {!isMobile && (
+          <div className="space-y-2">
+            {/* Cột trống */}
+          </div>
+        )}
 
         {/* Dòng 6: Ghi chú (span 4 cột) */}
         <div className="space-y-2 md:col-span-2 lg:col-span-4">
