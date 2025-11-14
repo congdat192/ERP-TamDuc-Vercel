@@ -6,7 +6,30 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Dynamic Manifest Loading for Separate PWAs -->
+    <script>
+      (function() {
+        const path = window.location.pathname;
+        const isERP = path.startsWith('/ERP') || 
+                      path.startsWith('/login') || 
+                      path.startsWith('/my-profile') || 
+                      path.startsWith('/ESS');
+        
+        // Load appropriate manifest
+        const manifestLink = document.createElement('link');
+        manifestLink.rel = 'manifest';
+        manifestLink.href = isERP ? '/manifest-erp.json' : '/manifest-catalog.json';
+        document.head.appendChild(manifestLink);
+        
+        // Update Apple PWA title
+        const appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+        if (appleTitle) {
+          appleTitle.content = isERP ? 'TĐ ERP' : 'TĐ Catalog';
+        }
+      })();
+    </script>
+    
     <title>Tâm Đức ERP</title>
     <meta name="description" content="ERP Project by Tâm Đức Optical">
     <meta name="author" content="Lovable" />

@@ -1,0 +1,25 @@
+{
+  "name": "Tâm Đức Lens Catalog",
+  "short_name": "TĐ Catalog",
+  "description": "Catalog tròng kính Tâm Đức - Tư vấn chuyên nghiệp",
+  "start_url": "/lens-catalog",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#ffffff",
+  "theme_color": "#0f6b53",
+  "icons": [
+    {
+      "src": "https://storage.googleapis.com/gpt-engineer-file-uploads/GQTKK7hEPwTIYKondgzdBNin6sJ3/uploads/1760166092433-tamduc%20favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://storage.googleapis.com/gpt-engineer-file-uploads/GQTKK7hEPwTIYKondgzdBNin6sJ3/uploads/1760166092433-tamduc%20favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
