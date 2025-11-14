@@ -115,7 +115,7 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
       if (uploadedUrls.length > 0) {
         const response: APIResponse = await FamilyMemberService.addImages(
           related.customer_phone,
-          related.related_name,
+          related.id, // ✅ Use ID instead of name
           uploadedUrls
         );
 
@@ -175,7 +175,7 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
       // 1. Call External API to remove image
       const response: APIResponse = await FamilyMemberService.deleteImage(
         related.customer_phone,
-        related.related_name,
+        related.id, // ✅ Use ID instead of name
         avatar.public_url
       );
 

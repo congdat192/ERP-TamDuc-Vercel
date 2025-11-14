@@ -15,6 +15,7 @@ export type MoiQuanHe = "con_cai" | "vo_chong" | "anh_chi_em" | "ong_ba" | "khac
 export type GioiTinh = "nam" | "nu";
 
 export interface APIFamilyMember {
+  id: string; // 10-char identifier [0-9a-z]
   ten: string;
   moi_quan_he: MoiQuanHe;
   gioi_tinh: GioiTinh;
@@ -142,11 +143,12 @@ export class FamilyMemberService {
     return this.parseResponse(data, error);
   }
 
-  // ========== 2. UPDATE - Cập nhật thông tin người thân ==========
+  // ========== 2. UPDATE - Cập nhật thông tin người thân (bao gồm rename) ==========
   static async updateFamilyMember(
     customerPhone: string,
-    ten: string, // Identify by name
+    id: string,
     updates: {
+      ten?: string; // Optional - for rename
       moi_quan_he?: string;
       gioi_tinh?: 'nam' | 'nu' | 'khac';
       ngay_sinh?: string;
@@ -159,7 +161,7 @@ export class FamilyMemberService {
         action: 'update',
         customer_sdt: customerPhone,
         nguoi_than: {
-          ten,
+          id,
           ...updates
         }
       }
@@ -168,46 +170,26 @@ export class FamilyMemberService {
     return this.parseResponse(data, error);
   }
 
-  // ========== 3. RENAME - Đổi tên người thân ==========
-  static async renameFamilyMember(
-    customerPhone: string,
-    ten_cu: string,
-    ten_moi: string
-  ): Promise<APIResponse> {
-    const { data, error } = await supabase.functions.invoke(this.ENDPOINT, {
-      body: {
-        action: 'rename',
-        customer_sdt: customerPhone,
-        ten_cu,      // ✅ Root level (not inside nguoi_than)
-        ten_moi      // ✅ Root level (not inside nguoi_than)
-      }
-    });
-
-    return this.parseResponse(data, error);
-  }
-
-  // ========== 4. DELETE - Xóa người thân ==========
+  // ========== 3. DELETE - Xóa người thân ==========
   static async deleteFamilyMember(
     customerPhone: string,
-    ten: string
+    id: string
   ): Promise<APIResponse> {
     const { data, error } = await supabase.functions.invoke(this.ENDPOINT, {
       body: {
         action: 'delete',
         customer_sdt: customerPhone,
-        nguoi_than: {
-          ten
-        }
+        nguoi_than: { id }
       }
     });
 
     return this.parseResponse(data, error);
   }
 
-  // ========== 5. ADD_IMAGE - Thêm hình ảnh ==========
+  // ========== 4. ADD_IMAGE - Thêm hình ảnh ==========
   static async addImages(
     customerPhone: string,
-    ten: string,
+    id: string,
     hinh_anh_moi: string[] // Array of URLs
   ): Promise<APIResponse> {
     const { data, error } = await supabase.functions.invoke(this.ENDPOINT, {
@@ -215,7 +197,7 @@ export class FamilyMemberService {
         action: 'add_image',
         customer_sdt: customerPhone,
         nguoi_than: {
-          ten,
+          id,
           hinh_anh_moi
         }
       }
@@ -224,10 +206,10 @@ export class FamilyMemberService {
     return this.parseResponse(data, error);
   }
 
-  // ========== 6. DELETE_IMAGE - Xóa hình ảnh ==========
+  // ========== 5. DELETE_IMAGE - Xóa hình ảnh ==========
   static async deleteImage(
     customerPhone: string,
-    ten: string,
+    id: string,
     image_url: string // Single URL
   ): Promise<APIResponse> {
     const { data, error } = await supabase.functions.invoke(this.ENDPOINT, {
@@ -235,7 +217,7 @@ export class FamilyMemberService {
         action: 'delete_image',
         customer_sdt: customerPhone,
         nguoi_than: {
-          ten,
+          id,
           image_url
         }
       }
@@ -244,19 +226,19 @@ export class FamilyMemberService {
     return this.parseResponse(data, error);
   }
 
-  // ========== 7. ASSIGN_BILLS - Gán hóa đơn (nhiều hóa đơn) ==========
+  // ========== 6. ASSIGN_BILLS - Gán hóa đơn (nhiều hóa đơn) ==========
   static async assignBills(
     customerPhone: string,
-    ten: string,
-    billIds: number[] // ✅ Array of invoice IDs (numbers) [12345, 67890]
+    id: string,
+    hoadon_ids: (string | number)[] // ✅ Array of invoice IDs
   ): Promise<APIResponse> {
     const { data, error } = await supabase.functions.invoke(this.ENDPOINT, {
       body: {
         action: 'assign_bills',
         customer_sdt: customerPhone,
         nguoi_than: {
-          ten,
-          hoadon_ids: billIds // ✅ API expects array of numbers
+          id,
+          hoadon_ids // ✅ API expects array of numbers/strings
         }
       }
     });
@@ -264,19 +246,19 @@ export class FamilyMemberService {
     return this.parseResponse(data, error);
   }
 
-  // ========== 8. UNASSIGN_BILL - Bỏ gán 1 hóa đơn ==========
+  // ========== 7. UNASSIGN_BILL - Bỏ gán 1 hóa đơn ==========
   static async unassignBill(
     customerPhone: string,
-    ten: string,
-    billId: number // ✅ Single invoice ID (number) 12345
+    id: string,
+    hoadon_id: string | number // ✅ Single invoice ID
   ): Promise<APIResponse> {
     const { data, error } = await supabase.functions.invoke(this.ENDPOINT, {
       body: {
         action: 'unassign_bill',
         customer_sdt: customerPhone,
         nguoi_than: {
-          ten,
-          hoadon_id: billId // ✅ API expects number
+          id,
+          hoadon_id // ✅ API expects number/string
         }
       }
     });
