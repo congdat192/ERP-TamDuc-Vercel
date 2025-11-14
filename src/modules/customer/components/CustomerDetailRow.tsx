@@ -177,8 +177,14 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
 
   return (
     <tr className="bg-gray-50/50">
-      <td colSpan={visibleColumnsCount + 2} className="p-0">
-        <div className="border-2 border-solid theme-border-primary bg-white/80 rounded-lg mx-2 my-1 shadow-sm">
+      <td colSpan={visibleColumnsCount + 2} className={cn(
+        "p-0",
+        isMobile && "!block !w-screen !max-w-full overflow-x-hidden"
+      )}>
+        <div className={cn(
+          "border-2 border-solid theme-border-primary bg-white/80 rounded-lg shadow-sm",
+          isMobile ? "mx-0 my-1 max-w-full" : "mx-2 my-1"
+        )}>
           {/* Mobile Header - Compact when viewing tab detail */}
           {isMobile && !showTabsList && (
             <div className="sticky top-0 z-50 bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 shadow-lg">

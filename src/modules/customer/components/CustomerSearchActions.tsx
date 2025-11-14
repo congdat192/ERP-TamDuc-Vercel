@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ColumnVisibilityFilter } from './ColumnVisibilityFilter';
 import { ColumnConfig } from './ColumnVisibilityFilter';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface CustomerSearchActionsProps {
   searchTerm: string;
@@ -26,6 +27,8 @@ export function CustomerSearchActions({
   handleColumnToggle,
   onToggleSidebar 
 }: CustomerSearchActionsProps) {
+  const isMobile = useIsMobile();
+  
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && onSearch) {
       onSearch();
@@ -92,10 +95,12 @@ export function CustomerSearchActions({
           
           {/* Column Filter và More Actions */}
           <div className="flex items-center space-x-2">
-            <ColumnVisibilityFilter 
-              columns={columns}
-              onColumnToggle={handleColumnToggle}
-            />
+            {!isMobile && (
+              <ColumnVisibilityFilter 
+                columns={columns}
+                onColumnToggle={handleColumnToggle}
+              />
+            )}
             <Button variant="ghost" size="sm" className="hover:theme-bg-primary/10 hover:theme-text-primary">
               <MoreHorizontal className="w-4 h-4 theme-text-primary" />
             </Button>
