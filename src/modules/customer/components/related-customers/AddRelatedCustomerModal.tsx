@@ -57,6 +57,14 @@ const formatDateInput = (value: string): string => {
   return `${digitsOnly.slice(0, 2)}/${digitsOnly.slice(2, 4)}/${digitsOnly.slice(4, 8)}`;
 };
 
+// Convert dd/mm/yyyy -> "Ngày DD tháng MM năm YYYY"
+const formatDateToVietnamese = (dateStr: string): string => {
+  if (!dateStr.trim() || !isValidDate(dateStr)) return '';
+  
+  const [day, month, year] = dateStr.split('/');
+  return `Ngày ${parseInt(day, 10)} tháng ${parseInt(month, 10)} năm ${year}`;
+};
+
 export function AddRelatedCustomerModal({
   open, 
   onOpenChange, 
@@ -370,6 +378,11 @@ export function AddRelatedCustomerModal({
               {birthDate && !isValidDate(birthDate) && (
                 <p className="text-sm text-red-500">
                   Định dạng không hợp lệ. Vui lòng nhập dd/mm/yyyy
+                </p>
+              )}
+              {birthDate && isValidDate(birthDate) && (
+                <p className="text-sm text-green-600 font-medium animate-in fade-in-50 duration-200">
+                  ✓ {formatDateToVietnamese(birthDate)}
                 </p>
               )}
             </div>
