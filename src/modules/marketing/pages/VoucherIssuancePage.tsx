@@ -4,6 +4,7 @@ import { VoucherIssueTab } from '../components/voucher/VoucherIssueTab';
 import { VoucherReissueTab } from '../components/voucher/VoucherReissueTab';
 import { VoucherSettingsTab } from '../components/voucher/VoucherSettingsTab';
 import { VoucherHistoryTab } from '../components/voucher/VoucherHistoryTab';
+import { CSKHReportTab } from '../components/voucher/CSKHReportTab';
 import { usePermissions } from '@/hooks/usePermissions';
 
 export function VoucherIssuancePage() {
@@ -22,16 +23,17 @@ export function VoucherIssuancePage() {
                             hasFeatureAccess('manage_voucher_sources');
   
   // Count visible tabs to set grid-cols dynamically
-  const visibleTabs = [canIssueVouchers, canReissueVouchers, canAccessSettings, canViewHistory].filter(Boolean).length;
+  const visibleTabs = [canIssueVouchers, canReissueVouchers, canAccessSettings, canViewHistory, true].filter(Boolean).length;
 
   return (
     <div className="p-4">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className={`grid w-full grid-cols-${visibleTabs} max-w-2xl`}>
+        <TabsList className="grid w-full max-w-3xl" style={{ gridTemplateColumns: `repeat(${visibleTabs}, 1fr)` }}>
           {canIssueVouchers && <TabsTrigger value="issue">Phát hành</TabsTrigger>}
           {canReissueVouchers && <TabsTrigger value="reissue">Cấp lại</TabsTrigger>}
           {canAccessSettings && <TabsTrigger value="settings">Cài đặt</TabsTrigger>}
           {canViewHistory && <TabsTrigger value="history">Lịch sử</TabsTrigger>}
+          <TabsTrigger value="report">Báo cáo</TabsTrigger>
         </TabsList>
 
         {canIssueVouchers && (
@@ -57,6 +59,10 @@ export function VoucherIssuancePage() {
             <VoucherHistoryTab />
           </TabsContent>
         )}
+
+        <TabsContent value="report" className="mt-3">
+          <CSKHReportTab />
+        </TabsContent>
       </Tabs>
     </div>
   );
