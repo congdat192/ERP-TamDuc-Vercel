@@ -25,6 +25,13 @@ export function CustomerRelatedTab({ customer, currentUser, refreshTrigger }: Cu
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedRelated, setSelectedRelated] = useState<RelatedCustomer | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [localRefreshTrigger, setLocalRefreshTrigger] = useState(0);
+
+  // Unified refresh trigger function
+  const triggerRefresh = () => {
+    console.log('[CustomerRelatedTab] Triggering refresh');
+    setLocalRefreshTrigger(prev => prev + 1);
+  };
 
   const fetchRelatedCustomers = async () => {
     if (!customer?.phone) {
@@ -108,13 +115,21 @@ export function CustomerRelatedTab({ customer, currentUser, refreshTrigger }: Cu
     fetchRelatedCustomers();
   }, [customer?.phone, customer?.familyMembers]);
 
-  // Handle manual refresh from parent
+  // Handle manual refresh from parent via refreshTrigger prop
   useEffect(() => {
     if (refreshTrigger && refreshTrigger > 0) {
-      console.log('[CustomerRelatedTab] Manual refresh triggered:', refreshTrigger);
-      refreshCustomerData();
+      console.log('[CustomerRelatedTab] Parent refresh trigger:', refreshTrigger);
+      triggerRefresh();
     }
   }, [refreshTrigger]);
+
+  // Handle unified refresh trigger (manual + auto)
+  useEffect(() => {
+    if (localRefreshTrigger > 0) {
+      console.log('[CustomerRelatedTab] Executing refresh:', localRefreshTrigger);
+      refreshCustomerData();
+    }
+  }, [localRefreshTrigger]);
 
   const handleViewRelated = (related: RelatedCustomer) => {
     setSelectedRelated(related);
@@ -123,7 +138,11 @@ export function CustomerRelatedTab({ customer, currentUser, refreshTrigger }: Cu
 
   const handleAddSuccess = () => {
     setIsAddModalOpen(false);
-    refreshCustomerData();
+    triggerRefresh(); // Unified trigger pattern
+  };
+
+  const handleRelatedUpdate = () => {
+    triggerRefresh(); // Unified trigger pattern
   };
 
   return (
@@ -196,7 +215,7 @@ export function CustomerRelatedTab({ customer, currentUser, refreshTrigger }: Cu
         related={selectedRelated}
         customer={customer}
         currentUser={currentUser}
-        onUpdate={refreshCustomerData}
+        onUpdate={handleRelatedUpdate}
       />
     </div>
   );
