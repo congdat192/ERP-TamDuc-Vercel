@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Plus, Loader2, AlertCircle } from 'lucide-react';
 import { RelatedCustomerCard } from '../related-customers/RelatedCustomerCard';
 import { AddRelatedCustomerModal } from '../related-customers/AddRelatedCustomerModal';
 import { RelatedCustomerDetailDialog } from '../related-customers/RelatedCustomerDetailDialog';
@@ -125,31 +124,14 @@ export function CustomerRelatedTab({ customer, currentUser }: CustomerRelatedTab
         <h3 className="text-lg font-semibold theme-text">
           👥 Danh sách người thân ({relatedCustomers.length})
         </h3>
-        
-        {/* Button Group */}
-        <div className="flex gap-2">
-          {/* Refresh Button */}
-          <Button
-            onClick={refreshCustomerData}
-            disabled={isLoading}
-            variant="outline"
-            size="sm"
-            className={`gap-2 ${isMobile ? "min-h-[44px] touch-manipulation" : ""}`}
-          >
-            <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
-            {!isMobile && "Làm mới"}
-          </Button>
-          
-          {/* Add Button */}
-          <Button
-            onClick={() => setIsAddModalOpen(true)}
-            className={`gap-2 ${isMobile ? "min-h-[44px] touch-manipulation" : ""}`}
-            size="sm"
-          >
-            <Plus className="w-4 h-4" />
-            {!isMobile && "Thêm người thân"}
-          </Button>
-        </div>
+        <Button
+          onClick={() => setIsAddModalOpen(true)}
+          className={`gap-2 ${isMobile ? "min-h-[44px] touch-manipulation" : ""}`}
+          size="sm"
+        >
+          <Plus className="w-4 h-4" />
+          {!isMobile && "Thêm người thân"}
+        </Button>
       </div>
 
       {/* Content */}

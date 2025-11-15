@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Gift, History, RefreshCw, AlertCircle } from "lucide-react";
+import { Gift, History, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { VoucherCard } from "../voucher/VoucherCard";
@@ -172,15 +172,9 @@ export function CustomerVoucherTab({
     <div className="space-y-6">
       {/* Section 1: Voucher Khả Dụng */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Gift className="w-5 h-5 theme-text-primary" />
-            <h3 className="text-lg font-semibold theme-text">Voucher Khả Dụng</h3>
-          </div>
-          <Button variant="outline" size="sm" onClick={onRefresh} className="gap-2">
-            <RefreshCw className="w-4 h-4" />
-            Làm mới
-          </Button>
+        <div className="flex items-center gap-2">
+          <Gift className="w-5 h-5 theme-text-primary" />
+          <h3 className="text-lg font-semibold theme-text">Voucher Khả Dụng</h3>
         </div>
 
         {/* Voucher Đã Nhận */}
