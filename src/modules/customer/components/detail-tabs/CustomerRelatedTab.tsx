@@ -13,9 +13,10 @@ import { useIsMobile } from '@/hooks/use-mobile';
 interface CustomerRelatedTabProps {
   customer: any;
   currentUser: any;
+  refreshTrigger?: number;
 }
 
-export function CustomerRelatedTab({ customer, currentUser }: CustomerRelatedTabProps) {
+export function CustomerRelatedTab({ customer, currentUser, refreshTrigger }: CustomerRelatedTabProps) {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const [relatedCustomers, setRelatedCustomers] = useState<RelatedCustomer[]>([]);
@@ -106,6 +107,14 @@ export function CustomerRelatedTab({ customer, currentUser }: CustomerRelatedTab
   useEffect(() => {
     fetchRelatedCustomers();
   }, [customer?.phone, customer?.familyMembers]);
+
+  // Handle manual refresh from parent
+  useEffect(() => {
+    if (refreshTrigger && refreshTrigger > 0) {
+      console.log('[CustomerRelatedTab] Manual refresh triggered:', refreshTrigger);
+      refreshCustomerData();
+    }
+  }, [refreshTrigger]);
 
   const handleViewRelated = (related: RelatedCustomer) => {
     setSelectedRelated(related);

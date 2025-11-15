@@ -41,6 +41,7 @@ const TABS: TabConfig[] = [
 export function FullScreenCustomerDetail({ customer, onClose }: FullScreenCustomerDetailProps) {
   const { currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState<TabKey | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // API data
   const [invoicesData, setInvoicesData] = useState<any[]>([]);
@@ -149,8 +150,8 @@ export function FullScreenCustomerDetail({ customer, onClose }: FullScreenCustom
         break;
         
       case 'related':
-        // Related tab sẽ refresh customer data
-        fetchCustomerData();
+        // Related tab sẽ refresh via trigger
+        setRefreshTrigger(prev => prev + 1);
         break;
         
       case 'info':
@@ -313,6 +314,7 @@ export function FullScreenCustomerDetail({ customer, onClose }: FullScreenCustom
               <CustomerRelatedTab 
                 customer={customer}
                 currentUser={currentUser}
+                refreshTrigger={refreshTrigger}
               />
             )}
           </div>
