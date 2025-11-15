@@ -135,9 +135,41 @@ export function FullScreenCustomerDetail({ customer, onClose }: FullScreenCustom
   };
 
   const handleRefresh = () => {
-    fetchInvoicesData();
-    fetchVoucherEligibility();
-    fetchCustomerData();
+    console.log('[FullScreenCustomerDetail] Refreshing tab:', activeTab);
+    
+    switch (activeTab) {
+      case 'sales':
+      case 'images':
+        // Sales và Images tab dùng chung invoices data
+        fetchInvoicesData();
+        break;
+        
+      case 'voucher':
+        fetchVoucherEligibility();
+        break;
+        
+      case 'related':
+        // Related tab sẽ refresh customer data
+        fetchCustomerData();
+        break;
+        
+      case 'info':
+      case 'interaction':
+        // Info và Interaction tab dùng customer data
+        fetchCustomerData();
+        break;
+        
+      case 'debt':
+      case 'points':
+        // Các tabs này load data từ DB trực tiếp, không cần refresh
+        break;
+        
+      default:
+        // Fallback: refresh all data
+        fetchInvoicesData();
+        fetchVoucherEligibility();
+        fetchCustomerData();
+    }
   };
 
   // Fetch data on mount
