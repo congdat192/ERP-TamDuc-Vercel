@@ -23,7 +23,41 @@ interface AddRelatedCustomerModalProps {
   onSuccess: () => void;
 }
 
-export function AddRelatedCustomerModal({ 
+// Validate dd/mm/yyyy format
+const isValidDate = (dateStr: string): boolean => {
+  if (!dateStr.trim()) return true; // Empty is valid (optional field)
+  
+  const regex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+  const match = dateStr.match(regex);
+  if (!match) return false;
+  
+  const day = parseInt(match[1], 10);
+  const month = parseInt(match[2], 10);
+  const year = parseInt(match[3], 10);
+  
+  if (day < 1 || day > 31 || month < 1 || month > 12 || 
+      year < 1900 || year > new Date().getFullYear()) return false;
+  
+  const date = new Date(year, month - 1, day);
+  return date.getDate() === day && date.getMonth() === month - 1;
+};
+
+// Convert dd/mm/yyyy -> yyyy-mm-dd for API
+const convertToAPIFormat = (dateStr: string): string => {
+  if (!dateStr.trim()) return '';
+  const [day, month, year] = dateStr.split('/');
+  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+};
+
+// Auto-format as user types: 15111970 -> 15/11/1970
+const formatDateInput = (value: string): string => {
+  const digitsOnly = value.replace(/\D/g, '');
+  if (digitsOnly.length <= 2) return digitsOnly;
+  if (digitsOnly.length <= 4) return `${digitsOnly.slice(0, 2)}/${digitsOnly.slice(2)}`;
+  return `${digitsOnly.slice(0, 2)}/${digitsOnly.slice(2, 4)}/${digitsOnly.slice(4, 8)}`;
+};
+
+export function AddRelatedCustomerModal({
   open, 
   onOpenChange, 
   customer, 
@@ -119,7 +153,11 @@ export function AddRelatedCustomerModal({
     }
     
     if (!birthDate) {
-      toast({ title: 'Lỗi', description: 'Vui lòng chọn ngày sinh', variant: 'destructive' });
+      toast({ 
+        title: 'Lỗi', 
+        description: 'Vui lòng nhập ngày sinh đúng định dạng dd/mm/yyyy', 
+        variant: 'destructive' 
+      });
       return;
     }
 
@@ -171,7 +209,7 @@ export function AddRelatedCustomerModal({
         ten: relatedName.trim(),
         moi_quan_he: relationshipType,
         gioi_tinh: gender === 'Nam' ? 'nam' : 'nu',
-        ngay_sinh: birthDate,
+        ngay_sinh: convertToAPIFormat(birthDate),
         sdt: phone.trim() || undefined,
         ghi_chu: notes.trim() || undefined,
         hinh_anh: uploadedUrls
@@ -318,12 +356,22 @@ export function AddRelatedCustomerModal({
               </Label>
               <Input
                 id="birth-date"
-                type="date"
+                type="text"
+                placeholder="dd/mm/yyyy (ví dụ: 15/11/1970)"
                 value={birthDate}
-                onChange={(e) => setBirthDate(e.target.value)}
+                onChange={(e) => {
+                  const formatted = formatDateInput(e.target.value);
+                  setBirthDate(formatted);
+                }}
                 className="voucher-input"
+                maxLength={10}
                 required
               />
+              {birthDate && !isValidDate(birthDate) && (
+                <p className="text-sm text-red-500">
+                  Định dạng không hợp lệ. Vui lòng nhập dd/mm/yyyy
+                </p>
+              )}
             </div>
 
             {/* Phone */}
