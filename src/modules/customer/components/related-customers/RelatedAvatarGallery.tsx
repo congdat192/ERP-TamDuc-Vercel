@@ -14,28 +14,14 @@ interface RelatedAvatarGalleryProps {
   onUpdate?: () => void;
 }
 
-interface PendingFile {
-  id: string;
-  file: File;
-  previewUrl: string;
-}
-
 export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGalleryProps) {
   const [avatars, setAvatars] = useState<RelatedAvatar[]>(related.avatars || []);
-  const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
     loadAvatars();
   }, [related.id]);
-
-  // Cleanup blob URLs on unmount
-  useEffect(() => {
-    return () => {
-      pendingFiles.forEach(p => URL.revokeObjectURL(p.previewUrl));
-    };
-  }, [pendingFiles]);
 
   // 🔐 Phase 4: Helper to set auth token for External Storage
   const setAuthToken = async () => {
@@ -57,134 +43,118 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
     }
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    const newPendingFiles: PendingFile[] = [];
-
-    for (const file of Array.from(files)) {
-      // Validate
-      const maxSize = 5 * 1024 * 1024; // 5MB
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-      
-      if (!allowedTypes.includes(file.type)) {
-        toast({
-          title: '❌ File không hợp lệ',
-          description: `${file.name}: Chỉ chấp nhận JPG, PNG, WEBP`,
-          variant: 'destructive'
-        });
-        continue;
-      }
-      
-      if (file.size > maxSize) {
-        toast({
-          title: '❌ File quá lớn',
-          description: `${file.name}: Vượt quá 5MB`,
-          variant: 'destructive'
-        });
-        continue;
-      }
-
-      // Create preview (NO upload yet)
-      newPendingFiles.push({
-        id: `temp-${Date.now()}-${Math.random()}`,
-        file,
-        previewUrl: URL.createObjectURL(file)
-      });
-    }
-
-    setPendingFiles(prev => [...prev, ...newPendingFiles]);
-    e.target.value = ''; // Reset input
-  };
-
-  const handleSave = async () => {
-    if (pendingFiles.length === 0) return;
-
     setIsUploading(true);
+    let successCount = 0;
+
     try {
+      // 🔐 Set auth token trước khi upload
       await setAuthToken();
 
       const uploadedUrls: string[] = [];
 
-      // Upload all pending files
-      for (const pending of pendingFiles) {
-        const filePath = buildFamilyAvatarFilePath(
-          related.customer_phone,
-          related.related_name,
-          pending.file
-        );
-
-        const { data, error } = await externalStorageClient.storage
-          .from('avatar_customers')
-          .upload(filePath, pending.file);
-
-        if (error) {
-          console.error('[RelatedAvatarGallery] Upload error:', error);
+      for (const file of Array.from(files)) {
+        // Validate file
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        
+        if (!allowedTypes.includes(file.type)) {
           toast({
-            title: '❌ Upload thất bại',
-            description: error.message,
+            title: '❌ File không hợp lệ',
+            description: `${file.name}: Chỉ chấp nhận JPG, PNG, WEBP`,
+            variant: 'destructive'
+          });
+          continue;
+        }
+        
+        if (file.size > maxSize) {
+          toast({
+            title: '❌ File quá lớn',
+            description: `${file.name}: Vượt quá 5MB`,
             variant: 'destructive'
           });
           continue;
         }
 
+        // ✅ Build safe filePath (no Unicode, correct extension)
+        const filePath = buildFamilyAvatarFilePath(related.customer_phone, related.related_name, file);
+        
+        // ✅ Dùng External Storage Client
+        const { data: uploadData, error: uploadError } = await externalStorageClient.storage
+          .from('avatar_customers')
+          .upload(filePath, file);
+
+        if (uploadError) {
+          console.error('[RelatedAvatarGallery] Upload error:', uploadError);
+          toast({
+            title: '❌ Upload thất bại',
+            description: uploadError.message,
+            variant: 'destructive'
+          });
+          continue;
+        }
+
+        // 2. Get public URL from External Supabase
         const { data: { publicUrl } } = externalStorageClient.storage
           .from('avatar_customers')
           .getPublicUrl(filePath);
-
+        
+        console.log('[RelatedAvatarGallery] Uploaded:', publicUrl);
+        
         uploadedUrls.push(publicUrl);
-
-        // Clean up blob URL
-        URL.revokeObjectURL(pending.previewUrl);
+        successCount++;
       }
 
-      // Call API to save all uploaded images
+      // 3. Call External API to add all images at once
       if (uploadedUrls.length > 0) {
-        const response = await FamilyMemberService.addImages(
+        const response: APIResponse = await FamilyMemberService.addImages(
           related.customer_phone,
-          related.id,
+          related.id, // ✅ Use ID instead of name
           uploadedUrls
         );
 
+        // ✅ CHECK response.success FIELD FIRST
         if (!response.success) {
+          console.error('[RelatedAvatarGallery] Add images failed:', response);
+          console.error('[RelatedAvatarGallery] Request ID:', response.meta?.request_id);
+
           toast({
             title: '❌ Lỗi',
-            description: response.error_description || 'Không thể lưu ảnh',
-            variant: 'destructive'
+            description: response.error_description,
+            variant: 'destructive',
+            duration: 5000
           });
           return;
         }
 
+        // ✅ SUCCESS: Display message NGUYÊN VĂN
+        console.log('[RelatedAvatarGallery] Success:', response);
+        console.log('[RelatedAvatarGallery] Request ID:', response.meta?.request_id);
+
         toast({
           title: '✅ Thành công',
-          description: response.message || `Đã upload ${uploadedUrls.length} ảnh`,
+          description: response.message
         });
-        
-        // Reset state
-        setPendingFiles([]);
-        onUpdate?.(); // Trigger parent refresh
+
+        onUpdate?.();
       }
     } catch (error: any) {
-      console.error('[RelatedAvatarGallery] Save error:', error);
+      // Network error hoặc unexpected error
+      console.error('[RelatedAvatarGallery] Unexpected error:', error);
+
       toast({
         title: '❌ Lỗi',
-        description: error.message || 'Không thể upload ảnh',
-        variant: 'destructive'
+        description: 'Không thể kết nối đến server. Vui lòng thử lại.',
+        variant: 'destructive',
+        duration: 5000
       });
     } finally {
       setIsUploading(false);
+      e.target.value = ''; // Reset input
     }
-  };
-
-  const handleDeletePending = (tempId: string) => {
-    setPendingFiles(prev => {
-      const toDelete = prev.find(p => p.id === tempId);
-      if (toDelete) {
-        URL.revokeObjectURL(toDelete.previewUrl);
-      }
-      return prev.filter(p => p.id !== tempId);
-    });
   };
 
   const handleDelete = async (avatarId: string) => {
@@ -269,7 +239,7 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
               type="file"
               multiple
               accept="image/jpeg,image/png,image/webp"
-              onChange={handleFileSelect}
+              onChange={handleUpload}
               disabled={isUploading}
               className="hidden"
             />
@@ -290,7 +260,7 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
               type="file"
               accept="image/*"
               capture="environment"
-              onChange={handleFileSelect}
+              onChange={handleUpload}
               disabled={isUploading}
               className="hidden"
             />
