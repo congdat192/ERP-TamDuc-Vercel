@@ -290,7 +290,7 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
           {avatars.map((avatar) => (
             <div key={avatar.id} className="relative group">
               <div 
-                className="aspect-square rounded-lg overflow-hidden border-2 cursor-pointer hover:border-primary transition-colors"
+                className="aspect-square rounded-lg overflow-hidden border-2 cursor-pointer hover:border-primary hover:shadow-lg transition-all duration-200"
                 style={{ borderColor: avatar.is_primary ? 'hsl(var(--primary))' : undefined }}
                 onClick={() => setSelectedImage(avatar.public_url)}
               >
@@ -301,25 +301,25 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
                 />
               </div>
 
-              {/* Primary Star */}
+              {/* Primary Star - Góc trái trên */}
               {avatar.is_primary && (
-                <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1">
+                <div className="absolute top-2 left-2 bg-primary text-primary-foreground rounded-full p-1.5 shadow-lg">
                   <Star className="w-4 h-4 fill-current" />
                 </div>
               )}
 
-              {/* Hover Actions */}
-              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={() => handleDelete(avatar.id)}
-                  className="gap-1"
-                >
-                  <Trash2 className="w-3 h-3" />
-                  Xóa
-                </Button>
-              </div>
+              {/* Delete Button - Góc phải trên */}
+              <Button
+                size="icon"
+                variant="destructive"
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent triggering lightbox
+                  handleDelete(avatar.id);
+                }}
+                className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-10"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
             </div>
           ))}
         </div>
