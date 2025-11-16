@@ -1891,6 +1891,7 @@ export type Database = {
           created_by: string | null
           description: string | null
           discount_percent: number | null
+          display_order: number | null
           id: string
           image_urls: Json | null
           is_active: boolean | null
@@ -1910,6 +1911,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           discount_percent?: number | null
+          display_order?: number | null
           id?: string
           image_urls?: Json | null
           is_active?: boolean | null
@@ -1929,6 +1931,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           discount_percent?: number | null
+          display_order?: number | null
           id?: string
           image_urls?: Json | null
           is_active?: boolean | null
@@ -3298,6 +3301,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      batch_update_product_display_order: {
+        Args: { updates: Json }
+        Returns: undefined
+      }
       cleanup_expired_otp: { Args: never; Returns: undefined }
       generate_doc_number: {
         Args: { _doc_type: string; _year: number }

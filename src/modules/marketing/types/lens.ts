@@ -45,6 +45,7 @@ export interface LensProduct {
   view_count: number;
   is_active: boolean;
   related_product_ids: string[];
+  display_order: number; // Display order for filtered products
   created_at: string;
   updated_at: string;
   created_by: string | null;
