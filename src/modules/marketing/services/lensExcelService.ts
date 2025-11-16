@@ -1,6 +1,7 @@
 import * as XLSX from 'xlsx';
 import { LensProduct, LensBrand } from '../types/lens';
 import { supabase } from '@/integrations/supabase/client';
+import { normalizeAttributeOptions } from '../utils/attributeHelpers';
 
 export interface ExcelRow {
   'Mã SKU*': string;
@@ -126,11 +127,15 @@ export class LensExcelService {
     multiselectAttrs.forEach(attr => {
       const selectedValues: string[] = [];
       
-      // Check each option column (e.g., "Chống UV400" = "Có")
-      attr.options.forEach((option: string) => {
-        const columnValue = row[option as keyof ExcelRow]?.toString().trim().toLowerCase();
+      // Normalize options to handle both old format (string[]) and new format (AttributeOption[])
+      const normalizedOptions = normalizeAttributeOptions(attr.options);
+      
+      // Check each option column using opt.label (e.g., "Kiểm soát cận thị" = "Có")
+      normalizedOptions.forEach(opt => {
+        const columnValue = row[opt.label as keyof ExcelRow]?.toString().trim().toLowerCase();
         if (columnValue === 'có' || columnValue === 'true') {
-          selectedValues.push(option);
+          // Push opt.value to match database format (e.g., "kiem_soat_can_thi")
+          selectedValues.push(opt.value);
         }
       });
       
