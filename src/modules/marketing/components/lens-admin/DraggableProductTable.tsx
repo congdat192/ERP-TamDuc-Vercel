@@ -283,7 +283,11 @@ export function DraggableProductTable({
 
   // Update items when products change
   useEffect(() => {
-    setItems(products);
+    // Sort by display_order as fallback (defensive programming)
+    const sorted = [...products].sort((a, b) => 
+      (a.display_order || 999999) - (b.display_order || 999999)
+    );
+    setItems(sorted);
   }, [products]);
 
   const visibleColumnsCount = Object.values(columnVisibility).filter(Boolean).length;
