@@ -84,7 +84,16 @@ export const lensApi = {
       query = query.or(`name.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
     }
 
-    // Apply sorting (can be done in SQL)
+    // Detect if attribute filters are active
+    const hasAttributeFilters = filters?.attributeFilters && 
+      Object.keys(filters.attributeFilters).length > 0;
+
+    // PRIMARY SORT: display_order if filters are active
+    if (hasAttributeFilters) {
+      query = query.order('display_order', { ascending: true });
+    }
+
+    // SECONDARY SORT: user's choice
     switch (filters?.sort) {
       case 'price-asc':
         query = query.order('price', { ascending: true });
@@ -97,7 +106,10 @@ export const lensApi = {
         break;
       case 'newest':
       default:
-        query = query.order('created_at', { ascending: false });
+        // Fallback if no filter: sort by created_at
+        if (!hasAttributeFilters) {
+          query = query.order('created_at', { ascending: false });
+        }
         break;
     }
 
@@ -819,5 +831,26 @@ export const lensApi = {
       .getPublicUrl(fileName);
     
     return publicUrl;
+  },
+
+  // ============= DISPLAY ORDER MANAGEMENT =============
+  
+  // Update single product display order
+  async updateProductDisplayOrder(productId: string, displayOrder: number): Promise<void> {
+    const { error } = await supabase
+      .from('lens_products')
+      .update({ display_order: displayOrder, updated_at: new Date().toISOString() })
+      .eq('id', productId);
+
+    if (error) throw error;
+  },
+
+  // Batch update product display orders
+  async batchUpdateDisplayOrder(updates: Array<{ id: string; display_order: number }>): Promise<void> {
+    const { error } = await supabase.rpc('batch_update_product_display_order', {
+      updates: updates
+    });
+
+    if (error) throw error;
   },
 };

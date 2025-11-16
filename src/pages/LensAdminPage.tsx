@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Plus, ShieldAlert, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,8 @@ import { ProductSelector } from "@/modules/marketing/components/lens-admin/Produ
 import { RecommendationGroupManager } from "@/modules/marketing/components/lens-admin/RecommendationGroupManager";
 import { BannerManager } from "@/modules/marketing/components/lens-admin/BannerManager";
 import { SupplierCatalogManager } from "@/modules/marketing/components/lens-admin/SupplierCatalogManager";
+import { ProductFilterPanel } from "@/modules/marketing/components/lens-admin/ProductFilterPanel";
+import { DraggableProductTable } from "@/modules/marketing/components/lens-admin/DraggableProductTable";
 import { LensProduct } from "@/modules/marketing/types/lens";
 import { toast } from "sonner";
 
@@ -53,6 +55,7 @@ export function LensAdminPage() {
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<LensProduct | null>(null);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [productFilters, setProductFilters] = useState<Record<string, string[]>>({});
   const { columns, handleColumnToggle } = useProductColumnVisibility();
   
   // Convert columns to visibility object
@@ -75,7 +78,47 @@ export function LensAdminPage() {
     queryFn: () => lensApi.getBrands(),
   });
 
+  const { data: attributes } = useQuery({
+    queryKey: ['lens-attributes'],
+    queryFn: () => lensApi.getAttributes(),
+  });
+
   const products = productsData?.products || [];
+
+  // Filter products based on filters
+  const filteredProducts = useMemo(() => {
+    if (Object.keys(productFilters).length === 0) return products;
+    
+    return products.filter(product => {
+      return Object.entries(productFilters).every(([slug, values]) => {
+        if (values.length === 0) return true;
+        const productValues = product.attributes[slug] || [];
+        return values.some(v => productValues.includes(v));
+      });
+    });
+  }, [products, productFilters]);
+
+  const hasActiveFilters = Object.keys(productFilters).length > 0;
+
+  const handleFilterChange = (slug: string, value: string) => {
+    setProductFilters(prev => {
+      const current = prev[slug] || [];
+      const updated = current.includes(value)
+        ? current.filter(v => v !== value)
+        : [...current, value];
+      
+      if (updated.length === 0) {
+        const { [slug]: _, ...rest } = prev;
+        return rest;
+      }
+      
+      return { ...prev, [slug]: updated };
+    });
+  };
+
+  const handleClearFilters = () => {
+    setProductFilters({});
+  };
 
   const handleCreate = () => {
     setEditingProduct(null);
@@ -168,17 +211,43 @@ export function LensAdminPage() {
             </Button>
           </div>
 
-          <ProductTable
-            products={products}
-            onEdit={handleEdit}
-            onClone={handleClone}
-            onRefetch={refetch}
-            onSelect={(id) => {
-              setSelectedProductId(id);
-              setActiveTab("tiers");
-            }}
-            columnVisibility={columnVisibility}
+          <ProductFilterPanel
+            attributes={attributes || []}
+            filters={productFilters}
+            onFilterChange={handleFilterChange}
+            onClearAll={handleClearFilters}
           />
+
+          {hasActiveFilters ? (
+            <>
+              <p className="text-sm text-muted-foreground">
+                Đang lọc {filteredProducts.length} sản phẩm. Kéo thả để sắp xếp thứ tự hiển thị ngoài Lens Catalog.
+              </p>
+              <DraggableProductTable
+                products={filteredProducts}
+                onEdit={handleEdit}
+                onClone={handleClone}
+                onRefetch={refetch}
+                onSelect={(id) => {
+                  setSelectedProductId(id);
+                  setActiveTab("tiers");
+                }}
+                columnVisibility={columnVisibility}
+              />
+            </>
+          ) : (
+            <ProductTable
+              products={products}
+              onEdit={handleEdit}
+              onClone={handleClone}
+              onRefetch={refetch}
+              onSelect={(id) => {
+                setSelectedProductId(id);
+                setActiveTab("tiers");
+              }}
+              columnVisibility={columnVisibility}
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="attributes">
