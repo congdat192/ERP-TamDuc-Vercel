@@ -69,7 +69,7 @@ export function LensAdminPage() {
     refetch,
     isLoading: isLoadingProducts,
   } = useQuery({
-    queryKey: ["admin-lens-products"],
+    queryKey: ["admin-lens-products", productFilters],
     queryFn: () => lensApi.getProducts({}, 1, 100),
   });
 
@@ -87,15 +87,25 @@ export function LensAdminPage() {
 
   // Filter products based on filters
   const filteredProducts = useMemo(() => {
-    if (Object.keys(productFilters).length === 0) return products;
+    let result = products;
     
-    return products.filter(product => {
-      return Object.entries(productFilters).every(([slug, values]) => {
-        if (values.length === 0) return true;
-        const productValues = product.attributes[slug] || [];
-        return values.some(v => productValues.includes(v));
+    // Apply filters
+    if (Object.keys(productFilters).length > 0) {
+      result = products.filter(product => {
+        return Object.entries(productFilters).every(([slug, values]) => {
+          if (values.length === 0) return true;
+          const productValues = product.attributes[slug] || [];
+          return values.some(v => productValues.includes(v));
+        });
       });
-    });
+      
+      // Sort by display_order when filters are active
+      result = [...result].sort((a, b) => 
+        (a.display_order || 999999) - (b.display_order || 999999)
+      );
+    }
+    
+    return result;
   }, [products, productFilters]);
 
   const hasActiveFilters = Object.keys(productFilters).length > 0;

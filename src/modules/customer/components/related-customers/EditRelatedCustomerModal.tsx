@@ -324,7 +324,7 @@ export function EditRelatedCustomerModal({
 
         toast({
           title: '✅ Thành công',
-          description: lastResponse.message
+          description: 'Đã cập nhật thông tin người thân thành công'
         });
       }
 
