@@ -48,28 +48,19 @@ export function CSKHReportTab() {
     }
   };
 
+  // v1.2 API không có list field, chỉ có summary data
   const revenueByDayData = useMemo(() => {
-    if (!reportData?.list) return [];
-    
-    const grouped = reportData.list.reduce((acc, item) => {
-      const date = item.created_at.split('T')[0];
-      if (!acc[date]) {
-        acc[date] = { date, revenue: 0 };
-      }
-      acc[date].revenue += item.revenue;
-      return acc;
-    }, {} as Record<string, { date: string; revenue: number }>);
-    
-    return Object.values(grouped).sort((a, b) => a.date.localeCompare(b.date));
-  }, [reportData?.list]);
+    // Không có detailed list trong v1.2, return empty array
+    return [];
+  }, [reportData]);
 
   const customerTypePieData = useMemo(() => {
-    if (!reportData?.breakdown) return [];
+    if (!reportData?.summary?.breakdown) return [];
     return [
-      { name: 'Khách mới', value: reportData.breakdown.new_customer.count, color: 'hsl(var(--chart-1))' },
-      { name: 'Khách cũ', value: reportData.breakdown.returning_customer.count, color: 'hsl(var(--chart-2))' }
+      { name: 'Khách mới', value: reportData.summary.breakdown.new_customers.orders, color: 'hsl(var(--chart-1))' },
+      { name: 'Khách cũ', value: reportData.summary.breakdown.old_customers.orders, color: 'hsl(var(--chart-2))' }
     ];
-  }, [reportData?.breakdown]);
+  }, [reportData?.summary?.breakdown]);
 
   const formatCurrency = (value: number) => {
     return `${value.toLocaleString('vi-VN')}đ`;
@@ -159,24 +150,12 @@ export function CSKHReportTab() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Tổng Lợi Nhuận</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-foreground">
-                  {formatCurrency(reportData.summary.total_profit)}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Tổng Hoa Hồng</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">Tổng Voucher</CardTitle>
                 <Award className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-chart-1">
-                  {formatCurrency(reportData.summary.total_commission)}
+                  {reportData.summary.total_vouchers}
                 </div>
               </CardContent>
             </Card>
@@ -188,7 +167,7 @@ export function CSKHReportTab() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-foreground">
-                  {reportData.summary.orders_count}
+                  {reportData.summary.total_orders}
                 </div>
               </CardContent>
             </Card>
@@ -202,16 +181,12 @@ export function CSKHReportTab() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Số lượng:</span>
-                  <span className="font-semibold text-foreground">{reportData.breakdown.new_customer.count}</span>
+                  <span className="text-sm text-muted-foreground">Số đơn:</span>
+                  <span className="font-semibold text-foreground">{reportData.summary.breakdown.new_customers.orders}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Doanh thu:</span>
-                  <span className="font-semibold text-foreground">{formatCurrency(reportData.breakdown.new_customer.revenue)}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Hoa hồng:</span>
-                  <span className="font-semibold text-chart-1">{formatCurrency(reportData.breakdown.new_customer.commission)}</span>
+                  <span className="font-semibold text-foreground">{formatCurrency(reportData.summary.breakdown.new_customers.revenue)}</span>
                 </div>
               </CardContent>
             </Card>
@@ -222,16 +197,12 @@ export function CSKHReportTab() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Số lượng:</span>
-                  <span className="font-semibold text-foreground">{reportData.breakdown.returning_customer.count}</span>
+                  <span className="text-sm text-muted-foreground">Số đơn:</span>
+                  <span className="font-semibold text-foreground">{reportData.summary.breakdown.old_customers.orders}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Doanh thu:</span>
-                  <span className="font-semibold text-foreground">{formatCurrency(reportData.breakdown.returning_customer.revenue)}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Hoa hồng:</span>
-                  <span className="font-semibold text-chart-2">{formatCurrency(reportData.breakdown.returning_customer.commission)}</span>
+                  <span className="font-semibold text-foreground">{formatCurrency(reportData.summary.breakdown.old_customers.revenue)}</span>
                 </div>
               </CardContent>
             </Card>

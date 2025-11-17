@@ -246,7 +246,7 @@ serve(async (req) => {
       success: apiData.success,
       has_data: !!(apiData as any).data,
       has_meta: !!(apiData as any).meta,
-      has_creator_phone: !!apiData.creator_phone,
+      has_creator_phone: !!('creator_phone' in apiData ? (apiData as CSKHApiResponseV1_2).creator_phone : null),
       has_period: !!(apiData as any).period,
       top_level_keys: Object.keys(apiData),
     });
