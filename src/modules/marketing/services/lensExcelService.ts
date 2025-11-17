@@ -108,12 +108,7 @@ export class LensExcelService {
     // Build attributes object
     const attributesData: Record<string, string[]> = {};
     
-    // Add lens_brand
-    if (brandName) {
-      attributesData.lens_brand = [brandName];
-    }
-    
-    // Add select attributes
+    // Add select attributes (including thuong_hieu from dynamic loop)
     const selectAttrs = allAttributes.filter(a => a.type === 'select');
     selectAttrs.forEach(attr => {
       const value = row[attr.name as keyof ExcelRow]?.toString().trim();

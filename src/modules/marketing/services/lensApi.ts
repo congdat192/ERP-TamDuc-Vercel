@@ -23,7 +23,7 @@ export const lensApi = {
     const { data } = await supabase
       .from('lens_product_attributes')
       .select('options')
-      .eq('slug', 'lens_brand')
+      .eq('slug', 'thuong_hieu')
       .single();
     
     if (!data || !data.options) return [];
