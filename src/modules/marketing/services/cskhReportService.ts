@@ -1,56 +1,34 @@
 import { supabase } from '@/integrations/supabase/client';
 
+// ✅ CHÍNH XÁC theo API .md file v1.2
 export interface CSKHReportSummary {
   total_revenue: number;
-  total_profit: number;
-  total_commission: number;
-  orders_count: number;
-}
-
-export interface CSKHCustomerBreakdown {
-  new_customer: {
-    count: number;
-    revenue: number;
-    commission: number;
+  total_orders: number;
+  total_vouchers: number;
+  breakdown: {
+    new_customers: {
+      revenue: number;
+      orders: number;
+    };
+    old_customers: {
+      revenue: number;
+      orders: number;
+    };
   };
-  returning_customer: {
-    count: number;
-    revenue: number;
-    commission: number;
-  };
-}
-
-export interface CSKHReportRecord {
-  creatorphone: string;
-  creatorname: string;
-  invoicecode: string;
-  invoiceid: string;
-  invoicestatus: string;
-  customername: string;
-  customerphone: string;
-  customerstatus: string; // "new" | "returning"
-  revenue: number;
-  profit: number;
-  commission: number;
-  created_at: string;
 }
 
 export interface CSKHReportResponse {
   success: boolean;
+  creator_phone: string;
+  period: {
+    from: string;  // YYYY-MM-DD
+    to: string;    // YYYY-MM-DD
+  };
   summary: CSKHReportSummary;
-  breakdown: CSKHCustomerBreakdown;
-  list: CSKHReportRecord[];
   pagination: {
     page: number;
     pagesize: number;
     total: number;
-  };
-  meta: {
-    request_id: string;
-    creatorphone: string;
-    fromdate?: string;
-    todate?: string;
-    generated_at: string;
   };
 }
 

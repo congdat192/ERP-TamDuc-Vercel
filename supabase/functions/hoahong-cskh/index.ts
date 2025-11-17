@@ -17,7 +17,38 @@ interface TokenResponse {
   expires_in?: number;
 }
 
-interface CSKHApiResponse {
+// ✅ API v1.2 Response Format (External API now returns this directly)
+interface CSKHApiResponseV1_2 {
+  success: boolean;
+  creator_phone: string;
+  period: {
+    from: string;
+    to: string;
+  };
+  summary: {
+    total_revenue: number;
+    total_orders: number;
+    total_vouchers: number;
+    breakdown: {
+      new_customers: {
+        revenue: number;
+        orders: number;
+      };
+      old_customers: {
+        revenue: number;
+        orders: number;
+      };
+    };
+  };
+  pagination: {
+    page: number;
+    pagesize: number;
+    total: number;
+  };
+}
+
+// ❌ DEPRECATED: Old format (kept for backward compatibility if needed)
+interface CSKHApiResponseOld {
   success: boolean;
   data: {
     summary: {
@@ -66,6 +97,8 @@ interface CSKHApiResponse {
     generated_at: string;
   };
 }
+
+type CSKHApiResponse = CSKHApiResponseV1_2 | CSKHApiResponseOld;
 
 async function getOAuthToken(): Promise<string> {
   const clientId = Deno.env.get('EXTERNAL_API_CLIENT_ID');
@@ -202,27 +235,81 @@ serve(async (req) => {
 
     // ✅ Log response từ External API để debug
     const apiDataStr = JSON.stringify(apiData);
-    console.log('[hoahong-cskh] External API response (first 1000 chars):', 
+    console.log('[hoahong-cskh] External API response (first 1000 chars):',
       apiDataStr.substring(0, 1000));
-    console.log('[hoahong-cskh] Response structure:', {
+
+    // ✅ DETECT FORMAT: Check if API is returning v1.2 format or old format
+    const isV1_2Format = 'creator_phone' in apiData && 'period' in apiData;
+
+    console.log('[hoahong-cskh] Response format detected:', {
+      format: isV1_2Format ? 'v1.2' : 'old',
       success: apiData.success,
-      has_data: !!apiData.data,
-      has_meta: !!apiData.meta,
-      data_keys: apiData.data ? Object.keys(apiData.data) : [],
+      has_data: !!(apiData as any).data,
+      has_meta: !!(apiData as any).meta,
+      has_creator_phone: !!apiData.creator_phone,
+      has_period: !!(apiData as any).period,
+      top_level_keys: Object.keys(apiData),
     });
 
-    // ✅ CRITICAL: Validate apiData.data exists
-    if (!apiData.data) {
-      console.error('[hoahong-cskh] Missing data field in API response:', apiData);
+    // ✅ If API already returns v1.2 format, just pass it through
+    if (isV1_2Format) {
+      const v1_2Data = apiData as CSKHApiResponseV1_2;
+
+      // Validate v1.2 structure
+      if (!v1_2Data.summary || !v1_2Data.summary.breakdown || !v1_2Data.pagination) {
+        console.error('[hoahong-cskh] Incomplete v1.2 structure:', {
+          has_summary: !!v1_2Data.summary,
+          has_breakdown: v1_2Data.summary ? !!v1_2Data.summary.breakdown : false,
+          has_pagination: !!v1_2Data.pagination,
+        });
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: 'INCOMPLETE_API_RESPONSE',
+            message: 'External API returned incomplete v1.2 structure',
+            details: {
+              has_summary: !!v1_2Data.summary,
+              has_breakdown: v1_2Data.summary ? !!v1_2Data.summary.breakdown : false,
+              has_pagination: !!v1_2Data.pagination,
+            },
+          }),
+          {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+
+      const endTime = Date.now();
+      console.log('[hoahong-cskh] Request completed in', endTime - startTime, 'ms');
+      console.log('[hoahong-cskh] Passing through v1.2 response:', {
+        success: v1_2Data.success,
+        creator_phone: v1_2Data.creator_phone,
+        total_orders: v1_2Data.summary.total_orders,
+        total_revenue: v1_2Data.summary.total_revenue,
+      });
+
+      return new Response(JSON.stringify(v1_2Data), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // ✅ OLD FORMAT: Transform old format to v1.2
+    const oldData = apiData as CSKHApiResponseOld;
+
+    // Validate old format structure
+    if (!oldData.data) {
+      console.error('[hoahong-cskh] Missing data field in old format:', apiData);
       return new Response(
         JSON.stringify({
           success: false,
           error: 'INVALID_API_RESPONSE',
-          message: 'External API returned response without data field',
+          message: 'External API returned response without data field (old format)',
           details: {
-            received_success: apiData.success,
-            has_meta: !!apiData.meta,
-            raw_keys: Object.keys(apiData),
+            received_success: oldData.success,
+            has_meta: !!oldData.meta,
+            raw_keys: Object.keys(oldData),
           },
         }),
         {
@@ -232,23 +319,22 @@ serve(async (req) => {
       );
     }
 
-    // ✅ Validate nested data structure
-    if (!apiData.data.summary || !apiData.data.breakdown || !apiData.data.pagination) {
-      console.error('[hoahong-cskh] Incomplete data structure:', {
-        has_summary: !!apiData.data.summary,
-        has_breakdown: !!apiData.data.breakdown,
-        has_list: !!apiData.data.list,
-        has_pagination: !!apiData.data.pagination,
+    if (!oldData.data.summary || !oldData.data.breakdown || !oldData.data.pagination) {
+      console.error('[hoahong-cskh] Incomplete old format data structure:', {
+        has_summary: !!oldData.data.summary,
+        has_breakdown: !!oldData.data.breakdown,
+        has_list: !!oldData.data.list,
+        has_pagination: !!oldData.data.pagination,
       });
       return new Response(
         JSON.stringify({
           success: false,
           error: 'INCOMPLETE_API_RESPONSE',
-          message: 'External API returned incomplete data structure',
+          message: 'External API returned incomplete old format data structure',
           details: {
-            has_summary: !!apiData.data.summary,
-            has_breakdown: !!apiData.data.breakdown,
-            has_pagination: !!apiData.data.pagination,
+            has_summary: !!oldData.data.summary,
+            has_breakdown: !!oldData.data.breakdown,
+            has_pagination: !!oldData.data.pagination,
           },
         }),
         {
@@ -258,35 +344,35 @@ serve(async (req) => {
       );
     }
 
-    // ✅ Transform response theo API Spec v1.2
+    // Transform old format to v1.2
     const transformedResponse = {
-      success: apiData.success,
-      creator_phone: apiData.meta.creatorphone,
+      success: oldData.success,
+      creator_phone: oldData.meta.creatorphone,
       period: {
-        from: apiData.meta.fromdate || '',
-        to: apiData.meta.todate || '',
+        from: oldData.meta.fromdate || '',
+        to: oldData.meta.todate || '',
       },
       summary: {
-        total_revenue: apiData.data.summary.total_revenue,
-        total_orders: apiData.data.summary.orders_count,
+        total_revenue: oldData.data.summary.total_revenue,
+        total_orders: oldData.data.summary.orders_count,
         total_vouchers: 0, // API cũ không có field này, set default 0
         breakdown: {
           new_customers: {
-            revenue: apiData.data.breakdown.new_customer.revenue,
-            orders: apiData.data.breakdown.new_customer.count,
+            revenue: oldData.data.breakdown.new_customer.revenue,
+            orders: oldData.data.breakdown.new_customer.count,
           },
           old_customers: {
-            revenue: apiData.data.breakdown.returning_customer.revenue,
-            orders: apiData.data.breakdown.returning_customer.count,
+            revenue: oldData.data.breakdown.returning_customer.revenue,
+            orders: oldData.data.breakdown.returning_customer.count,
           },
         },
       },
-      pagination: apiData.data.pagination,
+      pagination: oldData.data.pagination,
     };
 
     const endTime = Date.now();
     console.log('[hoahong-cskh] Request completed in', endTime - startTime, 'ms');
-    console.log('[hoahong-cskh] Response summary:', {
+    console.log('[hoahong-cskh] Transformed old format to v1.2:', {
       success: transformedResponse.success,
       creator_phone: transformedResponse.creator_phone,
       total_orders: transformedResponse.summary.total_orders,
