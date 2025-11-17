@@ -1,8 +1,9 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, ShieldAlert, HelpCircle } from "lucide-react";
+import { Plus, ShieldAlert, HelpCircle, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useNavigate } from "react-router-dom";
@@ -56,6 +57,7 @@ export function LensAdminPage() {
   const [editingProduct, setEditingProduct] = useState<LensProduct | null>(null);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [productFilters, setProductFilters] = useState<Record<string, string[]>>({});
+  const [searchQuery, setSearchQuery] = useState("");
   const { columns, handleColumnToggle } = useProductColumnVisibility();
   
   // Convert columns to visibility object
@@ -85,28 +87,49 @@ export function LensAdminPage() {
 
   const products = productsData?.products || [];
 
-  // Filter products based on filters
+  // Filter products based on filters and search query
   const filteredProducts = useMemo(() => {
     let result = products;
-    
-    // Apply filters
+
+    // Apply text search
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      result = result.filter(product => {
+        // Search in product name
+        if (product.name.toLowerCase().includes(query)) return true;
+
+        // Search in SKU
+        if (product.sku && product.sku.toLowerCase().includes(query)) return true;
+
+        // Search in description
+        if (product.description && product.description.toLowerCase().includes(query)) return true;
+
+        // Search in brand
+        const brand = product.attributes?.lens_brand?.[0];
+        if (brand && brand.toLowerCase().includes(query)) return true;
+
+        return false;
+      });
+    }
+
+    // Apply attribute filters
     if (Object.keys(productFilters).length > 0) {
-      result = products.filter(product => {
+      result = result.filter(product => {
         return Object.entries(productFilters).every(([slug, values]) => {
           if (values.length === 0) return true;
           const productValues = product.attributes[slug] || [];
           return values.some(v => productValues.includes(v));
         });
       });
-      
+
       // Sort by display_order when filters are active
-      result = [...result].sort((a, b) => 
+      result = [...result].sort((a, b) =>
         (a.display_order || 999999) - (b.display_order || 999999)
       );
     }
-    
+
     return result;
-  }, [products, productFilters]);
+  }, [products, productFilters, searchQuery]);
 
   const hasActiveFilters = Object.keys(productFilters).length > 0;
 
@@ -221,6 +244,27 @@ export function LensAdminPage() {
             </Button>
           </div>
 
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Tìm kiếm sản phẩm theo tên, SKU, mô tả hoặc thương hiệu..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-10"
+            />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0"
+                onClick={() => setSearchQuery("")}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+
           <ProductFilterPanel
             attributes={attributes || []}
             filters={productFilters}
@@ -228,11 +272,20 @@ export function LensAdminPage() {
             onClearAll={handleClearFilters}
           />
 
+          {searchQuery && (
+            <p className="text-sm text-muted-foreground">
+              Tìm thấy {filteredProducts.length} sản phẩm phù hợp với "{searchQuery}"
+              {products.length > 0 && ` (trong tổng số ${products.length} sản phẩm)`}
+            </p>
+          )}
+
           {hasActiveFilters ? (
             <>
-              <p className="text-sm text-muted-foreground">
-                Đang lọc {filteredProducts.length} sản phẩm. Kéo thả để sắp xếp thứ tự hiển thị ngoài Lens Catalog.
-              </p>
+              {!searchQuery && (
+                <p className="text-sm text-muted-foreground">
+                  Đang lọc {filteredProducts.length} sản phẩm. Kéo thả để sắp xếp thứ tự hiển thị ngoài Lens Catalog.
+                </p>
+              )}
               <DraggableProductTable
                 products={filteredProducts}
                 onEdit={handleEdit}
@@ -247,7 +300,7 @@ export function LensAdminPage() {
             </>
           ) : (
             <ProductTable
-              products={products}
+              products={searchQuery ? filteredProducts : products}
               onEdit={handleEdit}
               onClone={handleClone}
               onRefetch={refetch}
