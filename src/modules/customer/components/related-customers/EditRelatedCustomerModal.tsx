@@ -14,6 +14,7 @@ import { toast } from '@/components/ui/use-toast';
 import { Upload, Trash2, Star, Camera, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { externalStorageClient } from '@/integrations/supabase/externalStorageClient';
+import { buildFamilyAvatarFilePath } from '../../utils/avatarUpload';
 
 interface EditRelatedCustomerModalProps {
   open: boolean;
@@ -42,7 +43,7 @@ export function EditRelatedCustomerModal({
   // ✅ Image upload state (giống ADD modal)
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-  const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
+  const [imagesToDelete, setImagesToDelete] = useState<Array<{id: string, url: string}>>([]);
 
   // Cleanup preview URLs on unmount
   useEffect(() => {
@@ -65,6 +66,7 @@ export function EditRelatedCustomerModal({
     previewUrls.forEach(url => URL.revokeObjectURL(url));
     setSelectedFiles([]);
     setPreviewUrls([]);
+    setImagesToDelete([]);
   }, [related]);
 
   // ✅ Handle file selection (giống ADD modal)
@@ -115,66 +117,10 @@ export function EditRelatedCustomerModal({
     });
   };
 
-  // ✅ Handle delete existing image (xóa ảnh cũ trong DB)
-  const handleDeleteExistingImage = async (avatarId: string, publicUrl: string) => {
-    const confirmed = window.confirm('Bạn có chắc chắn muốn xóa ảnh này?');
-    if (!confirmed) return;
-
-    setDeletingImageId(avatarId);
-
-    try {
-      // 🔐 Set auth token
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.access_token) {
-        await externalStorageClient.auth.setSession({
-          access_token: session.access_token,
-          refresh_token: session.refresh_token || ''
-        });
-      }
-
-      // Call API to delete image
-      const response: APIResponse = await FamilyMemberService.deleteImage(
-        related.customer_phone,
-        related.related_name,
-        publicUrl
-      );
-
-      if (!response.success) {
-        console.error('[EditRelatedCustomerModal] Delete image failed:', response);
-        console.error('[EditRelatedCustomerModal] Request ID:', response.meta?.request_id);
-
-        toast({
-          title: '❌ Lỗi',
-          description: response.error_description,
-          variant: 'destructive',
-          duration: 5000
-        });
-        return;
-      }
-
-      // Delete from External Storage
-      const filePath = publicUrl.split('/').slice(-4).join('/');
-      await externalStorageClient.storage
-        .from('avatar_customers')
-        .remove([filePath]);
-
-      toast({
-        title: '✅ Thành công',
-        description: response.message
-      });
-
-      onSuccess(); // Refresh data
-    } catch (error: any) {
-      console.error('[EditRelatedCustomerModal] Unexpected error:', error);
-      toast({
-        title: '❌ Lỗi',
-        description: 'Không thể kết nối đến server. Vui lòng thử lại.',
-        variant: 'destructive',
-        duration: 5000
-      });
-    } finally {
-      setDeletingImageId(null);
-    }
+  // ✅ Handle mark image for deletion (chỉ đánh dấu, chưa xóa thật)
+  const handleMarkImageForDeletion = (avatarId: string, publicUrl: string) => {
+    // Thêm vào danh sách ảnh cần xóa
+    setImagesToDelete(prev => [...prev, { id: avatarId, url: publicUrl }]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -212,11 +158,8 @@ export function EditRelatedCustomerModal({
 
         // Upload each file
         for (const file of selectedFiles) {
-          const fileName = `${customerPhone}_${newName}_${Date.now()}.jpg`;
-          const year = new Date().getFullYear();
-          const month = String(new Date().getMonth() + 1).padStart(2, '0');
-          const day = String(new Date().getDate()).padStart(2, '0');
-          const filePath = `${year}/${month}/${day}/${fileName}`;
+          // ✅ Use helper function to build correct filePath (includes family/ prefix and safe name)
+          const filePath = buildFamilyAvatarFilePath(customerPhone, related.related_name, file);
 
           // ✅ Upload to External Supabase Storage
           const { data: uploadData, error: uploadError } = await externalStorageClient.storage
@@ -317,6 +260,49 @@ export function EditRelatedCustomerModal({
         lastResponse = addImageResponse;
       }
 
+      // ✅ Step 3: Xóa các ảnh đã đánh dấu (batch delete)
+      if (imagesToDelete.length > 0) {
+        // 🔐 Set auth token for storage deletion
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          await externalStorageClient.auth.setSession({
+            access_token: session.access_token,
+            refresh_token: session.refresh_token || ''
+          });
+        }
+
+        // Delete each image
+        for (const img of imagesToDelete) {
+          const deleteResponse = await FamilyMemberService.deleteImage(
+            customerPhone,
+            related.id,
+            img.url
+          );
+
+          if (!deleteResponse.success) {
+            console.error('[EditRelatedCustomerModal] Delete image failed:', deleteResponse);
+            toast({
+              title: '⚠️ Cảnh báo',
+              description: `Không thể xóa một số ảnh: ${deleteResponse.error_description}`,
+              variant: 'destructive'
+            });
+            continue;
+          }
+
+          // Delete from External Storage
+          try {
+            const filePath = img.url.split('/').slice(-4).join('/');
+            await externalStorageClient.storage
+              .from('avatar_customers')
+              .remove([filePath]);
+          } catch (err) {
+            console.error('[EditRelatedCustomerModal] Storage delete error:', err);
+          }
+
+          lastResponse = deleteResponse;
+        }
+      }
+
       // ✅ SUCCESS
       if (lastResponse) {
         console.log('[EditRelatedCustomerModal] Success:', lastResponse);
@@ -344,6 +330,7 @@ export function EditRelatedCustomerModal({
       setIsLoading(false);
     }
   };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -453,40 +440,37 @@ export function EditRelatedCustomerModal({
               <div className="space-y-2">
                 <Label className="text-sm theme-text-muted">Ảnh hiện tại:</Label>
                 <div className="grid grid-cols-4 gap-2">
-                  {related.avatars.map((avatar, index) => (
-                    <div key={avatar.id} className="relative group">
-                      <div
-                        className={`aspect-square rounded-lg overflow-hidden border-2 ${
-                          avatar.is_primary ? 'border-primary' : 'border-border'
-                        }`}
-                      >
-                        <img
-                          src={avatar.public_url}
-                          alt={`Ảnh ${index + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      {avatar.is_primary && (
-                        <div className="absolute top-1 right-1 bg-primary text-primary-foreground rounded-full p-1">
-                          <Star className="w-3 h-3 fill-current" />
+                  {related.avatars
+                    .filter(avatar => !imagesToDelete.some(img => img.id === avatar.id))
+                    .map((avatar, index) => (
+                      <div key={avatar.id} className="relative group">
+                        <div
+                          className={`aspect-square rounded-lg overflow-hidden border-2 ${
+                            avatar.is_primary ? 'border-primary' : 'border-border'
+                          }`}
+                        >
+                          <img
+                            src={avatar.public_url}
+                            alt={`Ảnh ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
                         </div>
-                      )}
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="destructive"
-                        className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0"
-                        onClick={() => handleDeleteExistingImage(avatar.id, avatar.public_url)}
-                        disabled={deletingImageId === avatar.id}
-                      >
-                        {deletingImageId === avatar.id ? (
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                        ) : (
-                          <Trash2 className="w-3 h-3" />
+                        {avatar.is_primary && (
+                          <div className="absolute top-1 right-1 bg-primary text-primary-foreground rounded-full p-1">
+                            <Star className="w-3 h-3 fill-current" />
+                          </div>
                         )}
-                      </Button>
-                    </div>
-                  ))}
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="destructive"
+                          className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0"
+                          onClick={() => handleMarkImageForDeletion(avatar.id, avatar.public_url)}
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    ))}
                 </div>
               </div>
             )}
@@ -577,9 +561,9 @@ export function EditRelatedCustomerModal({
           </div>
 
           <DialogFooter>
-            <Button 
-              type="button" 
-              variant="outline" 
+            <Button
+              type="button"
+              variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >

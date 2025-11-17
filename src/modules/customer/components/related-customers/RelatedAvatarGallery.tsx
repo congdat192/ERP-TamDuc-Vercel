@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Upload, Star, Trash2, Image as ImageIcon, Camera } from 'lucide-react';
+import { Upload, Star, Trash2, Image as ImageIcon, Camera, Loader2 } from 'lucide-react';
 import { RelatedCustomer, RelatedAvatar } from '../../types/relatedCustomer.types';
 import { FamilyMemberService, APIResponse } from '../../services/familyMemberService';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,12 +12,24 @@ import { buildFamilyAvatarFilePath } from '../../utils/avatarUpload';
 interface RelatedAvatarGalleryProps {
   related: RelatedCustomer;
   onUpdate?: () => void;
+  readOnly?: boolean; // ✅ Chế độ READ only - ẩn upload area
 }
 
-export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGalleryProps) {
+export function RelatedAvatarGallery({ related, onUpdate, readOnly = false }: RelatedAvatarGalleryProps) {
   const [avatars, setAvatars] = useState<RelatedAvatar[]>(related.avatars || []);
   const [isUploading, setIsUploading] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  // ✅ Preview state - giống CREATE modal
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+
+  // Cleanup preview URLs on unmount
+  useEffect(() => {
+    return () => {
+      previewUrls.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, []);
 
   useEffect(() => {
     loadAvatars();
@@ -43,12 +55,60 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
     }
   };
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // ✅ Handle file selection - PREVIEW ONLY (giống CREATE modal)
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files || files.length === 0) return;
+    if (!files) return;
+
+    const validFiles: File[] = [];
+    const validUrls: string[] = [];
+
+    Array.from(files).forEach(file => {
+      // Validate
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+      if (!allowedTypes.includes(file.type)) {
+        toast({
+          title: '❌ File không hợp lệ',
+          description: `${file.name}: Chỉ chấp nhận JPG, PNG, WEBP`,
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      if (file.size > maxSize) {
+        toast({
+          title: '❌ File quá lớn',
+          description: `${file.name}: Vượt quá 5MB`,
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      validFiles.push(file);
+      validUrls.push(URL.createObjectURL(file));
+    });
+
+    setSelectedFiles(prev => [...prev, ...validFiles]);
+    setPreviewUrls(prev => [...prev, ...validUrls]);
+    e.target.value = ''; // Reset input
+  };
+
+  // ✅ Remove preview file before upload
+  const handleRemovePreview = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    setPreviewUrls(prev => {
+      URL.revokeObjectURL(prev[index]); // Cleanup
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  // ✅ Confirm and upload all selected files
+  const handleConfirmUpload = async () => {
+    if (selectedFiles.length === 0) return;
 
     setIsUploading(true);
-    let successCount = 0;
 
     try {
       // 🔐 Set auth token trước khi upload
@@ -56,32 +116,10 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
 
       const uploadedUrls: string[] = [];
 
-      for (const file of Array.from(files)) {
-        // Validate file
-        const maxSize = 5 * 1024 * 1024; // 5MB
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-        
-        if (!allowedTypes.includes(file.type)) {
-          toast({
-            title: '❌ File không hợp lệ',
-            description: `${file.name}: Chỉ chấp nhận JPG, PNG, WEBP`,
-            variant: 'destructive'
-          });
-          continue;
-        }
-        
-        if (file.size > maxSize) {
-          toast({
-            title: '❌ File quá lớn',
-            description: `${file.name}: Vượt quá 5MB`,
-            variant: 'destructive'
-          });
-          continue;
-        }
-
+      for (const file of selectedFiles) {
         // ✅ Build safe filePath (no Unicode, correct extension)
         const filePath = buildFamilyAvatarFilePath(related.customer_phone, related.related_name, file);
-        
+
         // ✅ Dùng External Storage Client
         const { data: uploadData, error: uploadError } = await externalStorageClient.storage
           .from('avatar_customers')
@@ -89,58 +127,55 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
 
         if (uploadError) {
           console.error('[RelatedAvatarGallery] Upload error:', uploadError);
-          toast({
-            title: '❌ Upload thất bại',
-            description: uploadError.message,
-            variant: 'destructive'
-          });
-          continue;
+          throw new Error(`Upload failed: ${uploadError.message}`);
         }
 
-        // 2. Get public URL from External Supabase
+        // Get public URL from External Supabase
         const { data: { publicUrl } } = externalStorageClient.storage
           .from('avatar_customers')
           .getPublicUrl(filePath);
-        
+
         console.log('[RelatedAvatarGallery] Uploaded:', publicUrl);
-        
+
         uploadedUrls.push(publicUrl);
-        successCount++;
       }
 
-      // 3. Call External API to add all images at once
-      if (uploadedUrls.length > 0) {
-        const response: APIResponse = await FamilyMemberService.addImages(
-          related.customer_phone,
-          related.id, // ✅ Use ID instead of name
-          uploadedUrls
-        );
+      // Call External API to add all images at once
+      const response: APIResponse = await FamilyMemberService.addImages(
+        related.customer_phone,
+        related.id,
+        uploadedUrls
+      );
 
-        // ✅ CHECK response.success FIELD FIRST
-        if (!response.success) {
-          console.error('[RelatedAvatarGallery] Add images failed:', response);
-          console.error('[RelatedAvatarGallery] Request ID:', response.meta?.request_id);
-
-          toast({
-            title: '❌ Lỗi',
-            description: response.error_description,
-            variant: 'destructive',
-            duration: 5000
-          });
-          return;
-        }
-
-        // ✅ SUCCESS: Display message NGUYÊN VĂN
-        console.log('[RelatedAvatarGallery] Success:', response);
-        console.log('[RelatedAvatarGallery] Request ID:', response.meta?.request_id);
+      // ✅ CHECK response.success FIELD FIRST
+      if (!response.success) {
+        console.error('[RelatedAvatarGallery] Add images failed:', response);
+        console.error('[RelatedAvatarGallery] Request ID:', response.meta?.request_id);
 
         toast({
-          title: '✅ Thành công',
-          description: response.message
+          title: '❌ Lỗi',
+          description: response.error_description,
+          variant: 'destructive',
+          duration: 5000
         });
-
-        onUpdate?.();
+        return;
       }
+
+      // ✅ SUCCESS
+      console.log('[RelatedAvatarGallery] Success:', response);
+      console.log('[RelatedAvatarGallery] Request ID:', response.meta?.request_id);
+
+      toast({
+        title: '✅ Thành công',
+        description: response.message
+      });
+
+      // Cleanup preview
+      previewUrls.forEach(url => URL.revokeObjectURL(url));
+      setSelectedFiles([]);
+      setPreviewUrls([]);
+
+      onUpdate?.();
     } catch (error: any) {
       // Network error hoặc unexpected error
       console.error('[RelatedAvatarGallery] Unexpected error:', error);
@@ -153,8 +188,14 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
       });
     } finally {
       setIsUploading(false);
-      e.target.value = ''; // Reset input
     }
+  };
+
+  // ✅ Cancel all previews
+  const handleCancelUpload = () => {
+    previewUrls.forEach(url => URL.revokeObjectURL(url));
+    setSelectedFiles([]);
+    setPreviewUrls([]);
   };
 
   const handleDelete = async (avatarId: string) => {
@@ -230,22 +271,24 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
 
   return (
     <div className="space-y-4">
-      {/* Upload Area */}
-      <div className="grid grid-cols-2 gap-3">
-        {/* Upload từ thư viện */}
+      {/* Upload Area + Preview - Chỉ hiển thị khi KHÔNG ở READ mode */}
+      {!readOnly && (
+        <>
+          <div className="grid grid-cols-2 gap-3">
+            {/* Upload từ thư viện */}
         <Card className="border-2 border-dashed hover:border-primary/50 transition-colors">
           <label className="flex flex-col items-center justify-center p-4 cursor-pointer">
             <input
               type="file"
               multiple
               accept="image/jpeg,image/png,image/webp"
-              onChange={handleUpload}
+              onChange={handleFileSelect}
               disabled={isUploading}
               className="hidden"
             />
             <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
             <div className="text-center text-sm theme-text font-medium">
-              {isUploading ? 'Đang upload...' : '📁 Chọn từ thư viện'}
+              📁 Chọn từ thư viện
             </div>
             <div className="text-xs text-muted-foreground mt-1">
               Chọn nhiều ảnh
@@ -260,13 +303,13 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
               type="file"
               accept="image/*"
               capture="environment"
-              onChange={handleUpload}
+              onChange={handleFileSelect}
               disabled={isUploading}
               className="hidden"
             />
             <Camera className="w-8 h-8 mb-2 text-muted-foreground" />
             <div className="text-center text-sm theme-text font-medium">
-              {isUploading ? 'Đang upload...' : '📸 Chụp ảnh'}
+              📸 Chụp ảnh
             </div>
             <div className="text-xs text-muted-foreground mt-1">
               Mở camera
@@ -279,6 +322,75 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
         Hỗ trợ: JPG, PNG, WEBP (Max 5MB/ảnh)
       </div>
 
+      {/* ✅ Preview Grid - Ảnh MỚI chưa upload (giống CREATE modal) */}
+      {previewUrls.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="text-sm font-medium theme-text">
+              📋 Ảnh mới sẽ thêm ({previewUrls.length})
+            </div>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleCancelUpload}
+                disabled={isUploading}
+              >
+                Hủy
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleConfirmUpload}
+                disabled={isUploading}
+                className="gap-2"
+              >
+                {isUploading ? (
+                  <>
+                    <Upload className="w-4 h-4 animate-pulse" />
+                    Đang lưu...
+                  </>
+                ) : (
+                  <>
+                    💾 Lưu ảnh
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+          <div className="grid grid-cols-4 gap-2">
+            {previewUrls.map((url, index) => (
+              <div key={index} className="relative group">
+                <div
+                  className={`aspect-square rounded-lg overflow-hidden border-2 ${
+                    index === 0 ? 'border-primary' : 'border-border'
+                  }`}
+                >
+                  <img src={url} alt={`Preview ${index + 1}`} className="w-full h-full object-cover" />
+                </div>
+                {index === 0 && (
+                  <div className="absolute top-1 right-1 bg-primary text-primary-foreground rounded-full p-1">
+                    <Star className="w-3 h-3 fill-current" />
+                  </div>
+                )}
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="destructive"
+                  className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0"
+                  onClick={() => handleRemovePreview(index)}
+                  disabled={isUploading}
+                >
+                  <Trash2 className="w-3 h-3" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+        </>
+      )}
+      {/* ↑ Đóng block {!readOnly && ( */}
+
       {/* Avatar Grid */}
       {avatars.length === 0 ? (
         <div className="text-center py-12">
@@ -289,7 +401,7 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {avatars.map((avatar) => (
             <div key={avatar.id} className="relative group">
-              <div 
+              <div
                 className="aspect-square rounded-lg overflow-hidden border-2 cursor-pointer hover:border-primary hover:shadow-lg transition-all duration-200"
                 style={{ borderColor: avatar.is_primary ? 'hsl(var(--primary))' : undefined }}
                 onClick={() => setSelectedImage(avatar.public_url)}
@@ -308,18 +420,20 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
                 </div>
               )}
 
-              {/* Delete Button - Góc phải trên */}
-              <Button
-                size="icon"
-                variant="destructive"
-                onClick={(e) => {
-                  e.stopPropagation(); // Prevent triggering lightbox
-                  handleDelete(avatar.id);
-                }}
-                className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-10"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
+              {/* Delete Button - Góc phải trên - Chỉ hiển thị khi KHÔNG ở READ mode */}
+              {!readOnly && (
+                <Button
+                  size="icon"
+                  variant="destructive"
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent triggering lightbox
+                    handleDelete(avatar.id);
+                  }}
+                  className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-10"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              )}
             </div>
           ))}
         </div>
@@ -327,13 +441,13 @@ export function RelatedAvatarGallery({ related, onUpdate }: RelatedAvatarGallery
 
       {/* Lightbox */}
       {selectedImage && (
-        <div 
+        <div
           className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
           onClick={() => setSelectedImage(null)}
         >
-          <img 
-            src={selectedImage} 
-            alt="Preview" 
+          <img
+            src={selectedImage}
+            alt="Preview"
             className="max-w-full max-h-full object-contain"
           />
         </div>

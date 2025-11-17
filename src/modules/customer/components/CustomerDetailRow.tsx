@@ -62,6 +62,7 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
   const [voucherEligibilityData, setVoucherEligibilityData] = useState<any>(null);
   const [isLoadingVouchers, setIsLoadingVouchers] = useState(false);
   const [vouchersError, setVouchersError] = useState<string | null>(null);
+  const [relatedRefreshTrigger, setRelatedRefreshTrigger] = useState(0);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
@@ -169,6 +170,12 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
     }
   };
 
+  // ✅ Function to refresh all tabs data
+  const handleRefreshAll = () => {
+    fetchInvoicesData();
+    setRelatedRefreshTrigger(prev => prev + 1); // Trigger refresh for related tab
+  };
+
   useEffect(() => {
     fetchInvoicesData();
     fetchVoucherEligibility();
@@ -238,7 +245,7 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={fetchInvoicesData}
+                  onClick={handleRefreshAll}
                   disabled={isLoadingInvoices}
                   className="gap-2"
                 >
@@ -394,9 +401,10 @@ export function CustomerDetailRow({ customer, visibleColumnsCount }: CustomerDet
                   </TabsContent>
 
                   <TabsContent value="related" className="mt-0 sm:mt-0 p-4 sm:p-0">
-                    <CustomerRelatedTab 
+                    <CustomerRelatedTab
                       customer={customer}
                       currentUser={currentUser}
+                      refreshTrigger={relatedRefreshTrigger}
                     />
                   </TabsContent>
                 </>

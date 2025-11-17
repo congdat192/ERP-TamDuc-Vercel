@@ -1,5 +1,4 @@
 import { Card } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Eye } from 'lucide-react';
 import { RelatedCustomer, RELATIONSHIP_ICONS, RELATIONSHIP_LABELS } from '../../types/relatedCustomer.types';
@@ -10,69 +9,76 @@ interface RelatedCustomerCardProps {
 }
 
 export function RelatedCustomerCard({ related, onView }: RelatedCustomerCardProps) {
-  const getInitials = (name: string) => {
-    if (!name) return 'NA';
-    return name.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2);
-  };
-
-  const getPrimaryAvatar = () => {
+  // ✅ Lấy ảnh mới nhất (ảnh đầu tiên trong array)
+  const getLatestAvatar = () => {
     if (!related.avatars || related.avatars.length === 0) return null;
-    const primary = related.avatars.find(a => a.is_primary);
-    return primary || related.avatars[0];
+    return related.avatars[0];
   };
 
   const formatBirthDate = (dateStr: string | null) => {
-    if (!dateStr) return '';
+    if (!dateStr) return 'Chưa có';
     const date = new Date(dateStr);
     return `${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
   };
 
-  const primaryAvatar = getPrimaryAvatar();
+  const latestAvatar = getLatestAvatar();
 
   return (
-    <Card className="theme-card hover:shadow-lg transition-all duration-200 p-4 flex flex-col items-center space-y-3">
-      {/* Avatar */}
-      <Avatar className="w-20 h-20 border-4 border-white shadow-md ring-2 ring-gray-200">
-        {primaryAvatar?.public_url ? (
-          <AvatarImage 
-            src={primaryAvatar.public_url} 
-            alt={related.related_name}
-            className="object-cover"
-          />
-        ) : null}
-        <AvatarFallback className="theme-bg-primary text-white text-lg font-semibold">
-          {getInitials(related.related_name)}
-        </AvatarFallback>
-      </Avatar>
-
-      {/* Name */}
-      <div className="text-center">
-        <h4 className="font-semibold theme-text">{related.related_name}</h4>
-      </div>
-
-      {/* Relationship */}
-      <div className="flex items-center gap-2 text-sm theme-text-muted">
-        <span className="text-lg">{RELATIONSHIP_ICONS[related.relationship_type]}</span>
-        <span>{RELATIONSHIP_LABELS[related.relationship_type]}</span>
-      </div>
-
-      {/* Birth Date */}
-      {related.birth_date && (
-        <div className="text-sm theme-text-muted">
-          {formatBirthDate(related.birth_date)}
+    <Card className="theme-card hover:shadow-lg transition-all duration-200 p-4">
+      {/* Layout 2 cột */}
+      <div className="flex gap-4">
+        {/* Column 1: Ảnh mới nhất */}
+        <div className="flex-shrink-0">
+          <div className="w-24 h-24 rounded-lg overflow-hidden border-2 border-gray-200 bg-gray-100">
+            {latestAvatar?.public_url ? (
+              <img
+                src={latestAvatar.public_url}
+                alt={related.related_name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-200">
+                <span className="text-3xl text-blue-600 font-bold">
+                  {related.related_name.charAt(0).toUpperCase()}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
-      )}
 
-      {/* View Button */}
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => onView(related)}
-        className="w-full gap-2"
-      >
-        <Eye className="w-4 h-4" />
-        Xem
-      </Button>
+        {/* Column 2: Thông tin */}
+        <div className="flex-1 flex flex-col justify-between min-w-0">
+          {/* Tên */}
+          <div>
+            <h4 className="font-semibold theme-text text-base truncate">
+              {related.related_name}
+            </h4>
+
+            {/* Mối quan hệ */}
+            <div className="flex items-center gap-1 text-sm theme-text-muted mt-1">
+              <span>{RELATIONSHIP_ICONS[related.relationship_type]}</span>
+              <span className="truncate">{RELATIONSHIP_LABELS[related.relationship_type]}</span>
+            </div>
+
+            {/* Ngày sinh */}
+            <div className="text-sm theme-text-muted mt-1">
+              {formatBirthDate(related.birth_date)}
+            </div>
+          </div>
+
+          {/* View Button */}
+          <div className="flex justify-center">
+            <Button
+              size="sm"
+              onClick={() => onView(related)}
+              className="gap-2 mt-3 bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <Eye className="w-4 h-4" />
+              Xem
+            </Button>
+          </div>
+        </div>
+      </div>
     </Card>
   );
 }

@@ -9,6 +9,7 @@ import { RelatedCustomer } from '../../types/relatedCustomer.types';
 import { useToast } from '@/hooks/use-toast';
 import { mapFamilyMembersToRelated, fetchCustomerByPhone } from '../../services/customerService';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { FamilyMemberService, APIResponse } from '../../services/familyMemberService';
 
 interface CustomerRelatedTabProps {
   customer: any;
@@ -143,6 +144,57 @@ export function CustomerRelatedTab({ customer, currentUser, refreshTrigger }: Cu
 
   const handleRelatedUpdate = () => {
     triggerRefresh(); // Unified trigger pattern
+  };
+
+  const handleDelete = async (related: RelatedCustomer) => {
+    const confirmed = window.confirm(
+      `Bạn có chắc chắn muốn xóa người thân "${related.related_name}"?\n\n` +
+      `⚠️ Cảnh báo: Tất cả ảnh và hóa đơn của người thân này cũng sẽ bị xóa!`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const response: APIResponse = await FamilyMemberService.deleteFamilyMember(
+        customer.phone,
+        related.id
+      );
+
+      // ✅ CHECK response.success FIELD FIRST
+      if (!response.success) {
+        console.error('[CustomerRelatedTab] Delete failed:', response);
+        console.error('[CustomerRelatedTab] Request ID:', response.meta?.request_id);
+
+        toast({
+          title: '❌ Lỗi',
+          description: response.error_description,
+          variant: 'destructive',
+          duration: 5000
+        });
+        return;
+      }
+
+      // ✅ SUCCESS: Display message NGUYÊN VĂN
+      console.log('[CustomerRelatedTab] Success:', response);
+      console.log('[CustomerRelatedTab] Request ID:', response.meta?.request_id);
+
+      toast({
+        title: '✅ Thành công',
+        description: response.message
+      });
+
+      triggerRefresh();
+    } catch (error: any) {
+      // Network error hoặc unexpected error
+      console.error('[CustomerRelatedTab] Unexpected error:', error);
+
+      toast({
+        title: '❌ Lỗi',
+        description: 'Không thể kết nối đến server. Vui lòng thử lại.',
+        variant: 'destructive',
+        duration: 5000
+      });
+    }
   };
 
   return (
