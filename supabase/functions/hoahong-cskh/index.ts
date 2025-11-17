@@ -200,22 +200,97 @@ serve(async (req) => {
 
     const apiData: CSKHApiResponse = await apiResponse.json();
 
-    // Transform response: flatten data.* to top level
+    // ✅ Log response từ External API để debug
+    const apiDataStr = JSON.stringify(apiData);
+    console.log('[hoahong-cskh] External API response (first 1000 chars):', 
+      apiDataStr.substring(0, 1000));
+    console.log('[hoahong-cskh] Response structure:', {
+      success: apiData.success,
+      has_data: !!apiData.data,
+      has_meta: !!apiData.meta,
+      data_keys: apiData.data ? Object.keys(apiData.data) : [],
+    });
+
+    // ✅ CRITICAL: Validate apiData.data exists
+    if (!apiData.data) {
+      console.error('[hoahong-cskh] Missing data field in API response:', apiData);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'INVALID_API_RESPONSE',
+          message: 'External API returned response without data field',
+          details: {
+            received_success: apiData.success,
+            has_meta: !!apiData.meta,
+            raw_keys: Object.keys(apiData),
+          },
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    // ✅ Validate nested data structure
+    if (!apiData.data.summary || !apiData.data.breakdown || !apiData.data.pagination) {
+      console.error('[hoahong-cskh] Incomplete data structure:', {
+        has_summary: !!apiData.data.summary,
+        has_breakdown: !!apiData.data.breakdown,
+        has_list: !!apiData.data.list,
+        has_pagination: !!apiData.data.pagination,
+      });
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'INCOMPLETE_API_RESPONSE',
+          message: 'External API returned incomplete data structure',
+          details: {
+            has_summary: !!apiData.data.summary,
+            has_breakdown: !!apiData.data.breakdown,
+            has_pagination: !!apiData.data.pagination,
+          },
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    // ✅ Transform response theo API Spec v1.2
     const transformedResponse = {
       success: apiData.success,
-      summary: apiData.data.summary,
-      breakdown: apiData.data.breakdown,
-      list: apiData.data.list,
+      creator_phone: apiData.meta.creatorphone,
+      period: {
+        from: apiData.meta.fromdate || '',
+        to: apiData.meta.todate || '',
+      },
+      summary: {
+        total_revenue: apiData.data.summary.total_revenue,
+        total_orders: apiData.data.summary.orders_count,
+        total_vouchers: 0, // API cũ không có field này, set default 0
+        breakdown: {
+          new_customers: {
+            revenue: apiData.data.breakdown.new_customer.revenue,
+            orders: apiData.data.breakdown.new_customer.count,
+          },
+          old_customers: {
+            revenue: apiData.data.breakdown.returning_customer.revenue,
+            orders: apiData.data.breakdown.returning_customer.count,
+          },
+        },
+      },
       pagination: apiData.data.pagination,
-      meta: apiData.meta,
     };
 
     const endTime = Date.now();
     console.log('[hoahong-cskh] Request completed in', endTime - startTime, 'ms');
     console.log('[hoahong-cskh] Response summary:', {
       success: transformedResponse.success,
-      orders_count: transformedResponse.summary.orders_count,
-      list_length: transformedResponse.list.length,
+      creator_phone: transformedResponse.creator_phone,
+      total_orders: transformedResponse.summary.total_orders,
+      total_revenue: transformedResponse.summary.total_revenue,
     });
 
     return new Response(JSON.stringify(transformedResponse), {
