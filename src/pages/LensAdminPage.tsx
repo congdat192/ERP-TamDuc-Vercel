@@ -60,7 +60,7 @@ export function LensAdminPage() {
   const [productFilters, setProductFilters] = useState<Record<string, string[]>>({});
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(50);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
   const { columns, handleColumnToggle } = useProductColumnVisibility();
   
   // Convert columns to visibility object
@@ -322,6 +322,7 @@ export function LensAdminPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="20">20</SelectItem>
                   <SelectItem value="50">50</SelectItem>
                   <SelectItem value="100">100</SelectItem>
                   <SelectItem value="200">200</SelectItem>
