@@ -186,15 +186,15 @@ export function RelatedCustomerDetailDialog({
                     <div className="space-y-2 text-sm">
                       <div className="flex gap-4">
                         <span className="text-muted-foreground">Mã KH:</span>
-                        <span className="font-medium">{related.customer_code} (Đỗ Khắm Hòa (ban...))</span>
+                        <span className="font-medium">{customer?.code || customer?.id} ({customer?.name})</span>
                       </div>
                       <div className="flex gap-4">
                         <span className="text-muted-foreground">SĐT:</span>
-                        <span className="font-medium">{related.customer_phone}</span>
+                        <span className="font-medium">{customer?.phone}</span>
                       </div>
                       <div className="flex gap-4">
                         <span className="text-muted-foreground">Nhóm:</span>
-                        <span className="font-medium">{related.customer_group}</span>
+                        <span className="font-medium">{customer?.group || customer?.groups || 'Khách lẻ'}</span>
                       </div>
                     </div>
                   </div>
