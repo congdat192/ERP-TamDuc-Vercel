@@ -15,13 +15,92 @@ import { Badge } from '@/components/ui/badge';
 import { LensProduct } from '../../types/lens';
 import { lensApi } from '../../services/lensApi';
 import { toast } from 'sonner';
-import { Upload, X, Check, Search } from 'lucide-react';
+import { Upload, X, Check, Search, GripVertical } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { MediaLibraryDialog } from './MediaLibraryDialog';
 import { SupplyTiersManager } from './SupplyTiersManager';
 import { UseCaseScoringManager } from './UseCaseScoringManager';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  horizontalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+// Types for image management
+type ImageItem = {
+  id: string;
+  url: string;
+  file?: File;
+  isNew: boolean;
+};
+
+// Sortable Image Component
+interface SortableImageProps {
+  image: ImageItem;
+  index: number;
+  onRemove: (id: string) => void;
+}
+
+function SortableImage({ image, index, onRemove }: SortableImageProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: image.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="relative group">
+      <img
+        src={image.url}
+        alt={`Product ${index + 1}`}
+        className="w-full h-24 object-cover rounded border"
+      />
+      {index === 0 && (
+        <Badge className="absolute top-1 left-1 text-xs">Chính</Badge>
+      )}
+      {image.isNew && (
+        <Badge className="absolute bottom-1 left-1 text-xs bg-primary">Mới</Badge>
+      )}
+      <button
+        type="button"
+        className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 h-6 w-6 p-0 bg-destructive text-destructive-foreground rounded hover:bg-destructive/90 flex items-center justify-center transition-opacity"
+        onClick={() => onRemove(image.id)}
+      >
+        <X className="w-3 h-3" />
+      </button>
+      <div
+        className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/10 transition-colors cursor-grab active:cursor-grabbing"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" />
+      </div>
+    </div>
+  );
+}
 
 const schema = z.object({
   name: z.string().min(1, 'Vui lòng nhập tên sản phẩm'),
@@ -51,13 +130,18 @@ interface ProductFormProps {
 
 export function ProductForm({ open, product, onClose }: ProductFormProps) {
   const [attributeValues, setAttributeValues] = useState<Record<string, string[]>>({});
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
-  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-  const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [images, setImages] = useState<ImageItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedRelatedIds, setSelectedRelatedIds] = useState<string[]>([]);
   const [relatedProductsSearch, setRelatedProductsSearch] = useState('');
   const [showMediaLibrary, setShowMediaLibrary] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const { data: attributes = [] } = useQuery({
     queryKey: ['lens-attributes'],
@@ -118,9 +202,12 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
         promotion_text: product.promotion_text || '',
         is_active: product.is_active,
       });
-      setExistingImages(product.image_urls || []);
-      setImageFiles([]);
-      setImagePreviews([]);
+      const existingImageItems: ImageItem[] = (product.image_urls || []).map((url, index) => ({
+        id: `existing-${index}-${Date.now()}`,
+        url,
+        isNew: false,
+      }));
+      setImages(existingImageItems);
       setAttributeValues(product.attributes || {});
       setSelectedRelatedIds(product.related_product_ids || []);
     } else if (product && !product.id) {
@@ -135,9 +222,12 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
         promotion_text: product.promotion_text || '',
         is_active: product.is_active,
       });
-      setExistingImages(product.image_urls || []);
-      setImageFiles([]);
-      setImagePreviews([]);
+      const existingImageItems: ImageItem[] = (product.image_urls || []).map((url, index) => ({
+        id: `existing-${index}-${Date.now()}`,
+        url,
+        isNew: false,
+      }));
+      setImages(existingImageItems);
       setAttributeValues(product.attributes || {});
       setSelectedRelatedIds(product.related_product_ids || []);
     } else if (open) {
@@ -152,9 +242,7 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
         sale_price: undefined,
         promotion_text: '',
       });
-      setExistingImages([]);
-      setImageFiles([]);
-      setImagePreviews([]);
+      setImages([]);
       setAttributeValues({});
       setSelectedRelatedIds([]);
     }
@@ -163,31 +251,43 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
 
   const handleImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const totalImages = existingImages.length + imagePreviews.length + files.length;
-    
+    const totalImages = images.length + files.length;
+
     if (totalImages > 10) {
       toast.error('Tối đa 10 ảnh');
       return;
     }
-    
-    setImageFiles(prev => [...prev, ...files]);
-    
+
     files.forEach(file => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreviews(prev => [...prev, reader.result as string]);
+        const newImage: ImageItem = {
+          id: `new-${Date.now()}-${Math.random()}`,
+          url: reader.result as string,
+          file,
+          isNew: true,
+        };
+        setImages(prev => [...prev, newImage]);
       };
       reader.readAsDataURL(file);
     });
   };
 
-  const handleRemoveNewImage = (index: number) => {
-    setImageFiles(prev => prev.filter((_, i) => i !== index));
-    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+  const handleRemoveImage = (id: string) => {
+    setImages(prev => prev.filter(img => img.id !== id));
   };
 
-  const handleRemoveExistingImage = (url: string) => {
-    setExistingImages(prev => prev.filter(u => u !== url));
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) return;
+
+    setImages((items) => {
+      const oldIndex = items.findIndex((item) => item.id === active.id);
+      const newIndex = items.findIndex((item) => item.id === over.id);
+
+      return arrayMove(items, oldIndex, newIndex);
+    });
   };
 
   const onSubmit = async (data: FormData) => {
@@ -206,13 +306,33 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
 
     setIsSubmitting(true);
     try {
-      let newImageUrls: string[] = [];
-      if (imageFiles.length > 0) {
-        newImageUrls = await lensApi.uploadImages(imageFiles);
+      // Separate existing and new images
+      const existingImageUrls = images.filter(img => !img.isNew).map(img => img.url);
+      const newImageFiles = images.filter(img => img.isNew && img.file).map(img => img.file!);
+
+      // Upload new images
+      let uploadedUrls: string[] = [];
+      if (newImageFiles.length > 0) {
+        uploadedUrls = await lensApi.uploadImages(newImageFiles);
       }
-      
-      const allImageUrls = [...existingImages, ...newImageUrls];
-      
+
+      // Build final image URLs array in the correct order
+      const allImageUrls: string[] = [];
+      let uploadedIndex = 0;
+
+      images.forEach(img => {
+        if (img.isNew) {
+          // Replace preview URL with uploaded URL
+          if (uploadedUrls[uploadedIndex]) {
+            allImageUrls.push(uploadedUrls[uploadedIndex]);
+            uploadedIndex++;
+          }
+        } else {
+          // Keep existing URL
+          allImageUrls.push(img.url);
+        }
+      });
+
       const productData = {
         name: data.name,
         sku: data.sku?.trim() || null,
@@ -230,9 +350,10 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
       };
 
       if (product?.id) {
-        const removedImages = (product.image_urls || []).filter(url => !existingImages.includes(url));
+        // Delete removed images
+        const removedImages = (product.image_urls || []).filter(url => !existingImageUrls.includes(url));
         await Promise.all(removedImages.map(url => lensApi.deleteImage(url).catch(() => {})));
-        
+
         await lensApi.updateProduct(product.id, productData as any);
         toast.success('Cập nhật sản phẩm thành công');
       } else {
@@ -270,56 +391,32 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
 
             <TabsContent value="info" className="mt-4">
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Multi-Image Upload */}
-          <div className="space-y-2">
+          {/* Draggable Image Gallery */}
+          <div className="space-y-3">
             <Label>Hình ảnh sản phẩm</Label>
-            
-            {existingImages.length > 0 && (
-              <div className="grid grid-cols-5 gap-2">
-                {existingImages.map((url, index) => (
-                  <div key={url} className="relative group">
-                    <img
-                      src={url}
-                      alt={`Product ${index + 1}`}
-                      className="w-full h-24 object-cover rounded border"
-                    />
-                    {index === 0 && <Badge className="absolute top-1 left-1 text-xs">Chính</Badge>}
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="destructive"
-                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 h-6 w-6 p-0"
-                      onClick={() => handleRemoveExistingImage(url)}
-                    >
-                      <X className="w-3 h-3" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
 
-            {imagePreviews.length > 0 && (
-              <div className="grid grid-cols-5 gap-2">
-                {imagePreviews.map((preview, index) => (
-                  <div key={preview} className="relative group">
-                    <img
-                      src={preview}
-                      alt={`New ${index + 1}`}
-                      className="w-full h-24 object-cover rounded border border-primary"
-                    />
-                    <Badge className="absolute top-1 left-1 text-xs">Mới</Badge>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="destructive"
-                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 h-6 w-6 p-0"
-                      onClick={() => handleRemoveNewImage(index)}
-                    >
-                      <X className="w-3 h-3" />
-                    </Button>
+            {images.length > 0 && (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={images.map(img => img.id)}
+                  strategy={horizontalListSortingStrategy}
+                >
+                  <div className="grid grid-cols-5 gap-2">
+                    {images.map((image, index) => (
+                      <SortableImage
+                        key={image.id}
+                        image={image}
+                        index={index}
+                        onRemove={handleRemoveImage}
+                      />
+                    ))}
                   </div>
-                ))}
-              </div>
+                </SortableContext>
+              </DndContext>
             )}
 
             <div className="flex gap-2">
@@ -332,7 +429,7 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
                 <Search className="w-4 h-4 mr-2" />
                 Chọn từ thư viện
               </Button>
-              
+
               <Button
                 type="button"
                 variant="outline"
@@ -354,7 +451,7 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
             />
 
             <p className="text-xs text-muted-foreground">
-              Tối đa 10 ảnh. Ảnh đầu tiên sẽ là ảnh đại diện.
+              Tối đa 10 ảnh. Kéo thả để sắp xếp thứ tự. Ảnh đầu tiên sẽ là ảnh đại diện.
             </p>
           </div>
 
@@ -588,56 +685,32 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
           </Tabs>
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          {/* Multi-Image Upload */}
-          <div className="space-y-2">
+          {/* Draggable Image Gallery */}
+          <div className="space-y-3">
             <Label>Hình ảnh sản phẩm</Label>
-            
-            {existingImages.length > 0 && (
-              <div className="grid grid-cols-5 gap-2">
-                {existingImages.map((url, index) => (
-                  <div key={url} className="relative group">
-                    <img
-                      src={url}
-                      alt={`Product ${index + 1}`}
-                      className="w-full h-24 object-cover rounded border"
-                    />
-                    {index === 0 && <Badge className="absolute top-1 left-1 text-xs">Chính</Badge>}
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="destructive"
-                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 h-6 w-6 p-0"
-                      onClick={() => handleRemoveExistingImage(url)}
-                    >
-                      <X className="w-3 h-3" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
 
-            {imagePreviews.length > 0 && (
-              <div className="grid grid-cols-5 gap-2">
-                {imagePreviews.map((preview, index) => (
-                  <div key={preview} className="relative group">
-                    <img
-                      src={preview}
-                      alt={`New ${index + 1}`}
-                      className="w-full h-24 object-cover rounded border border-primary"
-                    />
-                    <Badge className="absolute top-1 left-1 text-xs">Mới</Badge>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="destructive"
-                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 h-6 w-6 p-0"
-                      onClick={() => handleRemoveNewImage(index)}
-                    >
-                      <X className="w-3 h-3" />
-                    </Button>
+            {images.length > 0 && (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={images.map(img => img.id)}
+                  strategy={horizontalListSortingStrategy}
+                >
+                  <div className="grid grid-cols-5 gap-2">
+                    {images.map((image, index) => (
+                      <SortableImage
+                        key={image.id}
+                        image={image}
+                        index={index}
+                        onRemove={handleRemoveImage}
+                      />
+                    ))}
                   </div>
-                ))}
-              </div>
+                </SortableContext>
+              </DndContext>
             )}
 
             <div className="flex gap-2">
@@ -650,7 +723,7 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
                 <Search className="w-4 h-4 mr-2" />
                 Chọn từ thư viện
               </Button>
-              
+
               <Button
                 type="button"
                 variant="outline"
@@ -672,7 +745,7 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
             />
 
             <p className="text-xs text-muted-foreground">
-              Tối đa 10 ảnh. Ảnh đầu tiên sẽ là ảnh đại diện.
+              Tối đa 10 ảnh. Kéo thả để sắp xếp thứ tự. Ảnh đầu tiên sẽ là ảnh đại diện.
             </p>
           </div>
 
@@ -943,11 +1016,16 @@ export function ProductForm({ open, product, onClose }: ProductFormProps) {
           open={showMediaLibrary}
           onClose={() => setShowMediaLibrary(false)}
           onSelect={(urls) => {
-            setExistingImages(prev => [...prev, ...urls]);
+            const newImageItems: ImageItem[] = urls.map((url, index) => ({
+              id: `library-${Date.now()}-${index}`,
+              url,
+              isNew: false,
+            }));
+            setImages(prev => [...prev, ...newImageItems]);
             setShowMediaLibrary(false);
           }}
-          maxSelection={10 - existingImages.length - imageFiles.length}
-          currentImages={existingImages}
+          maxSelection={10 - images.length}
+          currentImages={images.map(img => img.url)}
         />
       </DialogContent>
     </Dialog>
