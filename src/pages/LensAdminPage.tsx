@@ -1,10 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, ShieldAlert, HelpCircle, Search, X } from "lucide-react";
+import { Plus, ShieldAlert, HelpCircle, Search, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useNavigate } from "react-router-dom";
 import {
@@ -58,6 +59,8 @@ export function LensAdminPage() {
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [productFilters, setProductFilters] = useState<Record<string, string[]>>({});
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(50);
   const { columns, handleColumnToggle } = useProductColumnVisibility();
   
   // Convert columns to visibility object
@@ -132,6 +135,18 @@ export function LensAdminPage() {
   }, [products, productFilters, searchQuery]);
 
   const hasActiveFilters = Object.keys(productFilters).length > 0;
+
+  // Pagination calculations
+  const totalProducts = filteredProducts.length;
+  const totalPages = Math.ceil(totalProducts / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters or search query changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [productFilters, searchQuery, itemsPerPage]);
 
   const handleFilterChange = (slug: string, value: string) => {
     setProductFilters(prev => {
@@ -272,35 +287,54 @@ export function LensAdminPage() {
             onClearAll={handleClearFilters}
           />
 
-          {searchQuery && (
-            <p className="text-sm text-muted-foreground">
-              Tìm thấy {filteredProducts.length} sản phẩm phù hợp với "{searchQuery}"
-              {products.length > 0 && ` (trong tổng số ${products.length} sản phẩm)`}
-            </p>
-          )}
+          {/* Product count and pagination info */}
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-muted-foreground">
+              {searchQuery ? (
+                <>
+                  Tìm thấy <span className="font-semibold">{totalProducts}</span> sản phẩm phù hợp với "{searchQuery}"
+                  {products.length > 0 && ` (trong tổng số ${products.length} sản phẩm)`}
+                </>
+              ) : hasActiveFilters ? (
+                <>
+                  Đang lọc <span className="font-semibold">{totalProducts}</span> sản phẩm.
+                  Kéo thả để sắp xếp thứ tự hiển thị ngoài Lens Catalog.
+                </>
+              ) : (
+                <>
+                  Tổng số <span className="font-semibold">{totalProducts}</span> sản phẩm
+                </>
+              )}
+              {totalPages > 1 && (
+                <span className="ml-2">
+                  - Hiển thị {startIndex + 1}-{Math.min(endIndex, totalProducts)}
+                </span>
+              )}
+            </div>
+
+            {/* Items per page selector */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Hiển thị:</span>
+              <Select
+                value={itemsPerPage.toString()}
+                onValueChange={(value) => setItemsPerPage(Number(value))}
+              >
+                <SelectTrigger className="w-24">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="50">50</SelectItem>
+                  <SelectItem value="100">100</SelectItem>
+                  <SelectItem value="200">200</SelectItem>
+                </SelectContent>
+              </Select>
+              <span className="text-sm text-muted-foreground">/ trang</span>
+            </div>
+          </div>
 
           {hasActiveFilters ? (
-            <>
-              {!searchQuery && (
-                <p className="text-sm text-muted-foreground">
-                  Đang lọc {filteredProducts.length} sản phẩm. Kéo thả để sắp xếp thứ tự hiển thị ngoài Lens Catalog.
-                </p>
-              )}
-              <DraggableProductTable
-                products={filteredProducts}
-                onEdit={handleEdit}
-                onClone={handleClone}
-                onRefetch={refetch}
-                onSelect={(id) => {
-                  setSelectedProductId(id);
-                  setActiveTab("tiers");
-                }}
-                columnVisibility={columnVisibility}
-              />
-            </>
-          ) : (
-            <ProductTable
-              products={searchQuery ? filteredProducts : products}
+            <DraggableProductTable
+              products={paginatedProducts}
               onEdit={handleEdit}
               onClone={handleClone}
               onRefetch={refetch}
@@ -310,6 +344,83 @@ export function LensAdminPage() {
               }}
               columnVisibility={columnVisibility}
             />
+          ) : (
+            <ProductTable
+              products={paginatedProducts}
+              onEdit={handleEdit}
+              onClone={handleClone}
+              onRefetch={refetch}
+              onSelect={(id) => {
+                setSelectedProductId(id);
+                setActiveTab("tiers");
+              }}
+              columnVisibility={columnVisibility}
+            />
+          )}
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="w-4 h-4 mr-1" />
+                Trước
+              </Button>
+
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={currentPage === pageNum ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setCurrentPage(pageNum)}
+                      className="w-10"
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+                {totalPages > 5 && currentPage < totalPages - 2 && (
+                  <>
+                    <span className="px-2 text-muted-foreground">...</span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(totalPages)}
+                      className="w-10"
+                    >
+                      {totalPages}
+                    </Button>
+                  </>
+                )}
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+              >
+                Sau
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
+            </div>
           )}
         </TabsContent>
 
