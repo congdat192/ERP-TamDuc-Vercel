@@ -84,13 +84,16 @@ export function ProductFilterPanel({
               <DropdownMenu key={attr.id}>
                 <DropdownMenuTrigger asChild>
                   <Button
-                    variant={hasSelection ? "default" : "outline"}
+                    variant="outline"
                     size="sm"
-                    className={hasSelection ? 'bg-primary hover:bg-primary/90' : ''}
+                    className={hasSelection
+                      ? 'border-blue-500 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-700 dark:hover:bg-blue-900'
+                      : ''
+                    }
                   >
                     {attr.name}
                     {hasSelection && (
-                      <Badge variant="secondary" className="ml-2 bg-white/20">
+                      <Badge variant="secondary" className="ml-2 bg-blue-200 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
                         {selectedValues.length}
                       </Badge>
                     )}
