@@ -71,6 +71,11 @@ function SortableImage({ image, index, onRemove }: SortableImageProps) {
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const handleRemoveClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onRemove(image.id);
+  };
+
   return (
     <div ref={setNodeRef} style={style} className="relative group">
       <img
@@ -79,18 +84,11 @@ function SortableImage({ image, index, onRemove }: SortableImageProps) {
         className="w-full h-24 object-cover rounded border"
       />
       {index === 0 && (
-        <Badge className="absolute top-1 left-1 text-xs">Chính</Badge>
+        <Badge className="absolute top-1 left-1 text-xs z-10">Chính</Badge>
       )}
       {image.isNew && (
-        <Badge className="absolute bottom-1 left-1 text-xs bg-primary">Mới</Badge>
+        <Badge className="absolute bottom-1 left-1 text-xs bg-primary z-10">Mới</Badge>
       )}
-      <button
-        type="button"
-        className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 h-6 w-6 p-0 bg-destructive text-destructive-foreground rounded hover:bg-destructive/90 flex items-center justify-center transition-opacity"
-        onClick={() => onRemove(image.id)}
-      >
-        <X className="w-3 h-3" />
-      </button>
       <div
         className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/10 transition-colors cursor-grab active:cursor-grabbing"
         {...attributes}
@@ -98,6 +96,14 @@ function SortableImage({ image, index, onRemove }: SortableImageProps) {
       >
         <GripVertical className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" />
       </div>
+      <button
+        type="button"
+        className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 h-6 w-6 p-0 bg-destructive text-destructive-foreground rounded hover:bg-destructive/90 flex items-center justify-center transition-opacity z-20"
+        onClick={handleRemoveClick}
+        onPointerDown={(e) => e.stopPropagation()}
+      >
+        <X className="w-3 h-3" />
+      </button>
     </div>
   );
 }
