@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { LensProductWithDetails } from '../../types/lens';
 import { LensProductWithTiersAndScores } from '../../types/lens-extended';
-import { Plus, Check, Store, Truck, Clock } from 'lucide-react';
+import { Plus, Check, Store, Truck, Clock, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { lensApi } from '../../services/lensApi';
 
 interface ProductDetailModalProps {
@@ -29,6 +29,8 @@ export function ProductDetailModal({
   onProductSelect,
 }: ProductDetailModalProps) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [showImageZoom, setShowImageZoom] = useState(false);
+  const [zoomImageIndex, setZoomImageIndex] = useState(0);
   const images = product.image_urls || [];
   const hasImages = images.length > 0;
   
@@ -47,6 +49,19 @@ export function ProductDetailModal({
     enabled: open && !!product.related_product_ids && product.related_product_ids.length > 0,
   });
 
+  const handleImageClick = () => {
+    setZoomImageIndex(selectedImageIndex);
+    setShowImageZoom(true);
+  };
+
+  const handlePrevImage = () => {
+    setZoomImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+  };
+
+  const handleNextImage = () => {
+    setZoomImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
@@ -55,14 +70,25 @@ export function ProductDetailModal({
             {/* Left: Image Gallery */}
             <div className="space-y-4">
               {/* Main Image */}
-              <div className="aspect-square bg-muted rounded-lg overflow-hidden relative">
+              <div className="aspect-square bg-muted rounded-lg overflow-hidden relative group">
                 {hasImages ? (
                   <>
                     <img
                       src={images[selectedImageIndex]}
                       alt={`${product.name} - Ảnh ${selectedImageIndex + 1}`}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover cursor-pointer transition-transform group-hover:scale-105"
+                      onClick={handleImageClick}
                     />
+
+                    {/* Zoom indicator overlay */}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all cursor-pointer flex items-center justify-center"
+                         onClick={handleImageClick}>
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 rounded-full p-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+                        </svg>
+                      </div>
+                    </div>
                     
                     {/* Badge giảm giá - góc trái trên */}
                     {product.discount_percent && (
@@ -360,6 +386,80 @@ export function ProductDetailModal({
           )}
         </ScrollArea>
       </DialogContent>
+
+      {/* Image Zoom Modal */}
+      <Dialog open={showImageZoom} onOpenChange={setShowImageZoom}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-black/95">
+          <div className="relative w-full h-[95vh] flex items-center justify-center">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowImageZoom(false)}
+              className="absolute top-4 right-4 z-50 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            {/* Image Counter */}
+            {images.length > 1 && (
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-white/10 text-white px-4 py-2 rounded-full text-sm">
+                {zoomImageIndex + 1} / {images.length}
+              </div>
+            )}
+
+            {/* Main Zoomed Image */}
+            <img
+              src={images[zoomImageIndex]}
+              alt={`${product.name} - Ảnh ${zoomImageIndex + 1}`}
+              className="max-w-full max-h-full object-contain"
+            />
+
+            {/* Navigation Arrows */}
+            {images.length > 1 && (
+              <>
+                <button
+                  onClick={handlePrevImage}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                >
+                  <ChevronLeft className="w-8 h-8" />
+                </button>
+                <button
+                  onClick={handleNextImage}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                >
+                  <ChevronRight className="w-8 h-8" />
+                </button>
+              </>
+            )}
+
+            {/* Thumbnail Strip */}
+            {images.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 max-w-[90%]">
+                <div className="flex gap-2 bg-black/50 p-2 rounded-lg backdrop-blur-sm">
+                  {images.map((url, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setZoomImageIndex(index)}
+                      className={`
+                        flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all
+                        ${index === zoomImageIndex
+                          ? 'border-white ring-2 ring-white'
+                          : 'border-transparent hover:border-white/50'
+                        }
+                      `}
+                    >
+                      <img
+                        src={url}
+                        alt={`Thumbnail ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
