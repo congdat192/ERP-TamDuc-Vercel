@@ -297,8 +297,7 @@ export function LensAdminPage() {
                 </>
               ) : hasActiveFilters ? (
                 <>
-                  Đang lọc <span className="font-semibold">{totalProducts}</span> sản phẩm.
-                  Kéo thả để sắp xếp thứ tự hiển thị ngoài Lens Catalog.
+                  Đang lọc <span className="font-semibold">{totalProducts}</span> sản phẩm
                 </>
               ) : (
                 <>
@@ -332,31 +331,17 @@ export function LensAdminPage() {
             </div>
           </div>
 
-          {hasActiveFilters ? (
-            <DraggableProductTable
-              products={paginatedProducts}
-              onEdit={handleEdit}
-              onClone={handleClone}
-              onRefetch={refetch}
-              onSelect={(id) => {
-                setSelectedProductId(id);
-                setActiveTab("tiers");
-              }}
-              columnVisibility={columnVisibility}
-            />
-          ) : (
-            <ProductTable
-              products={paginatedProducts}
-              onEdit={handleEdit}
-              onClone={handleClone}
-              onRefetch={refetch}
-              onSelect={(id) => {
-                setSelectedProductId(id);
-                setActiveTab("tiers");
-              }}
-              columnVisibility={columnVisibility}
-            />
-          )}
+          <DraggableProductTable
+            products={paginatedProducts}
+            onEdit={handleEdit}
+            onClone={handleClone}
+            onRefetch={refetch}
+            onSelect={(id) => {
+              setSelectedProductId(id);
+              setActiveTab("tiers");
+            }}
+            columnVisibility={columnVisibility}
+          />
 
           {/* Pagination Controls */}
           {totalPages > 1 && (
