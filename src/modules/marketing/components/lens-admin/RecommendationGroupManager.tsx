@@ -361,18 +361,15 @@ export function RecommendationGroupManager() {
             </div>
             <div>
               <Label>Icon</Label>
-              <Select value={formData.icon} onValueChange={(v) => setFormData({ ...formData, icon: v })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {ICON_OPTIONS.map((icon) => (
-                    <SelectItem key={icon} value={icon}>
-                      <span className="text-xl">{icon}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input
+                value={formData.icon}
+                onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
+                placeholder="Paste icon here (e.g., ⚡ 🏪 💡)"
+                className="text-xl"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Paste bất kỳ emoji hoặc icon nào bạn muốn
+              </p>
             </div>
             <div>
               <Label>Màu badge</Label>
