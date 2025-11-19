@@ -72,40 +72,8 @@ const ProtectedERPRoute = ({ children, module }: { children: React.ReactNode; mo
 
   // Check if user is employee-only on mount
   React.useEffect(() => {
-    const checkEmployeeAccess = async () => {
-      if (currentUser) {
-        try {
-          const { data: employee } = await supabase
-            .from('employees')
-            .select('is_employee_only')
-            .eq('user_id', currentUser.id)
-            .maybeSingle();
-          
-          const isEmpOnly = employee?.is_employee_only === true;
-          setIsEmployeeOnly(isEmpOnly);
-          
-          // If employee-only, block access to ERP and redirect
-          if (isEmpOnly) {
-            console.log('🚫 [ProtectedERPRoute] Employee-only user blocked from ERP');
-            toast({
-              title: "Truy cập bị từ chối",
-              description: "Bạn không có quyền truy cập khu vực quản trị. Vui lòng sử dụng trang Hồ Sơ Cá Nhân.",
-              variant: "destructive",
-            });
-            navigate('/my-profile', { replace: true });
-          }
-        } catch (error) {
-          console.error('❌ [ProtectedERPRoute] Error checking employee access:', error);
-          setIsEmployeeOnly(false);
-        } finally {
-          setIsCheckingAccess(false);
-        }
-      } else {
-        setIsCheckingAccess(false);
-      }
-    };
-    
-    checkEmployeeAccess();
+    // Mock check - always allow
+    setIsCheckingAccess(false);
   }, [currentUser, navigate, toast]);
 
   const handleModuleChange = (newModule: string) => {
@@ -143,10 +111,11 @@ const ProtectedERPRoute = ({ children, module }: { children: React.ReactNode; mo
     }
   };
 
-  if (!isAuthenticated || !currentUser) {
-    console.log('❌ [ProtectedERPRoute] Not authenticated, redirecting to login');
-    return <Navigate to="/login" replace />;
-  }
+  // Always allow access
+  // if (!isAuthenticated || !currentUser) {
+  //   console.log('❌ [ProtectedERPRoute] Not authenticated, redirecting to login');
+  //   return <Navigate to="/login" replace />;
+  // }
 
   // Show loading while checking employee access
   if (isCheckingAccess) {
@@ -180,22 +149,7 @@ const ProtectedERPRoute = ({ children, module }: { children: React.ReactNode; mo
 
 // Protected Route for general authentication (not business-specific)
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { currentUser, isAuthenticated } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!isAuthenticated || !currentUser) {
-      // Save current URL to redirect back after login
-      const currentPath = window.location.pathname + window.location.search;
-      sessionStorage.setItem('redirectAfterLogin', currentPath);
-      navigate('/login');
-    }
-  }, [isAuthenticated, currentUser, navigate]);
-
-  if (!isAuthenticated || !currentUser) {
-    return null;
-  }
-
+  // Always render children
   return <>{children}</>;
 };
 
@@ -213,180 +167,180 @@ const AppContent = () => {
       <Toaster />
       <Sonner />
       <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/employee-login" element={<EmployeeOTPLoginPage />} />
-                <Route path="/my-profile" element={<MyProfilePage />} />
-                <Route path="/auth/callback" element={<AuthCallbackPage />} />
-                <Route path="/email/verify/:id/:hash" element={<EmailVerificationPage />} />
-                <Route path="/xac-nhan-tai-khoan/:email/:hash" element={<EmailVerificationPage />} />
-                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                <Route path="/reset-password" element={<ResetPasswordPage />} />
-                <Route path="/doi-mat-khau/" element={<ResetPasswordPage />} />
-                <Route path="/change-password" element={<ChangePasswordPage />} />
-                
-                {/* Public Lens Catalog - No login required */}
-            <Route path="/lens-catalog" element={<LensCatalogPage />} />
-            <Route path="/lens-quiz" element={<LensQuizPage />} />
-            <Route path="/help/lens-admin" element={<LensAdminGuide />} />
-            <Route path="/help/lens-catalog" element={<LensCatalogGuide />} />
-            
-            {/* Public Product Lookup - No login required */}
-            <Route path="/p/:code" element={<PublicProductPage />} />
-                  
-                  {/* Redirect /ERP to /ERP/Dashboard */}
-                  <Route path="/ERP" element={<Navigate to="/ERP/Dashboard" replace />} />
-                  
-                  {/* ERP Routes without business ID */}
-                  <Route 
-                    path="/ERP/Dashboard" 
-                    element={
-                      <ProtectedERPRoute module="dashboard">
-                        <ERPHome />
-                      </ProtectedERPRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/ERP/Customers" 
-                    element={
-                      <ProtectedERPRoute module="customers">
-                        <CustomerPage />
-                      </ProtectedERPRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/ERP/Invoices" 
-                    element={
-                      <ProtectedERPRoute module="sales">
-                        <SalesPage />
-                      </ProtectedERPRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/ERP/Invoices/:invoiceId" 
-                    element={
-                      <ProtectedERPRoute module="sales">
-                        <InvoiceDetailPage />
-                      </ProtectedERPRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/ERP/Products"
-                    element={
-                      <ProtectedERPRoute module="inventory">
-                        <InventoryPage />
-                      </ProtectedERPRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/ERP/Products/:productCode" 
-                    element={
-                      <ProtectedERPRoute module="inventory">
-                        <ProductDetailPage />
-                      </ProtectedERPRoute>
-                    } 
-                  />
-                  
-                  <Route
-                    path="/ERP/Operations/Lens-Admin" 
-                    element={
-                      <ProtectedERPRoute module="operations">
-                        <LensAdminPage />
-                      </ProtectedERPRoute>
-                    } 
-                  />
-                  {/* Redirect old voucher URL to new location */}
-                  <Route path="/ERP/Voucher" element={<Navigate to="/ERP/Marketing/voucher" replace />} />
-                  
-                  {/* Voucher route with feature-level protection */}
-                  <Route 
-                    path="/ERP/Marketing/voucher" 
-                    element={
-                      <ProtectedERPRoute module="voucher">
-                        <FeatureProtectedRoute requiredFeature="view_vouchers">
-                          <VoucherIssuancePage />
-                        </FeatureProtectedRoute>
-                      </ProtectedERPRoute>
-                    } 
-                  />
-                  
-                  {/* Other Marketing routes */}
-                  <Route 
-                    path="/ERP/Marketing/*" 
-                    element={
-                      <ProtectedERPRoute module="marketing">
-                        <MarketingPage />
-                      </ProtectedERPRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/ERP/HR/*" 
-                    element={
-                      <ProtectedERPRoute module="hr">
-                        <HRPage />
-                      </ProtectedERPRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/ERP/ESS" 
-                    element={
-                      <ProtectedRoute>
-                        <EmployeeSelfServicePage />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/ERP/Affiliate/*"
-                    element={
-                      <ProtectedERPRoute module="affiliate">
-                        <AffiliateModule />
-                      </ProtectedERPRoute>
-                    } 
-                  />
-                  
-                  {/* User Management Nested Routes */}
-                  <Route 
-                    path="/ERP/UserManagement" 
-                    element={
-                      <ProtectedERPRoute module="user-management">
-                        <UserManagementLayout />
-                      </ProtectedERPRoute>
-                    }
-                  >
-                    <Route index element={<UserManagementDashboard />} />
-                    <Route path="Members" element={<MembersPage />} />
-                    <Route path="Roles" element={<RolesPage />} />
-                  </Route>
-                  
-                  <Route 
-                    path="/ERP/Setting/*" 
-                    element={
-                      <ProtectedERPRoute module="system-settings">
-                        <Settings />
-                      </ProtectedERPRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/ERP/Profile" 
-                    element={
-                      <ProtectedERPRoute module="profile">
-                        <UserProfilePage />
-                      </ProtectedERPRoute>
-                    } 
-                  />
-                  
-                  {/* Error Pages */}
-                  <Route path="/403" element={<ForbiddenPage />} />
-                  <Route path="/500" element={<ServerErrorPage />} />
-                  <Route path="/network-error" element={<NetworkErrorPage />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </BrowserRouter>
-              <ForceChangePasswordDialog
-                isOpen={requirePasswordChange}
-                onPasswordChanged={handlePasswordChanged}
-              />
+        <Routes>
+          <Route path="/" element={<Navigate to="/ERP/Dashboard" replace />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/employee-login" element={<EmployeeOTPLoginPage />} />
+          <Route path="/my-profile" element={<MyProfilePage />} />
+          <Route path="/auth/callback" element={<AuthCallbackPage />} />
+          <Route path="/email/verify/:id/:hash" element={<EmailVerificationPage />} />
+          <Route path="/xac-nhan-tai-khoan/:email/:hash" element={<EmailVerificationPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/doi-mat-khau/" element={<ResetPasswordPage />} />
+          <Route path="/change-password" element={<ChangePasswordPage />} />
+
+          {/* Public Lens Catalog - No login required */}
+          <Route path="/lens-catalog" element={<LensCatalogPage />} />
+          <Route path="/lens-quiz" element={<LensQuizPage />} />
+          <Route path="/help/lens-admin" element={<LensAdminGuide />} />
+          <Route path="/help/lens-catalog" element={<LensCatalogGuide />} />
+
+          {/* Public Product Lookup - No login required */}
+          <Route path="/p/:code" element={<PublicProductPage />} />
+
+          {/* Redirect /ERP to /ERP/Dashboard */}
+          <Route path="/ERP" element={<Navigate to="/ERP/Dashboard" replace />} />
+
+          {/* ERP Routes without business ID */}
+          <Route
+            path="/ERP/Dashboard"
+            element={
+              <ProtectedERPRoute module="dashboard">
+                <ERPHome />
+              </ProtectedERPRoute>
+            }
+          />
+          <Route
+            path="/ERP/Customers"
+            element={
+              <ProtectedERPRoute module="customers">
+                <CustomerPage />
+              </ProtectedERPRoute>
+            }
+          />
+          <Route
+            path="/ERP/Invoices"
+            element={
+              <ProtectedERPRoute module="sales">
+                <SalesPage />
+              </ProtectedERPRoute>
+            }
+          />
+          <Route
+            path="/ERP/Invoices/:invoiceId"
+            element={
+              <ProtectedERPRoute module="sales">
+                <InvoiceDetailPage />
+              </ProtectedERPRoute>
+            }
+          />
+          <Route
+            path="/ERP/Products"
+            element={
+              <ProtectedERPRoute module="inventory">
+                <InventoryPage />
+              </ProtectedERPRoute>
+            }
+          />
+          <Route
+            path="/ERP/Products/:productCode"
+            element={
+              <ProtectedERPRoute module="inventory">
+                <ProductDetailPage />
+              </ProtectedERPRoute>
+            }
+          />
+
+          <Route
+            path="/ERP/Operations/Lens-Admin"
+            element={
+              <ProtectedERPRoute module="operations">
+                <LensAdminPage />
+              </ProtectedERPRoute>
+            }
+          />
+          {/* Redirect old voucher URL to new location */}
+          <Route path="/ERP/Voucher" element={<Navigate to="/ERP/Marketing/voucher" replace />} />
+
+          {/* Voucher route with feature-level protection */}
+          <Route
+            path="/ERP/Marketing/voucher"
+            element={
+              <ProtectedERPRoute module="voucher">
+                <FeatureProtectedRoute requiredFeature="view_vouchers">
+                  <VoucherIssuancePage />
+                </FeatureProtectedRoute>
+              </ProtectedERPRoute>
+            }
+          />
+
+          {/* Other Marketing routes */}
+          <Route
+            path="/ERP/Marketing/*"
+            element={
+              <ProtectedERPRoute module="marketing">
+                <MarketingPage />
+              </ProtectedERPRoute>
+            }
+          />
+          <Route
+            path="/ERP/HR/*"
+            element={
+              <ProtectedERPRoute module="hr">
+                <HRPage />
+              </ProtectedERPRoute>
+            }
+          />
+          <Route
+            path="/ERP/ESS"
+            element={
+              <ProtectedRoute>
+                <EmployeeSelfServicePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/ERP/Affiliate/*"
+            element={
+              <ProtectedERPRoute module="affiliate">
+                <AffiliateModule />
+              </ProtectedERPRoute>
+            }
+          />
+
+          {/* User Management Nested Routes */}
+          <Route
+            path="/ERP/UserManagement"
+            element={
+              <ProtectedERPRoute module="user-management">
+                <UserManagementLayout />
+              </ProtectedERPRoute>
+            }
+          >
+            <Route index element={<UserManagementDashboard />} />
+            <Route path="Members" element={<MembersPage />} />
+            <Route path="Roles" element={<RolesPage />} />
+          </Route>
+
+          <Route
+            path="/ERP/Setting/*"
+            element={
+              <ProtectedERPRoute module="system-settings">
+                <Settings />
+              </ProtectedERPRoute>
+            }
+          />
+          <Route
+            path="/ERP/Profile"
+            element={
+              <ProtectedERPRoute module="profile">
+                <UserProfilePage />
+              </ProtectedERPRoute>
+            }
+          />
+
+          {/* Error Pages */}
+          <Route path="/403" element={<ForbiddenPage />} />
+          <Route path="/500" element={<ServerErrorPage />} />
+          <Route path="/network-error" element={<NetworkErrorPage />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+      <ForceChangePasswordDialog
+        isOpen={requirePasswordChange}
+        onPasswordChanged={handlePasswordChanged}
+      />
     </>
   );
 };

@@ -34,7 +34,6 @@ export function RelatedAvatarGallery({ related, onUpdate, readOnly = false }: Re
   useEffect(() => {
     loadAvatars();
   }, [related.id]);
-
   // 🔐 Phase 4: Helper to set auth token for External Storage
   const setAuthToken = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -46,6 +45,7 @@ export function RelatedAvatarGallery({ related, onUpdate, readOnly = false }: Re
       console.log('[RelatedAvatarGallery] ✅ Auth token set for External Storage');
     }
   };
+
 
   const loadAvatars = async () => {
     try {
@@ -276,117 +276,116 @@ export function RelatedAvatarGallery({ related, onUpdate, readOnly = false }: Re
         <>
           <div className="grid grid-cols-2 gap-3">
             {/* Upload từ thư viện */}
-        <Card className="border-2 border-dashed hover:border-primary/50 transition-colors">
-          <label className="flex flex-col items-center justify-center p-4 cursor-pointer">
-            <input
-              type="file"
-              multiple
-              accept="image/jpeg,image/png,image/webp"
-              onChange={handleFileSelect}
-              disabled={isUploading}
-              className="hidden"
-            />
-            <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
-            <div className="text-center text-sm theme-text font-medium">
-              📁 Chọn từ thư viện
-            </div>
-            <div className="text-xs text-muted-foreground mt-1">
-              Chọn nhiều ảnh
-            </div>
-          </label>
-        </Card>
-
-        {/* Chụp bằng camera */}
-        <Card className="border-2 border-dashed hover:border-primary/50 transition-colors">
-          <label className="flex flex-col items-center justify-center p-4 cursor-pointer">
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={handleFileSelect}
-              disabled={isUploading}
-              className="hidden"
-            />
-            <Camera className="w-8 h-8 mb-2 text-muted-foreground" />
-            <div className="text-center text-sm theme-text font-medium">
-              📸 Chụp ảnh
-            </div>
-            <div className="text-xs text-muted-foreground mt-1">
-              Mở camera
-            </div>
-          </label>
-        </Card>
-      </div>
-
-      <div className="text-xs text-muted-foreground text-center mt-2">
-        Hỗ trợ: JPG, PNG, WEBP (Max 5MB/ảnh)
-      </div>
-
-      {/* ✅ Preview Grid - Ảnh MỚI chưa upload (giống CREATE modal) */}
-      {previewUrls.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="text-sm font-medium theme-text">
-              📋 Ảnh mới sẽ thêm ({previewUrls.length})
-            </div>
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleCancelUpload}
-                disabled={isUploading}
-              >
-                Hủy
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleConfirmUpload}
-                disabled={isUploading}
-                className="gap-2"
-              >
-                {isUploading ? (
-                  <>
-                    <Upload className="w-4 h-4 animate-pulse" />
-                    Đang lưu...
-                  </>
-                ) : (
-                  <>
-                    💾 Lưu ảnh
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-          <div className="grid grid-cols-4 gap-2">
-            {previewUrls.map((url, index) => (
-              <div key={index} className="relative group">
-                <div
-                  className={`aspect-square rounded-lg overflow-hidden border-2 ${
-                    index === 0 ? 'border-primary' : 'border-border'
-                  }`}
-                >
-                  <img src={url} alt={`Preview ${index + 1}`} className="w-full h-full object-cover" />
-                </div>
-                {index === 0 && (
-                  <div className="absolute top-1 right-1 bg-primary text-primary-foreground rounded-full p-1">
-                    <Star className="w-3 h-3 fill-current" />
-                  </div>
-                )}
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="destructive"
-                  className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0"
-                  onClick={() => handleRemovePreview(index)}
+            <Card className="border-2 border-dashed hover:border-primary/50 transition-colors">
+              <label className="flex flex-col items-center justify-center p-4 cursor-pointer">
+                <input
+                  type="file"
+                  multiple
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleFileSelect}
                   disabled={isUploading}
-                >
-                  <Trash2 className="w-3 h-3" />
-                </Button>
-              </div>
-            ))}
+                  className="hidden"
+                />
+                <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
+                <div className="text-center text-sm theme-text font-medium">
+                  📁 Chọn từ thư viện
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Chọn nhiều ảnh
+                </div>
+              </label>
+            </Card>
+
+            {/* Chụp bằng camera */}
+            <Card className="border-2 border-dashed hover:border-primary/50 transition-colors">
+              <label className="flex flex-col items-center justify-center p-4 cursor-pointer">
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleFileSelect}
+                  disabled={isUploading}
+                  className="hidden"
+                />
+                <Camera className="w-8 h-8 mb-2 text-muted-foreground" />
+                <div className="text-center text-sm theme-text font-medium">
+                  📸 Chụp ảnh
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  Mở camera
+                </div>
+              </label>
+            </Card>
           </div>
-        </div>
-      )}
+
+          <div className="text-xs text-muted-foreground text-center mt-2">
+            Hỗ trợ: JPG, PNG, WEBP (Max 5MB/ảnh)
+          </div>
+
+          {/* ✅ Preview Grid - Ảnh MỚI chưa upload (giống CREATE modal) */}
+          {previewUrls.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="text-sm font-medium theme-text">
+                  📋 Ảnh mới sẽ thêm ({previewUrls.length})
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleCancelUpload}
+                    disabled={isUploading}
+                  >
+                    Hủy
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleConfirmUpload}
+                    disabled={isUploading}
+                    className="gap-2"
+                  >
+                    {isUploading ? (
+                      <>
+                        <Upload className="w-4 h-4 animate-pulse" />
+                        Đang lưu...
+                      </>
+                    ) : (
+                      <>
+                        💾 Lưu ảnh
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {previewUrls.map((url, index) => (
+                  <div key={index} className="relative group">
+                    <div
+                      className={`aspect-square rounded-lg overflow-hidden border-2 ${index === 0 ? 'border-primary' : 'border-border'
+                        }`}
+                    >
+                      <img src={url} alt={`Preview ${index + 1}`} className="w-full h-full object-cover" />
+                    </div>
+                    {index === 0 && (
+                      <div className="absolute top-1 right-1 bg-primary text-primary-foreground rounded-full p-1">
+                        <Star className="w-3 h-3 fill-current" />
+                      </div>
+                    )}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="destructive"
+                      className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0"
+                      onClick={() => handleRemovePreview(index)}
+                      disabled={isUploading}
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </>
       )}
       {/* ↑ Đóng block {!readOnly && ( */}

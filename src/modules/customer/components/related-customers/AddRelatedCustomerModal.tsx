@@ -26,18 +26,18 @@ interface AddRelatedCustomerModalProps {
 // Validate dd/mm/yyyy format
 const isValidDate = (dateStr: string): boolean => {
   if (!dateStr.trim()) return true; // Empty is valid (optional field)
-  
+
   const regex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
   const match = dateStr.match(regex);
   if (!match) return false;
-  
+
   const day = parseInt(match[1], 10);
   const month = parseInt(match[2], 10);
   const year = parseInt(match[3], 10);
-  
-  if (day < 1 || day > 31 || month < 1 || month > 12 || 
-      year < 1900 || year > new Date().getFullYear()) return false;
-  
+
+  if (day < 1 || day > 31 || month < 1 || month > 12 ||
+    year < 1900 || year > new Date().getFullYear()) return false;
+
   const date = new Date(year, month - 1, day);
   return date.getDate() === day && date.getMonth() === month - 1;
 };
@@ -60,21 +60,21 @@ const formatDateInput = (value: string): string => {
 // Convert dd/mm/yyyy -> "Ngày DD tháng MM năm YYYY"
 const formatDateToVietnamese = (dateStr: string): string => {
   if (!dateStr.trim() || !isValidDate(dateStr)) return '';
-  
+
   const [day, month, year] = dateStr.split('/');
   return `Ngày ${parseInt(day, 10)} tháng ${parseInt(month, 10)} năm ${year}`;
 };
 
 export function AddRelatedCustomerModal({
-  open, 
-  onOpenChange, 
-  customer, 
+  open,
+  onOpenChange,
+  customer,
   currentUser,
-  onSuccess 
+  onSuccess
 }: AddRelatedCustomerModalProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Form state
   const [relatedName, setRelatedName] = useState('');
   const [relationshipType, setRelationshipType] = useState<RelationshipType>('con_cai');
@@ -82,7 +82,7 @@ export function AddRelatedCustomerModal({
   const [birthDate, setBirthDate] = useState('');
   const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
-  
+
   // Image upload state
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
@@ -97,15 +97,15 @@ export function AddRelatedCustomerModal({
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
-    
+
     const validFiles: File[] = [];
     const validUrls: string[] = [];
-    
+
     Array.from(files).forEach(file => {
       // Validate
       const maxSize = 5 * 1024 * 1024; // 5MB
       const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-      
+
       if (!allowedTypes.includes(file.type)) {
         toast({
           title: '❌ File không hợp lệ',
@@ -114,7 +114,7 @@ export function AddRelatedCustomerModal({
         });
         return;
       }
-      
+
       if (file.size > maxSize) {
         toast({
           title: '❌ File quá lớn',
@@ -123,11 +123,11 @@ export function AddRelatedCustomerModal({
         });
         return;
       }
-      
+
       validFiles.push(file);
       validUrls.push(URL.createObjectURL(file));
     });
-    
+
     setSelectedFiles(prev => [...prev, ...validFiles]);
     setPreviewUrls(prev => [...prev, ...validUrls]);
   };
@@ -154,17 +154,17 @@ export function AddRelatedCustomerModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!relatedName.trim()) {
       toast({ title: 'Lỗi', description: 'Vui lòng nhập tên người thân', variant: 'destructive' });
       return;
     }
-    
+
     if (!birthDate) {
-      toast({ 
-        title: 'Lỗi', 
-        description: 'Vui lòng nhập ngày sinh đúng định dạng dd/mm/yyyy', 
-        variant: 'destructive' 
+      toast({
+        title: 'Lỗi',
+        description: 'Vui lòng nhập ngày sinh đúng định dạng dd/mm/yyyy',
+        variant: 'destructive'
       });
       return;
     }
@@ -174,7 +174,7 @@ export function AddRelatedCustomerModal({
     try {
       // 🔐 Phase 4: Get auth token from Lovable Cloud and set to External Storage
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (session?.access_token) {
         await externalStorageClient.auth.setSession({
           access_token: session.access_token,
@@ -185,7 +185,7 @@ export function AddRelatedCustomerModal({
 
       // 1. Upload avatars to Storage FIRST (if any)
       const uploadedUrls: string[] = [];
-      
+
       if (selectedFiles.length > 0) {
         for (const file of selectedFiles) {
           // ✅ Build safe filePath (no Unicode, correct extension)
@@ -205,9 +205,9 @@ export function AddRelatedCustomerModal({
           const { data: { publicUrl } } = externalStorageClient.storage
             .from('avatar_customers')
             .getPublicUrl(filePath);
-          
+
           console.log('[AddRelatedCustomerModal] Uploaded to External Storage:', publicUrl);
-          
+
           uploadedUrls.push(publicUrl);
         }
       }
@@ -424,7 +424,7 @@ export function AddRelatedCustomerModal({
           {/* Upload Avatar Section */}
           <div className="space-y-4">
             <h3 className="font-semibold theme-text">📸 HÌNH ẢNH</h3>
-            
+
             {/* Upload Area */}
             <div className="grid grid-cols-2 gap-3">
               {/* Upload từ thư viện */}
@@ -472,7 +472,7 @@ export function AddRelatedCustomerModal({
             <div className="text-xs text-muted-foreground text-center">
               Ảnh đầu tiên sẽ là ảnh đại diện • Max 5MB/ảnh
             </div>
-            
+
             {/* Preview Grid */}
             {previewUrls.length > 0 && (
               <div className="grid grid-cols-4 gap-2">

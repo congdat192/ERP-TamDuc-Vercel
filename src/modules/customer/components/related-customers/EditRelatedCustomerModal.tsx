@@ -43,7 +43,7 @@ export function EditRelatedCustomerModal({
   // ✅ Image upload state (giống ADD modal)
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-  const [imagesToDelete, setImagesToDelete] = useState<Array<{id: string, url: string}>>([]);
+  const [imagesToDelete, setImagesToDelete] = useState<Array<{ id: string, url: string }>>([]);
 
   // Cleanup preview URLs on unmount
   useEffect(() => {
@@ -125,7 +125,7 @@ export function EditRelatedCustomerModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.related_name?.trim()) {
       toast({
         title: '⚠️ Thiếu thông tin',
@@ -362,7 +362,7 @@ export function EditRelatedCustomerModal({
             <Label>
               Mối quan hệ <span className="text-destructive">*</span>
             </Label>
-            <Select 
+            <Select
               value={formData.relationship_type}
               onValueChange={(value) => setFormData({ ...formData, relationship_type: value as RelationshipType })}
             >
@@ -448,9 +448,8 @@ export function EditRelatedCustomerModal({
                     .map((avatar, index) => (
                       <div key={avatar.id} className="relative group">
                         <div
-                          className={`aspect-square rounded-lg overflow-hidden border-2 ${
-                            avatar.is_primary ? 'border-primary' : 'border-border'
-                          }`}
+                          className={`aspect-square rounded-lg overflow-hidden border-2 ${avatar.is_primary ? 'border-primary' : 'border-border'
+                            }`}
                         >
                           <img
                             src={avatar.public_url}
@@ -536,9 +535,8 @@ export function EditRelatedCustomerModal({
                   {previewUrls.map((url, index) => (
                     <div key={index} className="relative group">
                       <div
-                        className={`aspect-square rounded-lg overflow-hidden border-2 ${
-                          index === 0 ? 'border-primary' : 'border-border'
-                        }`}
+                        className={`aspect-square rounded-lg overflow-hidden border-2 ${index === 0 ? 'border-primary' : 'border-border'
+                          }`}
                       >
                         <img src={url} alt={`Preview ${index + 1}`} className="w-full h-full object-cover" />
                       </div>
