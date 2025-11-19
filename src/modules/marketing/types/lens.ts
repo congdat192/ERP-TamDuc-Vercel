@@ -170,6 +170,7 @@ export interface SupplierCatalog {
   id: string;
   supplier_name: string;
   display_name: string;
+  category: string | null;
   icon: string | null;
   pdf_url: string;
   file_name: string;
@@ -184,6 +185,7 @@ export interface SupplierCatalog {
 export interface CreateSupplierCatalogInput {
   supplier_name: string;
   display_name: string;
+  category?: string;
   icon?: string;
   pdf_url: string;
   file_name: string;
@@ -193,6 +195,7 @@ export interface CreateSupplierCatalogInput {
 
 export interface UpdateSupplierCatalogInput {
   display_name?: string;
+  category?: string;
   icon?: string;
   pdf_url?: string;
   file_name?: string;

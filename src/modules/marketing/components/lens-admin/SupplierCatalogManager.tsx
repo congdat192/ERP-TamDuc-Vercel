@@ -63,6 +63,7 @@ export function SupplierCatalogManager() {
               <TableHead>Icon</TableHead>
               <TableHead>Nhà cung cấp</TableHead>
               <TableHead>Tên hiển thị</TableHead>
+              <TableHead>Thư mục</TableHead>
               <TableHead>File</TableHead>
               <TableHead>Kích thước</TableHead>
               <TableHead>Trạng thái</TableHead>
@@ -75,6 +76,11 @@ export function SupplierCatalogManager() {
                 <TableCell className="text-2xl">{catalog.icon}</TableCell>
                 <TableCell className="font-medium">{catalog.supplier_name}</TableCell>
                 <TableCell>{catalog.display_name}</TableCell>
+                <TableCell>
+                  <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                    📁 {catalog.category || 'Khác'}
+                  </Badge>
+                </TableCell>
                 <TableCell className="text-xs text-muted-foreground">{catalog.file_name}</TableCell>
                 <TableCell>{catalog.file_size ? `${(catalog.file_size / 1024 / 1024).toFixed(2)} MB` : '-'}</TableCell>
                 <TableCell>
