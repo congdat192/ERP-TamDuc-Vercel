@@ -23,16 +23,17 @@ interface LensAppBarProps {
   onRecommendationSelect: (group: LensRecommendationGroup | null) => void;
 }
 
-export function LensAppBar({ 
-  onSearchChange, 
-  compareCount, 
+export function LensAppBar({
+  onSearchChange,
+  compareCount,
   onCompareClick,
   selectedRecommendation,
-  onRecommendationSelect 
+  onRecommendationSelect
 }: LensAppBarProps) {
   const navigate = useNavigate();
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
   const [selectedCatalog, setSelectedCatalog] = useState<SupplierCatalog | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const { data: groups, isLoading } = useQuery({
     queryKey: ['recommendation-groups'],
@@ -43,6 +44,18 @@ export function LensAppBar({
     queryKey: ['supplier-catalogs'],
     queryFn: () => lensApi.getSupplierCatalogs(),
   });
+
+  // Group catalogs by category
+  const categorizedCatalogs = catalogs?.reduce((acc, catalog) => {
+    const category = catalog.category || 'Khác';
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(catalog);
+    return acc;
+  }, {} as Record<string, SupplierCatalog[]>) || {};
+
+  const categories = Object.keys(categorizedCatalogs).sort();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -128,10 +141,14 @@ export function LensAppBar({
 
           {/* PDF Catalog Dropdown */}
           {!isLoadingCatalogs && catalogs && catalogs.length > 0 && (
-            <DropdownMenu>
+            <DropdownMenu
+              onOpenChange={(open) => {
+                if (!open) setSelectedCategory(null);
+              }}
+            >
               <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="gap-2 border-2 border-purple-500 bg-purple-50 hover:bg-purple-100 text-purple-700 font-semibold shadow-sm h-9"
                 >
                   <FileText className="w-4 h-4 text-purple-500" />
@@ -139,18 +156,53 @@ export function LensAppBar({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 z-[60]">
-                {catalogs.map((catalog) => (
-                  <DropdownMenuItem
-                    key={catalog.id}
-                    onClick={() => {
-                      setSelectedCatalog(catalog);
-                      setPdfModalOpen(true);
-                    }}
-                  >
-                    <span className="mr-2 text-lg">{catalog.icon}</span>
-                    <span className="flex-1">{catalog.display_name}</span>
-                  </DropdownMenuItem>
-                ))}
+                {selectedCategory === null ? (
+                  // Show categories (folders)
+                  <>
+                    {categories.map((category) => (
+                      <DropdownMenuItem
+                        key={category}
+                        onSelect={(e) => {
+                          e.preventDefault();
+                          setSelectedCategory(category);
+                        }}
+                      >
+                        <span className="mr-2 text-lg">📁</span>
+                        <span className="flex-1">{category}</span>
+                        <Badge className="ml-2 bg-purple-600 hover:bg-purple-600 text-white text-xs">
+                          {categorizedCatalogs[category].length}
+                        </Badge>
+                      </DropdownMenuItem>
+                    ))}
+                  </>
+                ) : (
+                  // Show PDFs in selected category
+                  <>
+                    <DropdownMenuItem
+                      onSelect={(e) => {
+                        e.preventDefault();
+                        setSelectedCategory(null);
+                      }}
+                    >
+                      <span className="mr-2">←</span>
+                      <span className="flex-1 font-semibold">Quay lại</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    {categorizedCatalogs[selectedCategory]?.map((catalog) => (
+                      <DropdownMenuItem
+                        key={catalog.id}
+                        onClick={() => {
+                          setSelectedCatalog(catalog);
+                          setPdfModalOpen(true);
+                          setSelectedCategory(null);
+                        }}
+                      >
+                        <span className="mr-2 text-lg">{catalog.icon || '📄'}</span>
+                        <span className="flex-1">{catalog.display_name}</span>
+                      </DropdownMenuItem>
+                    ))}
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           )}

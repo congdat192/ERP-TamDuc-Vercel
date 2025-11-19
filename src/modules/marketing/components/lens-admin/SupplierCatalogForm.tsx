@@ -28,6 +28,7 @@ export function SupplierCatalogForm({ open, catalog, onClose }: SupplierCatalogF
     defaultValues: {
       supplier_name: catalog?.supplier_name || '',
       display_name: catalog?.display_name || '',
+      category: catalog?.category || '',
       icon: catalog?.icon || '',
       display_order: catalog?.display_order || 0,
     }
@@ -38,6 +39,7 @@ export function SupplierCatalogForm({ open, catalog, onClose }: SupplierCatalogF
       reset({
         supplier_name: catalog.supplier_name,
         display_name: catalog.display_name,
+        category: catalog.category || '',
         icon: catalog.icon || '',
         display_order: catalog.display_order,
       });
@@ -48,6 +50,7 @@ export function SupplierCatalogForm({ open, catalog, onClose }: SupplierCatalogF
       reset({
         supplier_name: '',
         display_name: '',
+        category: '',
         icon: '',
         display_order: 0,
       });
@@ -138,6 +141,14 @@ export function SupplierCatalogForm({ open, catalog, onClose }: SupplierCatalogF
             <Label>Tên hiển thị *</Label>
             <Input {...register('display_name', { required: true })} placeholder="CHEMI Catalog 2024" />
             {errors.display_name && <p className="text-sm text-red-600">Bắt buộc</p>}
+          </div>
+
+          <div>
+            <Label>Thư mục/Danh mục</Label>
+            <Input {...register('category')} placeholder="Essilor, Chemi, ZEISS..." />
+            <p className="text-xs text-muted-foreground mt-1">
+              Để trống sẽ hiển thị trong thư mục "Khác"
+            </p>
           </div>
 
           <div>
