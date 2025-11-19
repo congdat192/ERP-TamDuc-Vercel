@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Copy, Download } from 'lucide-react';
 import { ReceivedVoucher } from '../../services/voucherService';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import QRCode from 'qrcode';
 
@@ -17,17 +17,37 @@ export function VoucherDetailDialog({ voucher, open, onOpenChange }: VoucherDeta
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    if (voucher && open && canvasRef.current) {
-      // Clear canvas trước khi render QR mới
+    if (!voucher || !open) {
+      return;
+    }
+
+    // Validate voucher code
+    if (!voucher.voucher_code || voucher.voucher_code.trim() === '') {
+      console.error('Voucher code is empty or undefined:', voucher);
+      toast.error('Mã voucher không hợp lệ');
+      return;
+    }
+
+    // Use requestAnimationFrame to ensure canvas is mounted in DOM
+    const generateQR = () => {
+      if (!canvasRef.current) {
+        console.warn('Canvas ref not available, retrying...');
+        requestAnimationFrame(generateQR);
+        return;
+      }
+
       const canvas = canvasRef.current;
+      console.log('Generating QR code for:', voucher.voucher_code);
+
+      // Clear canvas trước khi render QR mới
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
       }
-      
+
       // Generate QR code
       QRCode.toCanvas(
-        canvasRef.current,
+        canvas,
         voucher.voucher_code,
         {
           width: 200,
@@ -41,10 +61,19 @@ export function VoucherDetailDialog({ voucher, open, onOpenChange }: VoucherDeta
           if (error) {
             console.error('QR Code generation error:', error);
             toast.error('Không thể tạo mã QR');
+          } else {
+            console.log('QR code generated successfully for:', voucher.voucher_code);
           }
         }
       );
-    }
+    };
+
+    // Start generation after a short delay to ensure Dialog is fully mounted
+    const timeoutId = setTimeout(() => {
+      requestAnimationFrame(generateQR);
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
   }, [voucher, open]);
 
   const handleCopyCode = () => {
