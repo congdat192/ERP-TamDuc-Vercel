@@ -52,6 +52,15 @@ export const MODULE_PERMISSIONS: ModulePermission[] = [
     ]
   },
   {
+    module: 'voucher',
+    label: 'Voucher & Loyalty',
+    icon: 'Ticket',
+    allowedRoles: ['erp-admin', 'voucher-admin', 'telesales', 'custom'],
+    subMenus: [
+      { path: '/ERP/Marketing/voucher', label: 'Phát hành Voucher', icon: 'Ticket' }
+    ]
+  },
+  {
     module: 'operations',
     label: 'Vận Hành',
     icon: 'Wrench',
