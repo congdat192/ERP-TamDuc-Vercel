@@ -46,6 +46,14 @@ import { AffiliateModule } from "./modules/affiliate";
 import { ERPLayout } from "@/components/layout/ERPLayout";
 import { Navigate, useNavigate } from "react-router-dom";
 import { VoucherIssuancePage } from "./modules/marketing/pages/VoucherIssuancePage";
+import { CRMPage } from "./modules/crm/pages/CRMPage";
+import { PipelinePage } from "./modules/crm/pages/PipelinePage";
+import { BookingPage } from "./modules/crm/pages/BookingPage";
+import { CampaignPage } from './modules/crm/pages/CampaignPage';
+import { AutomationPage } from './modules/crm/pages/AutomationPage';
+import { AnalyticsPage } from './modules/crm/pages/AnalyticsPage';
+import { CustomerListPage } from './modules/crm/pages/CustomerListPage';
+import { Customer360Page } from "./modules/crm/pages/Customer360Page";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -108,14 +116,17 @@ const ProtectedERPRoute = ({ children, module }: { children: React.ReactNode; mo
       case 'system-settings':
         navigate('/ERP/Setting');
         break;
+      case 'crm':
+        navigate('/crm');
+        break;
     }
   };
 
   // Always allow access
-  // if (!isAuthenticated || !currentUser) {
-  //   console.log('❌ [ProtectedERPRoute] Not authenticated, redirecting to login');
-  //   return <Navigate to="/login" replace />;
-  // }
+  if (!isAuthenticated || !currentUser) {
+    console.log('❌ [ProtectedERPRoute] Not authenticated, redirecting to login');
+    return <Navigate to="/login" replace />;
+  }
 
   // Show loading while checking employee access
   if (isCheckingAccess) {
@@ -149,7 +160,16 @@ const ProtectedERPRoute = ({ children, module }: { children: React.ReactNode; mo
 
 // Protected Route for general authentication (not business-specific)
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  // Always render children
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
   return <>{children}</>;
 };
 
@@ -330,7 +350,64 @@ const AppContent = () => {
             }
           />
 
-          {/* Error Pages */}
+          {/* CRM Routes */}
+          <Route
+            path="/crm"
+            element={
+              <ProtectedERPRoute module="crm">
+                <CRMPage />
+              </ProtectedERPRoute>
+            }
+          />
+          <Route
+            path="/crm/pipeline"
+            element={
+              <ProtectedERPRoute module="crm">
+                <PipelinePage />
+              </ProtectedERPRoute>
+            }
+          />
+          <Route
+            path="/crm/booking"
+            element={
+              <ProtectedERPRoute module="crm">
+                <BookingPage />
+              </ProtectedERPRoute>
+            }
+          />
+          <Route path="/crm/campaign" element={
+            <ProtectedERPRoute module="CRM">
+              <CampaignPage />
+            </ProtectedERPRoute>
+          } />
+          <Route path="/crm/automation" element={
+            <ProtectedERPRoute module="CRM">
+              <AutomationPage />
+            </ProtectedERPRoute>
+          } />
+          <Route path="/crm/analytics" element={
+            <ProtectedERPRoute module="CRM">
+              <AnalyticsPage />
+            </ProtectedERPRoute>
+          } />
+          <Route
+            path="/crm/customer"
+            element={
+              <ProtectedERPRoute module="crm">
+                <CustomerListPage />
+              </ProtectedERPRoute>
+            }
+          />
+          <Route
+            path="/crm/customer/:id"
+            element={
+              <ProtectedERPRoute module="crm">
+                <Customer360Page />
+              </ProtectedERPRoute>
+            }
+          />
+
+          {/* Catch all */}
           <Route path="/403" element={<ForbiddenPage />} />
           <Route path="/500" element={<ServerErrorPage />} />
           <Route path="/network-error" element={<NetworkErrorPage />} />

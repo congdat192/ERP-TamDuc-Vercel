@@ -1,11 +1,8 @@
-/**
- * Mocked AuthContext for No-Auth Mode
- * - Always returns a logged-in user with Owner role
- * - Bypasses all Supabase Auth checks
- */
-
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, UserStatus } from "@/types/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface AuthContextType {
   currentUser: User | null;
@@ -29,67 +26,193 @@ export const useAuth = () => {
   return context;
 };
 
-// Mock User Object
-const MOCK_USER: User = {
-  id: "mock-user-id",
-  fullName: "Admin User",
-  username: "admin@example.com",
-  email: "admin@example.com",
-  phone: "0123456789",
-  avatarPath: null,
-  status: "ACTIVE" as UserStatus,
-  role: "owner" as any,
-  permissions: {
-    modules: ["dashboard", "customers", "sales", "inventory", "marketing", "hr", "affiliate", "user-management", "system-settings", "profile"],
-    features: ["full_access"],
-    voucherFeatures: [],
-    canManageUsers: true,
-    canViewAllVouchers: true,
-  },
-  isActive: true,
-  emailVerified: true,
-  securitySettings: {
-    twoFactorEnabled: false,
-    loginAttemptLimit: 5,
-    passwordChangeRequired: false,
-  },
-  activities: [],
-  createdAt: new Date().toISOString(),
-};
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [currentUser] = useState<User | null>(MOCK_USER);
-  const [isLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [requirePasswordChange, setRequirePasswordChange] = useState(false);
+  const { toast } = useToast();
 
-  const login = async (): Promise<boolean> => {
-    console.log("🔓 [AuthContext] Mock login successful");
-    return true;
+  // Toggle this to true to bypass Supabase Auth
+  const USE_MOCK_AUTH = true;
+
+  const refreshUserProfile = async () => {
+    if (USE_MOCK_AUTH) {
+      const mockUser: User = {
+        id: 'mock-user-id',
+        email: 'admin@example.com',
+        username: 'admin',
+        fullName: 'Admin User',
+        phone: '0909000000',
+        avatarPath: 'https://github.com/shadcn.png',
+        status: 'active',
+        role: 'admin',
+        permissions: {
+          modules: ['dashboard', 'crm', 'sales', 'inventory', 'marketing', 'hr', 'user-management', 'system-settings'],
+          features: [],
+          voucherFeatures: [],
+          canManageUsers: true,
+          canViewAllVouchers: true,
+        },
+        isActive: true,
+        emailVerified: true,
+        securitySettings: {
+          twoFactorEnabled: false,
+          loginAttemptLimit: 5,
+          passwordChangeRequired: false,
+        },
+        activities: [],
+        createdAt: new Date().toISOString(),
+      };
+      setCurrentUser(mockUser);
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        setCurrentUser(null);
+        return;
+      }
+
+      // Call the RPC function to get profile + role + permissions
+      const { data, error } = await supabase.rpc('get_user_profile_simple', {
+        _user_id: user.id
+      });
+
+      if (error) {
+        console.error("Error fetching user profile:", error);
+        return;
+      }
+
+      if (data) {
+        const profileData = data as any;
+
+        // Map RPC response to User type
+        const mappedUser: User = {
+          id: user.id,
+          email: user.email || "",
+          username: user.email || "",
+          fullName: profileData.profile?.full_name || user.email?.split('@')[0] || "User",
+          phone: profileData.profile?.phone || "",
+          avatarPath: profileData.profile?.avatar_path,
+          status: (profileData.profile?.status?.toLowerCase() as UserStatus) || "active",
+          role: (profileData.role?.name?.toLowerCase() || "user") as any,
+          permissions: {
+            modules: profileData.modules || [],
+            features: profileData.features || [],
+            voucherFeatures: [], // TODO: Map specific voucher features if needed
+            canManageUsers: profileData.features?.includes('manage_users') || false,
+            canViewAllVouchers: profileData.features?.includes('view_all_vouchers') || false,
+          },
+          isActive: profileData.profile?.status === 'ACTIVE' || profileData.profile?.status === 'active',
+          emailVerified: user.email_confirmed_at ? true : false,
+          securitySettings: {
+            twoFactorEnabled: false,
+            loginAttemptLimit: 5,
+            passwordChangeRequired: false,
+          },
+          activities: [],
+          createdAt: user.created_at,
+        };
+
+        setCurrentUser(mappedUser);
+      }
+    } catch (error) {
+      console.error("Error in refreshUserProfile:", error);
+    }
+  };
+
+  const refreshPermissions = async () => {
+    await refreshUserProfile();
+  };
+
+  useEffect(() => {
+    if (USE_MOCK_AUTH) {
+      refreshUserProfile();
+      return;
+    }
+
+    // Check active session
+    const checkSession = async () => {
+      setIsLoading(true);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          await refreshUserProfile();
+        } else {
+          setCurrentUser(null);
+        }
+      } catch (error) {
+        console.error("Session check error:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkSession();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state change:", event);
+
+      if (event === 'SIGNED_IN' && session) {
+        await refreshUserProfile();
+      } else if (event === 'SIGNED_OUT') {
+        setCurrentUser(null);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const login = async (email: string, password: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        toast({
+          title: "Đăng nhập thất bại",
+          description: error.message,
+          variant: "destructive",
+        });
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Login error:", error);
+      return false;
+    }
   };
 
   const logout = async (): Promise<void> => {
-    console.log("👋 [AuthContext] Mock logout (no-op)");
-  };
-
-  const refreshUserProfile = async (): Promise<void> => {
-    console.log("🔄 [AuthContext] Mock refresh profile");
-  };
-
-  const refreshPermissions = async (): Promise<void> => {
-    console.log("🔄 [AuthContext] Mock refresh permissions");
+    try {
+      await supabase.auth.signOut();
+      setCurrentUser(null);
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   return (
     <AuthContext.Provider
       value={{
         currentUser,
-        isAuthenticated: true,
+        isAuthenticated: !!currentUser,
         isLoading,
         login,
         logout,
         refreshUserProfile,
         refreshPermissions,
-        requirePasswordChange: false,
-        setRequirePasswordChange: () => { },
+        requirePasswordChange,
+        setRequirePasswordChange,
       }}
     >
       {children}

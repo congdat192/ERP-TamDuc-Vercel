@@ -25,9 +25,9 @@ export const MODULE_PERMISSIONS: ModulePermission[] = [
     label: 'Kho Hàng',
     icon: 'Package',
     allowedRoles: ['erp-admin', 'custom'],
-  subMenus: [
-    { path: '/ERP/Products', label: 'Sản phẩm', icon: 'Package' }
-  ]
+    subMenus: [
+      { path: '/ERP/Products', label: 'Sản phẩm', icon: 'Package' }
+    ]
   },
   {
     module: 'accounting',
@@ -77,6 +77,21 @@ export const MODULE_PERMISSIONS: ModulePermission[] = [
     label: 'Quản Lý Người Dùng',
     icon: 'Shield',
     allowedRoles: ['erp-admin']
+  },
+  {
+    module: 'crm',
+    label: 'Premium CRM',
+    icon: 'Crown',
+    allowedRoles: ['erp-admin', 'custom'],
+    subMenus: [
+      { path: '/crm', label: 'Dashboard', icon: 'LayoutDashboard' },
+      { path: '/crm/pipeline', label: 'Sales Pipeline', icon: 'Activity' },
+      { path: '/crm/booking', label: 'Booking', icon: 'Calendar' },
+      { path: '/crm/campaign', label: 'Chiến dịch', icon: 'Zap' },
+      { path: '/crm/automation', label: 'Automation', icon: 'Workflow' },
+      { path: '/crm/analytics', label: 'Báo cáo', icon: 'BarChart' },
+      { path: '/crm/customer', label: 'Khách hàng 360', icon: 'Users' }
+    ]
   }
 ];
 
@@ -92,7 +107,7 @@ export const VOUCHER_FEATURES = [
 
 export const DEFAULT_PERMISSIONS = {
   'erp-admin': {
-    modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'marketing', 'voucher', 'operations', 'affiliate', 'system-settings', 'user-management'] as ERPModule[],
+    modules: ['dashboard', 'customers', 'sales', 'inventory', 'accounting', 'hr', 'marketing', 'voucher', 'operations', 'affiliate', 'system-settings', 'user-management', 'crm'] as ERPModule[],
     features: ['full_access'],
     voucherFeatures: ['voucher-dashboard', 'campaign-management', 'issue-voucher', 'voucher-list', 'voucher-analytics', 'voucher-leaderboard', 'voucher-settings'] as VoucherFeature[],
     canManageUsers: true,

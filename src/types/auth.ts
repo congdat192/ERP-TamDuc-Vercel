@@ -3,7 +3,7 @@ export type UserRole = 'erp-admin' | 'voucher-admin' | 'telesales' | 'custom';
 
 export type UserStatus = 'active' | 'inactive' | 'locked' | 'pending' | 'pending_verification';
 
-export type ERPModule = 
+export type ERPModule =
   | 'dashboard'
   | 'customers'
   | 'sales'
@@ -15,9 +15,10 @@ export type ERPModule =
   | 'operations'
   | 'affiliate'
   | 'system-settings'
-  | 'user-management';
+  | 'user-management'
+  | 'crm';
 
-export type VoucherFeature = 
+export type VoucherFeature =
   | 'voucher-dashboard'
   | 'campaign-management'
   | 'issue-voucher'
