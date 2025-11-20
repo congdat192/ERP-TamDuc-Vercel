@@ -69,7 +69,7 @@ export function Customer360Page() {
                 </div>
 
                 {/* AI Suggestion */}
-                <AISuggestion context="customer_360" data={customer} />
+                <AISuggestion context="customer" data={customer} />
 
                 <div className="grid grid-cols-12 gap-6">
                     {/* Left Column: Profile & Family */}
