@@ -33,7 +33,19 @@ export const MODULE_PERMISSIONS: ModulePermission[] = [
     module: 'accounting',
     label: 'Kế Toán',
     icon: 'Calculator',
-    allowedRoles: ['erp-admin', 'custom']
+    allowedRoles: ['erp-admin', 'custom'],
+    subMenus: [
+      {
+        label: 'Sổ Quỹ',
+        path: '/ERP/Accounting/CashBook',
+        icon: 'Wallet'
+      },
+      {
+        label: 'Công Nợ NCC',
+        path: '/ERP/Accounting/SupplierDebt',
+        icon: 'Users'
+      }
+    ]
   },
   {
     module: 'hr',

@@ -54,6 +54,8 @@ import { AutomationPage } from './modules/crm/pages/AutomationPage';
 import { AnalyticsPage } from './modules/crm/pages/AnalyticsPage';
 import { CustomerListPage } from './modules/crm/pages/CustomerListPage';
 import { Customer360Page } from "./modules/crm/pages/Customer360Page";
+import CashBookPage from "./modules/accounting/pages/CashBookPage";
+import SupplierDebtPage from './modules/accounting/pages/SupplierDebtPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -258,6 +260,24 @@ const AppContent = () => {
             element={
               <ProtectedERPRoute module="inventory">
                 <ProductDetailPage />
+              </ProtectedERPRoute>
+            }
+          />
+
+          {/* Accounting Routes */}
+          <Route
+            path="/ERP/Accounting/CashBook"
+            element={
+              <ProtectedERPRoute module="accounting">
+                <CashBookPage />
+              </ProtectedERPRoute>
+            }
+          />
+          <Route
+            path="/ERP/Accounting/SupplierDebt"
+            element={
+              <ProtectedERPRoute module="accounting">
+                <SupplierDebtPage />
               </ProtectedERPRoute>
             }
           />
