@@ -108,6 +108,5 @@ export function Customer360Page() {
                 </div>
             </div>
         </div>
-        </div >
     );
 }
