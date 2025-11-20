@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Activity, Calendar, Users, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { CRMNavigation } from '../components/shared/CRMNavigation';
 
 export function CRMPage() {
     const navigate = useNavigate();
@@ -51,28 +52,31 @@ export function CRMPage() {
     ];
 
     return (
-        <div className="p-8 space-y-8 bg-gray-50 min-h-screen">
-            <div>
-                <h1 className="text-3xl font-bold text-gray-900">CRM Dashboard</h1>
-                <p className="text-gray-500 mt-2">Trung tâm quản lý Khách hàng & Doanh thu (Premium Module)</p>
-            </div>
+        <div className="min-h-screen bg-gray-50">
+            <CRMNavigation />
+            <div className="p-8 space-y-8">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900">CRM Dashboard</h1>
+                    <p className="text-gray-500 mt-2">Trung tâm quản lý Khách hàng & Doanh thu (Premium Module)</p>
+                </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {modules.map((module) => (
-                    <Card
-                        key={module.path}
-                        className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-none ${module.color}`}
-                        onClick={() => navigate(module.path)}
-                    >
-                        <CardHeader className="pb-2">
-                            <div className="mb-2">{module.icon}</div>
-                            <CardTitle className="text-xl">{module.title}</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-sm text-gray-600">{module.description}</p>
-                        </CardContent>
-                    </Card>
-                ))}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {modules.map((module) => (
+                        <Card
+                            key={module.path}
+                            className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-none ${module.color}`}
+                            onClick={() => navigate(module.path)}
+                        >
+                            <CardHeader className="pb-2">
+                                <div className="mb-2">{module.icon}</div>
+                                <CardTitle className="text-xl">{module.title}</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-sm text-gray-600">{module.description}</p>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
             </div>
         </div>
     );

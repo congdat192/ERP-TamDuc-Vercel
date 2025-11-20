@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { crmService } from '../services/crmService';
+import { CRMNavigation } from '../components/shared/CRMNavigation';
 import { CRMLead, PipelineStage } from '../types/crm';
 import { StageColumn } from '../components/pipeline/StageColumn';
 import { CreateLeadModal } from '../components/pipeline/CreateLeadModal';
@@ -66,33 +67,36 @@ export function PipelinePage() {
     };
 
     return (
-        <div className="h-[calc(100vh-4rem)] flex flex-col p-6 space-y-4 bg-gray-50">
-            <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Quy trình Bán hàng (Sales Pipeline)</h1>
-                    <p className="text-sm text-gray-500">Quản lý các cơ hội kinh doanh theo giai đoạn.</p>
+        <div className="min-h-screen bg-gray-50 flex flex-col">
+            <CRMNavigation />
+            <div className="flex-1 flex flex-col p-6 space-y-4">
+                <div className="flex justify-between items-center">
+                    <div>
+                        <h1 className="text-2xl font-bold text-gray-900">Quy trình Bán hàng (Sales Pipeline)</h1>
+                        <p className="text-sm text-gray-500">Quản lý các cơ hội kinh doanh theo giai đoạn.</p>
+                    </div>
+                    <div className="flex gap-2">
+                        <Button variant="outline" size="icon" onClick={loadData} disabled={loading}>
+                            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                        </Button>
+                        <PipelineSettings stages={stages} onUpdate={loadData} />
+                        <CreateLeadModal onSuccess={loadData} />
+                    </div>
                 </div>
-                <div className="flex gap-2">
-                    <Button variant="outline" size="icon" onClick={loadData} disabled={loading}>
-                        <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                    </Button>
-                    <PipelineSettings stages={stages} onUpdate={loadData} />
-                    <CreateLeadModal onSuccess={loadData} />
-                </div>
-            </div>
 
-            {/* Kanban Board Container */}
-            <div className="flex-1 overflow-x-auto pb-4">
-                <div className="flex gap-4 h-full min-w-max">
-                    {stages.map((stage) => (
-                        <StageColumn
-                            key={stage.id}
-                            stage={stage}
-                            leads={leads.filter((l) => l.stage_id === stage.id)}
-                            onMoveStage={handleMoveStage}
-                            onDeleteLead={handleDeleteLead}
-                        />
-                    ))}
+                {/* Kanban Board Container */}
+                <div className="flex-1 overflow-x-auto pb-4">
+                    <div className="flex gap-4 h-full min-w-max">
+                        {stages.map((stage) => (
+                            <StageColumn
+                                key={stage.id}
+                                stage={stage}
+                                leads={leads.filter((l) => l.stage_id === stage.id)}
+                                onMoveStage={handleMoveStage}
+                                onDeleteLead={handleDeleteLead}
+                            />
+                        ))}
+                    </div>
                 </div>
             </div>
         </div>
